@@ -181,7 +181,7 @@ main { padding-bottom: 96px; }
 <body>
 <main>
   <header class="top">
-    <div class="eyebrow">AutoScales · Foto-App Test</div>
+    <div class="eyebrow">AutoScales · Foto-App Test · Fassung 3.1</div>
     <div class="pg" id="pg" aria-hidden="true"></div>
   </header>
 
@@ -651,7 +651,7 @@ main { padding-bottom: 96px; }
   function exifShort(x) {
     if (!x) return '';
     if (x.error) return 'EXIF: ' + x.error;
-    return 'EXIF ' + ((x.tags0 || []).length + (x.tagsE || []).length) + ' Felder' + (x.orientation != null ? ', Ausrichtung ' + x.orientation : '') + (x.make || x.model || x.focal != null ? ', mit Kamera-Angaben' : ', ohne Kamera-Angaben');
+    return 'EXIF ' + ((x.tags0 || []).length + (x.tagsE || []).length) + ' Felder' + (x.orientation != null ? ', Ausrichtung ' + x.orientation : '') + (x.make || x.model || x.focal != null ? ', mit Kamera-Angaben (' + [x.make, x.model].filter(Boolean).join(' ') + (x.focal != null ? ', ' + fmt(x.focal, 1) + ' mm real' : '') + (x.focal35 != null ? ', ' + fmt(x.focal35, 0) + ' mm Kleinbild' : '') + (x.lens ? ', ' + x.lens : '') + ')' : ', ohne Kamera-Angaben');
   }
   function stillTxt(s) {
     if (!s) return 'nicht gemacht';
@@ -818,8 +818,8 @@ main { padding-bottom: 96px; }
   async function finishEvent(e) {
     var v = $('video'), vis = document.visibilityState === 'visible';
     function health() {
-      var c = (e.wantC && stream) ? (track && track.readyState === 'live' && v.currentTime - e.cam0.t > 0.5) : (e.wantC ? false : null);
-      var s = e.wantS ? (oriSeen - e.sen0 > 3) : null;
+      var c = e.wantC ? (camWanted ? !!(stream && track && track.readyState === 'live' && v.currentTime - e.cam0.t > 0.5) : null) : null;
+      var s = e.wantS ? (senWanted && sensorsOn ? (oriSeen - e.sen0 > 3) : null) : null;
       return { cam: c, sen: s };
     }
     var h = health(); e.post = { cam: h.cam, sen: h.sen, env: envNow(), restart: null, skipped: null };
@@ -897,15 +897,24 @@ main { padding-bottom: 96px; }
       try { ic = new ImageCapture(track); } catch (e) { rec.icErr = errText(e); }
       if (ic) {
         ph('grabFrame'); rec.grab = await tryGrab(ic); rec.pc = await photoCaps(ic); ph('Ruhe');
-        var seq = opt.seq, n = 0;
+        var seq = opt.seq;
         for (var i = 0; i < seq.length; i++) {
-          var s = seq[i] === 'max' ? maxStrat(rec.pc.caps) : STRAT.ohne;
-          if (!s) continue;
+          var tok = seq[i], base = tok.split('+')[0], extra = tok.split('+')[1] || '';
+          var s2 = base === 'max' ? maxStrat(rec.pc.caps) : STRAT.ohne;
+          if (!s2) continue;
           if (opt.onTake) opt.onTake(i + 1, seq.length);
-          await sleep(800);
+          var waitMs = /^\d+s$/.test(extra) ? parseInt(extra, 10) * 1000 : 800;
+          if (extra === 'neu') {
+            closeStream(); await sleep(400);
+            var o2 = await openStream(pl.dev, 4032, 3024, true); if (o2.err) o2 = await openStream(pl.dev, 4032, 3024, false);
+            if (o2.err) { rec.reopenErr = o2.err; continue; }
+            try { ic = new ImageCapture(track); } catch (e3) { rec.icErr = errText(e3); continue; }
+            camWanted = true; $('vf').hidden = false; waitMs = 900;
+          }
+          await sleep(waitMs);
           var sh0 = shake(600), land = landscapeNow(), ang0 = screenAngle();
           ph('takePhoto');
-          var t = await takeOnly(ic, s.n, s.o); t.shake = sh0; t.no = i + 1; t.land = land; t.ang = ang0; rec.takes.push(t);
+          var t = await takeOnly(ic, s2.n, s2.o); t.shake = sh0; t.no = i + 1; t.land = land; t.ang = ang0; t.token = tok; rec.takes.push(t);
         }
         ph('Ruhe');
       }
@@ -953,7 +962,7 @@ main { padding-bottom: 96px; }
     if (r.grab) L.push('grabFrame: ' + (r.grab.err ? 'Fehler ' + r.grab.err : r.grab.w + '×' + r.grab.h + ', ' + r.grab.ms + ' ms'));
     if (r.pc) L.push('Foto-Fähigkeiten (takePhoto): ' + (r.pc.err ? 'Fehler ' + r.pc.err : r.pc.txt) + (r.pc.set ? ', Einstellung ' + r.pc.set : ''));
     if (r.noIC) L.push('takePhoto: ImageCapture fehlt auf diesem Handy');
-    r.takes.forEach(function (t) { L.push('takePhoto ' + t.name + (t.req === 'ohne Angaben' ? '' : ' (' + t.req + ')') + ' #' + t.no + ': ' + takeTxt(t) + (t.shake ? ', Wackeln σ ' + fmt(t.shake.p, 2) + '°/' + fmt(t.shake.r, 2) + '°' : '')); });
+    r.takes.forEach(function (t) { L.push('takePhoto ' + t.name + (t.req === 'ohne Angaben' ? '' : ' (' + t.req + ')') + ' #' + t.no + (t.token && t.token !== 'ohne' ? ' [' + t.token + ']' : '') + ': ' + takeTxt(t) + (t.shake ? ', Wackeln σ ' + fmt(t.shake.p, 2) + '°/' + fmt(t.shake.r, 2) + '°' : '')); });
     if (r.fov) L.push('Sichtfeld takePhoto gegenüber Live-Standbild: Faktor ' + fmt(r.fov.f, 2) + ' (' + fovWord(r.fov.f) + '), Übereinstimmung ' + fmt(r.fov.r, 2) + (r.fov.r < 0.6 ? ' (niedrig, unsicher)' : '') + (r.fov.rot ? ', Foto passte nach Drehung ' + r.fov.rot : ''));
     if (r.shrink) r.shrink.forEach(function (s) { L.push('Verkleinern: ' + s.n + ': ' + (s.err ? 'Fehler ' + s.err : s.w + '×' + s.h + ', ' + bytes(s.bytes) + ', ' + s.ms + ' ms, unter 2 MB: ' + (s.under ? 'ja' : 'nein'))); });
     return L;
@@ -965,35 +974,56 @@ main { padding-bottom: 96px; }
     return { p: p.sd, r: r.sd, pSpan: p.max - p.min, rSpan: r.max - r.min, n: set.length };
   }
   function digestHold(kind, rec, heldOK) {
-    var heads = { hoch: 'HOCHKANT-LAUF (Schritt 3)', quer: 'QUERFORMAT-LAUF (Schritt 4)' };
+    var heads = { hoch: 'AUFRECHT-LAUF (Schritt 3)', quer: 'QUERFORMAT-LAUF (Schritt 4)' };
+    var ok = rec.takes.filter(function (t) { return t.a && t.a.w && t.name === 'ohne Angaben'; });
     var L = [heads[kind]].concat(recLines(rec));
+    if (ok.length) {
+      var a1 = ok[0].a, x1 = a1.exif || {};
+      L.push('Ausrichtung des Fotos: Handy ' + (ok[0].land ? 'quer' : 'hochkant') + ' gehalten (Winkel ' + ok[0].ang + '°), Pixel im JPEG ' + (x1.sofW ? x1.sofW + '×' + x1.sofH + ' (' + ori(x1.sofW, x1.sofH) + ')' : 'unbekannt') + ', EXIF-Ausrichtung ' + (x1.orientation != null ? x1.orientation : 'keine') + ', angezeigt ' + a1.w + '×' + a1.h + ' (' + ori(a1.w, a1.h) + '); Live-Bild kam ' + ori(rec.vw, rec.vh));
+      S.h.orient = S.h.orient || []; S.h.orient.push({ held: ok[0].land ? 'quer' : 'hoch', pixLand: x1.sofW ? x1.sofW >= x1.sofH : null, exifO: x1.orientation, shownLand: a1.w >= a1.h });
+    }
+    var ser = rec.takes.filter(function (t) { return t.a && t.a.w; }).map(function (t) { return fmt(t.a.bytes / 1048576, 1) + ' MB/' + fmt(t.a.sharp, 0) + (t.token && t.token !== 'ohne' ? ' (' + t.token + ')' : ''); });
+    if (ser.length > 1) { L.push('Serie (Größe/Schärfe je Foto, 1. Foto zuerst): ' + ser.join(' → ')); S.h.series = S.h.series || {}; S.h.series[kind] = ser.join(' → '); }
     S.res[kind] = { lines: L };
     S.h.fullTried = true; if (rec.noIC) S.h.noIC = true;
-    var ok = rec.takes.filter(function (t) { return t.a && t.a.w && t.name === 'ohne Angaben'; });
     if (ok.length) {
       var b = ok.reduce(function (a, c) { return c.a.w * c.a.h > a.a.w * a.a.h ? c : a; });
-      if (!S.h.full || b.a.w * b.a.h > S.h.full.w * S.h.full.h) S.h.full = { w: b.a.w, h: b.a.h, ms: b.a.ms, land: b.a.w >= b.a.h };
+      if (!S.h.full || b.a.w * b.a.h > S.h.full.w * S.h.full.h) S.h.full = { w: b.a.w, h: b.a.h, ms: ok[0].a.ms, land: b.a.w >= b.a.h };
     }
-    if (rec.win) { var w = S.h.sway || { p: 0, r: 0 }; S.h.sway = { p: Math.max(w.p, rec.win.p), r: Math.max(w.r, rec.win.r) }; }
+    if (rec.win) { S.h.swayK = S.h.swayK || {}; S.h.swayK[kind] = { p: rec.win.p, r: rec.win.r, valid: !!heldOK }; }
     if (rec.fov && S.h.fov == null) S.h.fov = rec.fov.f;
     if (kind === 'quer') {
       S.h.quer = { held: heldOK, streamLand: rec.vw >= rec.vh, takeLand: ok.length ? ok[0].a.w >= ok[0].a.h : null };
-      if (rec.shrink) { var sr = rec.shrink.filter(function (s) { return /2560/.test(s.n) && !s.err; })[0]; if (sr) S.h.shrink = { under: !!sr.under, ms: sr.ms }; var rot = rec.shrink.filter(function (s) { return /quer drehen/.test(s.n) && !s.err; })[0]; if (rot) S.h.rot = { ms: rot.ms }; }
+      if (rec.shrink) { var sr = rec.shrink.filter(function (s) { return /2560/.test(s.n) && !s.err && !/quer drehen/.test(s.n); })[0]; if (sr) S.h.shrink = { under: !!sr.under, ms: sr.ms, mb: sr.bytes }; }
     }
   }
   function swayWord() {
-    var w = S.h.sway; if (!w) return 'keine Daten';
-    if (w.p <= 0.5 && w.r <= 0.33) return 'gut';
-    if (w.p <= 0.67 && w.r <= 0.5) return 'knapp';
-    return 'zu unruhig';
+    var k = S.h.swayK; if (!k) return 'keine Daten';
+    var parts = [];
+    ['hoch', 'quer'].forEach(function (x) {
+      var w = k[x]; if (!w) return;
+      var word = (w.p <= 0.5 && w.r <= 0.33) ? 'gut' : (w.p <= 0.67 && w.r <= 0.5) ? 'knapp' : 'zu unruhig';
+      parts.push((x === 'hoch' ? 'aufrecht ' : 'quer ') + word + ' (σ ' + fmt(w.p, 2) + '°/' + fmt(w.r, 2) + '°)' + (w.valid ? '' : ' [Haltung stimmte nicht]'));
+    });
+    return parts.join(', ') || 'keine Daten';
+  }
+  function orientLines() {
+    var o = S.h.orient; if (!o || !o.length) return [];
+    var L = ['AUSRICHTUNG DES TAKEPHOTO-FOTOS'];
+    o.forEach(function (x) { L.push('  Handy ' + (x.held === 'quer' ? 'quer' : 'aufrecht') + ' gehalten → Pixel ' + (x.pixLand == null ? '?' : x.pixLand ? 'quer' : 'hochkant') + ', EXIF ' + (x.exifO != null ? x.exifO : 'keine') + ', angezeigt ' + (x.shownLand ? 'quer' : 'hochkant')); });
+    var same = o.length > 1 && o.every(function (x) { return x.pixLand === o[0].pixLand && x.exifO === o[0].exifO; }) && o.some(function (x) { return x.held === 'quer'; }) && o.some(function (x) { return x.held === 'hoch'; });
+    if (same) L.push('  Ergebnis: Das Foto folgt der Haltung nicht. Pixel und EXIF-Ausrichtung sind in beiden Haltungen gleich, die App muss nach dem Winkel des Handys selbst drehen.');
+    return L;
   }
   function headline() {
     var h = S.h, p = [];
     p.push('Volles Foto: ' + (h.full ? 'ja, ' + mp(h.full.w, h.full.h) + (h.full.ms ? ' in ' + h.full.ms + ' ms' : '') : h.noIC ? 'nein (takePhoto fehlt)' : h.fullTried ? 'nein' : '–'));
     p.push('Wasserwaage: ' + swayWord());
-    p.push('Quer: ' + (h.quer ? (h.quer.held ? (h.quer.takeLand == null ? 'ohne Foto' : h.quer.takeLand ? 'ja' : 'Foto kommt hochkant, App muss drehen') : 'Querformat nicht erkannt') : '–'));
+    var q = (h.orient || []).filter(function (x) { return x.held === 'quer'; })[0];
+    p.push('Quer: ' + (h.quer ? (h.quer.held ? (q ? (q.shownLand ? 'ja, Foto kommt quer' : 'Foto kommt hochkant (EXIF ' + (q.exifO != null ? q.exifO : 'keine') + '), App muss drehen') : 'ohne Foto') : 'Querformat nicht gehalten') : '–'));
     if (h.fov != null) p.push('Sichtfeld Foto/Live: ' + (h.fov > 1.03 ? 'Foto weiter' : h.fov < 0.97 ? 'Foto enger' : 'gleich') + ' (' + fmt(h.fov, 2) + ')');
-    if (h.shrink) p.push('2 MB: ' + (h.shrink.under ? 'ja' : 'nein') + ' (' + h.shrink.ms + ' ms)');
+    if (h.series && h.series.quer) p.push('Serie quer: ' + h.series.quer);
+    if (h.shrink) p.push('2 MB: ' + (h.shrink.under ? 'ja' : 'nein') + ' (' + fmt(h.shrink.mb / 1048576, 1) + ' MB, ' + h.shrink.ms + ' ms)');
     p.push('Kamera-App-Foto: ' + (h.app ? mp(h.app.w, h.app.h) : '–'));
     if (S.fold) p.push('Klappen: ' + (h.fold ? (h.fold.camDead || h.fold.senDead ? 'Neustart nötig' + (h.fold.camDead ? ' (Kamera)' : '') + (h.fold.senDead ? ' (Sensor)' : '') : 'läuft weiter') : '–'));
     return p.join(' · ');
@@ -1074,6 +1104,15 @@ main { padding-bottom: 96px; }
   }
 
   /* ---------- Schritte ---------- */
+  async function holdStill(wantLand, secs) {
+    var end = performance.now() + secs * 1000, resets = 0, bad = false;
+    while (performance.now() < end) {
+      if (landscapeNow() !== wantLand) { resets++; end = performance.now() + secs * 1000; setCd(wantLand ? 'Bitte quer halten … ' : 'Bitte aufrecht halten … ', null); if (resets > 60) { bad = true; break; } }
+      else setCd('Halte still … ', Math.max(1, Math.ceil((end - performance.now()) / 1000)));
+      await sleep(200);
+    }
+    setCd('', null); return { resets: resets, bad: bad };
+  }
   async function runKamera() {
     S.phase = 'run'; ui(); sayS('Bewegungssensor … bitte „Erlauben“ tippen');
     var okS = false;
@@ -1106,7 +1145,7 @@ main { padding-bottom: 96px; }
       sayS('Bewegungssensor …');
       await sensorsStart();
       var t0 = performance.now();
-      while (landscapeNow() !== wantLand && performance.now() - t0 < 20000) { setCd(wantLand ? 'Drehe das Handy jetzt quer … ' : 'Halte das Handy aufrecht … ', Math.ceil((20000 - (performance.now() - t0)) / 1000)); await sleep(250); }
+      while (landscapeNow() !== wantLand && performance.now() - t0 < 12000) { setCd(wantLand ? 'Drehe das Handy jetzt quer … ' : 'Halte das Handy aufrecht … ', Math.ceil((12000 - (performance.now() - t0)) / 1000)); await sleep(250); }
       heldOK = landscapeNow() === wantLand; setCd('', null);
       if (!heldOK) sayS(wantLand ? 'Querformat nicht erkannt, der Test läuft trotzdem weiter. Ist die Drehsperre an?' : 'Hochformat nicht erkannt, der Test läuft trotzdem weiter.', true); else sayS('');
       if (!R.plan.length) { await camPermission(); await discover(); }
@@ -1116,13 +1155,14 @@ main { padding-bottom: 96px; }
       if (o.err) o = await openStream(pl.dev, 4032, 3024, false);
       if (o.err) throw new Error(o.err);
       camWanted = true; ph('Kamera bereit'); await sleep(900);
-      var w0 = performance.now();
-      await countdown('Halte still … ', 5);
+      var hs = await holdStill(wantLand, 5), w0 = performance.now() - 5000;
       var win = winStats(w0);
+      if (hs.bad) heldOK = false;
       sayS('Jetzt werden mehrere Fotos gemacht. Bitte weiter ganz ruhig halten.');
-      var seq = kind === 'hoch' ? ['ohne', 'max'] : ['ohne', 'ohne', 'max', 'ohne'];
+      var seq = kind === 'hoch' ? ['ohne', 'ohne'] : ['ohne', 'ohne', 'ohne+4s', 'ohne+neu'];
       rec = await captureSet(pl, { ask: '4032×3024', startMs: o.ms, seq: seq, onTake: function (i, n) { setCd('Foto ' + i + ' von ' + n + ' … halte still', null); } });
-      rec.win = win; rec.heldAs = (heldOK ? (wantLand ? 'quer' : 'hochkant') : 'nicht wie verlangt');
+      var heldEnd = landscapeNow() === wantLand; if (!heldEnd) heldOK = false;
+      rec.win = win; rec.heldAs = (heldOK ? (wantLand ? 'quer' : 'hochkant') : 'nicht wie verlangt (Haltung wurde während des Tests gewechselt oder war falsch)');
       stopAll('Ende von Schritt ' + (wantLand ? 4 : 3)); $('vf').hidden = true;
       running = false; setCd('Ich rechne … du darfst das Handy jetzt bewegen', null); sayS('');
       await sleep(400);
@@ -1212,12 +1252,13 @@ main { padding-bottom: 96px; }
     return L;
   }
   function buildSummary() {
-    var L = ['FOTO-APP PROBE 3 · Ergebnis', 'KURZ: ' + (devName() || '–') + ' → ' + headline()];
+    var L = ['FOTO-APP PROBE 3.1 · Ergebnis', 'KURZ: ' + (devName() || '–') + ' → ' + headline()];
     L = L.concat(deviceLines());
     if (R.devices.length) { L.push('KAMERAS'); R.devices.forEach(function (x) { L.push('  ' + x.label + ' = ' + (KIND[x.kind] || x.kind)); }); }
     var Sn = R.sensor, rate = sensorsOn ? hz() : Sn.lastHz;
     L.push('LAGESENSOR: Erlaubnis ' + (Sn.perm ? 'Ausrichtung ' + (Sn.perm.ori || 'nicht nötig') + ', Bewegung ' + (Sn.perm.mot || 'nicht nötig') : 'nicht abgefragt') + (Sn.err ? ' · FEHLER ' + Sn.err : '') + (Sn.silent ? ' · keine Messwerte' : '') + ' · Messrate zuletzt ' + (rate ? fmt(rate, 0) + '/s' : '–') + ' · Neustarts durch die Seite: ' + Sn.restarts + (Sn.why.length ? ' (' + Sn.why.join(', ') + ')' : ''));
     ['kamera', 'hoch', 'quer', 'foto', 'wechsel', 'klapp'].forEach(function (k) { if (S.res[k]) S.res[k].lines.forEach(function (x) { L.push(x); }); });
+    orientLines().forEach(function (x) { L.push(x); });
     if (S.fovAns) L.push('Sichtfeld Vorschau gegenüber Foto laut Augenschein: ' + S.fovAns);
     L = L.concat(protokollLines());
     if (R.stopNote) L.push('Kamera und Sensor wurden zuletzt ausgeschaltet: ' + R.stopNote);
@@ -1259,8 +1300,8 @@ main { padding-bottom: 96px; }
   var DEF = {
     geraet: ['Dein Handy', 'Schreibe Marke und Modell deines Handys auf, zum Beispiel „iPhone 11“ oder „Samsung Galaxy S24“. Bitte keinen Namen einer Person eintragen.'],
     kamera: ['Kamera erlauben', 'Tippe auf „Kamera starten“. Dein Handy fragt dich gleich um Erlaubnis für die Kamera und für die Bewegung. Tippe jedes Mal auf „Erlauben“. Danach warte 5 Sekunden.'],
-    hoch: ['Aufrecht ganz ruhig halten', 'Peile etwas Großes an, zum Beispiel einen Schrank oder einen Fernseher, 2 bis 3 Meter weit weg und bei gutem Licht. Halte das Handy aufrecht und stütze die Ellbogen am Körper ab.'],
-    quer: ['Quer ganz ruhig halten', 'Drehe das Handy jetzt zur Seite und peile dasselbe Motiv an. Halte es wieder ganz ruhig. Dreht sich das Bild nicht mit, schalte die Drehsperre aus.'],
+    hoch: ['Aufrecht ganz ruhig halten', 'Peile etwas Großes an, zum Beispiel einen Schrank oder einen Fernseher, 2 bis 3 Meter weit weg und bei gutem Licht. Halte das Handy aufrecht (hochkant, wie beim Lesen einer Nachricht) und stütze die Ellbogen am Körper ab. Wenn du es zwischendurch drehst, fängt der Countdown neu an.'],
+    quer: ['Quer ganz ruhig halten', 'Drehe das Handy jetzt zur Seite (quer, wie einen Fernseher) und peile dasselbe Motiv an. Halte es ganz ruhig, bis alle Fotos gemacht sind. Dreht sich das Bild nicht mit, schalte die Drehsperre aus.'],
     foto: ['Foto mit der Kamera-App', 'Tippe zuerst auf „Kamera einschalten“. Danach auf „Kamera-App öffnen“. Mache ein Foto vom selben Motiv, ohne Zoom, und tippe auf „Foto verwenden“ oder „Fertig“.'],
     klapp: ['Zuklappen und aufklappen', 'Tippe auf „Start“. Klappe dein Handy dann zu, warte 3 Sekunden und klappe es wieder auf. Du hast 30 Sekunden Zeit.'],
     ergebnis: ['Fertig', 'Danke! Die Kamera ist aus. Schicke das Ergebnis jetzt an Giannis. Im Text stehen nur dein Handymodell und Messwerte, keine Fotos und keine Namen.']
