@@ -1,0 +1,945 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Foto-App Probe">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="robots" content="noindex,nofollow">
+</head>
+<body>
+<title>Foto-App Probe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Michroma&family=Montserrat:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: ein Prüfprotokoll in einer Spalte. Kopf mit Ablauf, fünf nummerierte Prüfschritte mit Status, am Ende das Ergebnisblatt. */
+:root {
+  --bg: #FAFAFA;
+  --fg: #0B0C10;
+  --muted: #55575E;
+  --line: #DCDDE2;
+  --card: #FFFFFF;
+  --gold: #FFC77C;
+  --on-gold: #0B0C10;
+  --bad: #B3261E;
+  --focus: #0B0C10;
+  --screen: #0B0C10;
+  --font-display: 'Michroma', 'Montserrat', system-ui, sans-serif;
+  --font-body: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-data: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0B0C10; --fg: #FAFAFA; --muted: #9CA3AF; --line: #262830; --card: #13151B;
+    --bad: #FF8F85; --focus: #FFC77C; --screen: #000000; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0B0C10; --fg: #FAFAFA; --muted: #9CA3AF; --line: #262830; --card: #13151B;
+  --bad: #FF8F85; --focus: #FFC77C; --screen: #000000; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 400 15px/1.5 var(--font-body);
+  padding-block: 20px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+h1, h2, p, dl, ol { margin: 0; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* Kopf */
+.eyebrow { font: 600 11px/1.2 var(--font-body); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 400 clamp(22px, 7vw, 30px)/1.15 var(--font-display); margin-top: 10px; text-wrap: balance; }
+.lede { margin-top: 12px; color: var(--muted); max-width: 60ch; }
+.sep { display: flex; align-items: center; gap: 10px; color: var(--gold); }
+.sep::before, .sep::after { content: ""; height: 1px; flex: 1; background: var(--gold); }
+.sep i { width: 7px; height: 7px; background: var(--gold); transform: rotate(45deg); }
+.plan { padding-left: 1.2em; display: grid; gap: 4px; }
+.plan li::marker { font-weight: 700; }
+.plan b { font-weight: 600; }
+
+/* Prüfschritt */
+.step { display: flex; flex-direction: column; gap: 14px; }
+.step-h { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
+.num { flex: none; width: 30px; height: 30px; display: grid; place-items: center; background: var(--fg); color: var(--bg); font: 400 13px/1 var(--font-display); }
+h2 { font: 700 17px/1.25 var(--font-body); flex: 1 1 auto; min-width: 0; }
+.how { color: var(--muted); max-width: 60ch; }
+.chip { display: inline-flex; align-items: center; gap: 7px; font: 600 11px/1 var(--font-body); letter-spacing: .06em; text-transform: uppercase; padding: 7px 10px; border: 1px solid var(--line); border-radius: 999px; white-space: nowrap; }
+.chip i { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--muted); }
+.chip[data-s="ok"] i { background: var(--gold); border-color: var(--fg); }
+.chip[data-s="bad"] i { background: var(--bad); border-color: var(--bad); }
+.chip[data-s="warn"] i { background: linear-gradient(90deg, var(--gold) 50%, transparent 50%); border-color: var(--fg); }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.btn { min-height: 46px; padding: 0 18px; border: 1px solid var(--fg); background: transparent; border-radius: 4px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; text-align: center; }
+.btn.primary { background: var(--gold); border-color: var(--gold); color: var(--on-gold); }
+.btn[disabled] { opacity: .4; cursor: not-allowed; }
+.field { min-height: 46px; padding: 0 12px; background: var(--card); border: 1px solid var(--line); border-radius: 4px; min-width: 0; max-width: 100%; }
+label.field-l { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 13px; }
+.file-btn { position: relative; }
+.file-btn input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; font-size: 0; }
+.file-btn:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
+.msg { min-height: 0; color: var(--muted); font-size: 14px; }
+.msg.bad { color: var(--bad); font-weight: 600; }
+.note { border-left: 3px solid var(--gold); padding: 8px 0 8px 12px; font-size: 14px; }
+.note b { font-weight: 700; }
+.kv { display: grid; border-top: 1px solid var(--line); }
+.kv .row { display: grid; grid-template-columns: minmax(7.5rem, 11rem) minmax(0, 1fr); gap: 4px 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.kv dt { color: var(--muted); font-size: 13px; }
+.kv dd { margin: 0; font: 500 13px/1.45 var(--font-data); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.kv .row[data-s] dd::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; border: 2px solid var(--muted); vertical-align: baseline; }
+.kv .row[data-s="ok"] dd::before { background: var(--gold); border-color: var(--fg); }
+.kv .row[data-s="bad"] dd::before { background: var(--bad); border-color: var(--bad); }
+.sub { font: 700 12px/1.2 var(--font-body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+details { font-size: 13px; color: var(--muted); }
+details pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 400 12px/1.4 var(--font-data); margin: 8px 0 0; }
+summary { cursor: pointer; }
+
+/* Sucher */
+.vf { position: relative; aspect-ratio: 4 / 3; max-width: 100%; background: var(--screen); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; display: grid; place-items: center; }
+.vf video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: var(--screen); }
+.vf .empty { position: relative; color: #9CA3AF; font-size: 13px; padding: 0 16px; text-align: center; }
+.vf.live .empty { display: none; }
+.lvl { position: absolute; inset: 0; pointer-events: none; display: none; }
+.vf.lvl-on .lvl { display: block; }
+.lvl-h { position: absolute; left: 15%; right: 15%; top: 50%; height: 2px; margin-top: -1px; background: #FFC77C; transform: translateY(var(--ty, 0px)) rotate(var(--rot, 0deg)); box-shadow: 0 0 0 1px rgba(0,0,0,.45); }
+.lvl-c { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border: 2px solid #FAFAFA; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0,0,0,.45); }
+.lvl-t { position: absolute; left: 8px; bottom: 8px; font: 600 12px/1 var(--font-data); background: rgba(11,12,16,.75); color: #FAFAFA; padding: 6px 8px; border-radius: 3px; }
+.lvl-t[data-ok="1"] { background: #FFC77C; color: #0B0C10; }
+
+/* Lagesensor-Anzeige */
+.gauge { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.gauge > div { border: 1px solid var(--line); background: var(--card); padding: 12px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.gauge .lab { font: 600 12px/1.3 var(--font-body); color: var(--muted); }
+.gauge output { font: 400 clamp(22px, 8vw, 32px)/1.1 var(--font-display); font-variant-numeric: tabular-nums; }
+.gauge .hint { font-size: 12px; color: var(--muted); }
+.gauge > div[data-ok="1"] { border-color: var(--fg); box-shadow: inset 0 -4px 0 var(--gold); }
+.thumbs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.thumbs figure { margin: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.thumbs img { width: 100%; height: auto; border: 1px solid var(--line); background: var(--screen); }
+.thumbs figcaption { font-size: 12px; color: var(--muted); }
+.radios { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.radios legend { font-weight: 600; font-size: 13px; padding: 0; margin-bottom: 6px; }
+.radios label { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; }
+.radios input { width: 20px; height: 20px; accent-color: var(--fg); }
+.sheet { border: 1px solid var(--fg); background: var(--card); padding: 14px; max-height: 70vh; overflow: auto; }
+.sheet pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 400 12.5px/1.5 var(--font-data); }
+.canvas-hidden { display: none; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+@media (max-width: 380px) { .kv .row { grid-template-columns: 1fr; } }
+</style>
+
+<main>
+  <header>
+    <div class="eyebrow">AutoScales · Foto-App · Machbarkeit</div>
+    <h1>Foto-App Probe</h1>
+    <p class="lede">Diese Seite misst, was ein Handy im Browser für die Foto-App leisten kann: Kamera, Lagesensor, Bildqualität. Sie sendet nichts ab. Alle Werte bleiben auf diesem Gerät, bis der Ergebnistext von Hand weitergegeben wird.</p>
+  </header>
+
+  <div class="sep" aria-hidden="true"><i></i></div>
+
+  <section class="step" aria-labelledby="h-plan">
+    <h2 id="h-plan">Ablauf, etwa 10 Minuten (Schätzung)</h2>
+    <ol class="plan">
+      <li><b>Kamera live:</b> Sucher starten, Auflösung prüfen.</li>
+      <li><b>Lagesensor:</b> Neigung und Rollen anzeigen, Ruhe messen.</li>
+      <li><b>Auslösen:</b> Foto machen und die Sensorwerte im Moment des Auslösens festhalten.</li>
+      <li><b>Foto über Auswahlfeld:</b> dasselbe Motiv mit der Handykamera, zum Vergleich.</li>
+      <li><b>Ergebnis:</b> Screenshot machen oder Text kopieren und weiterschicken.</li>
+    </ol>
+    <p class="how">Am besten draußen vor einem Auto, Handy wie beim Fotografieren in Brusthöhe. Zu Hause genügt eine beliebige Szene.</p>
+  </section>
+
+  <section class="step" aria-labelledby="h-dev">
+    <div class="step-h">
+      <h2 id="h-dev">Gerät und Rahmen</h2>
+    </div>
+    <label class="field-l" for="devname">Gerät und Systemversion
+      <input class="field" id="devname" type="text" autocomplete="off" placeholder="z. B. iPhone 15 Pro, iOS 18.2 · Galaxy S23, Android 14">
+    </label>
+    <p class="how">iPhone: Einstellungen → Allgemein → Info → Modellname und iOS-Version. Die Browserkennung unten ist nur ein Anhaltspunkt.</p>
+    <div id="frameNote" class="note" hidden></div>
+    <div id="r0"></div>
+  </section>
+
+  <section class="step" aria-labelledby="h-1">
+    <div class="step-h">
+      <span class="num" aria-hidden="true">1</span>
+      <h2 id="h-1">Kamera live</h2>
+      <span class="chip" id="c1" data-s="idle"><i></i><b>nicht getestet</b></span>
+    </div>
+    <p class="how">Handy quer halten, Hauptkamera hinten. „Kamera starten“ tippen und die Kamera erlauben. Danach „Auflösungen prüfen“.</p>
+    <div class="controls">
+      <button class="btn primary" id="camStart" type="button">Kamera starten</button>
+      <button class="btn" id="camStop" type="button" disabled>Stopp</button>
+      <button class="btn" id="camLadder" type="button" disabled>Auflösungen prüfen</button>
+    </div>
+    <label class="field-l" for="camRes">Angefragte Auflösung
+      <select class="field" id="camRes">
+        <option value="4032x3024">4032 × 3024 (12 MP, 4:3)</option>
+        <option value="3840x2160">3840 × 2160 (4K, 16:9)</option>
+        <option value="1920x1080" selected>1920 × 1080 (Full HD, 16:9)</option>
+        <option value="1280x720">1280 × 720 (HD, 16:9)</option>
+      </select>
+    </label>
+    <div class="vf" id="vf">
+      <video id="video" playsinline muted autoplay></video>
+      <span class="empty">Das Kamerabild erscheint hier.</span>
+      <div class="lvl" aria-hidden="true"><div class="lvl-h" id="lvlH"></div><div class="lvl-c"></div><div class="lvl-t" id="lvlT">–</div></div>
+    </div>
+    <p class="msg" id="m1" role="status" aria-live="polite"></p>
+    <div id="r1"></div>
+  </section>
+
+  <section class="step" aria-labelledby="h-2">
+    <div class="step-h">
+      <span class="num" aria-hidden="true">2</span>
+      <h2 id="h-2">Lagesensor</h2>
+      <span class="chip" id="c2" data-s="idle"><i></i><b>nicht getestet</b></span>
+    </div>
+    <p class="how">Handy aufrecht vor die Brust halten, wie beim Fotografieren. „Lagesensor starten“ tippen. Das iPhone fragt einmal um Erlaubnis. Dann „Ruhe messen“ und 5 Sekunden still halten.</p>
+    <div class="controls">
+      <button class="btn primary" id="senStart" type="button">Lagesensor starten</button>
+      <button class="btn" id="senStop" type="button" disabled>Stopp</button>
+    </div>
+    <div class="gauge" aria-live="off">
+      <div id="gP"><span class="lab">Neigung vor/zurück</span><output id="vP">–</output><span class="hint" id="hP">Sollwert ±2°</span></div>
+      <div id="gR"><span class="lab">Rollen seitlich</span><output id="vR">–</output><span class="hint" id="hR">Sollwert ±1°</span></div>
+    </div>
+    <label class="field-l" for="restPos">Wie wird das Handy gehalten?
+      <select class="field" id="restPos">
+        <option>in beiden Händen vor der Brust</option>
+        <option>Ellbogen am Körper abgestützt</option>
+        <option>angelehnt oder auf Stativ</option>
+      </select>
+    </label>
+    <div class="controls">
+      <button class="btn" id="restBtn" type="button" disabled>Ruhe messen (5 s)</button>
+    </div>
+    <p class="msg" id="m2" role="status" aria-live="polite"></p>
+    <div id="r2"></div>
+  </section>
+
+  <section class="step" aria-labelledby="h-3">
+    <div class="step-h">
+      <span class="num" aria-hidden="true">3</span>
+      <h2 id="h-3">Auslösen</h2>
+      <span class="chip" id="c3" data-s="idle"><i></i><b>nicht getestet</b></span>
+    </div>
+    <p class="how">Kamera (1) und Lagesensor (2) laufen lassen, ein Motiv anpeilen, Handy ruhig halten und „Auslösen“ tippen. Dreimal wiederholen. Die Schärfe-Kennzahl ist nur zum Vergleich zweier Bilder desselben Motivs gedacht.</p>
+    <div class="controls">
+      <button class="btn primary" id="shoot" type="button" disabled>Auslösen</button>
+    </div>
+    <p class="msg" id="m3" role="status" aria-live="polite"></p>
+    <div id="r3"></div>
+    <canvas id="grab" class="canvas-hidden" width="1" height="1"></canvas>
+  </section>
+
+  <section class="step" aria-labelledby="h-4">
+    <div class="step-h">
+      <span class="num" aria-hidden="true">4</span>
+      <h2 id="h-4">Foto über Auswahlfeld</h2>
+      <span class="chip" id="c4" data-s="idle"><i></i><b>nicht getestet</b></span>
+    </div>
+    <p class="how">Dasselbe Motiv vom selben Standort. Zuerst „Foto aufnehmen“ (öffnet die Handykamera), dann ein Foto aus der normalen Kamera-App wählen. Standortdaten werden nicht angezeigt und nicht in den Ergebnistext übernommen.</p>
+    <div class="controls">
+      <label class="btn primary file-btn">Foto aufnehmen<input type="file" id="inCap" accept="image/*" capture="environment"></label>
+      <label class="btn file-btn">Foto aus Kamera-App wählen<input type="file" id="inLib" accept="image/*"></label>
+    </div>
+    <p class="msg" id="m4" role="status" aria-live="polite"></p>
+    <div id="r4"></div>
+    <fieldset class="radios" id="fovBox">
+      <legend>Sichtfeld des Live-Bilds (Schritt 1) gegenüber dem Foto</legend>
+      <label><input type="radio" name="fov" value="gleich"> gleich</label>
+      <label><input type="radio" name="fov" value="weiter"> Live-Bild weiter</label>
+      <label><input type="radio" name="fov" value="enger"> Live-Bild enger</label>
+      <label><input type="radio" name="fov" value="unklar"> nicht verglichen</label>
+    </fieldset>
+  </section>
+
+  <div class="sep" aria-hidden="true"><i></i></div>
+
+  <section class="step" aria-labelledby="h-5">
+    <div class="step-h">
+      <span class="num" aria-hidden="true">5</span>
+      <h2 id="h-5">Ergebnis zum Weitergeben</h2>
+    </div>
+    <p class="how">Screenshot dieses Blatts oder „Text kopieren“. Der Text enthält keine Fotos und keine Standortdaten.</p>
+    <div class="controls">
+      <button class="btn primary" id="copy" type="button">Text kopieren</button>
+    </div>
+    <p class="msg" id="m5" role="status" aria-live="polite"></p>
+    <div class="sheet"><pre id="sum"></pre></div>
+    <details>
+      <summary>Rohe Browserkennung</summary>
+      <pre id="ua"></pre>
+    </details>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var RAD = Math.PI / 180;
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function fmt(x, d, sign) {
+    if (x == null || typeof x !== 'number' || isNaN(x)) return '–';
+    var s = Math.abs(x).toFixed(d == null ? 1 : d).replace('.', ',');
+    var nz = parseFloat(s.replace(',', '.')) !== 0;
+    return (x < 0 && nz ? '−' : (sign && nz ? '+' : '')) + s;
+  }
+  function bytes(n) { if (n == null) return '–'; if (n < 1024) return n + ' B'; if (n < 1048576) return fmt(n / 1024, 0) + ' KB'; return fmt(n / 1048576, 1) + ' MB'; }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function errText(e) { if (!e) return 'unbekannter Fehler'; return (e.name ? e.name : 'Fehler') + (e.message ? ': ' + e.message : ''); }
+  function kv(rows) {
+    return '<dl class="kv">' + rows.filter(Boolean).map(function (r) {
+      return '<div class="row"' + (r[2] ? ' data-s="' + r[2] + '"' : '') + '><dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd></div>';
+    }).join('') + '</dl>';
+  }
+  function setChip(id, s, text) { var c = $(id); if (!c) return; c.setAttribute('data-s', s); c.querySelector('b').textContent = text; }
+  function say(id, text, bad) { var m = $(id); m.textContent = text || ''; m.className = 'msg' + (bad ? ' bad' : ''); }
+
+  /* ---------- Ergebnisse ---------- */
+  var R = { dev: {}, cam: null, ladder: [], sensor: {}, rest: [], shots: [], photos: {}, fov: '', extra: [] };
+  var stream = null, track = null;
+  var samples = [], lastAcc = null, accSign = 0, sensorsOn = false;
+  var oriCount = 0, oriT0 = 0, oriTLast = 0, prevT = 0, maxDt = 0, accCount = 0;
+
+  /* ---------- Gerät und Rahmen ---------- */
+  var framed; try { framed = window.self !== window.top; } catch (e) { framed = true; }
+  var pp = document.permissionsPolicy || document.featurePolicy;
+  function allowed(f) { try { return pp && pp.allowsFeature ? pp.allowsFeature(f) : null; } catch (e) { return null; } }
+  function tri(v) { return v === true ? ['ja', 'ok'] : v === false ? ['nein', 'bad'] : ['unbekannt', '']; }
+  function screenAngle() {
+    var raw = (screen.orientation && typeof screen.orientation.angle === 'number') ? screen.orientation.angle : (typeof window.orientation === 'number' ? window.orientation : 0);
+    return ((Math.round(raw / 90) * 90 % 360) + 360) % 360;
+  }
+  function parseUA() {
+    var ua = navigator.userAgent, os = 'unbekannt', osv = '', br = 'unbekannt', brv = '', m;
+    var ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (ios) { os = 'iOS/iPadOS'; m = ua.match(/OS (\d+)[_.](\d+)(?:[_.](\d+))?/); if (m && /iPhone|iPad|iPod/.test(ua)) osv = m[1] + '.' + m[2] + (m[3] ? '.' + m[3] : ''); }
+    else if (/Android/.test(ua)) { os = 'Android'; m = ua.match(/Android (\d+(?:\.\d+)*)/); if (m) osv = m[1]; }
+    else if (/Mac OS X/.test(ua)) os = 'macOS';
+    else if (/Windows/.test(ua)) os = 'Windows';
+    else if (/Linux/.test(ua)) os = 'Linux';
+    var list = [[/CriOS\/([\d.]+)/, 'Chrome (iOS)'], [/FxiOS\/([\d.]+)/, 'Firefox (iOS)'], [/EdgiOS\/([\d.]+)/, 'Edge (iOS)'], [/EdgA?\/([\d.]+)/, 'Edge'], [/SamsungBrowser\/([\d.]+)/, 'Samsung Internet'], [/Firefox\/([\d.]+)/, 'Firefox'], [/Chrome\/([\d.]+)/, 'Chrome'], [/Version\/([\d.]+).*Safari/, 'Safari']];
+    for (var i = 0; i < list.length; i++) { var mm = ua.match(list[i][0]); if (mm) { br = list[i][1]; brv = mm[1]; break; } }
+    return { os: os, osv: osv, br: br, brv: brv, ua: ua };
+  }
+  var UA = parseUA();
+  function isStandalone() { try { return window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches; } catch (e) { return false; } }
+
+  function deviceRows() {
+    var DO = window.DeviceOrientationEvent;
+    var needPerm = !!(DO && typeof DO.requestPermission === 'function');
+    var cam = tri(allowed('camera')), acc = tri(allowed('accelerometer')), gyr = tri(allowed('gyroscope'));
+    var rows = [
+      ['System (Browserkennung)', UA.os + (UA.osv ? ' ' + UA.osv : '') + (UA.os.indexOf('iOS') === 0 ? ' (kann bei neuen iOS-Versionen veraltet gemeldet werden)' : '')],
+      ['Browser', UA.br + (UA.brv ? ' ' + UA.brv : '')],
+      ['Bildschirm', screen.width + '×' + screen.height + ' @' + (window.devicePixelRatio || 1) + 'x, Fenster ' + window.innerWidth + '×' + window.innerHeight],
+      ['Ausrichtung', (screen.orientation ? screen.orientation.type : 'unbekannt') + ', Winkel ' + screenAngle() + '°'],
+      ['Als Web-App gestartet', isStandalone() ? 'ja (Home-Bildschirm)' : 'nein (Browser-Tab)'],
+      ['Sicherer Kontext (https)', window.isSecureContext ? 'ja' : 'nein', window.isSecureContext ? 'ok' : 'bad'],
+      ['Seite in einem Rahmen', framed ? 'ja' : 'nein'],
+      ['Kamera laut Rahmenregel', cam[0], cam[1]],
+      ['Beschleunigung laut Rahmenregel', acc[0], acc[1]],
+      ['Gyroskop laut Rahmenregel', gyr[0], gyr[1]],
+      ['Kamera-Schnittstelle', (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) ? 'vorhanden' : 'fehlt', (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) ? 'ok' : 'bad'],
+      ['Foto-Auslöser (ImageCapture)', ('ImageCapture' in window) ? 'vorhanden' : 'fehlt (z. B. iPhone-Safari)', ('ImageCapture' in window) ? 'ok' : ''],
+      ['Lagesensor-Ereignisse', DO ? 'vorhanden' : 'fehlen', DO ? 'ok' : 'bad'],
+      ['Erlaubnis per Tipp nötig', needPerm ? 'ja (iOS-Verfahren)' : 'nein'],
+      ['Bildschirm wach halten', ('wakeLock' in navigator) ? 'vorhanden' : 'fehlt']
+    ];
+    (R.dev.extra || []).forEach(function (r) { rows.push(r); });
+    return rows;
+  }
+  function renderDevice() {
+    $('r0').innerHTML = kv(deviceRows());
+    var bad = framed && (allowed('camera') === false || allowed('accelerometer') === false || allowed('gyroscope') === false);
+    var n = $('frameNote');
+    if (bad) {
+      n.hidden = false;
+      n.innerHTML = '<b>Gesperrt durch den Rahmen.</b> Diese Seite läuft eingebettet. Der Rahmen sperrt Kamera und Lagesensor. Die Schritte 1 bis 3 können hier nicht laufen. Schritt 4 und die Geräteangaben gelten trotzdem.';
+    } else if (framed) {
+      n.hidden = false;
+      n.innerHTML = '<b>Eingebettet.</b> Diese Seite läuft in einem Rahmen. Ergebnisse können von einer eigenständigen Seite abweichen.';
+    } else {
+      n.hidden = false;
+      n.innerHTML = '<b>Eigenständige Seite.</b> Kein Rahmen: Die Ergebnisse gelten für eine normale Webseite oder Web-App.';
+    }
+    $('ua').textContent = UA.ua;
+  }
+  function loadExtraDeviceInfo() {
+    R.dev.extra = [];
+    var tasks = [];
+    if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+      tasks.push(navigator.userAgentData.getHighEntropyValues(['model', 'platformVersion']).then(function (v) {
+        if (v.model) R.dev.extra.push(['Gerätemodell (Browser meldet)', v.model]);
+        if (v.platformVersion) R.dev.extra.push(['Systemversion (Browser meldet)', v.platformVersion]);
+      }).catch(function () {}));
+    }
+    ['camera', 'accelerometer', 'gyroscope'].forEach(function (name) {
+      if (!navigator.permissions || !navigator.permissions.query) return;
+      tasks.push(navigator.permissions.query({ name: name }).then(function (s) {
+        R.dev.extra.push(['Berechtigung ' + name + ' (Browser)', s.state, s.state === 'granted' ? 'ok' : (s.state === 'denied' ? 'bad' : '')]);
+      }).catch(function () {}));
+    });
+    Promise.all(tasks).then(function () { renderDevice(); renderSummary(); });
+  }
+
+  /* ---------- Lage aus Lagesensor ---------- */
+  // Erdrichtung "oben" in Gerätekoordinaten aus beta/gamma (W3C-Rotationsmatrix, dritte Zeile)
+  function uFromOri(b, g) { var B = b * RAD, G = g * RAD; return [-Math.cos(B) * Math.sin(G), Math.sin(B), Math.cos(B) * Math.cos(G)]; }
+  // Neigung: Höhe der Kamerarichtung (+ = Kamera blickt nach oben). Rollen: + = rechte Bildseite höher.
+  function attitude(u, angle) {
+    var S = { 0: [0, 1], 90: [1, 0], 180: [0, -1], 270: [-1, 0] }[angle] || [0, 1];
+    var Rr = { 0: [1, 0], 90: [0, -1], 180: [-1, 0], 270: [0, 1] }[angle] || [1, 0];
+    var pitch = Math.asin(Math.max(-1, Math.min(1, -u[2]))) / RAD;
+    var roll = Math.atan2(u[0] * Rr[0] + u[1] * Rr[1], u[0] * S[0] + u[1] * S[1]) / RAD;
+    return { pitch: pitch, roll: roll };
+  }
+  function onOri(e) {
+    var t = performance.now();
+    if (e.beta == null || e.gamma == null) return;
+    oriCount++; if (!oriT0) oriT0 = t; oriTLast = t;
+    if (prevT) { var dt = t - prevT; if (dt > maxDt) maxDt = dt; } prevT = t;
+    var ang = screenAngle(), u = uFromOri(e.beta, e.gamma), a = attitude(u, ang), pa = null, ra = null;
+    if (lastAcc && t - lastAcc.t < 300) {
+      var n = Math.sqrt(lastAcc.x * lastAcc.x + lastAcc.y * lastAcc.y + lastAcc.z * lastAcc.z);
+      if (n > 1) {
+        var ua = [lastAcc.x / n, lastAcc.y / n, lastAcc.z / n];
+        var d = ua[0] * u[0] + ua[1] * u[1] + ua[2] * u[2];
+        if (!accSign && Math.abs(d) > 0.8) accSign = d > 0 ? 1 : -1;
+        if (accSign) { var q = attitude([ua[0] * accSign, ua[1] * accSign, ua[2] * accSign], ang); pa = q.pitch; ra = q.roll; }
+      }
+    }
+    samples.push({ t: t, p: a.pitch, r: a.roll, pa: pa, ra: ra });
+    while (samples.length && t - samples[0].t > 8000) samples.shift();
+  }
+  function onMot(e) {
+    var g = e.accelerationIncludingGravity;
+    if (g && g.x != null) { lastAcc = { x: g.x, y: g.y, z: g.z, t: performance.now() }; accCount++; }
+  }
+  function median(a) { var x = a.slice().sort(function (p, q) { return p - q; }); return x.length ? x[Math.floor(x.length / 2)] : null; }
+  function snapshot() {
+    var now = performance.now(), last = samples[samples.length - 1];
+    if (!last) return null;
+    var rec = samples.filter(function (s) { return now - s.t <= 250; });
+    return { age: now - last.t, p: last.p, r: last.r, pa: last.pa, ra: last.ra, pMed: median(rec.map(function (s) { return s.p; })), rMed: median(rec.map(function (s) { return s.r; })), n: rec.length };
+  }
+  function stats(a) {
+    var n = a.length; if (!n) return null;
+    var m = a.reduce(function (s, v) { return s + v; }, 0) / n;
+    var v = n > 1 ? a.reduce(function (s, x) { return s + (x - m) * (x - m); }, 0) / (n - 1) : 0;
+    return { n: n, mean: m, sd: Math.sqrt(v), min: Math.min.apply(null, a), max: Math.max.apply(null, a) };
+  }
+  function hz() { return oriCount > 2 && oriTLast > oriT0 ? (oriCount - 1) / ((oriTLast - oriT0) / 1000) : null; }
+
+  async function sensorsStart() {
+    setChip('c2', 'idle', 'startet …'); say('m2', '');
+    var DO = window.DeviceOrientationEvent, DM = window.DeviceMotionEvent, perm = {};
+    try {
+      if (!DO && !DM) { var e0 = new Error('DeviceOrientationEvent und DeviceMotionEvent fehlen'); e0.name = 'NichtVorhanden'; throw e0; }
+      if (DO && typeof DO.requestPermission === 'function') perm.ori = await DO.requestPermission();
+      if (DM && typeof DM.requestPermission === 'function') { try { perm.mot = await DM.requestPermission(); } catch (e1) { perm.mot = 'Fehler: ' + errText(e1); } }
+      R.sensor.perm = perm;
+      if (perm.ori === 'denied' || perm.mot === 'denied') { var e2 = new Error('Erlaubnis verweigert. Auf dem iPhone: Safari-Seite komplett neu laden und „Erlauben“ wählen.'); e2.name = 'NotAllowedError'; throw e2; }
+      samples = []; lastAcc = null; accSign = 0; oriCount = 0; oriT0 = 0; oriTLast = 0; prevT = 0; maxDt = 0; accCount = 0;
+      window.addEventListener('deviceorientation', onOri);
+      window.addEventListener('devicemotion', onMot);
+      sensorsOn = true; R.sensor.err = null;
+      $('senStart').disabled = true; $('senStop').disabled = false; $('restBtn').disabled = false; $('shoot').disabled = !track;
+      $('vf').classList.add('lvl-on');
+      await sleep(1500);
+      if (sensorsOn && oriCount === 0) {
+        R.sensor.silent = true;
+        setChip('c2', 'bad', 'keine Daten');
+        say('m2', 'Die Seite hat die Erlaubnis, bekommt aber keine Messwerte. Der Rahmen oder das Gerät liefert keinen Lagesensor.', true);
+      } else if (sensorsOn) {
+        R.sensor.silent = false;
+        setChip('c2', 'ok', 'geht');
+      }
+    } catch (e) {
+      R.sensor.err = errText(e);
+      setChip('c2', 'bad', 'geht nicht');
+      say('m2', 'Lagesensor nicht verfügbar: ' + errText(e), true);
+      sensorsStop(true);
+    }
+    render();
+  }
+  function sensorsStop(keepChip) {
+    window.removeEventListener('deviceorientation', onOri);
+    window.removeEventListener('devicemotion', onMot);
+    if (sensorsOn) R.sensor.lastHz = hz();
+    sensorsOn = false;
+    $('senStart').disabled = false; $('senStop').disabled = true; $('restBtn').disabled = true; $('shoot').disabled = true;
+    $('vf').classList.remove('lvl-on');
+    if (!keepChip) setChip('c2', 'idle', 'gestoppt');
+    render();
+  }
+  function liveTick() {
+    if (!sensorsOn) return;
+    var s = snapshot(); if (!s) return;
+    $('vP').textContent = fmt(s.p, 1, true) + '°';
+    $('vR').textContent = fmt(s.r, 1, true) + '°';
+    $('hP').textContent = Math.abs(s.p) < 0.5 ? 'waagerecht · Soll ±2°' : (s.p > 0 ? 'Kamera blickt nach oben · Soll ±2°' : 'Kamera blickt nach unten · Soll ±2°');
+    $('hR').textContent = Math.abs(s.r) < 0.5 ? 'gerade · Soll ±1°' : (s.r > 0 ? 'rechte Seite höher · Soll ±1°' : 'linke Seite höher · Soll ±1°');
+    var okP = Math.abs(s.p) <= 2, okR = Math.abs(s.r) <= 1;
+    $('gP').setAttribute('data-ok', okP ? '1' : '0'); $('gR').setAttribute('data-ok', okR ? '1' : '0');
+    var h = $('vf').clientHeight || 300, ty = Math.max(-0.4 * h, Math.min(0.4 * h, s.p * (h / 52)));
+    $('lvlH').style.setProperty('--ty', ty.toFixed(1) + 'px');
+    $('lvlH').style.setProperty('--rot', s.r.toFixed(2) + 'deg');
+    var t = $('lvlT'); t.textContent = fmt(s.p, 1, true) + '° · ' + fmt(s.r, 1, true) + '°'; t.setAttribute('data-ok', okP && okR ? '1' : '0');
+  }
+  setInterval(liveTick, 80);
+
+  function restMeasure() {
+    if (!sensorsOn) { say('m2', 'Zuerst „Lagesensor starten“.', true); return; }
+    var label = $('restPos').value, t0 = performance.now(), btn = $('restBtn');
+    btn.disabled = true; say('m2', 'Messung läuft, still halten …');
+    var iv = setInterval(function () { say('m2', 'Messung läuft, noch ' + Math.max(0, Math.ceil(5 - (performance.now() - t0) / 1000)) + ' s …'); }, 250);
+    setTimeout(function () {
+      clearInterval(iv);
+      var set = samples.filter(function (s) { return s.t >= t0; });
+      var sp = stats(set.map(function (s) { return s.p; })), sr = stats(set.map(function (s) { return s.r; }));
+      btn.disabled = !sensorsOn;
+      if (!sp || set.length < 5) { say('m2', 'Zu wenige Messwerte (' + set.length + '). Lagesensor liefert nichts.', true); return; }
+      var secs = (set[set.length - 1].t - set[0].t) / 1000;
+      R.rest.push({ label: label, n: set.length, hz: secs > 0 ? (set.length - 1) / secs : null, p: sp, r: sr, flat: Math.abs(sp.mean) > 60 });
+      say('m2', sp.mean && Math.abs(sp.mean) > 60 ? 'Das Handy lag flach. Für die Foto-Lage aufrecht halten und noch einmal messen.' : 'Messung gespeichert.');
+      render();
+    }, 5000);
+  }
+
+  /* ---------- EXIF ---------- */
+  // <exif>
+  function ratio(n, d) { return d ? n / d : null; }
+  function readIFD(dv, base, off, le) {
+    var out = {};
+    if (base + off + 2 > dv.byteLength) return out;
+    var n = dv.getUint16(base + off, le);
+    var sizes = { 1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 7: 1, 9: 4, 10: 8 };
+    for (var i = 0; i < n; i++) {
+      var e = base + off + 2 + i * 12;
+      if (e + 12 > dv.byteLength) break;
+      var tag = dv.getUint16(e, le), type = dv.getUint16(e + 2, le), cnt = dv.getUint32(e + 4, le);
+      var total = (sizes[type] || 1) * cnt;
+      var vo = total <= 4 ? e + 8 : base + dv.getUint32(e + 8, le);
+      if (vo + total > dv.byteLength || cnt > 4096) continue;
+      var v = null, k;
+      if (type === 2) { var s = ''; for (k = 0; k < cnt; k++) { var ch = dv.getUint8(vo + k); if (ch === 0) break; s += String.fromCharCode(ch); } v = s.trim(); }
+      else if (type === 3) { v = cnt === 1 ? dv.getUint16(vo, le) : null; }
+      else if (type === 4) { v = cnt === 1 ? dv.getUint32(vo, le) : null; }
+      else if (type === 5) { v = cnt === 1 ? ratio(dv.getUint32(vo, le), dv.getUint32(vo + 4, le)) : null; }
+      else if (type === 10) { v = cnt === 1 ? ratio(dv.getInt32(vo, le), dv.getInt32(vo + 4, le)) : null; }
+      else continue;
+      out[tag] = v;
+    }
+    return out;
+  }
+  function parseTiff(dv, base) {
+    var le = dv.getUint16(base) === 0x4949;
+    if (dv.getUint16(base + 2, le) !== 42) return { error: 'EXIF-Kopf ungültig' };
+    var ifd0 = readIFD(dv, base, dv.getUint32(base + 4, le), le);
+    var exif = ifd0[0x8769] != null ? readIFD(dv, base, ifd0[0x8769], le) : {};
+    return {
+      make: ifd0[0x010F] || null, model: ifd0[0x0110] || null, software: ifd0[0x0131] || null,
+      orientation: ifd0[0x0112] != null ? ifd0[0x0112] : null,
+      exposure: exif[0x829A] != null ? exif[0x829A] : null, fnumber: exif[0x829D] != null ? exif[0x829D] : null,
+      iso: exif[0x8827] != null ? exif[0x8827] : null, focal: exif[0x920A] != null ? exif[0x920A] : null,
+      focal35: exif[0xA405] != null ? exif[0xA405] : null, digitalZoom: exif[0xA404] != null ? exif[0xA404] : null,
+      lens: exif[0xA434] || null, pixX: exif[0xA002] != null ? exif[0xA002] : null, pixY: exif[0xA003] != null ? exif[0xA003] : null,
+      hasGps: ifd0[0x8825] != null
+    };
+  }
+  async function readExif(blob) {
+    var buf = await blob.slice(0, 393216).arrayBuffer();
+    var dv = new DataView(buf);
+    if (dv.byteLength < 4 || dv.getUint16(0) !== 0xFFD8) return { error: 'kein JPEG (Typ ' + (blob.type || 'unbekannt') + '), EXIF nicht gelesen' };
+    var off = 2;
+    while (off + 4 < dv.byteLength) {
+      var marker = dv.getUint16(off); off += 2;
+      if (marker === 0xFFDA || marker === 0xFFD9) break;
+      var len = dv.getUint16(off);
+      if (marker === 0xFFE1 && dv.getUint32(off + 2) === 0x45786966) return parseTiff(dv, off + 8);
+      off += len;
+    }
+    return { error: 'keine EXIF-Daten im Bild' };
+  }
+  // </exif>
+
+  /* ---------- Bildanalyse ---------- */
+  async function loadBitmap(blob) {
+    if (window.createImageBitmap) { try { return await createImageBitmap(blob); } catch (e) { /* weiter mit Image */ } }
+    return await new Promise(function (res, rej) {
+      var url = URL.createObjectURL(blob), im = new Image();
+      im.onload = function () { URL.revokeObjectURL(url); res(im); };
+      im.onerror = function () { URL.revokeObjectURL(url); rej(new Error('Bild nicht lesbar (Typ ' + (blob.type || 'unbekannt') + ')')); };
+      im.src = url;
+    });
+  }
+  function metrics(src, sw, sh) {
+    var W = 1024, H = Math.max(1, Math.round(sh * W / sw));
+    var c = document.createElement('canvas'); c.width = W; c.height = H;
+    var x = c.getContext('2d', { willReadFrequently: true });
+    x.drawImage(src, 0, 0, W, H);
+    var d = x.getImageData(0, 0, W, H).data, g = new Float32Array(W * H), sum = 0, i, j;
+    for (i = 0, j = 0; i < d.length; i += 4, j++) { var v = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]; g[j] = v; sum += v; }
+    var m = 0, m2 = 0, n = 0;
+    for (var y = 1; y < H - 1; y++) for (var xx = 1; xx < W - 1; xx++) { var k = y * W + xx, l = 4 * g[k] - g[k - 1] - g[k + 1] - g[k - W] - g[k + W]; m += l; m2 += l * l; n++; }
+    var mean = m / n;
+    var tc = document.createElement('canvas'); tc.width = 480; tc.height = Math.max(1, Math.round(sh * 480 / sw));
+    tc.getContext('2d').drawImage(src, 0, 0, tc.width, tc.height);
+    return { sharp: m2 / n - mean * mean, bright: sum / (W * H), thumb: tc.toDataURL('image/jpeg', 0.75) };
+  }
+  async function analyzeBlob(blob) {
+    var out = { type: blob.type || 'unbekannt', bytes: blob.size };
+    try { out.exif = await readExif(blob); } catch (e) { out.exif = { error: errText(e) }; }
+    try {
+      var bm = await loadBitmap(blob), w = bm.width || bm.naturalWidth, h = bm.height || bm.naturalHeight;
+      out.w = w; out.h = h;
+      var m = metrics(bm, w, h); out.sharp = m.sharp; out.bright = m.bright; out.thumb = m.thumb;
+      if (bm.close) bm.close();
+    } catch (e) { out.decodeErr = errText(e); }
+    return out;
+  }
+  function lensClass(f35, zoom) {
+    if (f35 == null) return '';
+    var c = f35 < 18 ? 'Ultraweitwinkel (0,5x)' : f35 < 32 ? 'Hauptkamera (1x)' : f35 < 65 ? 'Tele 2x oder Ausschnitt' : 'Tele';
+    return c + (zoom && Math.abs(zoom - 1) > 0.05 ? ', Digitalzoom ' + fmt(zoom, 2) : '');
+  }
+  function exifRows(a, prefix) {
+    var rows = [], x = a.exif || {};
+    if (x.error) { rows.push([prefix + 'EXIF', x.error, 'bad']); return rows; }
+    rows.push([prefix + 'Gerät laut EXIF', ((x.make || '') + ' ' + (x.model || '')).trim() || 'nicht enthalten']);
+    rows.push([prefix + 'Objektiv', x.lens || 'nicht enthalten']);
+    rows.push([prefix + 'Brennweite', x.focal != null ? fmt(x.focal, 1) + ' mm real' + (x.focal35 != null ? ', ' + fmt(x.focal35, 0) + ' mm Kleinbild' : ', Kleinbild-Wert fehlt') : 'nicht enthalten', x.focal != null || x.focal35 != null ? 'ok' : 'bad']);
+    rows.push([prefix + 'Kamera-Einordnung', lensClass(x.focal35, x.digitalZoom) || 'nicht bestimmbar']);
+    rows.push([prefix + 'Blende · ISO · Zeit', (x.fnumber != null ? 'f/' + fmt(x.fnumber, 1) : '–') + ' · ' + (x.iso != null ? 'ISO ' + x.iso : '–') + ' · ' + (x.exposure != null ? (x.exposure < 1 ? '1/' + Math.round(1 / x.exposure) : fmt(x.exposure, 1)) + ' s' : '–')]);
+    rows.push([prefix + 'Ausrichtung (EXIF)', x.orientation != null ? String(x.orientation) : 'nicht enthalten']);
+    rows.push([prefix + 'Standortdaten im Bild', x.hasGps ? 'ja (nicht angezeigt)' : 'nein']);
+    return rows;
+  }
+
+  /* ---------- Kamera ---------- */
+  function camLabelFor(e) {
+    var n = e && e.name;
+    if (n === 'NotAllowedError' || n === 'SecurityError') return 'Zugriff abgelehnt oder vom Rahmen gesperrt';
+    if (n === 'NotFoundError') return 'keine Kamera gefunden';
+    if (n === 'NotReadableError') return 'Kamera belegt (andere App?)';
+    if (n === 'OverconstrainedError') return 'Auflösung oder Kamera nicht möglich';
+    if (n === 'NichtVorhanden') return 'Kamera-Schnittstelle fehlt';
+    return 'Fehler';
+  }
+  async function camStart() {
+    stopCam(true); say('m1', ''); setChip('c1', 'idle', 'startet …');
+    var sz = $('camRes').value.split('x'), W = +sz[0], H = +sz[1];
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { var e0 = new Error('navigator.mediaDevices fehlt (kein sicherer Kontext oder gesperrt)'); e0.name = 'NichtVorhanden'; throw e0; }
+      var t0 = performance.now();
+      stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: W }, height: { ideal: H } } });
+      track = stream.getVideoTracks()[0];
+      var v = $('video'); v.srcObject = stream;
+      try { await v.play(); } catch (pe) { /* autoplay kann bei muted trotzdem laufen */ }
+      await new Promise(function (res) { if (v.videoWidth) return res(); v.onloadedmetadata = function () { res(); }; setTimeout(res, 3000); });
+      var set = track.getSettings ? track.getSettings() : {}, caps = track.getCapabilities ? track.getCapabilities() : {};
+      R.cam = { ask: W + '×' + H, startMs: Math.round(performance.now() - t0), vw: v.videoWidth, vh: v.videoHeight, set: set, caps: caps, label: track.label || '(ohne Namen)', err: null, devices: [], fps: null };
+      try { var devs = await navigator.mediaDevices.enumerateDevices(); R.cam.devices = devs.filter(function (d) { return d.kind === 'videoinput'; }).map(function (d) { return d.label || '(ohne Namen)'; }); } catch (de) { /* egal */ }
+      $('vf').classList.add('live');
+      $('camStart').disabled = false; $('camStop').disabled = false; $('camLadder').disabled = false; $('shoot').disabled = !sensorsOn;
+      setChip('c1', 'ok', 'geht');
+      measureFps();
+    } catch (e) {
+      R.cam = { ask: W + '×' + H, err: errText(e), why: camLabelFor(e) };
+      setChip('c1', 'bad', 'geht nicht');
+      say('m1', 'Kamera nicht verfügbar: ' + camLabelFor(e) + ' (' + errText(e) + ')', true);
+      stopCam(true);
+    }
+    render();
+  }
+  function measureFps() {
+    var v = $('video'); if (!v.requestVideoFrameCallback) return;
+    var n = 0, t0 = null;
+    function cb(now) {
+      if (t0 === null) t0 = now; n++;
+      if (now - t0 < 2000 && stream) v.requestVideoFrameCallback(cb);
+      else if (R.cam && n > 1) { R.cam.fps = (n - 1) / ((now - t0) / 1000); render(); }
+    }
+    v.requestVideoFrameCallback(cb);
+  }
+  function stopCam(silent) {
+    if (stream) stream.getTracks().forEach(function (t) { t.stop(); });
+    stream = null; track = null;
+    var v = $('video'); v.srcObject = null;
+    $('vf').classList.remove('live');
+    $('camStop').disabled = true; $('camLadder').disabled = true; $('shoot').disabled = true;
+    if (!silent) { setChip('c1', 'idle', 'gestoppt'); render(); }
+  }
+  async function ladder() {
+    if (!track) { say('m1', 'Zuerst „Kamera starten“.', true); return; }
+    var btn = $('camLadder'); btn.disabled = true; say('m1', 'Prüfe Auflösungen, das Bild kann kurz flackern …');
+    var orig = track.getSettings(); R.ladder = [];
+    var list = [[4032, 3024], [3840, 2160], [2592, 1944], [1920, 1440], [1920, 1080], [1280, 960], [1280, 720]];
+    for (var i = 0; i < list.length && track; i++) {
+      var w = list[i][0], h = list[i][1], ok = false, got = '';
+      try {
+        await track.applyConstraints({ width: { exact: w }, height: { exact: h } });
+        await sleep(450);
+        var s = track.getSettings(); got = s.width + '×' + s.height;
+        ok = (s.width === w && s.height === h) || (s.width === h && s.height === w);
+      } catch (e) {
+        try { await track.applyConstraints({ width: { exact: h }, height: { exact: w } }); await sleep(450); var s2 = track.getSettings(); got = s2.width + '×' + s2.height; ok = (s2.width === h && s2.height === w) || (s2.width === w && s2.height === h); } catch (e2) { got = (e2 && e2.name) || 'Fehler'; }
+      }
+      R.ladder.push({ w: w, h: h, ok: ok, got: got });
+      render();
+    }
+    if (track && orig && orig.width) { try { await track.applyConstraints({ width: { exact: orig.width }, height: { exact: orig.height } }); } catch (e) { /* egal */ } }
+    btn.disabled = !track; say('m1', 'Auflösungsprüfung fertig.');
+    render();
+  }
+
+  /* ---------- Auslösen ---------- */
+  async function shoot() {
+    if (!track || !stream) { say('m3', 'Zuerst Kamera (1) starten.', true); return; }
+    var btn = $('shoot'); btn.disabled = true; say('m3', 'Löst aus …');
+    var v = $('video'), shot = { no: R.shots.length + 1, s1: snapshot(), at: new Date() }, t0 = performance.now();
+    try {
+      var w = v.videoWidth, h = v.videoHeight, c = $('grab'); c.width = w; c.height = h;
+      c.getContext('2d').drawImage(v, 0, 0, w, h);
+      var blob = await new Promise(function (res) { c.toBlob(res, 'image/jpeg', 0.92); });
+      shot.frame = { w: w, h: h, bytes: blob ? blob.size : null, ms: Math.round(performance.now() - t0) };
+      shot.s2 = snapshot();
+      var m = metrics(c, w, h); shot.frame.sharp = m.sharp; shot.frame.bright = m.bright; shot.frame.thumb = m.thumb;
+    } catch (e) { shot.frame = { err: errText(e) }; }
+    if ('ImageCapture' in window && track) {
+      try {
+        var ic = new ImageCapture(track), caps = null;
+        try { caps = await ic.getPhotoCapabilities(); } catch (ce) { /* egal */ }
+        var t1 = performance.now(), opts = null, pb;
+        if (caps && caps.imageWidth && caps.imageHeight) opts = { imageWidth: caps.imageWidth.max, imageHeight: caps.imageHeight.max };
+        try { pb = await ic.takePhoto(opts || undefined); } catch (te) { pb = await ic.takePhoto(); opts = null; }
+        var ms = Math.round(performance.now() - t1);
+        shot.s3 = snapshot();
+        shot.photo = await analyzeBlob(pb); shot.photo.ms = ms;
+        shot.photo.req = opts ? opts.imageWidth + '×' + opts.imageHeight : 'Standard';
+        shot.photo.maxCap = caps && caps.imageWidth ? caps.imageWidth.max + '×' + caps.imageHeight.max : null;
+      } catch (e) { shot.photo = { err: errText(e) }; }
+    } else { shot.photo = { na: true }; }
+    R.shots.push(shot);
+    setChip('c3', shot.frame && !shot.frame.err ? (sensorsOn || shot.s1 ? 'ok' : 'warn') : 'bad', shot.frame && !shot.frame.err ? (shot.s1 ? 'geht' : 'ohne Sensor') : 'geht nicht');
+    say('m3', 'Aufnahme ' + shot.no + ' gespeichert.');
+    btn.disabled = !(track && sensorsOn);
+    render();
+  }
+
+  /* ---------- Fotos über Auswahlfeld ---------- */
+  function onPhoto(kind, chipText) {
+    return async function (ev) {
+      var f = ev.target.files && ev.target.files[0]; if (!f) return;
+      setChip('c4', 'idle', 'liest …'); say('m4', 'Lese ' + chipText + ' …');
+      try {
+        var a = await analyzeBlob(f); a.kind = kind; a.name = f.name || '';
+        R.photos[kind] = a;
+        var anyExif = Object.keys(R.photos).some(function (k) { var x = R.photos[k].exif; return x && !x.error; });
+        setChip('c4', anyExif ? 'ok' : 'warn', anyExif ? 'geht' : 'ohne EXIF');
+        say('m4', chipText + ' gelesen.');
+      } catch (e) { setChip('c4', 'bad', 'geht nicht'); say('m4', 'Foto nicht lesbar: ' + errText(e), true); }
+      ev.target.value = '';
+      render();
+    };
+  }
+
+  /* ---------- Anzeige ---------- */
+  function renderCam() {
+    var c = R.cam, h = '';
+    if (!c) { $('r1').innerHTML = ''; return; }
+    if (c.err) { $('r1').innerHTML = kv([['Angefragt', c.ask], ['Ergebnis', c.why + ' · ' + c.err, 'bad']]); return; }
+    var s = c.set || {}, cp = c.caps || {}, rows = [];
+    rows.push(['Angefragt', c.ask]);
+    rows.push(['Geliefert (Videobild)', c.vw + '×' + c.vh + (s.width && (s.width !== c.vw || s.height !== c.vh) ? ' (Einstellung ' + s.width + '×' + s.height + ')' : ''), 'ok']);
+    rows.push(['Bilder pro Sekunde', (s.frameRate ? 'Einstellung ' + fmt(s.frameRate, 0) : '–') + (c.fps != null ? ', gemessen ' + fmt(c.fps, 0) : '')]);
+    rows.push(['Kamera', c.label]);
+    rows.push(['Weitere Kameras', c.devices && c.devices.length ? c.devices.join(' | ') : 'keine gemeldet']);
+    rows.push(['Blickrichtung', s.facingMode || 'nicht gemeldet']);
+    rows.push(['Zoom', cp.zoom ? 'steuerbar ' + fmt(cp.zoom.min, 1) + '–' + fmt(cp.zoom.max, 1) + 'x, aktuell ' + (s.zoom != null ? fmt(s.zoom, 2) + 'x' : '?') : 'nicht steuerbar', cp.zoom ? 'ok' : '']);
+    rows.push(['Höchstwert laut Kamera', cp.width && cp.height ? cp.width.max + '×' + cp.height.max : 'nicht gemeldet']);
+    rows.push(['Fokus', cp.focusMode ? cp.focusMode.join(', ') : 'nicht gemeldet']);
+    rows.push(['Zeit bis zum Bild', c.startMs + ' ms']);
+    h += kv(rows);
+    if (R.ladder.length) {
+      h += '<p class="sub">Auflösungen (exakt angefragt)</p>' + kv(R.ladder.map(function (l) { return [l.w + '×' + l.h, l.ok ? 'ja' : 'nein (' + l.got + ')', l.ok ? 'ok' : 'bad']; }));
+    }
+    $('r1').innerHTML = h;
+  }
+  function renderSensor() {
+    var h = '', S = R.sensor, rows = [];
+    if (S.err) rows.push(['Fehler', S.err, 'bad']);
+    if (S.perm && (S.perm.ori || S.perm.mot)) rows.push(['Erlaubnis', 'Ausrichtung ' + (S.perm.ori || 'nicht nötig') + ', Bewegung ' + (S.perm.mot || 'nicht nötig'), S.perm.ori === 'granted' ? 'ok' : '']);
+    if (sensorsOn || S.lastHz != null) {
+      var rate = sensorsOn ? hz() : S.lastHz;
+      rows.push(['Messrate', rate ? fmt(rate, 0) + ' pro Sekunde, größte Lücke ' + fmt(maxDt, 0) + ' ms' : 'noch keine Daten', rate ? 'ok' : 'bad']);
+      rows.push(['Beschleunigungsmesser', accCount ? 'liefert Daten' + (accSign ? (accSign > 0 ? ' (Vorzeichen wie Standard)' : ' (Vorzeichen umgekehrt, korrigiert)') : '') : 'keine Daten', accCount ? 'ok' : '']);
+    }
+    h += rows.length ? kv(rows) : '';
+    if (R.rest.length) {
+      h += '<p class="sub">Ruhe (5 Sekunden)</p>';
+      R.rest.forEach(function (r) {
+        h += kv([
+          [r.label, r.n + ' Messwerte, ' + (r.hz ? fmt(r.hz, 0) + ' pro s' : '–') + (r.flat ? ' · Handy lag flach' : '')],
+          ['Neigung', 'Mittel ' + fmt(r.p.mean, 1, true) + '° · Streuung σ ' + fmt(r.p.sd, 2) + '° · Spanne ' + fmt(r.p.max - r.p.min, 1) + '°'],
+          ['Rollen', 'Mittel ' + fmt(r.r.mean, 1, true) + '° · Streuung σ ' + fmt(r.r.sd, 2) + '° · Spanne ' + fmt(r.r.max - r.r.min, 1) + '°']
+        ]);
+      });
+    }
+    $('r2').innerHTML = h;
+  }
+  function snapText(s) { return s ? fmt(s.p, 1, true) + '° / ' + fmt(s.r, 1, true) + '° (Alter ' + fmt(s.age, 0) + ' ms)' : 'kein Sensorwert'; }
+  function renderShots() {
+    var h = '';
+    R.shots.slice(-8).forEach(function (s) {
+      var rows = [];
+      rows.push(['Aufnahme ' + s.no, s.at.toLocaleTimeString('de-DE')]);
+      rows.push(['Lage beim Tippen', snapText(s.s1) + (s.s1 && s.s1.pMed != null ? ' · Median 250 ms: ' + fmt(s.s1.pMed, 1, true) + '° / ' + fmt(s.s1.rMed, 1, true) + '°' : '')]);
+      if (s.s2) rows.push(['Lage nach Standbild', snapText(s.s2)]);
+      if (s.s3) rows.push(['Lage nach Foto-Auslöser', snapText(s.s3)]);
+      if (s.s1 && s.s1.pa != null) rows.push(['Lage aus Beschleunigung', fmt(s.s1.pa, 1, true) + '° / ' + fmt(s.s1.ra, 1, true) + '° (Unterschied ' + fmt(Math.abs(s.s1.pa - s.s1.p), 1) + '° / ' + fmt(Math.abs(s.s1.ra - s.s1.r), 1) + '°)']);
+      if (s.frame && s.frame.err) rows.push(['Standbild aus Live-Bild', s.frame.err, 'bad']);
+      else if (s.frame) rows.push(['Standbild aus Live-Bild', s.frame.w + '×' + s.frame.h + ', ' + bytes(s.frame.bytes) + ', ' + s.frame.ms + ' ms · Schärfe ' + fmt(s.frame.sharp, 0) + ' · Helligkeit ' + fmt(s.frame.bright, 0), 'ok']);
+      if (s.photo && s.photo.na) rows.push(['Foto-Auslöser (takePhoto)', 'in diesem Browser nicht vorhanden']);
+      else if (s.photo && s.photo.err) rows.push(['Foto-Auslöser (takePhoto)', s.photo.err, 'bad']);
+      else if (s.photo) {
+        rows.push(['Foto-Auslöser (takePhoto)', (s.photo.w ? s.photo.w + '×' + s.photo.h : 'Größe unbekannt') + ', ' + bytes(s.photo.bytes) + ', ' + s.photo.type + ', ' + s.photo.ms + ' ms · Schärfe ' + fmt(s.photo.sharp, 0) + ' · angefragt ' + s.photo.req + (s.photo.maxCap ? ', Höchstwert ' + s.photo.maxCap : ''), 'ok']);
+        exifRows(s.photo, 'takePhoto: ').forEach(function (r) { rows.push(r); });
+      }
+      h += kv(rows);
+    });
+    var last = R.shots[R.shots.length - 1];
+    if (last) {
+      h += '<div class="thumbs">';
+      if (last.frame && last.frame.thumb) h += '<figure><img alt="Standbild aus dem Live-Bild" src="' + last.frame.thumb + '"><figcaption>Standbild aus dem Live-Bild</figcaption></figure>';
+      if (last.photo && last.photo.thumb) h += '<figure><img alt="Foto vom Foto-Auslöser" src="' + last.photo.thumb + '"><figcaption>Foto vom Foto-Auslöser</figcaption></figure>';
+      h += '</div>';
+    }
+    $('r3').innerHTML = h;
+  }
+  function renderPhotos() {
+    var h = '', thumbs = '';
+    [['cap', 'Aufgenommen'], ['lib', 'Aus Kamera-App']].forEach(function (k) {
+      var a = R.photos[k[0]]; if (!a) return;
+      var rows = [['Datei (' + k[1] + ')', (a.name || '?') + ' · ' + a.type + ' · ' + bytes(a.bytes)]];
+      rows.push(['Größe', a.w ? a.w + '×' + a.h + ' (' + fmt(a.w * a.h / 1e6, 1) + ' MP)' : (a.decodeErr || 'nicht lesbar'), a.w ? 'ok' : 'bad']);
+      if (a.exif && a.exif.pixX) rows.push(['Größe laut EXIF', a.exif.pixX + '×' + a.exif.pixY]);
+      if (a.sharp != null) rows.push(['Schärfe · Helligkeit', fmt(a.sharp, 0) + ' · ' + fmt(a.bright, 0)]);
+      exifRows(a, '').forEach(function (r) { rows.push(r); });
+      h += kv(rows);
+      if (a.thumb) thumbs += '<figure><img alt="' + esc(k[1]) + '" src="' + a.thumb + '"><figcaption>' + esc(k[1]) + '</figcaption></figure>';
+    });
+    if (thumbs) h += '<div class="thumbs">' + thumbs + '</div>';
+    $('r4').innerHTML = h;
+  }
+
+  /* ---------- Ergebnisblatt ---------- */
+  function exifLine(a) {
+    var x = a.exif || {};
+    if (x.error) return 'EXIF: ' + x.error;
+    return 'EXIF: ' + (((x.make || '') + ' ' + (x.model || '')).trim() || 'ohne Gerät') + ', Brennweite ' + (x.focal != null ? fmt(x.focal, 1) + ' mm' : 'fehlt') + (x.focal35 != null ? ' (' + fmt(x.focal35, 0) + ' mm KB)' : ', KB-Wert fehlt') + ', ' + (lensClass(x.focal35, x.digitalZoom) || 'Kamera unklar') + (x.lens ? ', Objektiv „' + x.lens + '“' : '') + ', Standortdaten ' + (x.hasGps ? 'ja' : 'nein');
+  }
+  function buildSummary() {
+    var L = [], dn = ($('devname').value || '').trim();
+    L.push('FOTO-APP PROBE · Ergebnis');
+    L.push('Stand: ' + new Date().toLocaleString('de-DE'));
+    L.push('Gerät (eingetragen): ' + (dn || 'nicht eingetragen'));
+    L.push('System laut Browserkennung: ' + UA.os + (UA.osv ? ' ' + UA.osv : '') + ' · ' + UA.br + (UA.brv ? ' ' + UA.brv : ''));
+    L.push('Bildschirm: ' + screen.width + '×' + screen.height + ' @' + (window.devicePixelRatio || 1) + 'x · als Web-App gestartet: ' + (isStandalone() ? 'ja' : 'nein') + ' · https: ' + (window.isSecureContext ? 'ja' : 'nein'));
+    L.push('Seite in Rahmen: ' + (framed ? 'ja' : 'nein') + ' · Rahmenregel Kamera: ' + tri(allowed('camera'))[0] + ', Beschleunigung: ' + tri(allowed('accelerometer'))[0] + ', Gyroskop: ' + tri(allowed('gyroscope'))[0]);
+    L.push('');
+    L.push('1 KAMERA LIVE');
+    var c = R.cam;
+    if (!c) L.push('  nicht getestet');
+    else if (c.err) L.push('  geht nicht: ' + c.why + ' (' + c.err + ')');
+    else {
+      L.push('  angefragt ' + c.ask + ', geliefert ' + c.vw + '×' + c.vh + ', ' + (c.fps != null ? fmt(c.fps, 0) + ' Bilder/s' : (c.set && c.set.frameRate ? fmt(c.set.frameRate, 0) + ' Bilder/s (Einstellung)' : 'Bildrate unbekannt')) + ', Start nach ' + c.startMs + ' ms');
+      L.push('  Kamera: ' + c.label + (c.devices && c.devices.length > 1 ? ' (weitere: ' + c.devices.filter(function (d) { return d !== c.label; }).join(' | ') + ')' : ''));
+      L.push('  Zoom: ' + (c.caps && c.caps.zoom ? 'steuerbar ' + fmt(c.caps.zoom.min, 1) + '–' + fmt(c.caps.zoom.max, 1) + 'x, aktuell ' + (c.set && c.set.zoom != null ? fmt(c.set.zoom, 2) + 'x' : '?') : 'nicht steuerbar') + ' · Höchstwert laut Kamera: ' + (c.caps && c.caps.width ? c.caps.width.max + '×' + c.caps.height.max : 'nicht gemeldet'));
+    }
+    if (R.ladder.length) L.push('  Auflösungen exakt: ' + R.ladder.map(function (l) { return l.w + '×' + l.h + (l.ok ? ' ja' : ' nein'); }).join(', '));
+    L.push('');
+    L.push('2 LAGESENSOR');
+    if (R.sensor.err) L.push('  geht nicht: ' + R.sensor.err);
+    else if (!oriCount && !R.sensor.lastHz && !R.rest.length) L.push('  nicht getestet' + (R.sensor.silent ? ' (keine Daten trotz Erlaubnis)' : ''));
+    else {
+      var rate = sensorsOn ? hz() : R.sensor.lastHz;
+      L.push('  Erlaubnis: ' + (R.sensor.perm && R.sensor.perm.ori ? R.sensor.perm.ori : 'nicht nötig') + ' · Messrate ' + (rate ? fmt(rate, 0) + '/s' : 'unbekannt') + ' · größte Lücke ' + fmt(maxDt, 0) + ' ms · Beschleunigungsmesser ' + (accCount ? 'ja' : 'nein'));
+    }
+    R.rest.forEach(function (r) {
+      L.push('  Ruhe (' + r.label + '): Neigung σ ' + fmt(r.p.sd, 2) + '°, Spanne ' + fmt(r.p.max - r.p.min, 1) + '° · Rollen σ ' + fmt(r.r.sd, 2) + '°, Spanne ' + fmt(r.r.max - r.r.min, 1) + '° · ' + r.n + ' Werte' + (r.flat ? ' · lag flach' : ''));
+    });
+    L.push('');
+    L.push('3 AUSLÖSEN');
+    if (!R.shots.length) L.push('  nicht getestet');
+    R.shots.slice(-8).forEach(function (s) {
+      L.push('  Aufnahme ' + s.no + ': Lage beim Tippen ' + (s.s1 ? fmt(s.s1.p, 1, true) + '° Neigung / ' + fmt(s.s1.r, 1, true) + '° Rollen (Alter ' + fmt(s.s1.age, 0) + ' ms)' : 'kein Sensorwert'));
+      if (s.s3 && s.s1) L.push('    nach takePhoto: ' + fmt(s.s3.p, 1, true) + '° / ' + fmt(s.s3.r, 1, true) + '° (Änderung ' + fmt(Math.abs(s.s3.p - s.s1.p), 1) + '° / ' + fmt(Math.abs(s.s3.r - s.s1.r), 1) + '°)');
+      if (s.frame && !s.frame.err) L.push('    Standbild Live: ' + s.frame.w + '×' + s.frame.h + ', ' + bytes(s.frame.bytes) + ', Schärfe ' + fmt(s.frame.sharp, 0));
+      if (s.photo && s.photo.na) L.push('    takePhoto: nicht vorhanden');
+      else if (s.photo && s.photo.err) L.push('    takePhoto: Fehler ' + s.photo.err);
+      else if (s.photo) { L.push('    takePhoto: ' + (s.photo.w ? s.photo.w + '×' + s.photo.h : '?') + ', ' + bytes(s.photo.bytes) + ', ' + s.photo.ms + ' ms, Schärfe ' + fmt(s.photo.sharp, 0)); L.push('    ' + exifLine(s.photo)); }
+    });
+    L.push('');
+    L.push('4 FOTO ÜBER AUSWAHLFELD');
+    var any = false;
+    [['cap', 'aufgenommen'], ['lib', 'aus Kamera-App']].forEach(function (k) {
+      var a = R.photos[k[0]]; if (!a) return; any = true;
+      L.push('  ' + k[1] + ': ' + (a.w ? a.w + '×' + a.h : 'nicht lesbar') + ', ' + bytes(a.bytes) + ', ' + a.type + (a.sharp != null ? ', Schärfe ' + fmt(a.sharp, 0) : ''));
+      L.push('    ' + exifLine(a));
+    });
+    if (!any) L.push('  nicht getestet');
+    if (R.fov) L.push('  Sichtfeld Live-Bild gegenüber Foto: ' + R.fov);
+    L.push('');
+    L.push('Hinweis: Schärfe = Laplace-Varianz bei 1024 px Breite, nur zum Vergleich desselben Motivs.');
+    return L.join('\n');
+  }
+  function renderSummary() { $('sum').textContent = buildSummary(); }
+  function render() { renderDevice(); renderCam(); renderSensor(); renderShots(); renderPhotos(); renderSummary(); }
+
+  /* ---------- Verdrahtung ---------- */
+  $('camStart').addEventListener('click', camStart);
+  $('camStop').addEventListener('click', function () { stopCam(false); });
+  $('camLadder').addEventListener('click', ladder);
+  $('senStart').addEventListener('click', sensorsStart);
+  $('senStop').addEventListener('click', function () { sensorsStop(false); });
+  $('restBtn').addEventListener('click', restMeasure);
+  $('shoot').addEventListener('click', shoot);
+  $('inCap').addEventListener('change', onPhoto('cap', 'Foto aufgenommen'));
+  $('inLib').addEventListener('change', onPhoto('lib', 'Foto aus Kamera-App'));
+  $('devname').addEventListener('input', renderSummary);
+  Array.prototype.forEach.call(document.querySelectorAll('input[name="fov"]'), function (r) { r.addEventListener('change', function () { R.fov = r.value === 'unklar' ? 'nicht verglichen' : r.value; renderSummary(); }); });
+  $('copy').addEventListener('click', async function () {
+    var text = $('sum').textContent;
+    try { await navigator.clipboard.writeText(text); say('m5', 'Text kopiert.'); }
+    catch (e) {
+      try { var rng = document.createRange(); rng.selectNodeContents($('sum')); var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(rng); say('m5', 'Kopieren gesperrt. Der Text ist markiert: lange tippen und „Kopieren“ wählen.'); }
+      catch (e2) { say('m5', 'Kopieren nicht möglich. Bitte Screenshot machen.', true); }
+    }
+  });
+  window.addEventListener('orientationchange', function () { renderDevice(); });
+  window.__asProbe = { uFromOri: uFromOri, attitude: attitude, readExif: readExif, fmt: fmt, lensClass: lensClass };
+
+  renderDevice(); renderSummary(); loadExtraDeviceInfo();
+  render();
+})();
+</script>
+
+</body>
+</html>

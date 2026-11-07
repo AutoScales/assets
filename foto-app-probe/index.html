@@ -6,12 +6,10 @@
 <meta name="color-scheme" content="light dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Foto-App Probe">
+<meta name="apple-mobile-web-app-title" content="Foto-App Probe 2">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="robots" content="noindex,nofollow">
-</head>
-<body>
-<title>Foto-App Probe</title>
+<title>Foto-App Probe 2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Michroma&family=Montserrat:wght@400;500;600;700&display=swap">
@@ -137,37 +135,50 @@ summary { cursor: pointer; }
 .canvas-hidden { display: none; }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
 @media (max-width: 380px) { .kv .row { grid-template-columns: 1fr; } }
+progress { width: 100%; height: 10px; accent-color: var(--gold); }
+.verdict { border: 1px solid var(--fg); background: var(--card); padding: 12px 14px; display: grid; gap: 6px; font-size: 14px; }
+.verdict b { font-weight: 700; }
+.lvl-t { max-width: 90%; }
+.mini { font-size: 12px; color: var(--muted); }
 </style>
-
+<link rel="icon" href="data:,">
+</head>
+<body>
 <main>
   <header>
-    <div class="eyebrow">AutoScales · Foto-App · Machbarkeit</div>
-    <h1>Foto-App Probe</h1>
-    <p class="lede">Diese Seite misst, was ein Handy im Browser für die Foto-App leisten kann: Kamera, Lagesensor, Bildqualität. Sie sendet nichts ab. Alle Werte bleiben auf diesem Gerät, bis der Ergebnistext von Hand weitergegeben wird.</p>
+    <div class="eyebrow">AutoScales · Foto-App · Machbarkeit · Fassung 2</div>
+    <h1>Foto-App Probe 2</h1>
+    <p class="lede">Frage dieser Fassung: Kann eine Web-App auf dem iPhone ein scharfes Foto in hoher Auflösung machen, während Umriss und Wasserwaage live laufen? Die Seite probiert dafür alle Wege durch und schreibt auf, was klappt. Sie sendet nichts ab. Alle Werte bleiben auf diesem Gerät, bis der Ergebnistext von Hand weitergegeben wird.</p>
   </header>
 
   <div class="sep" aria-hidden="true"><i></i></div>
 
   <section class="step" aria-labelledby="h-plan">
-    <h2 id="h-plan">Ablauf, etwa 10 Minuten (Schätzung)</h2>
+    <h2 id="h-plan">Ablauf, etwa 5 Minuten (Schätzung)</h2>
     <ol class="plan">
-      <li><b>Kamera live:</b> Sucher starten, Auflösung prüfen.</li>
-      <li><b>Lagesensor:</b> Neigung und Rollen anzeigen, Ruhe messen.</li>
-      <li><b>Auslösen:</b> Foto machen und die Sensorwerte im Moment des Auslösens festhalten.</li>
-      <li><b>Foto über Auswahlfeld:</b> dasselbe Motiv mit der Handykamera, zum Vergleich.</li>
-      <li><b>Ergebnis:</b> Screenshot machen oder Text kopieren und weiterschicken.</li>
+      <li><b>Gerät und Zustand</b> eintragen (Faltgerät: aufgeklappt oder zugeklappt).</li>
+      <li><b>Auto-Messung:</b> Motiv in Brusthöhe anpeilen, Handy mit den Ellbogen abstützen, „Test starten“ tippen, Kamera und Lagesensor erlauben. Etwa eine Minute ruhig halten, die Seite probiert alles selbst durch.</li>
+      <li><b>Foto aus der Kamera-App:</b> ein Foto machen und zurückkehren. Die Seite prüft, ob Kamera und Lagesensor noch laufen.</li>
+      <li><b>Zu- und Aufklappen</b> (nur Faltgerät): einmal klappen, je 3 Sekunden warten.</li>
+      <li><b>Ergebnis:</b> „Text kopieren“ oder Screenshot.</li>
     </ol>
-    <p class="how">Am besten draußen vor einem Auto, Handy wie beim Fotografieren in Brusthöhe. Zu Hause genügt eine beliebige Szene.</p>
+    <p class="how">Am besten draußen vor einem Auto. Zu Hause genügt eine beliebige Szene mit klaren Kanten.</p>
   </section>
 
   <section class="step" aria-labelledby="h-dev">
-    <div class="step-h">
-      <h2 id="h-dev">Gerät und Rahmen</h2>
-    </div>
+    <div class="step-h"><h2 id="h-dev">Gerät und Zustand</h2></div>
     <label class="field-l" for="devname">Gerät und Systemversion
-      <input class="field" id="devname" type="text" autocomplete="off" placeholder="z. B. iPhone 15 Pro, iOS 18.2 · Galaxy S23, Android 14">
+      <input class="field" id="devname" type="text" autocomplete="off" placeholder="z. B. iPhone Duo, iOS 27.2 · iPhone 11, iOS 18">
     </label>
-    <p class="how">iPhone: Einstellungen → Allgemein → Info → Modellname und iOS-Version. Die Browserkennung unten ist nur ein Anhaltspunkt.</p>
+    <label class="field-l" for="devstate">Zustand jetzt
+      <select class="field" id="devstate">
+        <option value="">bitte wählen</option>
+        <option>aufgeklappt (großer Innenbildschirm)</option>
+        <option>zugeklappt (Außenbildschirm)</option>
+        <option>normales iPhone, nicht faltbar</option>
+        <option>anderes Gerät</option>
+      </select>
+    </label>
     <div id="frameNote" class="note" hidden></div>
     <div id="r0"></div>
   </section>
@@ -175,91 +186,41 @@ summary { cursor: pointer; }
   <section class="step" aria-labelledby="h-1">
     <div class="step-h">
       <span class="num" aria-hidden="true">1</span>
-      <h2 id="h-1">Kamera live</h2>
+      <h2 id="h-1">Auto-Messung</h2>
       <span class="chip" id="c1" data-s="idle"><i></i><b>nicht getestet</b></span>
     </div>
-    <p class="how">Handy quer halten, Hauptkamera hinten. „Kamera starten“ tippen und die Kamera erlauben. Danach „Auflösungen prüfen“.</p>
+    <p class="how">Handy quer halten wie beim Fotografieren eines Autos, Motiv anpeilen, mit den Ellbogen abstützen. Nach „Test starten“ fragt das iPhone nach dem Lagesensor und der Kamera, beides erlauben. Danach läuft die Seite etwa eine Minute durch alle Kameras, Auflösungen und Auslösewege. Bitte währenddessen ruhig halten.</p>
     <div class="controls">
-      <button class="btn primary" id="camStart" type="button">Kamera starten</button>
-      <button class="btn" id="camStop" type="button" disabled>Stopp</button>
-      <button class="btn" id="camLadder" type="button" disabled>Auflösungen prüfen</button>
+      <button class="btn primary" id="go" type="button">Test starten</button>
+      <button class="btn" id="abort" type="button" disabled>Abbrechen</button>
+      <button class="btn" id="stopAll" type="button" disabled>Kamera und Sensor aus</button>
     </div>
-    <label class="field-l" for="camRes">Angefragte Auflösung
-      <select class="field" id="camRes">
-        <option value="4032x3024">4032 × 3024 (12 MP, 4:3)</option>
-        <option value="3840x2160">3840 × 2160 (4K, 16:9)</option>
-        <option value="1920x1080" selected>1920 × 1080 (Full HD, 16:9)</option>
-        <option value="1280x720">1280 × 720 (HD, 16:9)</option>
-      </select>
-    </label>
+    <progress id="prog" max="1" value="0" hidden></progress>
+    <p class="msg" id="m1" role="status" aria-live="polite"></p>
     <div class="vf" id="vf">
       <video id="video" playsinline muted autoplay></video>
       <span class="empty">Das Kamerabild erscheint hier.</span>
       <div class="lvl" aria-hidden="true"><div class="lvl-h" id="lvlH"></div><div class="lvl-c"></div><div class="lvl-t" id="lvlT">–</div></div>
     </div>
-    <p class="msg" id="m1" role="status" aria-live="polite"></p>
+    <div id="rv"></div>
     <div id="r1"></div>
   </section>
 
   <section class="step" aria-labelledby="h-2">
     <div class="step-h">
       <span class="num" aria-hidden="true">2</span>
-      <h2 id="h-2">Lagesensor</h2>
+      <h2 id="h-2">Foto aus der Kamera-App</h2>
       <span class="chip" id="c2" data-s="idle"><i></i><b>nicht getestet</b></span>
     </div>
-    <p class="how">Handy aufrecht vor die Brust halten, wie beim Fotografieren. „Lagesensor starten“ tippen. Das iPhone fragt einmal um Erlaubnis. Dann „Ruhe messen“ und 5 Sekunden still halten.</p>
+    <p class="how">Das Motiv von Schritt 1 vom selben Standort. „Foto aufnehmen“ öffnet die Kamera-App des Handys. Danach prüft die Seite, ob Kamera und Lagesensor noch laufen (Ergebnis unter Schritt 3). Optional: dasselbe Foto aus den Fotos wählen und bei „Optionen“ „Alle Fotodaten“ einschalten, damit Kamera-Angaben im Bild bleiben. Standortdaten werden nicht angezeigt und nicht in den Ergebnistext übernommen.</p>
     <div class="controls">
-      <button class="btn primary" id="senStart" type="button">Lagesensor starten</button>
-      <button class="btn" id="senStop" type="button" disabled>Stopp</button>
-    </div>
-    <div class="gauge" aria-live="off">
-      <div id="gP"><span class="lab">Neigung vor/zurück</span><output id="vP">–</output><span class="hint" id="hP">Sollwert ±2°</span></div>
-      <div id="gR"><span class="lab">Rollen seitlich</span><output id="vR">–</output><span class="hint" id="hR">Sollwert ±1°</span></div>
-    </div>
-    <label class="field-l" for="restPos">Wie wird das Handy gehalten?
-      <select class="field" id="restPos">
-        <option>in beiden Händen vor der Brust</option>
-        <option>Ellbogen am Körper abgestützt</option>
-        <option>angelehnt oder auf Stativ</option>
-      </select>
-    </label>
-    <div class="controls">
-      <button class="btn" id="restBtn" type="button" disabled>Ruhe messen (5 s)</button>
+      <label class="btn primary file-btn">Foto aufnehmen<input type="file" id="inCap" accept="image/*" capture="environment"></label>
+      <label class="btn file-btn">Foto aus Fotos wählen (optional)<input type="file" id="inLib" accept="image/*"></label>
     </div>
     <p class="msg" id="m2" role="status" aria-live="polite"></p>
     <div id="r2"></div>
-  </section>
-
-  <section class="step" aria-labelledby="h-3">
-    <div class="step-h">
-      <span class="num" aria-hidden="true">3</span>
-      <h2 id="h-3">Auslösen</h2>
-      <span class="chip" id="c3" data-s="idle"><i></i><b>nicht getestet</b></span>
-    </div>
-    <p class="how">Kamera (1) und Lagesensor (2) laufen lassen, ein Motiv anpeilen, Handy ruhig halten und „Auslösen“ tippen. Dreimal wiederholen. Die Schärfe-Kennzahl ist nur zum Vergleich zweier Bilder desselben Motivs gedacht.</p>
-    <div class="controls">
-      <button class="btn primary" id="shoot" type="button" disabled>Auslösen</button>
-    </div>
-    <p class="msg" id="m3" role="status" aria-live="polite"></p>
-    <div id="r3"></div>
-    <canvas id="grab" class="canvas-hidden" width="1" height="1"></canvas>
-  </section>
-
-  <section class="step" aria-labelledby="h-4">
-    <div class="step-h">
-      <span class="num" aria-hidden="true">4</span>
-      <h2 id="h-4">Foto über Auswahlfeld</h2>
-      <span class="chip" id="c4" data-s="idle"><i></i><b>nicht getestet</b></span>
-    </div>
-    <p class="how">Dasselbe Motiv vom selben Standort. Zuerst „Foto aufnehmen“ (öffnet die Handykamera), dann ein Foto aus der normalen Kamera-App wählen. Standortdaten werden nicht angezeigt und nicht in den Ergebnistext übernommen.</p>
-    <div class="controls">
-      <label class="btn primary file-btn">Foto aufnehmen<input type="file" id="inCap" accept="image/*" capture="environment"></label>
-      <label class="btn file-btn">Foto aus Kamera-App wählen<input type="file" id="inLib" accept="image/*"></label>
-    </div>
-    <p class="msg" id="m4" role="status" aria-live="polite"></p>
-    <div id="r4"></div>
-    <fieldset class="radios" id="fovBox">
-      <legend>Sichtfeld des Live-Bilds (Schritt 1) gegenüber dem Foto</legend>
+    <fieldset class="radios">
+      <legend>Sichtfeld des Live-Bilds in 4:3 (Schritt 1) gegenüber dem Foto</legend>
       <label><input type="radio" name="fov" value="gleich"> gleich</label>
       <label><input type="radio" name="fov" value="weiter"> Live-Bild weiter</label>
       <label><input type="radio" name="fov" value="enger"> Live-Bild enger</label>
@@ -267,30 +228,47 @@ summary { cursor: pointer; }
     </fieldset>
   </section>
 
+  <section class="step" aria-labelledby="h-3">
+    <div class="step-h">
+      <span class="num" aria-hidden="true">3</span>
+      <h2 id="h-3">Zuklappen, Aufklappen, Hintergrund</h2>
+      <span class="chip" id="c3" data-s="idle"><i></i><b>nicht getestet</b></span>
+    </div>
+    <p class="how">Die Seite schreibt mit, wenn sich Fenstergröße, Ausrichtung oder Sichtbarkeit ändern, auch beim Wechsel in die Kamera-App. Zwei Sekunden danach prüft sie, ob Kamera und Lagesensor noch Daten liefern, und startet sie wenn nötig selbst neu. Faltgerät: bei laufender Kamera einmal zu- und aufklappen, je 3 Sekunden warten. Läuft nichts, vorher „Kamera und Lagesensor starten“ tippen.</p>
+    <div class="controls">
+      <button class="btn" id="liveOn" type="button">Kamera und Lagesensor starten</button>
+      <button class="btn" id="evClear" type="button">Ereignisse leeren</button>
+    </div>
+    <p class="msg" id="m3" role="status" aria-live="polite"></p>
+    <div id="r3"></div>
+  </section>
+
   <div class="sep" aria-hidden="true"><i></i></div>
 
-  <section class="step" aria-labelledby="h-5">
+  <section class="step" aria-labelledby="h-4">
     <div class="step-h">
-      <span class="num" aria-hidden="true">5</span>
-      <h2 id="h-5">Ergebnis zum Weitergeben</h2>
+      <span class="num" aria-hidden="true">4</span>
+      <h2 id="h-4">Ergebnis zum Weitergeben</h2>
     </div>
-    <p class="how">Screenshot dieses Blatts oder „Text kopieren“. Der Text enthält keine Fotos und keine Standortdaten.</p>
+    <p class="how">Screenshot dieses Blatts oder „Text kopieren“. Der Text enthält keine Fotos und keine Standortdaten. Nach einem Neuladen der Seite steht der letzte Lauf darunter noch einmal, sodass beide Zustände (zugeklappt, aufgeklappt) kopierbar sind.</p>
     <div class="controls">
       <button class="btn primary" id="copy" type="button">Text kopieren</button>
     </div>
-    <p class="msg" id="m5" role="status" aria-live="polite"></p>
+    <p class="msg" id="m4" role="status" aria-live="polite"></p>
     <div class="sheet"><pre id="sum"></pre></div>
-    <details>
-      <summary>Rohe Browserkennung</summary>
-      <pre id="ua"></pre>
-    </details>
+    <div id="prevBox" hidden>
+      <p class="sub">Letzter gespeicherter Lauf (vor dem Neuladen)</p>
+      <div class="controls"><button class="btn" id="copyPrev" type="button">Text des letzten Laufs kopieren</button></div>
+      <div class="sheet"><pre id="prev"></pre></div>
+    </div>
+    <details><summary>Rohe Browserkennung</summary><pre id="ua"></pre></details>
   </section>
 </main>
 
 <script>
 (function () {
   "use strict";
-  var RAD = Math.PI / 180;
+  var RAD = Math.PI / 180, T0 = performance.now();
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function fmt(x, d, sign) {
@@ -300,6 +278,7 @@ summary { cursor: pointer; }
     return (x < 0 && nz ? '−' : (sign && nz ? '+' : '')) + s;
   }
   function bytes(n) { if (n == null) return '–'; if (n < 1024) return n + ' B'; if (n < 1048576) return fmt(n / 1024, 0) + ' KB'; return fmt(n / 1048576, 1) + ' MB'; }
+  function mp(w, h) { return w && h ? fmt(w * h / 1e6, 1) + ' MP' : '–'; }
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   function errText(e) { if (!e) return 'unbekannter Fehler'; return (e.name ? e.name : 'Fehler') + (e.message ? ': ' + e.message : ''); }
   function kv(rows) {
@@ -309,14 +288,13 @@ summary { cursor: pointer; }
   }
   function setChip(id, s, text) { var c = $(id); if (!c) return; c.setAttribute('data-s', s); c.querySelector('b').textContent = text; }
   function say(id, text, bad) { var m = $(id); m.textContent = text || ''; m.className = 'msg' + (bad ? ' bad' : ''); }
+  function withTimeout(p, ms) {
+    return Promise.race([p, new Promise(function (_, rej) { setTimeout(function () { var e = new Error('keine Antwort nach ' + (ms / 1000) + ' s'); e.name = 'Zeitüberschreitung'; rej(e); }, ms); })]);
+  }
 
-  /* ---------- Ergebnisse ---------- */
-  var R = { dev: {}, cam: null, ladder: [], sensor: {}, rest: [], shots: [], photos: {}, fov: '', extra: [] };
-  var stream = null, track = null;
-  var samples = [], lastAcc = null, accSign = 0, sensorsOn = false;
-  var oriCount = 0, oriT0 = 0, oriTLast = 0, prevT = 0, maxDt = 0, accCount = 0;
-
-  /* ---------- Gerät und Rahmen ---------- */
+  /* ---------- Zustand ---------- */
+  var R = { devices: [], plan: [], matrix: [], photos: {}, events: [], sensor: { restarts: 0 }, camErr: null, testErr: null, live: null, done: false };
+  var stream = null, track = null, lastOpen = null, running = false, aborted = false, camWanted = false, senWanted = false;
   var framed; try { framed = window.self !== window.top; } catch (e) { framed = true; }
   var pp = document.permissionsPolicy || document.featurePolicy;
   function allowed(f) { try { return pp && pp.allowsFeature ? pp.allowsFeature(f) : null; } catch (e) { return null; } }
@@ -325,6 +303,12 @@ summary { cursor: pointer; }
     var raw = (screen.orientation && typeof screen.orientation.angle === 'number') ? screen.orientation.angle : (typeof window.orientation === 'number' ? window.orientation : 0);
     return ((Math.round(raw / 90) * 90 % 360) + 360) % 360;
   }
+  function envNow() {
+    var vv = window.visualViewport;
+    return { iw: window.innerWidth, ih: window.innerHeight, sw: screen.width, sh: screen.height, ang: screenAngle(), vis: document.visibilityState, vvw: vv ? Math.round(vv.width) : null, vvh: vv ? Math.round(vv.height) : null, dpr: window.devicePixelRatio || 1 };
+  }
+  function envTxt(e) { return 'Fenster ' + e.iw + '×' + e.ih + ', Bildschirm ' + e.sw + '×' + e.sh + ', Winkel ' + e.ang + '°, ' + (e.vis === 'visible' ? 'sichtbar' : 'verborgen'); }
+  var ENV0 = envNow();
   function parseUA() {
     var ua = navigator.userAgent, os = 'unbekannt', osv = '', br = 'unbekannt', brv = '', m;
     var ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -339,69 +323,11 @@ summary { cursor: pointer; }
   }
   var UA = parseUA();
   function isStandalone() { try { return window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches; } catch (e) { return false; } }
-
-  function deviceRows() {
-    var DO = window.DeviceOrientationEvent;
-    var needPerm = !!(DO && typeof DO.requestPermission === 'function');
-    var cam = tri(allowed('camera')), acc = tri(allowed('accelerometer')), gyr = tri(allowed('gyroscope'));
-    var rows = [
-      ['System (Browserkennung)', UA.os + (UA.osv ? ' ' + UA.osv : '') + (UA.os.indexOf('iOS') === 0 ? ' (kann bei neuen iOS-Versionen veraltet gemeldet werden)' : '')],
-      ['Browser', UA.br + (UA.brv ? ' ' + UA.brv : '')],
-      ['Bildschirm', screen.width + '×' + screen.height + ' @' + (window.devicePixelRatio || 1) + 'x, Fenster ' + window.innerWidth + '×' + window.innerHeight],
-      ['Ausrichtung', (screen.orientation ? screen.orientation.type : 'unbekannt') + ', Winkel ' + screenAngle() + '°'],
-      ['Als Web-App gestartet', isStandalone() ? 'ja (Home-Bildschirm)' : 'nein (Browser-Tab)'],
-      ['Sicherer Kontext (https)', window.isSecureContext ? 'ja' : 'nein', window.isSecureContext ? 'ok' : 'bad'],
-      ['Seite in einem Rahmen', framed ? 'ja' : 'nein'],
-      ['Kamera laut Rahmenregel', cam[0], cam[1]],
-      ['Beschleunigung laut Rahmenregel', acc[0], acc[1]],
-      ['Gyroskop laut Rahmenregel', gyr[0], gyr[1]],
-      ['Kamera-Schnittstelle', (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) ? 'vorhanden' : 'fehlt', (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) ? 'ok' : 'bad'],
-      ['Foto-Auslöser (ImageCapture)', ('ImageCapture' in window) ? 'vorhanden' : 'fehlt (z. B. iPhone-Safari)', ('ImageCapture' in window) ? 'ok' : ''],
-      ['Lagesensor-Ereignisse', DO ? 'vorhanden' : 'fehlen', DO ? 'ok' : 'bad'],
-      ['Erlaubnis per Tipp nötig', needPerm ? 'ja (iOS-Verfahren)' : 'nein'],
-      ['Bildschirm wach halten', ('wakeLock' in navigator) ? 'vorhanden' : 'fehlt']
-    ];
-    (R.dev.extra || []).forEach(function (r) { rows.push(r); });
-    return rows;
-  }
-  function renderDevice() {
-    $('r0').innerHTML = kv(deviceRows());
-    var bad = framed && (allowed('camera') === false || allowed('accelerometer') === false || allowed('gyroscope') === false);
-    var n = $('frameNote');
-    if (bad) {
-      n.hidden = false;
-      n.innerHTML = '<b>Gesperrt durch den Rahmen.</b> Diese Seite läuft eingebettet. Der Rahmen sperrt Kamera und Lagesensor. Die Schritte 1 bis 3 können hier nicht laufen. Schritt 4 und die Geräteangaben gelten trotzdem.';
-    } else if (framed) {
-      n.hidden = false;
-      n.innerHTML = '<b>Eingebettet.</b> Diese Seite läuft in einem Rahmen. Ergebnisse können von einer eigenständigen Seite abweichen.';
-    } else {
-      n.hidden = false;
-      n.innerHTML = '<b>Eigenständige Seite.</b> Kein Rahmen: Die Ergebnisse gelten für eine normale Webseite oder Web-App.';
-    }
-    $('ua').textContent = UA.ua;
-  }
-  function loadExtraDeviceInfo() {
-    R.dev.extra = [];
-    var tasks = [];
-    if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
-      tasks.push(navigator.userAgentData.getHighEntropyValues(['model', 'platformVersion']).then(function (v) {
-        if (v.model) R.dev.extra.push(['Gerätemodell (Browser meldet)', v.model]);
-        if (v.platformVersion) R.dev.extra.push(['Systemversion (Browser meldet)', v.platformVersion]);
-      }).catch(function () {}));
-    }
-    ['camera', 'accelerometer', 'gyroscope'].forEach(function (name) {
-      if (!navigator.permissions || !navigator.permissions.query) return;
-      tasks.push(navigator.permissions.query({ name: name }).then(function (s) {
-        R.dev.extra.push(['Berechtigung ' + name + ' (Browser)', s.state, s.state === 'granted' ? 'ok' : (s.state === 'denied' ? 'bad' : '')]);
-      }).catch(function () {}));
-    });
-    Promise.all(tasks).then(function () { renderDevice(); renderSummary(); });
-  }
+  function devName() { return ($('devname').value || '').trim(); }
+  function devState() { return $('devstate').value || ''; }
 
   /* ---------- Lage aus Lagesensor ---------- */
-  // Erdrichtung "oben" in Gerätekoordinaten aus beta/gamma (W3C-Rotationsmatrix, dritte Zeile)
   function uFromOri(b, g) { var B = b * RAD, G = g * RAD; return [-Math.cos(B) * Math.sin(G), Math.sin(B), Math.cos(B) * Math.cos(G)]; }
-  // Neigung: Höhe der Kamerarichtung (+ = Kamera blickt nach oben). Rollen: + = rechte Bildseite höher.
   function attitude(u, angle) {
     var S = { 0: [0, 1], 90: [1, 0], 180: [0, -1], 270: [-1, 0] }[angle] || [0, 1];
     var Rr = { 0: [1, 0], 90: [0, -1], 180: [-1, 0], 270: [0, 1] }[angle] || [1, 0];
@@ -409,10 +335,12 @@ summary { cursor: pointer; }
     var roll = Math.atan2(u[0] * Rr[0] + u[1] * Rr[1], u[0] * S[0] + u[1] * S[1]) / RAD;
     return { pitch: pitch, roll: roll };
   }
+  var samples = [], lastAcc = null, accSign = 0, sensorsOn = false;
+  var oriSeen = 0, oriCount = 0, oriT0 = 0, oriTLast = 0, prevT = 0, maxDt = 0, accCount = 0;
   function onOri(e) {
     var t = performance.now();
     if (e.beta == null || e.gamma == null) return;
-    oriCount++; if (!oriT0) oriT0 = t; oriTLast = t;
+    oriSeen++; oriCount++; if (!oriT0) oriT0 = t; oriTLast = t;
     if (prevT) { var dt = t - prevT; if (dt > maxDt) maxDt = dt; } prevT = t;
     var ang = screenAngle(), u = uFromOri(e.beta, e.gamma), a = attitude(u, ang), pa = null, ra = null;
     if (lastAcc && t - lastAcc.t < 300) {
@@ -427,103 +355,67 @@ summary { cursor: pointer; }
     samples.push({ t: t, p: a.pitch, r: a.roll, pa: pa, ra: ra });
     while (samples.length && t - samples[0].t > 8000) samples.shift();
   }
-  function onMot(e) {
-    var g = e.accelerationIncludingGravity;
-    if (g && g.x != null) { lastAcc = { x: g.x, y: g.y, z: g.z, t: performance.now() }; accCount++; }
-  }
+  function onMot(e) { var g = e.accelerationIncludingGravity; if (g && g.x != null) { lastAcc = { x: g.x, y: g.y, z: g.z, t: performance.now() }; accCount++; } }
   function median(a) { var x = a.slice().sort(function (p, q) { return p - q; }); return x.length ? x[Math.floor(x.length / 2)] : null; }
-  function snapshot() {
-    var now = performance.now(), last = samples[samples.length - 1];
-    if (!last) return null;
-    var rec = samples.filter(function (s) { return now - s.t <= 250; });
-    return { age: now - last.t, p: last.p, r: last.r, pa: last.pa, ra: last.ra, pMed: median(rec.map(function (s) { return s.p; })), rMed: median(rec.map(function (s) { return s.r; })), n: rec.length };
-  }
   function stats(a) {
     var n = a.length; if (!n) return null;
     var m = a.reduce(function (s, v) { return s + v; }, 0) / n;
     var v = n > 1 ? a.reduce(function (s, x) { return s + (x - m) * (x - m); }, 0) / (n - 1) : 0;
     return { n: n, mean: m, sd: Math.sqrt(v), min: Math.min.apply(null, a), max: Math.max.apply(null, a) };
   }
+  function snapshot() {
+    var now = performance.now(), last = samples[samples.length - 1];
+    if (!last) return null;
+    var rec = samples.filter(function (s) { return now - s.t <= 250; });
+    return { age: now - last.t, p: last.p, r: last.r, pMed: median(rec.map(function (s) { return s.p; })), rMed: median(rec.map(function (s) { return s.r; })), n: rec.length };
+  }
+  function shake(ms) {
+    var now = performance.now(), rec = samples.filter(function (s) { return now - s.t <= ms; });
+    if (rec.length < 4) return null;
+    return { p: stats(rec.map(function (s) { return s.p; })).sd, r: stats(rec.map(function (s) { return s.r; })).sd, n: rec.length };
+  }
   function hz() { return oriCount > 2 && oriTLast > oriT0 ? (oriCount - 1) / ((oriTLast - oriT0) / 1000) : null; }
-
+  function sensorsAttach() {
+    samples = []; lastAcc = null; accSign = 0; oriCount = 0; oriT0 = 0; oriTLast = 0; prevT = 0; maxDt = 0; accCount = 0;
+    window.addEventListener('deviceorientation', onOri); window.addEventListener('devicemotion', onMot);
+    sensorsOn = true; $('vf').classList.add('lvl-on');
+  }
+  function sensorsDetach() {
+    if (sensorsOn) { R.sensor.lastHz = hz(); R.sensor.lastGap = maxDt; }
+    window.removeEventListener('deviceorientation', onOri); window.removeEventListener('devicemotion', onMot);
+    sensorsOn = false; $('vf').classList.remove('lvl-on');
+  }
+  function sensorsRestart() { sensorsDetach(); sensorsAttach(); R.sensor.restarts++; }
   async function sensorsStart() {
-    setChip('c2', 'idle', 'startet …'); say('m2', '');
     var DO = window.DeviceOrientationEvent, DM = window.DeviceMotionEvent, perm = {};
     try {
       if (!DO && !DM) { var e0 = new Error('DeviceOrientationEvent und DeviceMotionEvent fehlen'); e0.name = 'NichtVorhanden'; throw e0; }
       if (DO && typeof DO.requestPermission === 'function') perm.ori = await DO.requestPermission();
       if (DM && typeof DM.requestPermission === 'function') { try { perm.mot = await DM.requestPermission(); } catch (e1) { perm.mot = 'Fehler: ' + errText(e1); } }
       R.sensor.perm = perm;
-      if (perm.ori === 'denied' || perm.mot === 'denied') { var e2 = new Error('Erlaubnis verweigert. Auf dem iPhone: Safari-Seite komplett neu laden und „Erlauben“ wählen.'); e2.name = 'NotAllowedError'; throw e2; }
-      samples = []; lastAcc = null; accSign = 0; oriCount = 0; oriT0 = 0; oriTLast = 0; prevT = 0; maxDt = 0; accCount = 0;
-      window.addEventListener('deviceorientation', onOri);
-      window.addEventListener('devicemotion', onMot);
-      sensorsOn = true; R.sensor.err = null;
-      $('senStart').disabled = true; $('senStop').disabled = false; $('restBtn').disabled = false; $('shoot').disabled = !track;
-      $('vf').classList.add('lvl-on');
-      await sleep(1500);
-      if (sensorsOn && oriCount === 0) {
-        R.sensor.silent = true;
-        setChip('c2', 'bad', 'keine Daten');
-        say('m2', 'Die Seite hat die Erlaubnis, bekommt aber keine Messwerte. Der Rahmen oder das Gerät liefert keinen Lagesensor.', true);
-      } else if (sensorsOn) {
-        R.sensor.silent = false;
-        setChip('c2', 'ok', 'geht');
-      }
+      if (perm.ori === 'denied' || perm.mot === 'denied') { var e2 = new Error('Erlaubnis verweigert. Seite komplett neu laden und „Erlauben“ wählen.'); e2.name = 'NotAllowedError'; throw e2; }
+      if (sensorsOn) sensorsDetach();
+      sensorsAttach(); senWanted = true; R.sensor.err = null;
+      await sleep(1200);
+      R.sensor.silent = oriCount === 0;
+      return !R.sensor.silent;
     } catch (e) {
-      R.sensor.err = errText(e);
-      setChip('c2', 'bad', 'geht nicht');
-      say('m2', 'Lagesensor nicht verfügbar: ' + errText(e), true);
-      sensorsStop(true);
+      R.sensor.err = errText(e); sensorsDetach(); senWanted = false;
+      return false;
     }
-    render();
-  }
-  function sensorsStop(keepChip) {
-    window.removeEventListener('deviceorientation', onOri);
-    window.removeEventListener('devicemotion', onMot);
-    if (sensorsOn) R.sensor.lastHz = hz();
-    sensorsOn = false;
-    $('senStart').disabled = false; $('senStop').disabled = true; $('restBtn').disabled = true; $('shoot').disabled = true;
-    $('vf').classList.remove('lvl-on');
-    if (!keepChip) setChip('c2', 'idle', 'gestoppt');
-    render();
   }
   function liveTick() {
     if (!sensorsOn) return;
     var s = snapshot(); if (!s) return;
-    $('vP').textContent = fmt(s.p, 1, true) + '°';
-    $('vR').textContent = fmt(s.r, 1, true) + '°';
-    $('hP').textContent = Math.abs(s.p) < 0.5 ? 'waagerecht · Soll ±2°' : (s.p > 0 ? 'Kamera blickt nach oben · Soll ±2°' : 'Kamera blickt nach unten · Soll ±2°');
-    $('hR').textContent = Math.abs(s.r) < 0.5 ? 'gerade · Soll ±1°' : (s.r > 0 ? 'rechte Seite höher · Soll ±1°' : 'linke Seite höher · Soll ±1°');
     var okP = Math.abs(s.p) <= 2, okR = Math.abs(s.r) <= 1;
-    $('gP').setAttribute('data-ok', okP ? '1' : '0'); $('gR').setAttribute('data-ok', okR ? '1' : '0');
     var h = $('vf').clientHeight || 300, ty = Math.max(-0.4 * h, Math.min(0.4 * h, s.p * (h / 52)));
     $('lvlH').style.setProperty('--ty', ty.toFixed(1) + 'px');
     $('lvlH').style.setProperty('--rot', s.r.toFixed(2) + 'deg');
-    var t = $('lvlT'); t.textContent = fmt(s.p, 1, true) + '° · ' + fmt(s.r, 1, true) + '°'; t.setAttribute('data-ok', okP && okR ? '1' : '0');
+    var t = $('lvlT'); t.textContent = 'Neigung ' + fmt(s.p, 1, true) + '° · Rollen ' + fmt(s.r, 1, true) + '°'; t.setAttribute('data-ok', okP && okR ? '1' : '0');
   }
   setInterval(liveTick, 80);
 
-  function restMeasure() {
-    if (!sensorsOn) { say('m2', 'Zuerst „Lagesensor starten“.', true); return; }
-    var label = $('restPos').value, t0 = performance.now(), btn = $('restBtn');
-    btn.disabled = true; say('m2', 'Messung läuft, still halten …');
-    var iv = setInterval(function () { say('m2', 'Messung läuft, noch ' + Math.max(0, Math.ceil(5 - (performance.now() - t0) / 1000)) + ' s …'); }, 250);
-    setTimeout(function () {
-      clearInterval(iv);
-      var set = samples.filter(function (s) { return s.t >= t0; });
-      var sp = stats(set.map(function (s) { return s.p; })), sr = stats(set.map(function (s) { return s.r; }));
-      btn.disabled = !sensorsOn;
-      if (!sp || set.length < 5) { say('m2', 'Zu wenige Messwerte (' + set.length + '). Lagesensor liefert nichts.', true); return; }
-      var secs = (set[set.length - 1].t - set[0].t) / 1000;
-      R.rest.push({ label: label, n: set.length, hz: secs > 0 ? (set.length - 1) / secs : null, p: sp, r: sr, flat: Math.abs(sp.mean) > 60 });
-      say('m2', sp.mean && Math.abs(sp.mean) > 60 ? 'Das Handy lag flach. Für die Foto-Lage aufrecht halten und noch einmal messen.' : 'Messung gespeichert.');
-      render();
-    }, 5000);
-  }
-
   /* ---------- EXIF ---------- */
-  // <exif>
   function ratio(n, d) { return d ? n / d : null; }
   function readIFD(dv, base, off, le) {
     var out = {};
@@ -543,11 +435,12 @@ summary { cursor: pointer; }
       else if (type === 4) { v = cnt === 1 ? dv.getUint32(vo, le) : null; }
       else if (type === 5) { v = cnt === 1 ? ratio(dv.getUint32(vo, le), dv.getUint32(vo + 4, le)) : null; }
       else if (type === 10) { v = cnt === 1 ? ratio(dv.getInt32(vo, le), dv.getInt32(vo + 4, le)) : null; }
-      else continue;
+      else { out[tag] = null; continue; }
       out[tag] = v;
     }
     return out;
   }
+  function hexTags(o) { return Object.keys(o).map(function (k) { return (+k).toString(16).toUpperCase(); }); }
   function parseTiff(dv, base) {
     var le = dv.getUint16(base) === 0x4949;
     if (dv.getUint16(base + 2, le) !== 42) return { error: 'EXIF-Kopf ungültig' };
@@ -559,25 +452,29 @@ summary { cursor: pointer; }
       exposure: exif[0x829A] != null ? exif[0x829A] : null, fnumber: exif[0x829D] != null ? exif[0x829D] : null,
       iso: exif[0x8827] != null ? exif[0x8827] : null, focal: exif[0x920A] != null ? exif[0x920A] : null,
       focal35: exif[0xA405] != null ? exif[0xA405] : null, digitalZoom: exif[0xA404] != null ? exif[0xA404] : null,
-      lens: exif[0xA434] || null, pixX: exif[0xA002] != null ? exif[0xA002] : null, pixY: exif[0xA003] != null ? exif[0xA003] : null,
-      hasGps: ifd0[0x8825] != null
+      lens: exif[0xA434] || null, hasGps: ifd0[0x8825] != null,
+      tags0: hexTags(ifd0), tagsE: hexTags(exif)
     };
   }
   async function readExif(blob) {
     var buf = await blob.slice(0, 393216).arrayBuffer();
-    var dv = new DataView(buf);
-    if (dv.byteLength < 4 || dv.getUint16(0) !== 0xFFD8) return { error: 'kein JPEG (Typ ' + (blob.type || 'unbekannt') + '), EXIF nicht gelesen' };
-    var off = 2;
+    var dv = new DataView(buf), segs = [];
+    if (dv.byteLength < 4 || dv.getUint16(0) !== 0xFFD8) return { error: 'kein JPEG (Typ ' + (blob.type || 'unbekannt') + '), EXIF nicht gelesen', segs: segs };
+    var off = 2, res = null;
     while (off + 4 < dv.byteLength) {
       var marker = dv.getUint16(off); off += 2;
       if (marker === 0xFFDA || marker === 0xFFD9) break;
-      var len = dv.getUint16(off);
-      if (marker === 0xFFE1 && dv.getUint32(off + 2) === 0x45786966) return parseTiff(dv, off + 8);
+      var len = dv.getUint16(off), name = (marker & 0xFF).toString(16).toUpperCase();
+      if (marker === 0xFFE1 && dv.getUint32(off + 2) === 0x45786966) { segs.push('E1 Exif ' + bytes(len)); if (!res) res = parseTiff(dv, off + 8); }
+      else if (marker === 0xFFE1) segs.push('E1 anderes (XMP o. ä.) ' + bytes(len));
+      else if (marker === 0xFFE0) segs.push('E0 JFIF');
+      else if (marker === 0xFFE2) segs.push('E2 Farbprofil ' + bytes(len));
+      else segs.push(name);
       off += len;
     }
-    return { error: 'keine EXIF-Daten im Bild' };
+    if (res) { res.segs = segs; return res; }
+    return { error: 'keine EXIF-Daten im Bild', segs: segs };
   }
-  // </exif>
 
   /* ---------- Bildanalyse ---------- */
   async function loadBitmap(blob) {
@@ -589,8 +486,9 @@ summary { cursor: pointer; }
       im.src = url;
     });
   }
-  function metrics(src, sw, sh) {
-    var W = 1024, H = Math.max(1, Math.round(sh * W / sw));
+  // Schärfe: Varianz des Laplace-Filters, Bild auf feste Breite gebracht. Nur zum Vergleich desselben Motivs.
+  function lapVar(src, sw, sh, W) {
+    var H = Math.max(1, Math.round(sh * W / sw));
     var c = document.createElement('canvas'); c.width = W; c.height = H;
     var x = c.getContext('2d', { willReadFrequently: true });
     x.drawImage(src, 0, 0, W, H);
@@ -598,10 +496,15 @@ summary { cursor: pointer; }
     for (i = 0, j = 0; i < d.length; i += 4, j++) { var v = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]; g[j] = v; sum += v; }
     var m = 0, m2 = 0, n = 0;
     for (var y = 1; y < H - 1; y++) for (var xx = 1; xx < W - 1; xx++) { var k = y * W + xx, l = 4 * g[k] - g[k - 1] - g[k + 1] - g[k - W] - g[k + W]; m += l; m2 += l * l; n++; }
-    var mean = m / n;
+    var mean = m / n; c.width = 1; c.height = 1;
+    return { sharp: m2 / n - mean * mean, bright: sum / (W * H) };
+  }
+  function metrics(src, sw, sh) {
+    var a = lapVar(src, sw, sh, 1024), b = sw >= 2048 ? lapVar(src, sw, sh, 2048) : null;
     var tc = document.createElement('canvas'); tc.width = 480; tc.height = Math.max(1, Math.round(sh * 480 / sw));
     tc.getContext('2d').drawImage(src, 0, 0, tc.width, tc.height);
-    return { sharp: m2 / n - mean * mean, bright: sum / (W * H), thumb: tc.toDataURL('image/jpeg', 0.75) };
+    var thumb = tc.toDataURL('image/jpeg', 0.75); tc.width = 1; tc.height = 1;
+    return { sharp: a.sharp, sharp2: b ? b.sharp : null, bright: a.bright, thumb: thumb };
   }
   async function analyzeBlob(blob) {
     var out = { type: blob.type || 'unbekannt', bytes: blob.size };
@@ -609,7 +512,7 @@ summary { cursor: pointer; }
     try {
       var bm = await loadBitmap(blob), w = bm.width || bm.naturalWidth, h = bm.height || bm.naturalHeight;
       out.w = w; out.h = h;
-      var m = metrics(bm, w, h); out.sharp = m.sharp; out.bright = m.bright; out.thumb = m.thumb;
+      var m = metrics(bm, w, h); out.sharp = m.sharp; out.sharp2 = m.sharp2; out.bright = m.bright; out.thumb = m.thumb;
       if (bm.close) bm.close();
     } catch (e) { out.decodeErr = errText(e); }
     return out;
@@ -619,327 +522,501 @@ summary { cursor: pointer; }
     var c = f35 < 18 ? 'Ultraweitwinkel (0,5x)' : f35 < 32 ? 'Hauptkamera (1x)' : f35 < 65 ? 'Tele 2x oder Ausschnitt' : 'Tele';
     return c + (zoom && Math.abs(zoom - 1) > 0.05 ? ', Digitalzoom ' + fmt(zoom, 2) : '');
   }
+  function sharpTxt(a) { return a && a.sharp != null ? 'Schärfe ' + fmt(a.sharp, 0) + (a.sharp2 != null ? ' / ' + fmt(a.sharp2, 0) : '') : ''; }
+  function stillTxt(s) {
+    if (!s) return 'nicht gemacht';
+    if (s.err) return 'Fehler ' + s.err;
+    return s.w + '×' + s.h + ' (' + mp(s.w, s.h) + '), ' + bytes(s.bytes) + ', ' + s.ms + ' ms, ' + sharpTxt(s);
+  }
+  function takeTxt(t) {
+    if (t.err) return 'Fehler ' + t.err;
+    var a = t.a; if (!a) return 'kein Ergebnis';
+    return (a.w ? a.w + '×' + a.h + ' (' + mp(a.w, a.h) + ')' : 'Größe unbekannt') + ', ' + bytes(a.bytes) + ', ' + a.ms + ' ms' + (sharpTxt(a) ? ', ' + sharpTxt(a) : '') + (a.decodeErr ? ', ' + a.decodeErr : '');
+  }
   function exifRows(a, prefix) {
     var rows = [], x = a.exif || {};
+    if (x.segs && x.segs.length) rows.push([prefix + 'JPEG-Abschnitte', x.segs.join(', ')]);
     if (x.error) { rows.push([prefix + 'EXIF', x.error, 'bad']); return rows; }
+    rows.push([prefix + 'EXIF-Felder gefunden', (x.tags0 || []).length + ' + ' + (x.tagsE || []).length + ' (' + (x.tags0 || []).concat(x.tagsE || []).join(' ') + ')']);
     rows.push([prefix + 'Gerät laut EXIF', ((x.make || '') + ' ' + (x.model || '')).trim() || 'nicht enthalten']);
     rows.push([prefix + 'Objektiv', x.lens || 'nicht enthalten']);
     rows.push([prefix + 'Brennweite', x.focal != null ? fmt(x.focal, 1) + ' mm real' + (x.focal35 != null ? ', ' + fmt(x.focal35, 0) + ' mm Kleinbild' : ', Kleinbild-Wert fehlt') : 'nicht enthalten', x.focal != null || x.focal35 != null ? 'ok' : 'bad']);
     rows.push([prefix + 'Kamera-Einordnung', lensClass(x.focal35, x.digitalZoom) || 'nicht bestimmbar']);
     rows.push([prefix + 'Blende · ISO · Zeit', (x.fnumber != null ? 'f/' + fmt(x.fnumber, 1) : '–') + ' · ' + (x.iso != null ? 'ISO ' + x.iso : '–') + ' · ' + (x.exposure != null ? (x.exposure < 1 ? '1/' + Math.round(1 / x.exposure) : fmt(x.exposure, 1)) + ' s' : '–')]);
-    rows.push([prefix + 'Ausrichtung (EXIF)', x.orientation != null ? String(x.orientation) : 'nicht enthalten']);
     rows.push([prefix + 'Standortdaten im Bild', x.hasGps ? 'ja (nicht angezeigt)' : 'nein']);
     return rows;
   }
 
   /* ---------- Kamera ---------- */
-  function camLabelFor(e) {
-    var n = e && e.name;
-    if (n === 'NotAllowedError' || n === 'SecurityError') return 'Zugriff abgelehnt oder vom Rahmen gesperrt';
-    if (n === 'NotFoundError') return 'keine Kamera gefunden';
-    if (n === 'NotReadableError') return 'Kamera belegt (andere App?)';
-    if (n === 'OverconstrainedError') return 'Auflösung oder Kamera nicht möglich';
-    if (n === 'NichtVorhanden') return 'Kamera-Schnittstelle fehlt';
-    return 'Fehler';
+  function classify(label) {
+    var l = (label || '').toLowerCase();
+    if (/front|vorder|selfie|facetime|user/.test(l)) return 'front';
+    if (/ultra/.test(l)) return 'ultra';
+    if (/tele/.test(l)) return 'tele';
+    if (/dual|triple|dreifach|zweifach|virtual/.test(l)) return 'multi';
+    if (/back|rück|rear|arrière|trasera|posteriore|environment|hinten/.test(l)) return 'wide';
+    return 'other';
   }
-  async function camStart() {
-    stopCam(true); say('m1', ''); setChip('c1', 'idle', 'startet …');
-    var sz = $('camRes').value.split('x'), W = +sz[0], H = +sz[1];
-    try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { var e0 = new Error('navigator.mediaDevices fehlt (kein sicherer Kontext oder gesperrt)'); e0.name = 'NichtVorhanden'; throw e0; }
-      var t0 = performance.now();
-      stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: W }, height: { ideal: H } } });
-      track = stream.getVideoTracks()[0];
-      var v = $('video'); v.srcObject = stream;
-      try { await v.play(); } catch (pe) { /* autoplay kann bei muted trotzdem laufen */ }
-      await new Promise(function (res) { if (v.videoWidth) return res(); v.onloadedmetadata = function () { res(); }; setTimeout(res, 3000); });
-      var set = track.getSettings ? track.getSettings() : {}, caps = track.getCapabilities ? track.getCapabilities() : {};
-      R.cam = { ask: W + '×' + H, startMs: Math.round(performance.now() - t0), vw: v.videoWidth, vh: v.videoHeight, set: set, caps: caps, label: track.label || '(ohne Namen)', err: null, devices: [], fps: null };
-      try { var devs = await navigator.mediaDevices.enumerateDevices(); R.cam.devices = devs.filter(function (d) { return d.kind === 'videoinput'; }).map(function (d) { return d.label || '(ohne Namen)'; }); } catch (de) { /* egal */ }
-      $('vf').classList.add('live');
-      $('camStart').disabled = false; $('camStop').disabled = false; $('camLadder').disabled = false; $('shoot').disabled = !sensorsOn;
-      setChip('c1', 'ok', 'geht');
-      measureFps();
-    } catch (e) {
-      R.cam = { ask: W + '×' + H, err: errText(e), why: camLabelFor(e) };
-      setChip('c1', 'bad', 'geht nicht');
-      say('m1', 'Kamera nicht verfügbar: ' + camLabelFor(e) + ' (' + errText(e) + ')', true);
-      stopCam(true);
-    }
-    render();
-  }
-  function measureFps() {
-    var v = $('video'); if (!v.requestVideoFrameCallback) return;
-    var n = 0, t0 = null;
-    function cb(now) {
-      if (t0 === null) t0 = now; n++;
-      if (now - t0 < 2000 && stream) v.requestVideoFrameCallback(cb);
-      else if (R.cam && n > 1) { R.cam.fps = (n - 1) / ((now - t0) / 1000); render(); }
-    }
-    v.requestVideoFrameCallback(cb);
-  }
-  function stopCam(silent) {
+  var KIND = { wide: 'einzelne Weitwinkel-Hauptkamera (1x)', multi: 'zusammengeschaltete Kamera (mehrere Linsen)', ultra: 'Ultraweitwinkel', tele: 'Tele', front: 'vorne', other: 'unklar' };
+  function gum(c) { return navigator.mediaDevices.getUserMedia(c); }
+  function closeStream() {
     if (stream) stream.getTracks().forEach(function (t) { t.stop(); });
     stream = null; track = null;
-    var v = $('video'); v.srcObject = null;
-    $('vf').classList.remove('live');
-    $('camStop').disabled = true; $('camLadder').disabled = true; $('shoot').disabled = true;
-    if (!silent) { setChip('c1', 'idle', 'gestoppt'); render(); }
+    var v = $('video'); v.srcObject = null; $('vf').classList.remove('live');
   }
-  async function ladder() {
-    if (!track) { say('m1', 'Zuerst „Kamera starten“.', true); return; }
-    var btn = $('camLadder'); btn.disabled = true; say('m1', 'Prüfe Auflösungen, das Bild kann kurz flackern …');
-    var orig = track.getSettings(); R.ladder = [];
-    var list = [[4032, 3024], [3840, 2160], [2592, 1944], [1920, 1440], [1920, 1080], [1280, 960], [1280, 720]];
-    for (var i = 0; i < list.length && track; i++) {
-      var w = list[i][0], h = list[i][1], ok = false, got = '';
-      try {
-        await track.applyConstraints({ width: { exact: w }, height: { exact: h } });
-        await sleep(450);
-        var s = track.getSettings(); got = s.width + '×' + s.height;
-        ok = (s.width === w && s.height === h) || (s.width === h && s.height === w);
-      } catch (e) {
-        try { await track.applyConstraints({ width: { exact: h }, height: { exact: w } }); await sleep(450); var s2 = track.getSettings(); got = s2.width + '×' + s2.height; ok = (s2.width === h && s2.height === w) || (s2.width === w && s2.height === h); } catch (e2) { got = (e2 && e2.name) || 'Fehler'; }
-      }
-      R.ladder.push({ w: w, h: h, ok: ok, got: got });
-      render();
+  function watchTrack(t) {
+    ['ended', 'mute', 'unmute'].forEach(function (n) {
+      t.addEventListener(n, function () { if (t === track) logEvent('Kamera-Spur: ' + ({ ended: 'beendet', mute: 'stummgeschaltet', unmute: 'wieder aktiv' })[n]); });
+    });
+  }
+  async function openStream(dev, w, h, exact) {
+    closeStream();
+    function mk(W, H) {
+      var v = { frameRate: { ideal: 30 } };
+      v.width = exact ? { exact: W } : { ideal: W }; v.height = exact ? { exact: H } : { ideal: H };
+      if (dev && dev.id) v.deviceId = { exact: dev.id }; else v.facingMode = { ideal: 'environment' };
+      return { audio: false, video: v };
     }
-    if (track && orig && orig.width) { try { await track.applyConstraints({ width: { exact: orig.width }, height: { exact: orig.height } }); } catch (e) { /* egal */ } }
-    btn.disabled = !track; say('m1', 'Auflösungsprüfung fertig.');
-    render();
+    var t0 = performance.now(), s = null, err = null, swapped = false;
+    try { s = await gum(mk(w, h)); }
+    catch (e) { err = e; if (exact) { try { s = await gum(mk(h, w)); swapped = true; err = null; } catch (e2) { err = e2; } } }
+    if (!s) return { err: errText(err) + (err && err.constraint ? ' (' + err.constraint + ')' : '') };
+    stream = s; track = s.getVideoTracks()[0]; lastOpen = { dev: dev, w: w, h: h, exact: exact }; watchTrack(track);
+    var v = $('video'); v.srcObject = s;
+    try { await v.play(); } catch (e) { /* muted autoplay */ }
+    await new Promise(function (res) { if (v.videoWidth) return res(); v.onloadedmetadata = function () { res(); }; setTimeout(res, 3000); });
+    $('vf').classList.add('live');
+    return { ms: Math.round(performance.now() - t0), swapped: swapped };
+  }
+  function fpsFor(ms) {
+    var v = $('video');
+    return new Promise(function (res) {
+      if (!v.requestVideoFrameCallback) { setTimeout(function () { res(null); }, ms); return; }
+      var n = 0, t0 = null, done = false;
+      function fin(val) { if (!done) { done = true; res(val); } }
+      (function cb(now) {
+        if (done) return;
+        if (t0 === null) t0 = now; n++;
+        if (now - t0 < ms && stream) v.requestVideoFrameCallback(cb); else fin(n > 1 ? (n - 1) / ((now - t0) / 1000) : 0);
+      })(performance.now());
+      v.requestVideoFrameCallback(function cb2(now) {
+        if (done) return;
+        if (t0 === null) t0 = now; n++;
+        if (now - t0 < ms && stream) v.requestVideoFrameCallback(cb2); else fin(n > 1 ? (n - 1) / ((now - t0) / 1000) : 0);
+      });
+      setTimeout(function () { fin(n > 1 && t0 !== null ? n / (ms / 1000) : 0); }, ms + 1500);
+    });
+  }
+  var cv = document.createElement('canvas');
+  async function stillFromVideo() {
+    var v = $('video'), w = v.videoWidth, h = v.videoHeight;
+    if (!w) return { err: 'Videobild leer' };
+    var t0 = performance.now();
+    try {
+      cv.width = w; cv.height = h; cv.getContext('2d').drawImage(v, 0, 0, w, h);
+      var blob = await new Promise(function (r) { cv.toBlob(r, 'image/jpeg', 0.92); });
+      var ms = Math.round(performance.now() - t0), m = metrics(cv, w, h);
+      cv.width = 1; cv.height = 1;
+      return { w: w, h: h, bytes: blob ? blob.size : null, ms: ms, sharp: m.sharp, sharp2: m.sharp2, bright: m.bright, thumb: m.thumb };
+    } catch (e) { cv.width = 1; cv.height = 1; return { err: errText(e) }; }
+  }
+  async function tryGrab(ic) {
+    var t0 = performance.now();
+    try { var bm = await withTimeout(ic.grabFrame(), 5000), r = { w: bm.width, h: bm.height, ms: Math.round(performance.now() - t0) }; if (bm.close) bm.close(); return r; }
+    catch (e) { return { err: errText(e) }; }
+  }
+  async function tryTake(ic, name, opts) {
+    var t0 = performance.now(), req = opts ? opts.imageWidth + '×' + opts.imageHeight : 'ohne Angaben';
+    try {
+      var b = await withTimeout(ic.takePhoto(opts), 10000), ms = Math.round(performance.now() - t0);
+      var a = await analyzeBlob(b); a.ms = ms;
+      return { name: name, req: req, a: a };
+    } catch (e) { return { name: name, req: req, err: errText(e) }; }
+  }
+  async function photoCaps(ic) {
+    var o = {};
+    try {
+      var c = await withTimeout(ic.getPhotoCapabilities(), 4000);
+      o.caps = c;
+      o.txt = (c.imageWidth ? 'Breite ' + c.imageWidth.min + '–' + c.imageWidth.max : 'Breite nicht gemeldet') + ', ' + (c.imageHeight ? 'Höhe ' + c.imageHeight.min + '–' + c.imageHeight.max : 'Höhe nicht gemeldet');
+    } catch (e) { o.err = errText(e); }
+    try { if (ic.getPhotoSettings) { var s = await withTimeout(ic.getPhotoSettings(), 4000); o.set = (s.imageWidth ? s.imageWidth + '×' + s.imageHeight : 'ohne Größe'); } } catch (e) { o.setErr = errText(e); }
+    return o;
   }
 
-  /* ---------- Auslösen ---------- */
-  async function shoot() {
-    if (!track || !stream) { say('m3', 'Zuerst Kamera (1) starten.', true); return; }
-    var btn = $('shoot'); btn.disabled = true; say('m3', 'Löst aus …');
-    var v = $('video'), shot = { no: R.shots.length + 1, s1: snapshot(), at: new Date() }, t0 = performance.now();
+  /* ---------- Plan ---------- */
+  async function discover() {
+    var devs = [];
+    try { devs = (await navigator.mediaDevices.enumerateDevices()).filter(function (d) { return d.kind === 'videoinput'; }); } catch (e) { R.devErr = errText(e); }
+    R.devices = devs.map(function (d) { return { id: d.deviceId, label: d.label || '(ohne Namen)', kind: classify(d.label) }; });
+    var wide = R.devices.filter(function (d) { return d.kind === 'wide'; }), multi = R.devices.filter(function (d) { return d.kind === 'multi'; });
+    var MA = [[4032, 3024], [2592, 1944], [1920, 1440], [1920, 1080]], MB = [[4032, 3024], [1920, 1080]], plan = [];
+    wide.slice(0, 2).forEach(function (d) { plan.push({ dev: d, name: d.label, modes: MA, tk: 3 }); });
+    if (!wide.length && !multi.length) plan.push({ dev: null, name: 'Standard (hinten)', modes: MA, tk: 3 });
+    if (multi.length) plan.push({ dev: multi[0], name: multi[0].label, modes: wide.length ? MB : MA, tk: wide.length ? 2 : 3 });
+    R.plan = plan;
+  }
+  async function measureMode(pl, w, h) {
+    var rec = { cam: pl.name, ask: w + '×' + h, takes: [] };
+    var o = await openStream(pl.dev, w, h, true);
+    if (o.err) { rec.err = o.err; return rec; }
+    var v = $('video'), st = track.getSettings ? track.getSettings() : {}, cp = track.getCapabilities ? track.getCapabilities() : {};
+    rec.vw = v.videoWidth; rec.vh = v.videoHeight; rec.set = st.width + '×' + st.height; rec.zoom = st.zoom != null ? st.zoom : null;
+    rec.zoomRange = cp.zoom ? [cp.zoom.min, cp.zoom.max] : null; rec.startMs = o.ms; rec.swapped = o.swapped;
+    await sleep(700);
+    rec.fps = await fpsFor(1000);
+    rec.shake = shake(600);
+    rec.still = await stillFromVideo();
+    if ('ImageCapture' in window) {
+      var ic = null;
+      try { ic = new ImageCapture(track); } catch (e) { rec.icErr = errText(e); }
+      if (ic) {
+        rec.grab = await tryGrab(ic);
+        rec.pc = await photoCaps(ic);
+        var strat = [{ n: 'ohne Angaben', o: undefined }], c = rec.pc.caps;
+        if (c && c.imageWidth && c.imageHeight) {
+          strat.push({ n: 'Größtwert laut Kamera', o: { imageWidth: c.imageWidth.max, imageHeight: c.imageHeight.max } });
+          if (pl.tk > 2) strat.push({ n: 'Kleinstwert laut Kamera', o: { imageWidth: c.imageWidth.min, imageHeight: c.imageHeight.min } });
+        }
+        for (var i = 0; i < strat.length; i++) {
+          if (aborted) break;
+          var t = await tryTake(ic, strat[i].n, strat[i].o); t.shake = shake(600); rec.takes.push(t);
+        }
+      }
+    } else { rec.noIC = true; }
+    return rec;
+  }
+  function prog(k, total, text) { var p = $('prog'); p.hidden = false; p.max = total; p.value = k; say('m1', 'Schritt ' + (k + 1) + ' von ' + total + ': ' + text); }
+  async function runTest() {
+    if (running) return;
+    running = true; aborted = false; R.matrix = []; R.testErr = null; R.camErr = null; R.done = false;
+    $('go').disabled = true; $('abort').disabled = false; $('stopAll').disabled = true;
+    setChip('c1', 'idle', 'läuft …'); render();
     try {
-      var w = v.videoWidth, h = v.videoHeight, c = $('grab'); c.width = w; c.height = h;
-      c.getContext('2d').drawImage(v, 0, 0, w, h);
-      var blob = await new Promise(function (res) { c.toBlob(res, 'image/jpeg', 0.92); });
-      shot.frame = { w: w, h: h, bytes: blob ? blob.size : null, ms: Math.round(performance.now() - t0) };
-      shot.s2 = snapshot();
-      var m = metrics(c, w, h); shot.frame.sharp = m.sharp; shot.frame.bright = m.bright; shot.frame.thumb = m.thumb;
-    } catch (e) { shot.frame = { err: errText(e) }; }
-    if ('ImageCapture' in window && track) {
-      try {
-        var ic = new ImageCapture(track), caps = null;
-        try { caps = await ic.getPhotoCapabilities(); } catch (ce) { /* egal */ }
-        var t1 = performance.now(), opts = null, pb;
-        if (caps && caps.imageWidth && caps.imageHeight) opts = { imageWidth: caps.imageWidth.max, imageHeight: caps.imageHeight.max };
-        try { pb = await ic.takePhoto(opts || undefined); } catch (te) { pb = await ic.takePhoto(); opts = null; }
-        var ms = Math.round(performance.now() - t1);
-        shot.s3 = snapshot();
-        shot.photo = await analyzeBlob(pb); shot.photo.ms = ms;
-        shot.photo.req = opts ? opts.imageWidth + '×' + opts.imageHeight : 'Standard';
-        shot.photo.maxCap = caps && caps.imageWidth ? caps.imageWidth.max + '×' + caps.imageHeight.max : null;
-      } catch (e) { shot.photo = { err: errText(e) }; }
-    } else { shot.photo = { na: true }; }
-    R.shots.push(shot);
-    setChip('c3', shot.frame && !shot.frame.err ? (sensorsOn || shot.s1 ? 'ok' : 'warn') : 'bad', shot.frame && !shot.frame.err ? (shot.s1 ? 'geht' : 'ohne Sensor') : 'geht nicht');
-    say('m3', 'Aufnahme ' + shot.no + ' gespeichert.');
-    btn.disabled = !(track && sensorsOn);
+      say('m1', 'Erlaubnis für den Lagesensor …');
+      await sensorsStart();
+      say('m1', 'Erlaubnis für die Kamera …');
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { var e0 = new Error('navigator.mediaDevices fehlt (kein sicherer Kontext oder gesperrt)'); e0.name = 'NichtVorhanden'; throw e0; }
+      try { var s0 = await gum({ audio: false, video: { facingMode: { ideal: 'environment' } } }); R.firstCam = s0.getVideoTracks()[0].label || '(ohne Namen)'; s0.getTracks().forEach(function (t) { t.stop(); }); }
+      catch (e) { R.camErr = errText(e); throw e; }
+      await discover(); render();
+      var total = R.plan.reduce(function (n, p) { return n + p.modes.length; }, 0), k = 0;
+      outer: for (var pi = 0; pi < R.plan.length; pi++) {
+        for (var mi = 0; mi < R.plan[pi].modes.length; mi++) {
+          if (aborted) break outer;
+          var m = R.plan[pi].modes[mi];
+          prog(k, total, R.plan[pi].name + ' ' + m[0] + '×' + m[1]);
+          var rec = await measureMode(R.plan[pi], m[0], m[1]);
+          R.matrix.push(rec); k++; render();
+        }
+      }
+      $('prog').value = $('prog').max;
+      if (aborted) { say('m1', 'Abgebrochen.', true); setChip('c1', 'warn', 'abgebrochen'); }
+      else { R.done = true; await startLiveCam(); say('m1', 'Fertig. Kamera und Lagesensor laufen weiter für die Schritte 2 und 3.'); setChip('c1', anyStill() ? 'ok' : 'bad', anyStill() ? 'fertig' : 'ohne Bild'); }
+    } catch (e) {
+      R.testErr = errText(e);
+      say('m1', 'Abbruch: ' + errText(e), true); setChip('c1', 'bad', 'geht nicht');
+      closeStream();
+    } finally {
+      running = false; $('go').disabled = false; $('abort').disabled = true; $('stopAll').disabled = !(stream || sensorsOn);
+      render(); saveRun();
+    }
+  }
+  function anyStill() { return R.matrix.some(function (r) { return r.still && !r.still.err; }); }
+  async function startLiveCam() {
+    var pl = R.plan[0] || { dev: null }, o = await openStream(pl.dev, 1920, 1440, true);
+    if (o.err) o = await openStream(pl.dev, 1920, 1080, false);
+    camWanted = !o.err; R.live = o.err ? 'Kamera nicht gestartet: ' + o.err : 'Kamera läuft (' + $('video').videoWidth + '×' + $('video').videoHeight + ')';
+    $('stopAll').disabled = !(stream || sensorsOn);
+  }
+
+  /* ---------- Ereignisse: Klappen, Hintergrund, Neustart ---------- */
+  function camHealth() { var v = $('video'); return { has: !!stream, state: track ? track.readyState : '–', muted: track ? track.muted : null, t: v ? v.currentTime : 0 }; }
+  var evTimers = {};
+  function logEvent(name) {
+    var now = performance.now(), last = R.events[R.events.length - 1];
+    if (last && last.name === name && now - last.at < 600 && !last.post) { last.env = envNow(); return; }
+    var e = { at: now, t: (now - T0) / 1000, name: name, env: envNow(), cam0: camHealth(), sen0: oriSeen, wantC: camWanted, wantS: senWanted && sensorsOn, post: null };
+    R.events.push(e); if (R.events.length > 40) R.events.shift();
+    setTimeout(function () { finishEvent(e); }, 2000);
     render();
+  }
+  async function finishEvent(e) {
+    var v = $('video'), vis = document.visibilityState === 'visible';
+    function health() {
+      var c = (e.wantC && stream) ? (track && track.readyState === 'live' && v.currentTime - e.cam0.t > 0.5) : (e.wantC ? false : null);
+      var s = e.wantS ? (oriSeen - e.sen0 > 3) : null;
+      return { cam: c, sen: s };
+    }
+    var h = health(); e.post = { cam: h.cam, sen: h.sen, env: envNow(), restart: null, skipped: null };
+    if (running) { e.post.skipped = 'während der Auto-Messung'; render(); return; }
+    if (!vis) { e.post.skipped = 'Seite im Hintergrund'; render(); return; }
+    if (h.cam === false || h.sen === false) {
+      var rs = {};
+      try {
+        if (h.cam === false && lastOpen) { var o = await openStream(lastOpen.dev, lastOpen.w, lastOpen.h, lastOpen.exact); rs.camTried = true; rs.camErr = o.err || null; }
+        if (h.sen === false) { sensorsRestart(); rs.senTried = true; }
+      } catch (er) { rs.err = errText(er); }
+      await sleep(2000);
+      var t0 = e.cam0.t; var v2 = $('video');
+      rs.camOk = rs.camTried ? !!(stream && track && track.readyState === 'live' && v2.videoWidth > 0) : null;
+      rs.senOk = rs.senTried ? oriCount > 3 : null;
+      e.post.restart = rs;
+    }
+    render(); saveRun();
+  }
+  function bindEnv() {
+    window.addEventListener('resize', function () { logEvent('Fenstergröße geändert'); });
+    window.addEventListener('orientationchange', function () { logEvent('Drehung'); });
+    if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', function () { logEvent('Ausrichtung geändert'); });
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', function () { logEvent('Sichtfenster geändert'); });
+    document.addEventListener('visibilitychange', function () { logEvent(document.visibilityState === 'visible' ? 'Seite wieder sichtbar' : 'Seite verborgen'); });
+    window.addEventListener('pagehide', function () { logEvent('Seite verlassen (pagehide)'); });
+    window.addEventListener('pageshow', function (ev) { logEvent(ev.persisted ? 'Seite aus dem Zwischenspeicher' : 'Seite angezeigt'); });
+    document.addEventListener('freeze', function () { logEvent('Seite eingefroren'); });
+    document.addEventListener('resume', function () { logEvent('Seite aufgetaut'); });
+    if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) navigator.mediaDevices.addEventListener('devicechange', function () { logEvent('Kameraliste geändert'); });
   }
 
   /* ---------- Fotos über Auswahlfeld ---------- */
-  function onPhoto(kind, chipText) {
+  function onPhoto(kind, label) {
     return async function (ev) {
       var f = ev.target.files && ev.target.files[0]; if (!f) return;
-      setChip('c4', 'idle', 'liest …'); say('m4', 'Lese ' + chipText + ' …');
+      setChip('c2', 'idle', 'liest …'); say('m2', 'Lese ' + label + ' …');
       try {
         var a = await analyzeBlob(f); a.kind = kind; a.name = f.name || '';
         R.photos[kind] = a;
-        var anyExif = Object.keys(R.photos).some(function (k) { var x = R.photos[k].exif; return x && !x.error; });
-        setChip('c4', anyExif ? 'ok' : 'warn', anyExif ? 'geht' : 'ohne EXIF');
-        say('m4', chipText + ' gelesen.');
-      } catch (e) { setChip('c4', 'bad', 'geht nicht'); say('m4', 'Foto nicht lesbar: ' + errText(e), true); }
+        var anyExif = Object.keys(R.photos).some(function (k) { var x = R.photos[k].exif; return x && !x.error && (x.focal != null || x.make || x.model); });
+        setChip('c2', anyExif ? 'ok' : 'warn', anyExif ? 'geht' : 'ohne Kamera-Angaben');
+        say('m2', label + ' gelesen.');
+      } catch (e) { setChip('c2', 'bad', 'geht nicht'); say('m2', 'Foto nicht lesbar: ' + errText(e), true); }
       ev.target.value = '';
       render();
     };
   }
 
   /* ---------- Anzeige ---------- */
-  function renderCam() {
-    var c = R.cam, h = '';
-    if (!c) { $('r1').innerHTML = ''; return; }
-    if (c.err) { $('r1').innerHTML = kv([['Angefragt', c.ask], ['Ergebnis', c.why + ' · ' + c.err, 'bad']]); return; }
-    var s = c.set || {}, cp = c.caps || {}, rows = [];
-    rows.push(['Angefragt', c.ask]);
-    rows.push(['Geliefert (Videobild)', c.vw + '×' + c.vh + (s.width && (s.width !== c.vw || s.height !== c.vh) ? ' (Einstellung ' + s.width + '×' + s.height + ')' : ''), 'ok']);
-    rows.push(['Bilder pro Sekunde', (s.frameRate ? 'Einstellung ' + fmt(s.frameRate, 0) : '–') + (c.fps != null ? ', gemessen ' + fmt(c.fps, 0) : '')]);
-    rows.push(['Kamera', c.label]);
-    rows.push(['Weitere Kameras', c.devices && c.devices.length ? c.devices.join(' | ') : 'keine gemeldet']);
-    rows.push(['Blickrichtung', s.facingMode || 'nicht gemeldet']);
-    rows.push(['Zoom', cp.zoom ? 'steuerbar ' + fmt(cp.zoom.min, 1) + '–' + fmt(cp.zoom.max, 1) + 'x, aktuell ' + (s.zoom != null ? fmt(s.zoom, 2) + 'x' : '?') : 'nicht steuerbar', cp.zoom ? 'ok' : '']);
-    rows.push(['Höchstwert laut Kamera', cp.width && cp.height ? cp.width.max + '×' + cp.height.max : 'nicht gemeldet']);
-    rows.push(['Fokus', cp.focusMode ? cp.focusMode.join(', ') : 'nicht gemeldet']);
-    rows.push(['Zeit bis zum Bild', c.startMs + ' ms']);
-    h += kv(rows);
-    if (R.ladder.length) {
-      h += '<p class="sub">Auflösungen (exakt angefragt)</p>' + kv(R.ladder.map(function (l) { return [l.w + '×' + l.h, l.ok ? 'ja' : 'nein (' + l.got + ')', l.ok ? 'ok' : 'bad']; }));
-    }
+  function deviceRows() {
+    var DO = window.DeviceOrientationEvent, needPerm = !!(DO && typeof DO.requestPermission === 'function');
+    var cam = tri(allowed('camera')), acc = tri(allowed('accelerometer')), gyr = tri(allowed('gyroscope')), e = envNow();
+    return [
+      ['Eingetragen', (devName() || '–') + ' · Zustand: ' + (devState() || 'nicht gewählt')],
+      ['System (Browserkennung)', UA.os + (UA.osv ? ' ' + UA.osv : '') + (UA.os.indexOf('iOS') === 0 ? ' (die Version wird bei neuen iOS-Versionen eingefroren gemeldet, die Safari-Version ist verlässlicher)' : '')],
+      ['Browser', UA.br + (UA.brv ? ' ' + UA.brv : '')],
+      ['Bildschirm', e.sw + '×' + e.sh + ' @' + e.dpr + 'x, Fenster ' + e.iw + '×' + e.ih + (e.vvw ? ', Sichtfenster ' + e.vvw + '×' + e.vvh : '')],
+      ['Beim Laden der Seite', envTxt(ENV0)],
+      ['Ausrichtung', (screen.orientation ? screen.orientation.type : 'unbekannt') + ', Winkel ' + e.ang + '°'],
+      ['Als Web-App gestartet', isStandalone() ? 'ja (Home-Bildschirm)' : 'nein (Browser-Tab)'],
+      ['Sicherer Kontext (https)', window.isSecureContext ? 'ja' : 'nein', window.isSecureContext ? 'ok' : 'bad'],
+      ['Seite in einem Rahmen', framed ? 'ja' : 'nein'],
+      ['Rahmenregel Kamera · Beschleunigung · Gyroskop', cam[0] + ' · ' + acc[0] + ' · ' + gyr[0]],
+      ['Foto-Auslöser (ImageCapture)', ('ImageCapture' in window) ? 'vorhanden' : 'fehlt'],
+      ['Lagesensor-Erlaubnis per Tipp nötig', needPerm ? 'ja (iOS-Verfahren)' : 'nein']
+    ];
+  }
+  function renderDevice() {
+    $('r0').innerHTML = kv(deviceRows());
+    var n = $('frameNote'); n.hidden = false;
+    n.innerHTML = framed ? '<b>Eingebettet.</b> Diese Seite läuft in einem Rahmen, Kamera und Sensoren können gesperrt sein.' : '<b>Eigenständige Seite.</b> Kein Rahmen: Die Ergebnisse gelten für eine normale Webseite.';
+    $('ua').textContent = UA.ua;
+  }
+  function renderVerdict() {
+    var v = verdictLines();
+    $('rv').innerHTML = v.length ? '<div class="verdict">' + v.map(function (l) { return '<div>' + esc(l) + '</div>'; }).join('') + '</div>' : '';
+  }
+  function renderMatrix() {
+    var h = '';
+    if (R.camErr) h += kv([['Kamera', R.camErr, 'bad']]);
+    if (R.devices.length) h += '<p class="sub">Kameras laut Gerät</p>' + kv(R.devices.map(function (d) { return [d.label, KIND[d.kind] || d.kind]; }));
+    R.matrix.forEach(function (r) {
+      h += '<p class="sub">' + esc(r.cam + ' · ' + r.ask) + '</p>';
+      if (r.err) { h += kv([['Öffnen', r.err, 'bad']]); return; }
+      var rows = [
+        ['Geliefert', r.vw + '×' + r.vh + (r.swapped ? ' (Breite und Höhe vertauscht angefragt)' : '') + ', ' + (r.fps != null ? fmt(r.fps, 0) + ' Bilder/s' : 'Bildrate unbekannt') + ', Start ' + r.startMs + ' ms' + (r.zoom != null ? ', Zoom ' + fmt(r.zoom, 2) + 'x' : ''), (r.vw === +r.ask.split('×')[0] || r.vw === +r.ask.split('×')[1]) ? 'ok' : 'bad'],
+        ['Standbild aus dem Live-Bild', stillTxt(r.still), r.still && !r.still.err ? 'ok' : 'bad'],
+        r.shake ? ['Wackeln vor dem Standbild', 'Neigung σ ' + fmt(r.shake.p, 2) + '°, Rollen σ ' + fmt(r.shake.r, 2) + '°'] : null
+      ];
+      if (r.grab) rows.push(['grabFrame', r.grab.err ? 'Fehler ' + r.grab.err : r.grab.w + '×' + r.grab.h + ', ' + r.grab.ms + ' ms', r.grab.err ? 'bad' : 'ok']);
+      if (r.pc) rows.push(['Foto-Fähigkeiten (takePhoto)', r.pc.err ? 'Fehler ' + r.pc.err : r.pc.txt + (r.pc.set ? ', Einstellung ' + r.pc.set : '')]);
+      r.takes.forEach(function (t) { rows.push(['takePhoto ' + t.name + (t.req === 'ohne Angaben' ? '' : ' (' + t.req + ')'), takeTxt(t), t.err ? 'bad' : 'ok']); });
+      if (r.noIC) rows.push(['takePhoto', 'ImageCapture fehlt', 'bad']);
+      h += kv(rows);
+      var th = [];
+      if (r.still && r.still.thumb) th.push('<figure><img alt="" src="' + r.still.thumb + '"><figcaption>Standbild</figcaption></figure>');
+      r.takes.forEach(function (t) { if (t.a && t.a.thumb) th.push('<figure><img alt="" src="' + t.a.thumb + '"><figcaption>takePhoto ' + esc(t.name) + '</figcaption></figure>'); });
+      if (th.length) h += '<div class="thumbs">' + th.join('') + '</div>';
+    });
     $('r1').innerHTML = h;
   }
-  function renderSensor() {
-    var h = '', S = R.sensor, rows = [];
-    if (S.err) rows.push(['Fehler', S.err, 'bad']);
-    if (S.perm && (S.perm.ori || S.perm.mot)) rows.push(['Erlaubnis', 'Ausrichtung ' + (S.perm.ori || 'nicht nötig') + ', Bewegung ' + (S.perm.mot || 'nicht nötig'), S.perm.ori === 'granted' ? 'ok' : '']);
-    if (sensorsOn || S.lastHz != null) {
-      var rate = sensorsOn ? hz() : S.lastHz;
-      rows.push(['Messrate', rate ? fmt(rate, 0) + ' pro Sekunde, größte Lücke ' + fmt(maxDt, 0) + ' ms' : 'noch keine Daten', rate ? 'ok' : 'bad']);
-      rows.push(['Beschleunigungsmesser', accCount ? 'liefert Daten' + (accSign ? (accSign > 0 ? ' (Vorzeichen wie Standard)' : ' (Vorzeichen umgekehrt, korrigiert)') : '') : 'keine Daten', accCount ? 'ok' : '']);
-    }
-    h += rows.length ? kv(rows) : '';
-    if (R.rest.length) {
-      h += '<p class="sub">Ruhe (5 Sekunden)</p>';
-      R.rest.forEach(function (r) {
-        h += kv([
-          [r.label, r.n + ' Messwerte, ' + (r.hz ? fmt(r.hz, 0) + ' pro s' : '–') + (r.flat ? ' · Handy lag flach' : '')],
-          ['Neigung', 'Mittel ' + fmt(r.p.mean, 1, true) + '° · Streuung σ ' + fmt(r.p.sd, 2) + '° · Spanne ' + fmt(r.p.max - r.p.min, 1) + '°'],
-          ['Rollen', 'Mittel ' + fmt(r.r.mean, 1, true) + '° · Streuung σ ' + fmt(r.r.sd, 2) + '° · Spanne ' + fmt(r.r.max - r.r.min, 1) + '°']
-        ]);
-      });
-    }
+  function renderPhotos() {
+    var h = '';
+    ['cap', 'lib'].forEach(function (k) {
+      var a = R.photos[k]; if (!a) return;
+      var pre = k === 'cap' ? 'Kamera-App: ' : 'Fotos: ';
+      var rows = [[pre + 'Datei', (a.w ? a.w + '×' + a.h + ' (' + mp(a.w, a.h) + '), ' : '') + bytes(a.bytes) + ', ' + a.type + (sharpTxt(a) ? ', ' + sharpTxt(a) : '') + (a.decodeErr ? ', ' + a.decodeErr : '')]].concat(exifRows(a, pre));
+      h += kv(rows);
+      if (a.thumb) h += '<div class="thumbs"><figure><img alt="" src="' + a.thumb + '"><figcaption>' + esc(pre.replace(': ', '')) + '</figcaption></figure></div>';
+    });
     $('r2').innerHTML = h;
   }
-  function snapText(s) { return s ? fmt(s.p, 1, true) + '° / ' + fmt(s.r, 1, true) + '° (Alter ' + fmt(s.age, 0) + ' ms)' : 'kein Sensorwert'; }
-  function renderShots() {
-    var h = '';
-    R.shots.slice(-8).forEach(function (s) {
-      var rows = [];
-      rows.push(['Aufnahme ' + s.no, s.at.toLocaleTimeString('de-DE')]);
-      rows.push(['Lage beim Tippen', snapText(s.s1) + (s.s1 && s.s1.pMed != null ? ' · Median 250 ms: ' + fmt(s.s1.pMed, 1, true) + '° / ' + fmt(s.s1.rMed, 1, true) + '°' : '')]);
-      if (s.s2) rows.push(['Lage nach Standbild', snapText(s.s2)]);
-      if (s.s3) rows.push(['Lage nach Foto-Auslöser', snapText(s.s3)]);
-      if (s.s1 && s.s1.pa != null) rows.push(['Lage aus Beschleunigung', fmt(s.s1.pa, 1, true) + '° / ' + fmt(s.s1.ra, 1, true) + '° (Unterschied ' + fmt(Math.abs(s.s1.pa - s.s1.p), 1) + '° / ' + fmt(Math.abs(s.s1.ra - s.s1.r), 1) + '°)']);
-      if (s.frame && s.frame.err) rows.push(['Standbild aus Live-Bild', s.frame.err, 'bad']);
-      else if (s.frame) rows.push(['Standbild aus Live-Bild', s.frame.w + '×' + s.frame.h + ', ' + bytes(s.frame.bytes) + ', ' + s.frame.ms + ' ms · Schärfe ' + fmt(s.frame.sharp, 0) + ' · Helligkeit ' + fmt(s.frame.bright, 0), 'ok']);
-      if (s.photo && s.photo.na) rows.push(['Foto-Auslöser (takePhoto)', 'in diesem Browser nicht vorhanden']);
-      else if (s.photo && s.photo.err) rows.push(['Foto-Auslöser (takePhoto)', s.photo.err, 'bad']);
-      else if (s.photo) {
-        rows.push(['Foto-Auslöser (takePhoto)', (s.photo.w ? s.photo.w + '×' + s.photo.h : 'Größe unbekannt') + ', ' + bytes(s.photo.bytes) + ', ' + s.photo.type + ', ' + s.photo.ms + ' ms · Schärfe ' + fmt(s.photo.sharp, 0) + ' · angefragt ' + s.photo.req + (s.photo.maxCap ? ', Höchstwert ' + s.photo.maxCap : ''), 'ok']);
-        exifRows(s.photo, 'takePhoto: ').forEach(function (r) { rows.push(r); });
+  function evRows() {
+    return R.events.map(function (e) {
+      var p = e.post, txt = e.name + ' · ' + envTxt(e.env);
+      var parts = [];
+      if (!p) parts.push('prüft noch …');
+      else {
+        if (p.skipped) parts.push('nicht geprüft (' + p.skipped + ')');
+        else {
+          parts.push('Kamera ' + (p.cam === null ? 'nicht in Betrieb' : p.cam ? 'läuft weiter' : 'liefert nichts mehr') + ', Lagesensor ' + (p.sen === null ? 'nicht in Betrieb' : p.sen ? 'läuft weiter' : 'liefert nichts mehr'));
+          if (p.restart) {
+            var r = p.restart, bits = [];
+            if (r.camTried) bits.push('Kamera neu gestartet: ' + (r.camOk ? 'läuft wieder' : 'läuft nicht' + (r.camErr ? ' (' + r.camErr + ')' : '')));
+            if (r.senTried) bits.push('Lagesensor neu gestartet: ' + (r.senOk ? 'läuft wieder' : 'läuft nicht'));
+            if (r.err) bits.push(r.err);
+            parts.push('Neustart nötig, ' + bits.join('; '));
+          }
+        }
       }
-      h += kv(rows);
+      var bad = p && !p.skipped && (p.cam === false || p.sen === false);
+      return [fmt(e.t, 1) + ' s', txt + ' → ' + parts.join(' · '), p ? (bad ? 'bad' : (p.skipped ? '' : 'ok')) : ''];
     });
-    var last = R.shots[R.shots.length - 1];
-    if (last) {
-      h += '<div class="thumbs">';
-      if (last.frame && last.frame.thumb) h += '<figure><img alt="Standbild aus dem Live-Bild" src="' + last.frame.thumb + '"><figcaption>Standbild aus dem Live-Bild</figcaption></figure>';
-      if (last.photo && last.photo.thumb) h += '<figure><img alt="Foto vom Foto-Auslöser" src="' + last.photo.thumb + '"><figcaption>Foto vom Foto-Auslöser</figcaption></figure>';
-      h += '</div>';
-    }
-    $('r3').innerHTML = h;
   }
-  function renderPhotos() {
-    var h = '', thumbs = '';
-    [['cap', 'Aufgenommen'], ['lib', 'Aus Kamera-App']].forEach(function (k) {
-      var a = R.photos[k[0]]; if (!a) return;
-      var rows = [['Datei (' + k[1] + ')', (a.name || '?') + ' · ' + a.type + ' · ' + bytes(a.bytes)]];
-      rows.push(['Größe', a.w ? a.w + '×' + a.h + ' (' + fmt(a.w * a.h / 1e6, 1) + ' MP)' : (a.decodeErr || 'nicht lesbar'), a.w ? 'ok' : 'bad']);
-      if (a.exif && a.exif.pixX) rows.push(['Größe laut EXIF', a.exif.pixX + '×' + a.exif.pixY]);
-      if (a.sharp != null) rows.push(['Schärfe · Helligkeit', fmt(a.sharp, 0) + ' · ' + fmt(a.bright, 0)]);
-      exifRows(a, '').forEach(function (r) { rows.push(r); });
-      h += kv(rows);
-      if (a.thumb) thumbs += '<figure><img alt="' + esc(k[1]) + '" src="' + a.thumb + '"><figcaption>' + esc(k[1]) + '</figcaption></figure>';
-    });
-    if (thumbs) h += '<div class="thumbs">' + thumbs + '</div>';
-    $('r4').innerHTML = h;
+  function renderEvents() {
+    var rows = evRows();
+    $('r3').innerHTML = rows.length ? kv(rows) : '';
+    var any = R.events.some(function (e) { return e.post && !e.post.skipped; });
+    var badAny = R.events.some(function (e) { return e.post && !e.post.skipped && (e.post.cam === false || e.post.sen === false); });
+    setChip('c3', !R.events.length ? 'idle' : badAny ? 'warn' : any ? 'ok' : 'idle', !R.events.length ? 'nicht getestet' : badAny ? 'Neustart nötig' : any ? 'läuft weiter' : 'wartet');
+    if (R.live) say('m3', R.live);
+  }
+
+  /* ---------- Auswertung der Seite ---------- */
+  function verdictLines() {
+    var L = [];
+    if (!R.matrix.length) return L;
+    var ok = R.matrix.filter(function (r) { return r.still && !r.still.err; });
+    if (!ok.length) { L.push('Kein Standbild aus dem Live-Bild möglich.'); }
+    else {
+      var best = ok.reduce(function (a, b) { return b.still.w * b.still.h > a.still.w * a.still.h ? b : a; });
+      L.push('Größtes Standbild aus dem Live-Bild: ' + best.still.w + '×' + best.still.h + ' (' + mp(best.still.w, best.still.h) + ') mit „' + best.cam + '“, ' + (best.fps != null ? fmt(best.fps, 0) + ' Bilder/s' : '') + '.');
+    }
+    var takes = [], tried = 0, errs = {};
+    R.matrix.forEach(function (r) { r.takes.forEach(function (t) { tried++; if (t.a && t.a.w) takes.push({ t: t, r: r }); else if (t.err) errs[t.err] = (errs[t.err] || 0) + 1; }); });
+    if (R.matrix.some(function (r) { return r.noIC; })) L.push('takePhoto: Schnittstelle fehlt in diesem Browser.');
+    else if (tried) {
+      if (!takes.length) L.push('takePhoto: alle ' + tried + ' Versuche ohne Foto. Fehler: ' + Object.keys(errs).join(' | '));
+      else {
+        var bt = takes.reduce(function (a, b) { return b.t.a.w * b.t.a.h > a.t.a.w * a.t.a.h ? b : a; });
+        L.push('takePhoto: ' + takes.length + ' von ' + tried + ' Versuchen geglückt, größtes Foto ' + bt.t.a.w + '×' + bt.t.a.h + ' (' + mp(bt.t.a.w, bt.t.a.h) + '), „' + bt.t.name + '“, ' + bt.r.cam + ' bei ' + bt.r.ask + '.');
+        var f = Object.keys(errs); if (f.length) L.push('takePhoto gescheitert bei: ' + f.join(' | '));
+      }
+    }
+    var cap = R.photos.cap;
+    if (cap && cap.sharp != null && ok.length) {
+      var bs = ok.reduce(function (a, b) { return b.still.sharp > a.still.sharp ? b : a; });
+      L.push('Schärfe (Maßstab 1024 Pixel Breite, nur Vergleich desselben Motivs): bestes Live-Standbild ' + fmt(bs.still.sharp, 0) + ', Foto der Kamera-App ' + fmt(cap.sharp, 0) + '.');
+    }
+    return L;
   }
 
   /* ---------- Ergebnisblatt ---------- */
-  function exifLine(a) {
-    var x = a.exif || {};
-    if (x.error) return 'EXIF: ' + x.error;
-    return 'EXIF: ' + (((x.make || '') + ' ' + (x.model || '')).trim() || 'ohne Gerät') + ', Brennweite ' + (x.focal != null ? fmt(x.focal, 1) + ' mm' : 'fehlt') + (x.focal35 != null ? ' (' + fmt(x.focal35, 0) + ' mm KB)' : ', KB-Wert fehlt') + ', ' + (lensClass(x.focal35, x.digitalZoom) || 'Kamera unklar') + (x.lens ? ', Objektiv „' + x.lens + '“' : '') + ', Standortdaten ' + (x.hasGps ? 'ja' : 'nein');
-  }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
   function buildSummary() {
-    var L = [], dn = ($('devname').value || '').trim();
-    L.push('FOTO-APP PROBE · Ergebnis');
-    L.push('Stand: ' + new Date().toLocaleString('de-DE'));
-    L.push('Gerät (eingetragen): ' + (dn || 'nicht eingetragen'));
-    L.push('System laut Browserkennung: ' + UA.os + (UA.osv ? ' ' + UA.osv : '') + ' · ' + UA.br + (UA.brv ? ' ' + UA.brv : ''));
-    L.push('Bildschirm: ' + screen.width + '×' + screen.height + ' @' + (window.devicePixelRatio || 1) + 'x · als Web-App gestartet: ' + (isStandalone() ? 'ja' : 'nein') + ' · https: ' + (window.isSecureContext ? 'ja' : 'nein'));
-    L.push('Seite in Rahmen: ' + (framed ? 'ja' : 'nein') + ' · Rahmenregel Kamera: ' + tri(allowed('camera'))[0] + ', Beschleunigung: ' + tri(allowed('accelerometer'))[0] + ', Gyroskop: ' + tri(allowed('gyroscope'))[0]);
-    L.push('');
-    L.push('1 KAMERA LIVE');
-    var c = R.cam;
-    if (!c) L.push('  nicht getestet');
-    else if (c.err) L.push('  geht nicht: ' + c.why + ' (' + c.err + ')');
-    else {
-      L.push('  angefragt ' + c.ask + ', geliefert ' + c.vw + '×' + c.vh + ', ' + (c.fps != null ? fmt(c.fps, 0) + ' Bilder/s' : (c.set && c.set.frameRate ? fmt(c.set.frameRate, 0) + ' Bilder/s (Einstellung)' : 'Bildrate unbekannt')) + ', Start nach ' + c.startMs + ' ms');
-      L.push('  Kamera: ' + c.label + (c.devices && c.devices.length > 1 ? ' (weitere: ' + c.devices.filter(function (d) { return d !== c.label; }).join(' | ') + ')' : ''));
-      L.push('  Zoom: ' + (c.caps && c.caps.zoom ? 'steuerbar ' + fmt(c.caps.zoom.min, 1) + '–' + fmt(c.caps.zoom.max, 1) + 'x, aktuell ' + (c.set && c.set.zoom != null ? fmt(c.set.zoom, 2) + 'x' : '?') : 'nicht steuerbar') + ' · Höchstwert laut Kamera: ' + (c.caps && c.caps.width ? c.caps.width.max + '×' + c.caps.height.max : 'nicht gemeldet'));
+    var d = new Date(), L = [], e = envNow();
+    L.push('FOTO-APP PROBE 2 · Ergebnis');
+    L.push('Stand: ' + d.getDate() + '.' + (d.getMonth() + 1) + '.' + d.getFullYear() + ', ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()));
+    L.push('Gerät (eingetragen): ' + (devName() || '–') + ' · Zustand: ' + (devState() || 'nicht gewählt'));
+    L.push('System laut Browserkennung: ' + UA.os + ' ' + UA.osv + ' · ' + UA.br + ' ' + UA.brv);
+    L.push('Bildschirm: ' + e.sw + '×' + e.sh + ' @' + e.dpr + 'x · Fenster ' + e.iw + '×' + e.ih + ' · beim Laden ' + ENV0.iw + '×' + ENV0.ih + ' Winkel ' + ENV0.ang + '° · als Web-App gestartet: ' + (isStandalone() ? 'ja' : 'nein') + ' · https: ' + (window.isSecureContext ? 'ja' : 'nein'));
+    L.push('Seite in Rahmen: ' + (framed ? 'ja' : 'nein') + ' · ImageCapture: ' + (('ImageCapture' in window) ? 'ja' : 'nein'));
+    if (R.testErr) L.push('FEHLER im Test: ' + R.testErr);
+    if (R.devices.length) { L.push('KAMERAS'); R.devices.forEach(function (x) { L.push('  ' + x.label + ' = ' + (KIND[x.kind] || x.kind)); }); }
+    L.push('LAGESENSOR');
+    var S = R.sensor;
+    L.push('  Erlaubnis: ' + (S.perm ? 'Ausrichtung ' + (S.perm.ori || 'nicht nötig') + ', Bewegung ' + (S.perm.mot || 'nicht nötig') : 'nicht abgefragt') + (S.err ? ' · FEHLER ' + S.err : '') + (S.silent ? ' · keine Messwerte' : ''));
+    var rate = sensorsOn ? hz() : S.lastHz;
+    L.push('  Messrate ' + (rate ? fmt(rate, 0) + '/s' : '–') + ' · größte Lücke ' + fmt(sensorsOn ? maxDt : S.lastGap, 0) + ' ms · Neustarts durch die Seite: ' + S.restarts);
+    if (R.matrix.length) {
+      L.push('AUTO-MESSUNG (Kamera, angefragt → geliefert; Schärfe: Breite 1024 / 2048)');
+      R.matrix.forEach(function (r) {
+        L.push('  [' + r.cam + '] ' + r.ask + (r.err ? ' → FEHLER ' + r.err : ' → ' + r.vw + '×' + r.vh + ' · ' + (r.fps != null ? fmt(r.fps, 0) + ' Bilder/s' : 'Bildrate –') + ' · Start ' + r.startMs + ' ms' + (r.zoom != null ? ' · Zoom ' + fmt(r.zoom, 2) + 'x' : '')));
+        if (r.err) return;
+        L.push('     Standbild: ' + stillTxt(r.still) + (r.shake ? ' · Wackeln σ ' + fmt(r.shake.p, 2) + '°/' + fmt(r.shake.r, 2) + '°' : ''));
+        if (r.grab) L.push('     grabFrame: ' + (r.grab.err ? 'Fehler ' + r.grab.err : r.grab.w + '×' + r.grab.h + ', ' + r.grab.ms + ' ms'));
+        if (r.pc) L.push('     Foto-Fähigkeiten: ' + (r.pc.err ? 'Fehler ' + r.pc.err : r.pc.txt) + (r.pc.set ? ' · Einstellung ' + r.pc.set : ''));
+        r.takes.forEach(function (t) { L.push('     takePhoto ' + t.name + (t.req === 'ohne Angaben' ? '' : ' (' + t.req + ')') + ': ' + takeTxt(t)); });
+        if (r.noIC) L.push('     takePhoto: ImageCapture fehlt');
+      });
+      var v = verdictLines(); if (v.length) { L.push('AUSWERTUNG DER SEITE'); v.forEach(function (x) { L.push('  ' + x); }); }
     }
-    if (R.ladder.length) L.push('  Auflösungen exakt: ' + R.ladder.map(function (l) { return l.w + '×' + l.h + (l.ok ? ' ja' : ' nein'); }).join(', '));
-    L.push('');
-    L.push('2 LAGESENSOR');
-    if (R.sensor.err) L.push('  geht nicht: ' + R.sensor.err);
-    else if (!oriCount && !R.sensor.lastHz && !R.rest.length) L.push('  nicht getestet' + (R.sensor.silent ? ' (keine Daten trotz Erlaubnis)' : ''));
-    else {
-      var rate = sensorsOn ? hz() : R.sensor.lastHz;
-      L.push('  Erlaubnis: ' + (R.sensor.perm && R.sensor.perm.ori ? R.sensor.perm.ori : 'nicht nötig') + ' · Messrate ' + (rate ? fmt(rate, 0) + '/s' : 'unbekannt') + ' · größte Lücke ' + fmt(maxDt, 0) + ' ms · Beschleunigungsmesser ' + (accCount ? 'ja' : 'nein'));
-    }
-    R.rest.forEach(function (r) {
-      L.push('  Ruhe (' + r.label + '): Neigung σ ' + fmt(r.p.sd, 2) + '°, Spanne ' + fmt(r.p.max - r.p.min, 1) + '° · Rollen σ ' + fmt(r.r.sd, 2) + '°, Spanne ' + fmt(r.r.max - r.r.min, 1) + '° · ' + r.n + ' Werte' + (r.flat ? ' · lag flach' : ''));
+    var fov = (document.querySelector('input[name="fov"]:checked') || {}).value;
+    ['cap', 'lib'].forEach(function (k) {
+      var a = R.photos[k]; if (!a) return;
+      var x = a.exif || {};
+      L.push(k === 'cap' ? 'FOTO AUS KAMERA-APP' : 'FOTO AUS FOTOS (optional)');
+      L.push('  ' + (a.w ? a.w + '×' + a.h + ' (' + mp(a.w, a.h) + '), ' : '') + bytes(a.bytes) + ', ' + a.type + (sharpTxt(a) ? ', ' + sharpTxt(a) : ''));
+      if (x.segs) L.push('  JPEG-Abschnitte: ' + x.segs.join(', '));
+      if (x.error) L.push('  EXIF: ' + x.error);
+      else {
+        L.push('  EXIF-Felder: ' + (x.tags0 || []).length + ' + ' + (x.tagsE || []).length + ' (' + (x.tags0 || []).concat(x.tagsE || []).join(' ') + ')');
+        L.push('  Gerät ' + (((x.make || '') + ' ' + (x.model || '')).trim() || 'nicht enthalten') + ' · Brennweite ' + (x.focal != null ? fmt(x.focal, 1) + ' mm' : 'fehlt') + ' · Kleinbild ' + (x.focal35 != null ? fmt(x.focal35, 0) + ' mm' : 'fehlt') + ' · ' + (lensClass(x.focal35, x.digitalZoom) || 'Kamera unklar') + ' · Standortdaten ' + (x.hasGps ? 'ja' : 'nein'));
+      }
     });
-    L.push('');
-    L.push('3 AUSLÖSEN');
-    if (!R.shots.length) L.push('  nicht getestet');
-    R.shots.slice(-8).forEach(function (s) {
-      L.push('  Aufnahme ' + s.no + ': Lage beim Tippen ' + (s.s1 ? fmt(s.s1.p, 1, true) + '° Neigung / ' + fmt(s.s1.r, 1, true) + '° Rollen (Alter ' + fmt(s.s1.age, 0) + ' ms)' : 'kein Sensorwert'));
-      if (s.s3 && s.s1) L.push('    nach takePhoto: ' + fmt(s.s3.p, 1, true) + '° / ' + fmt(s.s3.r, 1, true) + '° (Änderung ' + fmt(Math.abs(s.s3.p - s.s1.p), 1) + '° / ' + fmt(Math.abs(s.s3.r - s.s1.r), 1) + '°)');
-      if (s.frame && !s.frame.err) L.push('    Standbild Live: ' + s.frame.w + '×' + s.frame.h + ', ' + bytes(s.frame.bytes) + ', Schärfe ' + fmt(s.frame.sharp, 0));
-      if (s.photo && s.photo.na) L.push('    takePhoto: nicht vorhanden');
-      else if (s.photo && s.photo.err) L.push('    takePhoto: Fehler ' + s.photo.err);
-      else if (s.photo) { L.push('    takePhoto: ' + (s.photo.w ? s.photo.w + '×' + s.photo.h : '?') + ', ' + bytes(s.photo.bytes) + ', ' + s.photo.ms + ' ms, Schärfe ' + fmt(s.photo.sharp, 0)); L.push('    ' + exifLine(s.photo)); }
-    });
-    L.push('');
-    L.push('4 FOTO ÜBER AUSWAHLFELD');
-    var any = false;
-    [['cap', 'aufgenommen'], ['lib', 'aus Kamera-App']].forEach(function (k) {
-      var a = R.photos[k[0]]; if (!a) return; any = true;
-      L.push('  ' + k[1] + ': ' + (a.w ? a.w + '×' + a.h : 'nicht lesbar') + ', ' + bytes(a.bytes) + ', ' + a.type + (a.sharp != null ? ', Schärfe ' + fmt(a.sharp, 0) : ''));
-      L.push('    ' + exifLine(a));
-    });
-    if (!any) L.push('  nicht getestet');
-    if (R.fov) L.push('  Sichtfeld Live-Bild gegenüber Foto: ' + R.fov);
-    L.push('');
-    L.push('Hinweis: Schärfe = Laplace-Varianz bei 1024 px Breite, nur zum Vergleich desselben Motivs.');
+    if (R.photos.cap) L.push('Sichtfeld Live-Bild (4:3) gegenüber Foto: ' + (fov || 'nicht angegeben'));
+    L.push('EREIGNISSE (Klappen, Hintergrund, Neustart)');
+    if (!R.events.length) L.push('  keine');
+    evRows().forEach(function (r) { L.push('  ' + r[0] + ' · ' + r[1]); });
     return L.join('\n');
   }
+  var lastSaved = 0;
+  function saveRun() {
+    try { localStorage.setItem('fotoAppProbe2.last', JSON.stringify({ t: Date.now(), text: buildSummary() })); } catch (e) { /* ohne Speicher weiter */ }
+  }
+  function loadPrev() {
+    try {
+      var s = localStorage.getItem('fotoAppProbe2.last'); if (!s) return;
+      var o = JSON.parse(s); if (!o || !o.text) return;
+      $('prevBox').hidden = false; $('prev').textContent = o.text;
+    } catch (e) { /* egal */ }
+  }
   function renderSummary() { $('sum').textContent = buildSummary(); }
-  function render() { renderDevice(); renderCam(); renderSensor(); renderShots(); renderPhotos(); renderSummary(); }
+  function render() { renderDevice(); renderVerdict(); renderMatrix(); renderPhotos(); renderEvents(); renderSummary(); }
 
-  /* ---------- Verdrahtung ---------- */
-  $('camStart').addEventListener('click', camStart);
-  $('camStop').addEventListener('click', function () { stopCam(false); });
-  $('camLadder').addEventListener('click', ladder);
-  $('senStart').addEventListener('click', sensorsStart);
-  $('senStop').addEventListener('click', function () { sensorsStop(false); });
-  $('restBtn').addEventListener('click', restMeasure);
-  $('shoot').addEventListener('click', shoot);
-  $('inCap').addEventListener('change', onPhoto('cap', 'Foto aufgenommen'));
-  $('inLib').addEventListener('change', onPhoto('lib', 'Foto aus Kamera-App'));
-  $('devname').addEventListener('input', renderSummary);
-  Array.prototype.forEach.call(document.querySelectorAll('input[name="fov"]'), function (r) { r.addEventListener('change', function () { R.fov = r.value === 'unklar' ? 'nicht verglichen' : r.value; renderSummary(); }); });
-  $('copy').addEventListener('click', async function () {
-    var text = $('sum').textContent;
-    try { await navigator.clipboard.writeText(text); say('m5', 'Text kopiert.'); }
-    catch (e) {
-      try { var rng = document.createRange(); rng.selectNodeContents($('sum')); var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(rng); say('m5', 'Kopieren gesperrt. Der Text ist markiert: lange tippen und „Kopieren“ wählen.'); }
-      catch (e2) { say('m5', 'Kopieren nicht möglich. Bitte Screenshot machen.', true); }
-    }
+  /* ---------- Bedienung ---------- */
+  $('go').addEventListener('click', runTest);
+  $('abort').addEventListener('click', function () { aborted = true; say('m1', 'Bricht nach dem laufenden Schritt ab …'); });
+  $('stopAll').addEventListener('click', function () { camWanted = false; senWanted = false; closeStream(); sensorsDetach(); $('stopAll').disabled = true; say('m1', 'Kamera und Lagesensor sind aus.'); render(); });
+  $('liveOn').addEventListener('click', async function () {
+    if (running) return;
+    say('m3', 'Starte …');
+    var ok = await sensorsStart();
+    try {
+      if (!R.plan.length) { var s0 = await gum({ audio: false, video: { facingMode: { ideal: 'environment' } } }); s0.getTracks().forEach(function (t) { t.stop(); }); await discover(); }
+      await startLiveCam();
+    } catch (e) { R.live = 'Kamera nicht gestartet: ' + errText(e); }
+    R.live = (R.live || '') + ' · Lagesensor ' + (ok ? 'läuft' : 'läuft nicht' + (R.sensor.err ? ' (' + R.sensor.err + ')' : ''));
+    $('stopAll').disabled = false; render();
   });
-  window.addEventListener('orientationchange', function () { renderDevice(); });
-  window.__asProbe = { uFromOri: uFromOri, attitude: attitude, readExif: readExif, fmt: fmt, lensClass: lensClass };
+  $('evClear').addEventListener('click', function () { R.events = []; render(); });
+  $('inCap').addEventListener('change', onPhoto('cap', 'das Foto aus der Kamera-App'));
+  $('inLib').addEventListener('change', onPhoto('lib', 'das Foto aus den Fotos'));
+  $('devname').addEventListener('input', function () { renderSummary(); renderDevice(); });
+  $('devstate').addEventListener('change', function () { render(); });
+  document.querySelectorAll('input[name="fov"]').forEach(function (r) { r.addEventListener('change', function () { renderSummary(); saveRun(); }); });
+  async function copyText(text, msgId) {
+    try { await navigator.clipboard.writeText(text); say(msgId, 'Text kopiert.'); }
+    catch (e) {
+      try { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); say(msgId, 'Text kopiert.'); }
+      catch (e2) { say(msgId, 'Kopieren geht hier nicht. Bitte Screenshot machen.', true); }
+    }
+  }
+  $('copy').addEventListener('click', function () { copyText(buildSummary(), 'm4'); });
+  $('copyPrev').addEventListener('click', function () { copyText($('prev').textContent, 'm4'); });
 
-  renderDevice(); renderSummary(); loadExtraDeviceInfo();
+  bindEnv();
+  loadPrev();
   render();
 })();
 </script>
-
 </body>
 </html>
