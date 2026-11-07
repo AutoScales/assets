@@ -406,7 +406,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     streamOpenedAt: 0, shotsSinceOpen: 0,
     textRot: 0, lastCls: null, wake: null,
     queue: [], uploading: false, pollTimer: null,
-    review: null, zusatzArt: null, fallbackInput: false
+    review: null, zusatzArt: null, fallbackInput: false, smooth: 'high', warmed: false
   };
 
   function slotMeta(id) {
@@ -558,6 +558,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     return { model: ifd0[0x0110] || null, orientation: ifd0[0x0112] != null ? ifd0[0x0112] : null, focal: ex[0x920A] != null ? ex[0x920A] : null, focal35: ex[0xA405] != null ? ex[0xA405] : null };
   }
   async function readExif(blob) {
+    var res = {}, sofW = null, sofH = null;
     try {
       var dv = new DataView(await blob.slice(0, 393216).arrayBuffer());
       if (dv.byteLength < 4 || dv.getUint16(0) !== 0xFFD8) return {};
@@ -566,11 +567,64 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
         var marker = dv.getUint16(off); off += 2;
         if (marker === 0xFFDA || marker === 0xFFD9) break;
         var len = dv.getUint16(off);
-        if (marker === 0xFFE1 && dv.getUint32(off + 2) === 0x45786966) return parseTiff(dv, off + 8) || {};
+        if (marker >= 0xFFC0 && marker <= 0xFFC2 && sofW == null) { sofH = dv.getUint16(off + 3); sofW = dv.getUint16(off + 5); }
+        if (marker === 0xFFE1 && dv.getUint32(off + 2) === 0x45786966 && !res.found) { res = parseTiff(dv, off + 8) || {}; res.found = true; }
         off += len;
       }
     } catch (e) { /* ohne EXIF weiter */ }
-    return {};
+    res.sofW = sofW; res.sofH = sofH;
+    return res;
+  }
+
+  /* Sichtfeld-Vergleich Live-Bild gegen Foto (aus Probe 4, kleiner gerechnet). f > 1: Foto zeigt mehr als das Live-Bild. */
+  function smallOf(src, sw, sh) {
+    var L = 64, w = sw >= sh ? L : Math.max(1, Math.round(L * sw / sh)), h = sw >= sh ? Math.max(1, Math.round(L * sh / sw)) : L;
+    var c = document.createElement('canvas'); c.width = w; c.height = h;
+    var x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(src, 0, 0, w, h);
+    var d = x.getImageData(0, 0, w, h).data, g = new Float32Array(w * h);
+    for (var i = 0, j = 0; i < d.length; i += 4, j++) g[j] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+    c.width = 1; c.height = 1;
+    return { w: w, h: h, g: g };
+  }
+  function rotSmall(Sm, cw) {
+    var w = Sm.h, h = Sm.w, g = new Float32Array(w * h);
+    for (var y = 0; y < Sm.h; y++) for (var x = 0; x < Sm.w; x++) { var nx = cw ? Sm.h - 1 - y : y, ny = cw ? x : Sm.w - 1 - x; g[ny * w + nx] = Sm.g[y * Sm.w + x]; }
+    return { w: w, h: h, g: g };
+  }
+  function fovFit1(A, B) {
+    if (!A || !B || A.w !== B.w || A.h !== B.h) return null;
+    var w = A.w, h = A.h, cx = (w - 1) / 2, cy = (h - 1) / 2;
+    function sample(g, x, y) {
+      if (x < 0 || y < 0 || x > w - 1 || y > h - 1) return NaN;
+      var x0 = Math.floor(x), y0 = Math.floor(y), fx = x - x0, fy = y - y0, x1 = Math.min(w - 1, x0 + 1), y1 = Math.min(h - 1, y0 + 1);
+      return (g[y0 * w + x0] * (1 - fx) + g[y0 * w + x1] * fx) * (1 - fy) + (g[y1 * w + x0] * (1 - fx) + g[y1 * w + x1] * fx) * fy;
+    }
+    function ncc(f, tx, ty) {
+      var n = 0, sa = 0, sb = 0, saa = 0, sbb = 0, sab = 0;
+      for (var y = 0; y < h; y++) for (var x = 0; x < w; x++) {
+        var a = sample(A.g, (x - cx) * f + cx + tx, (y - cy) * f + cy + ty);
+        if (a !== a) continue;
+        var b = B.g[y * w + x]; n++; sa += a; sb += b; saa += a * a; sbb += b * b; sab += a * b;
+      }
+      if (n < w * h * 0.3) return -1;
+      var cov = sab - sa * sb / n, va = saa - sa * sa / n, vb = sbb - sb * sb / n;
+      return va > 1e-6 && vb > 1e-6 ? cov / Math.sqrt(va * vb) : -1;
+    }
+    var best = { f: 1, r: -1 };
+    function scan(f0, f1, step) { for (var f = f0; f <= f1 + 1e-9; f += step) for (var ty = -1; ty <= 1; ty++) for (var tx = -1; tx <= 1; tx++) { var r = ncc(f, tx, ty); if (r > best.r) best = { f: f, r: r }; } }
+    scan(0.7, 1.5, 0.02); var c0 = best.f; scan(c0 - 0.02, c0 + 0.02, 0.005);
+    return { f: best.f, r: best.r };
+  }
+  // A = Live-Bild, B = Foto. Stehen beide gleich herum: direkt. Sonst B in beide Richtungen drehen (Live-Bild quer, Foto hochkant oder umgekehrt).
+  function fovFit(A, B) {
+    if (!A || !B) return null;
+    if (A.w === B.w && A.h === B.h) return fovFit1(A, B);
+    if (A.w === B.h && A.h === B.w) {
+      var c1 = fovFit1(A, rotSmall(B, true)), c2 = fovFit1(A, rotSmall(B, false));
+      if (!c1 && !c2) return null;
+      return c1 && (!c2 || c1.r >= c2.r) ? c1 : c2;
+    }
+    return null;
   }
 
   /* =====================================================================
@@ -719,7 +773,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
       }
       // 3) Einschwingzeit nach dem Kamerastart
       var settle = CFG.SETTLE_MS - (performance.now() - S.streamOpenedAt);
-      if (settle > 0) { say('Kamera wird bereit …'); S.phase = 'settle'; await sleepC(my, settle); }
+      if (settle > 0) { say('Kamera wird bereit …'); S.phase = 'settle'; warmUp(); await sleepC(my, settle); }
       say('');
       // 4) Selbstauslöser; nach Ablauf der Zeit erscheint zusätzlich der Knopf „Jetzt“
       S.phase = 'still';
@@ -798,22 +852,37 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
   }
   async function decodeImage(blob) {
     var url = URL.createObjectURL(blob), im = new Image();
+    var loaded = new Promise(function (res, rej) { im.onload = res; im.onerror = function () { rej(new Error('Bild nicht lesbar')); }; });
     im.src = url;
-    try { await im.decode(); } catch (e) { await new Promise(function (res, rej) { im.onload = res; im.onerror = function () { rej(new Error('Bild nicht lesbar')); }; if (im.complete && im.naturalWidth) res(); }); }
+    await loaded;   // Maße (mit EXIF-Ausrichtung) stehen ab hier fest
+    // decode() holt das Entschlüsseln vor das Zeichnen; im Hintergrund oder bei Last darf es nicht ewig hängen
+    try { await Promise.race([im.decode(), sleep(500)]); } catch (e) { /* drawImage entschlüsselt selbst */ }
     return { el: im, w: im.naturalWidth, h: im.naturalHeight, url: url };
   }
   function toBlob(c, q) { return new Promise(function (r) { c.toBlob(r, 'image/jpeg', q); }); }
   // dreht (rot = Grad im Uhrzeigersinn) und verkleinert auf lange Seite CFG.LONG_EDGE, Qualität CFG.QUALITY
   async function renderUpright(img, rot) {
-    var quarter = rot === 90 || rot === 270, ow = quarter ? img.h : img.w, oh = quarter ? img.w : img.h, s = Math.min(1, CFG.LONG_EDGE / Math.max(ow, oh));
+    var t0 = performance.now(), quarter = rot === 90 || rot === 270, ow = quarter ? img.h : img.w, oh = quarter ? img.w : img.h, s = Math.min(1, CFG.LONG_EDGE / Math.max(ow, oh));
     var c = document.createElement('canvas'); c.width = Math.max(1, Math.round(ow * s)); c.height = Math.max(1, Math.round(oh * s));
-    var x = c.getContext('2d'); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
+    var x = c.getContext('2d'); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = S.smooth;
     x.translate(c.width / 2, c.height / 2); x.rotate(rot * RAD); x.drawImage(img.el, -img.w * s / 2, -img.h * s / 2, img.w * s, img.h * s);
-    var blob = await toBlob(c, CFG.QUALITY);
+    var t1 = performance.now(), blob = await toBlob(c, CFG.QUALITY), t2 = performance.now();
     var tw = 320, th = Math.round(320 * c.height / c.width), t = document.createElement('canvas'); t.width = tw; t.height = th; t.getContext('2d').drawImage(c, 0, 0, tw, th);
     var thumb = t.toDataURL('image/jpeg', 0.7); t.width = 1; t.height = 1;
-    var out = { blob: blob, w: c.width, h: c.height, thumb: thumb }; c.width = 1; c.height = 1;
+    var out = { blob: blob, w: c.width, h: c.height, thumb: thumb, ms: { zeichnen: Math.round(t1 - t0), kodieren: Math.round(t2 - t1), vorschau: Math.round(performance.now() - t2), glaettung: S.smooth } }; c.width = 1; c.height = 1;
+    // Auf schwachen Geräten (gemessen: Chrome Android 4 s) die Glättung herunterschalten, damit es schnell bleibt
+    if (t2 - t0 > 1500 && S.smooth !== 'low') S.smooth = S.smooth === 'high' ? 'medium' : 'low';
     return out;
+  }
+  // Einmalige Aufwärmrunde (Canvas, Kodierer), damit das erste echte Foto nicht die Anlaufzeit trägt
+  async function warmUp() {
+    if (S.warmed) return; S.warmed = true;
+    try {
+      var c = document.createElement('canvas'); c.width = 2560; c.height = 1920; var x = c.getContext('2d'); x.imageSmoothingQuality = S.smooth;
+      var g = x.createLinearGradient(0, 0, 2560, 1920); g.addColorStop(0, '#345'); g.addColorStop(1, '#eed'); x.fillStyle = g; x.fillRect(0, 0, 2560, 1920);
+      x.drawImage(c, 100, 100, 2000, 1500, 0, 0, 1600, 1200);
+      await toBlob(c, CFG.QUALITY); c.width = 1; c.height = 1;
+    } catch (e) { /* egal */ }
   }
   function ampelHandy(snap, f35) {
     var lvl = 0, why = [], sensor = !!(snap && snap.p != null);
@@ -834,28 +903,39 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     var snap = snapshot(), cls = (gravClass() || (S.lastCls && performance.now() - S.lastCls.t < 3000 ? S.lastCls.cls : null)), t0 = performance.now(), blob;
     if (snap && snap.age > 800) snap = null;
     S.phase = 'shoot'; $('shotBtn').hidden = true; say('Foto wird gemacht …');
+    var live = null; try { live = smallOf($('video'), S.vw, S.vh); } catch (e) { /* ohne Vergleich weiter */ }
     try { blob = await withTimeout(S.ic.takePhoto(), 15000); }
     catch (e) { if (my !== S.token) throw CANCEL; problem('Das Foto konnte nicht gemacht werden', errText(e), true); return; }
     chk(my);
     flash();
     var takeMs = Math.round(performance.now() - t0);
     say('Foto wird verkleinert …');
-    await processAndReview(my, blob, { snap: snap, cls: cls, how: how, takeMs: takeMs, quelle: 'kamera' });
+    await processAndReview(my, blob, { snap: snap, cls: cls, how: how, takeMs: takeMs, quelle: 'kamera', live: live, video: S.vw + 'x' + S.vh });
   }
   async function processAndReview(my, blob, o) {
     try {
-      var exif = await readExif(blob), img = await decodeImage(blob), rot = 0, note = '';
-      if (o.quelle === 'kamera' && img.h > img.w) {
-        // Hochformat-Pixel (typisch iPhone, Fold): nach der Schwerkraft quer drehen
+      var T0 = performance.now(), exif = await readExif(blob), img = await decodeImage(blob), tDec = Math.round(performance.now() - T0), rot = 0, note = '', ex = [];
+      // Hat der Browser die EXIF-Ausrichtung angewandt? (Maße des Bildes gegen die Maße im JPEG; manche Browser tun es nicht)
+      var orient = exif.orientation || 1, effW = img.w, effH = img.h, extra = 0;
+      if (exif.sofW && (orient === 6 || orient === 8) && exif.sofW !== exif.sofH && img.w === exif.sofW && img.h === exif.sofH) { extra = orient === 6 ? 90 : 270; effW = img.h; effH = img.w; note = 'EXIF-Ausrichtung selbst angewandt'; }
+      if (o.quelle === 'kamera' && effH > effW) {
+        // Hochformat-Pixel (typisch iPhone, Fold, Samsung): nach der Schwerkraft quer drehen
         var cls = o.cls;
         if (/Kopf links/.test(cls || '')) rot = 270; else if (/Kopf rechts/.test(cls || '')) rot = 90;
-        else if (cls === null) { var a = screenAngle(); rot = a === 90 ? 270 : a === 270 ? 90 : 0; note = 'Drehung ohne Sensor nach Bildschirm'; }
+        else if (cls === null) { var a = screenAngle(); rot = a === 90 ? 270 : a === 270 ? 90 : 0; note = (note ? note + '; ' : '') + 'Drehung ohne Sensor nach Bildschirm'; }
       }
-      var res = await renderUpright(img, rot); URL.revokeObjectURL(img.url);
+      var res = await renderUpright(img, (rot + extra) % 360);
+      // Sichtfeld Foto gegen Live-Bild messen (nur zum Protokollieren, Foto bleibt unverändert)
+      var fovP = null;
+      if (o.live && o.quelle === 'kamera') {
+        fovP = (async function () { await sleep(30); try { var pm = smallOf(img.el, img.w, img.h); if (extra) pm = extra === 90 ? rotSmall(pm, true) : rotSmall(pm, false); var fr = fovFit(o.live, pm); URL.revokeObjectURL(img.url); return fr ? { faktor: +fr.f.toFixed(3), passung: +fr.r.toFixed(2) } : null; } catch (e) { URL.revokeObjectURL(img.url); return null; } })();
+      } else URL.revokeObjectURL(img.url);
       chk(my);
-      var f35 = exif.focal35 != null ? exif.focal35 : null, am = ampelHandy(o.snap, f35);
-      var r = { slot: S.cur, blob: res.blob, w: res.w, h: res.h, thumb: res.thumb, drehung: rot, hand: 0, f35: f35, exif: { orient: exif.orientation, focal: exif.focal, model: exif.model }, srcW: img.w, srcH: img.h,
-        snap: o.snap, cls: o.cls, ampel: am.ampel, gruende: am.gruende, how: o.how || {}, takeMs: o.takeMs, quelle: o.quelle, note: note, url: null };
+      var f35 = exif.focal35 != null ? exif.focal35 : null, am = ampelHandy(o.snap, f35), amp = am.ampel, why = am.gruende.slice();
+      if (res.h > res.w) { amp = 'rot'; why.push('Foto ist hochkant (Handy war nicht quer)'); }
+      var r = { slot: S.cur, blob: res.blob, w: res.w, h: res.h, thumb: res.thumb, drehung: (rot + extra) % 360, hand: 0, f35: f35, exif: { orient: exif.orientation, focal: exif.focal, model: exif.model }, srcW: img.w, srcH: img.h,
+        snap: o.snap, cls: o.cls, ampel: amp, gruende: why, how: o.how || {}, takeMs: o.takeMs, quelle: o.quelle, note: note, url: null, fovP: fovP, video: o.video || null,
+        zeiten: { entschluesseln: tDec, gesamt: Math.round(performance.now() - T0), zeichnen: res.ms.zeichnen, kodieren: res.ms.kodieren, vorschau: res.ms.vorschau, glaettung: res.ms.glaettung } };
       showReview(r);
     } catch (e) {
       if (e === CANCEL) return;
@@ -888,8 +968,10 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     $('revRot').disabled = false;
   };
   function discardReview() { var r = S.review; if (r && r.url) URL.revokeObjectURL(r.url); S.review = null; }
-  $('revOk').onclick = function () {
+  $('revOk').onclick = async function () {
     var r = S.review; if (!r) return; $('revOk').disabled = true;
+    var fov = null; if (r.fovP) { try { fov = await Promise.race([r.fovP, sleep(1500).then(function () { return null; })]); } catch (e) { fov = null; } }
+    if (S.review !== r) return;
     var st = slotState(r.slot), m = slotMeta(r.slot);
     st.thumb = r.thumb; st.state = 'wartet'; st.err = null; st.fotoId = uuid(); st.ampelHandy = r.ampel; st.server = null;
     if (m.art === 'zusatz') st.zusatz_art = S.zusatzArt;
@@ -897,7 +979,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
       id: st.fotoId, fahrzeug_id: S.vehicle.id, platz: m.key, zusatz_nr: m.zusatz_nr, zusatz_art: m.art === 'zusatz' ? S.zusatzArt : null,
       ampel_handy: r.ampel, ampel_handy_gruende: r.gruende.join('; '), geraet: dev(), brennweite_kb: r.f35, neigung: r.snap ? +r.snap.p.toFixed(1) : null, rollen: r.snap ? +r.snap.r.toFixed(1) : null,
       drehung: r.drehung, breite: r.w, hoehe: r.h, bytes: r.blob.size,
-      app_details: { app: APP, quelle: r.quelle, selbstausloeser: !!r.how.auto, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, aufnahme_ms: r.takeMs, kamera: S.camNote }
+      app_details: { app: APP, quelle: r.quelle, selbstausloeser: !!r.how.auto, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null }
     };
     var item = { slot: r.slot, id: st.fotoId, path: S.vehicle.id + '/' + m.key + '_' + st.fotoId + '.jpg', blob: r.blob, meta: meta, tries: 0, fileDone: false, state: 'wartet' };
     discardReview();
