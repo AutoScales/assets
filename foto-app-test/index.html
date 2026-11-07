@@ -107,7 +107,11 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
 .hud-top { position: absolute; left: 14px; right: 14px; top: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
 .chipbox { max-width: 66%; background: rgba(11,12,16,.72); padding: 8px 12px; border-radius: 4px; }
 .chipbox b { display: block; font: 700 15px/1.3 var(--font-body); }
-.chipbox > span { display: block; font-size: 13px; line-height: 1.35; color: #E5E7EB; margin-top: 2px; }
+.chipbox b ~ span { display: block; font-size: 13px; line-height: 1.35; color: #E5E7EB; margin-top: 2px; }
+.chipbox #revDbg { font: 500 11px/1.35 var(--font-data); color: var(--as-gold); }
+.chiprow { display: flex; gap: 10px; align-items: center; }
+#camDiag:empty { display: none; }
+#camDiag svg { display: block; width: 64px; height: 64px; }
 .chipbox .amp.l { display: inline-flex; vertical-align: middle; margin-left: 6px; background: rgba(250,250,250,.16); }
 .chipbox .amp i { width: 11px; height: 11px; }
 .xbtn { min-width: 44px; min-height: 44px; border-radius: 50%; border: 0; background: rgba(11,12,16,.72); color: #FAFAFA; font-size: 22px; line-height: 1; cursor: pointer; }
@@ -178,7 +182,8 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
   <ul class="hints">
     <li><b>6 Außenbilder</b> in fester Reihenfolge, dann <b>4 Innenbilder</b>. Zusatzbilder sind freiwillig.</li>
     <li>Handy <b>quer</b> halten, Kamera <b>1x</b>, ruhig und gerade. Die App löst selbst aus.</li>
-    <li>Du siehst jedes Foto und tippst <b>Passt</b> oder <b>Neu</b>. Erst bei „Passt“ geht es hoch.</li>
+    <li data-du="Du siehst jedes Foto und tippst <b>Passt</b> oder <b>Neu</b>. Erst bei „Passt“ geht es hoch." data-sie="Sie sehen jedes Foto und tippen auf <b>Passt</b> oder <b>Neu</b>. Erst bei „Passt“ wird hochgeladen.">Du siehst jedes Foto und tippst <b>Passt</b> oder <b>Neu</b>. Erst bei „Passt“ geht es hoch.</li>
+    <li id="hHint"></li>
   </ul>
   <p class="priv"><b>Testfassung:</b> bitte nur Testfotos, keine Kundenfahrzeuge mit Personen oder Papieren. Die App schickt Fotos nur an den eingetragenen Test-Server der AutoScales GmbH i.G. (Frankfurt). Auf dem Handy bleibt nichts gespeichert.</p>
   <p class="srv" id="srvInfo"></p>
@@ -223,7 +228,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
       <div class="lvl" aria-hidden="true"><div class="lvl-h" id="lvlH"></div><div class="lvl-c"></div></div>
       <div class="lvl-t" id="lvlT">–</div>
       <div class="hud-top">
-        <div class="chipbox"><b id="camLbl"></b><span id="camHint"></span></div>
+        <div class="chipbox"><div class="chiprow"><span id="camDiag" aria-hidden="true"></span><div><b id="camLbl"></b><span id="camHint"></span></div></div></div>
         <button class="xbtn" id="camX" type="button" aria-label="Kamera schließen">×</button>
       </div>
       <div class="mid"><span class="big" id="camBig" hidden></span></div>
@@ -236,7 +241,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     </div>
     <div class="pane" id="vRev" hidden>
       <img id="revImg" alt="Vorschau des Fotos">
-      <div class="rev-top"><div class="chipbox"><b id="revLbl"></b><span id="revInfo"></span></div></div>
+      <div class="rev-top"><div class="chipbox"><b id="revLbl"></b><span id="revInfo"></span><span id="revDbg" hidden></span></div></div>
       <div class="rev-bot">
         <button class="btn neu" id="revNeu" type="button">Neu</button>
         <button class="btn rot" id="revRot" type="button" aria-label="Foto um eine Vierteldrehung drehen" title="Foto steht schief? Drehen">↻</button>
@@ -246,7 +251,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     <div class="pane" id="vBet" hidden><div id="betBox"></div></div>
     <div class="pane" id="vTurn" hidden>
       <div class="phone" aria-hidden="true"></div>
-      <h1>Dreh dein Handy quer</h1>
+      <h1 data-du="Dreh dein Handy quer" data-sie="Drehen Sie Ihr Handy quer">Dreh dein Handy quer</h1>
       <p id="turnTxt">Die Kamera startet, sobald dein Handy quer liegt.</p>
       <div id="turnBtnBox" hidden><button class="btn dark" id="turnGo" type="button">Trotzdem weiter</button></div>
     </div>
@@ -272,6 +277,13 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     STILL_P: 0.35, STILL_R: 0.25, STILL_ROLL_MAX: 2.5, STILL_MS: 500, FRESH_MS: 250,   // Schwellen aus Probe 4
     ZUSATZ_MAX: 6
   };
+  // Umschaltbare Vorgaben. VORSCHLAG, OFFEN (nicht von Giannis entschieden, Stand 08.11.2026):
+  // Anrede „Sie“, Kamerahöhe ca. 1 m (Unterkante Frontscheibe), Ampel-Grenzen unverändert bis nach dem Händlertest.
+  // Umschalten im Link: &a=du|sie, &h=1m|brust, &debug (Messwerte in der Ansicht). Die Wahl landet in app_details.variante.
+  var VAR = { anrede: 'sie', hoehe: '1m', debug: false };
+  var AMPEL = { gelb: { p: 2, r: 1 }, rot: { p: 5, r: 2.5 } };
+  function T(du, sie) { return VAR.anrede === 'du' ? du : sie; }
+  function hoeheHint() { return VAR.hoehe === 'brust' ? 'Handy auf Brusthöhe (ca. 1,3 bis 1,5 m).' : 'Handy auf Höhe der Frontscheiben-Unterkante (ca. 1 m).'; }
   var PLAETZE = [
     { key: 'titel', nr: 1, art: 'aussen', name: 'Dreiviertel vorn links', sub: 'Titelbild', hint: 'Schräg vor die linke Vorderecke. Front und linke Seite im Bild.' },
     { key: 'front', nr: 2, art: 'aussen', name: 'Front', hint: 'Genau vor das Auto, mittig. Das ganze Auto im Bild.' },
@@ -316,7 +328,11 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
       var p = new URLSearchParams(h);
       if (p.has('demo')) cfg = { demo: true };
       else if (p.get('u') && p.get('k') && p.get('z')) cfg = { url: p.get('u').trim().replace(/\/+$/, ''), key: p.get('k').trim(), zugang: p.get('z') };
-      if (cfg) { store('fa_cfg', cfg); try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* egal */ } }
+      if (cfg) {
+        if (p.get('a') === 'du' || p.get('a') === 'sie') cfg.a = p.get('a');
+        if (p.get('h') === '1m' || p.get('h') === 'brust') cfg.h = p.get('h');
+        if (p.has('debug')) cfg.debug = true;
+        store('fa_cfg', cfg); try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* egal */ } }
     }
     if (!cfg) cfg = load('fa_cfg');
     if (cfg && !cfg.demo && !/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(cfg.url || '')) cfg = { bad: 'Die Server-Adresse im Link ist nicht erlaubt.' };
@@ -406,14 +422,14 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     streamOpenedAt: 0, shotsSinceOpen: 0,
     textRot: 0, lastCls: null, wake: null,
     queue: [], uploading: false, pollTimer: null,
-    review: null, zusatzArt: null, fallbackInput: false, smooth: 'high', warmed: false
+    review: null, zusatzArt: null, fallbackInput: false, smooth: 'high', warmed: false, restoredFailed: []
   };
 
   function slotMeta(id) {
     var m = /^zusatz(\d)$/.exec(id);
-    if (m) return { id: id, key: 'zusatz', nr: null, art: 'zusatz', name: 'Zusatzbild ' + m[1], zusatz_nr: +m[1], hint: 'Zeig, was das Inserat braucht. Handy ruhig halten.' };
+    if (m) return { id: id, key: 'zusatz', nr: null, art: 'zusatz', name: 'Zusatzbild ' + m[1], zusatz_nr: +m[1], hint: T('Zeig, was das Inserat braucht. Handy ruhig halten.', 'Zeigen Sie, was das Inserat braucht. Handy ruhig halten.') };
     var p = PLAETZE.filter(function (x) { return x.key === id; })[0];
-    return p ? { id: id, key: p.key, nr: p.nr, art: p.art, name: p.name, sub: p.sub, hint: p.hint, zusatz_nr: null } : null;
+    return p ? { id: id, key: p.key, nr: p.nr, art: p.art, name: p.name, sub: p.sub, hint: p.hint + (p.key === 'titel' ? ' ' + hoeheHint() : ''), zusatz_nr: null } : null;
   }
   function slotState(id) {
     if (!S.slots[id]) { var m = slotMeta(id); S.slots[id] = { id: id, key: m.key, zusatz_nr: m.zusatz_nr, zusatz_art: null, thumb: null, fotoId: null, state: 'leer', err: null, server: null, ampelHandy: null }; }
@@ -646,7 +662,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     var v = $('video'); v.srcObject = null;
   }
   async function camPermission() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { var e0 = new Error('Dein Browser kann die Kamera hier nicht starten.'); e0.name = 'NichtVorhanden'; throw e0; }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { var e0 = new Error(T('Dein Browser kann die Kamera hier nicht starten.', 'Ihr Browser kann die Kamera hier nicht starten.')); e0.name = 'NichtVorhanden'; throw e0; }
     var s0 = await gum({ audio: false, video: { facingMode: { ideal: 'environment' } } });
     s0.getTracks().forEach(function (t) { t.stop(); });
   }
@@ -747,10 +763,25 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     });
     return h;
   }
+  // Skizze von oben: Auto (Front oben), Standort des Händlers und Blickrichtung. Winkel und Abstände nach Spezifikation V2 (28°, 5 m; Front und Heck 4,5 m).
+  function diagSvg(key) {
+    var pos = { titel: [32, 16], front: [50, 16], seite: [12, 50], dreiviertel_hl: [32, 84], heck: [50, 84], dreiviertel_vr: [68, 16] }[key];
+    if (!pos) return '';
+    var ang = Math.atan2(50 - pos[1], 50 - pos[0]) / RAD;
+    return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect x="0" y="0" width="100" height="100" rx="10" fill="rgba(250,250,250,.10)"/>' +
+      '<rect x="40" y="26" width="20" height="48" rx="7" fill="#D1D5DB"/>' +
+      '<path d="M43 37 L57 37 L55.5 45 L44.5 45 Z" fill="#6B7280"/>' +
+      '<path d="M45 26 L50 18 L55 26 Z" fill="#FFC77C"/>' +
+      '<rect x="37" y="31" width="3" height="10" rx="1" fill="#111"/><rect x="60" y="31" width="3" height="10" rx="1" fill="#111"/>' +
+      '<rect x="37" y="59" width="3" height="10" rx="1" fill="#111"/><rect x="60" y="59" width="3" height="10" rx="1" fill="#111"/>' +
+      '<g transform="translate(' + pos[0] + ' ' + pos[1] + ') rotate(' + ang.toFixed(1) + ')"><path d="M4 -7 L24 0 L4 7 Z" fill="#FFC77C" opacity=".55"/><circle r="6" fill="#FFC77C" stroke="#0B0C10" stroke-width="1.5"/></g></svg>';
+  }
   function setLabels() {
     var m = slotMeta(S.cur), nr = m.nr ? m.nr + ' von 10 · ' : '';
     $('camLbl').textContent = nr + m.name + (m.sub ? ' (' + m.sub + ')' : '');
     $('camHint').textContent = m.hint;
+    $('camDiag').innerHTML = diagSvg(m.key);
     $('camDots').innerHTML = dotsHtml();
   }
 
@@ -781,12 +812,12 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
       $('shotBtn').onclick = function () { ctl.manual = true; };
       function tick(stillFor, fresh) {
         $('stillFill').style.width = Math.min(100, stillFor / CFG.STILL_MS * 100) + '%';
-        $('stillTxt').textContent = !fresh ? 'Warte auf Sensorwerte …' : (stillFor > 0 ? 'Halte still …' : 'Handy ruhig und gerade halten');
+        $('stillTxt').textContent = !fresh ? 'Warte auf Sensorwerte …' : (stillFor > 0 ? T('Halte still …', 'Halten Sie still …') : 'Handy ruhig und gerade halten');
       }
       var res = await waitStill(my, maxMs, tick, ctl);
       if (!res.ok && !res.noSensor && !res.manual) {
         $('shotBtn').hidden = false;
-        res = await waitStill(my, 1e9, function (a, f) { tick(a, f); if (a === 0 && f) $('stillTxt').textContent = 'Halte still oder tippe „Jetzt“'; }, ctl);
+        res = await waitStill(my, 1e9, function (a, f) { tick(a, f); if (a === 0 && f) $('stillTxt').textContent = T('Halte still oder tippe „Jetzt“', 'Halten Sie still oder tippen Sie auf „Jetzt“'); }, ctl);
       }
       var auto = !!res.ok;
       $('shotBtn').hidden = true; $('stillFill').style.width = '100%';
@@ -801,7 +832,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
 
   async function waitLandscape(my) {
     S.phase = 'turn'; paneShow('vCam', !!S.stream); paneShow('vTurn', true); $('vTurn').classList.toggle('over', !!S.stream);
-    $('turnBtnBox').hidden = true; $('turnTxt').textContent = 'Die Kamera startet, sobald dein Handy quer liegt.'; S.turnMan = false;
+    $('turnBtnBox').hidden = true; $('turnTxt').textContent = T('Die Kamera startet, sobald dein Handy quer liegt.', 'Die Kamera startet, sobald Ihr Handy quer liegt.'); S.turnMan = false;
     var t0 = performance.now(), okSince = 0;
     $('turnGo').onclick = function () { S.turnMan = true; };
     for (;;) {
@@ -809,7 +840,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
       var c = gravClass(), land = c === null ? landscapeNow() : isLandCls(c), now = performance.now();
       if (land) { if (!okSince) okSince = now; if (now - okSince >= 400) break; } else okSince = 0;
       if (S.turnMan) break;
-      if (c === null && now - t0 > 6000) { $('turnTxt').textContent = 'Dein Handy meldet die Lage nicht. Dreh es quer und tippe dann auf „Trotzdem weiter“.'; $('turnBtnBox').hidden = false; }
+      if (c === null && now - t0 > 6000) { $('turnTxt').textContent = T('Dein Handy meldet die Lage nicht. Dreh es quer und tippe dann auf „Trotzdem weiter“.', 'Ihr Handy meldet die Lage nicht. Drehen Sie es quer und tippen Sie dann auf „Trotzdem weiter“.'); $('turnBtnBox').hidden = false; }
       await sleep(100);
     }
     paneShow('vTurn', false);
@@ -821,7 +852,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     updateLayout();
     if (S.phase === 'settle' || S.phase === 'still') {
       var c = gravClass(), upright = c === 'hoch' || c === 'hoch kopfüber';
-      paneShow('vTurn', upright); if (upright) { $('vTurn').classList.add('over'); $('turnBtnBox').hidden = true; $('turnTxt').textContent = 'Das Foto wird gemacht, sobald dein Handy wieder quer liegt.'; }
+      paneShow('vTurn', upright); if (upright) { $('vTurn').classList.add('over'); $('turnBtnBox').hidden = true; $('turnTxt').textContent = T('Das Foto wird gemacht, sobald dein Handy wieder quer liegt.', 'Das Foto wird gemacht, sobald Ihr Handy wieder quer liegt.'); }
     }
     if (!$('vCam').hidden && S.phase !== 'turn') {
       var s = snapshot(), t = $('lvlT'), h = $('vCam').clientHeight || 300;
@@ -829,7 +860,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
       else {
         $('lvlH').style.setProperty('--ty', Math.max(-0.4 * h, Math.min(0.4 * h, s.p * (h / 52))).toFixed(1) + 'px');
         $('lvlH').style.setProperty('--rot', s.r.toFixed(2) + 'deg');
-        t.textContent = 'Neigung ' + fmt(s.p, 1, true) + '° · Rollen ' + fmt(s.r, 1, true) + '°'; t.setAttribute('data-ok', Math.abs(s.p) <= 2 && Math.abs(s.r) <= 1 ? '1' : '0');
+        t.textContent = 'Neigung ' + fmt(s.p, 1, true) + '° · Rollen ' + fmt(s.r, 1, true) + '°'; t.setAttribute('data-ok', Math.abs(s.p) <= AMPEL.gelb.p && Math.abs(s.r) <= AMPEL.gelb.r ? '1' : '0');
       }
     }
   }, 80);
@@ -888,8 +919,8 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     var lvl = 0, why = [], sensor = !!(snap && snap.p != null);
     if (sensor) {
       var ap = Math.abs(snap.p), ar = Math.abs(snap.r);
-      if (ap > 5 || ar > 2.5) { lvl = 2; why.push('Handy schief: Neigung ' + fmt(snap.p, 1) + '°, Rollen ' + fmt(snap.r, 1) + '°'); }
-      else if (ap > 2 || ar > 1) { lvl = 1; why.push('Handy leicht schief: Neigung ' + fmt(snap.p, 1) + '°, Rollen ' + fmt(snap.r, 1) + '°'); }
+      if (ap > AMPEL.rot.p || ar > AMPEL.rot.r) { lvl = 2; why.push('Handy schief: Neigung ' + fmt(snap.p, 1) + '°, Rollen ' + fmt(snap.r, 1) + '°'); }
+      else if (ap > AMPEL.gelb.p || ar > AMPEL.gelb.r) { lvl = 1; why.push('Handy leicht schief: Neigung ' + fmt(snap.p, 1) + '°, Rollen ' + fmt(snap.r, 1) + '°'); }
     }
     if (f35 != null) {
       if (f35 < 20 || f35 > 40) { lvl = 2; why.push('Kamera ist nicht 1x (' + fmt(f35, 0) + ' mm)'); }
@@ -955,6 +986,12 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     var m = slotMeta(r.slot);
     $('revLbl').textContent = (m.nr ? m.nr + ' von 10 · ' : '') + m.name;
     $('revInfo').innerHTML = esc(r.gruende.length ? r.gruende.join(' · ') : 'Lage in Ordnung') + (r.ampel ? ' ' + ampHtml(r.ampel) : '');
+    var dbg = $('revDbg'); dbg.hidden = !VAR.debug;
+    if (VAR.debug) {
+      var dtxt = function (f) { return 'Haltung ' + (r.cls || '–') + ' · Bild ' + r.srcW + '×' + r.srcH + ' (EXIF ' + (r.exif.orient || '–') + ') → gedreht ' + r.drehung + '° → ' + r.w + '×' + r.h + ' · ' + (f ? 'Sichtfeld ×' + fmt(f.faktor, 2) + ' (Passung ' + fmt(f.passung, 2) + ')' : 'Sichtfeld …') + ' · ' + (r.zeiten ? r.zeiten.gesamt : '–') + ' ms'; };
+      dbg.textContent = dtxt(null);
+      if (r.fovP) r.fovP.then(function (f) { if (S.review === r) dbg.textContent = dtxt(f); });
+    }
     paneShow('vCam', false); paneShow('vTurn', false); paneShow('vRev', true); say('');
     $('revOk').disabled = false;
   }
@@ -979,7 +1016,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
       id: st.fotoId, fahrzeug_id: S.vehicle.id, platz: m.key, zusatz_nr: m.zusatz_nr, zusatz_art: m.art === 'zusatz' ? S.zusatzArt : null,
       ampel_handy: r.ampel, ampel_handy_gruende: r.gruende.join('; '), geraet: dev(), brennweite_kb: r.f35, neigung: r.snap ? +r.snap.p.toFixed(1) : null, rollen: r.snap ? +r.snap.r.toFixed(1) : null,
       drehung: r.drehung, breite: r.w, hoehe: r.h, bytes: r.blob.size,
-      app_details: { app: APP, quelle: r.quelle, selbstausloeser: !!r.how.auto, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null }
+      app_details: { app: APP, quelle: r.quelle, selbstausloeser: !!r.how.auto, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, ampel: 'v1: gelb ab ' + AMPEL.gelb.p + '/' + AMPEL.gelb.r + ', rot ab ' + AMPEL.rot.p + '/' + AMPEL.rot.r } }
     };
     var item = { slot: r.slot, id: st.fotoId, path: S.vehicle.id + '/' + m.key + '_' + st.fotoId + '.jpg', blob: r.blob, meta: meta, tries: 0, fileDone: false, state: 'wartet' };
     discardReview();
@@ -995,7 +1032,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
   function betweenInnen() {
     S.token++; S.phase = 'between';
     var m = slotMeta(S.seq[S.idx]);
-    $('betBox').innerHTML = '<h1>Außen fertig</h1><p>Jetzt der Innenraum. Mach die Fahrertür auf und schalte die Zündung ein. Als Erstes: ' + esc(m.name) + '.</p><div class="btns"><button class="btn big primary" id="betGo" type="button">Weiter</button></div>';
+    $('betBox').innerHTML = '<h1>Außen fertig</h1><p>' + T('Jetzt der Innenraum. Mach die Fahrertür auf und schalte die Zündung ein. Als Erstes: ', 'Jetzt der Innenraum. Öffnen Sie die Fahrertür und schalten Sie die Zündung ein. Als Erstes: ') + esc(m.name) + '.</p><div class="btns"><button class="btn big primary" id="betGo" type="button">Weiter</button></div>';
     paneShow('vCam', false); paneShow('vRev', false); paneShow('vTurn', false); paneShow('vBet', true);
     $('betGo').onclick = function () { paneShow('vBet', false); nextShot(); };
   }
@@ -1022,24 +1059,69 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
   /* =====================================================================
      Hochladen (im Hintergrund, mit Wiederholung)
      ===================================================================== */
-  function enqueue(item) { S.queue.push(item); renderGalleryIfShown(); kick(); }
+  /* Warteschlange: bleibt in IndexedDB erhalten (Funkloch, Seite neu geladen, App vom System beendet) und läuft nach dem Neuladen weiter */
+  var IDB = { db: null, ok: false };
+  function idbOpen() {
+    return new Promise(function (res) {
+      try {
+        var r = indexedDB.open('fa_queue', 1);
+        r.onupgradeneeded = function () { r.result.createObjectStore('items', { keyPath: 'id' }); };
+        r.onsuccess = function () { IDB.db = r.result; IDB.ok = true; res(true); };
+        r.onerror = function () { res(false); };
+        r.onblocked = function () { res(false); };
+      } catch (e) { res(false); }
+    });
+  }
+  function idbDo(mode, fn) {
+    return new Promise(function (res) {
+      if (!IDB.ok) { res(null); return; }
+      try { var tx = IDB.db.transaction('items', mode), out = fn(tx.objectStore('items')); tx.oncomplete = function () { res(out && 'result' in out ? out.result : true); }; tx.onerror = tx.onabort = function () { res(null); }; }
+      catch (e) { res(null); }
+    });
+  }
+  function idbPut(it) { return idbDo('readwrite', function (st) { return st.put({ id: it.id, slot: it.slot, path: it.path, blob: it.blob, meta: it.meta, vehicleId: it.vehicleId, thumb: it.thumb || null, failed: !!it.failed, t: it.t || Date.now() }); }); }
+  function idbDel(id) { return idbDo('readwrite', function (st) { return st.delete(id); }); }
+  function idbAll() { return idbDo('readonly', function (st) { return st.getAll(); }); }
+  function enqueue(item) {
+    item.vehicleId = S.vehicle.id; item.thumb = slotState(item.slot).thumb; item.t = Date.now();
+    idbPut(item).then(function () { S.queue.push(item); renderGalleryIfShown(); kick(); });
+  }
+  async function restoreQueue() {
+    if (!S.api || S.demo) return;
+    if (!(await idbOpen())) return;
+    var all = (await idbAll()) || [];
+    all.sort(function (a, b) { return a.t - b.t; });
+    all.forEach(function (r) {
+      var it = { slot: r.slot, id: r.id, path: r.path, blob: r.blob, meta: r.meta, vehicleId: r.vehicleId, thumb: r.thumb, t: r.t, tries: 0, fileDone: false, failed: !!r.failed };
+      if (it.failed) S.restoredFailed.push(it); else S.queue.push(it);
+    });
+    if (S.queue.length) kick();
+  }
+  // Nach „Weitermachen“: Bilder dieses Fahrzeugs, die noch warten oder fehlgeschlagen sind, wieder in der Galerie zeigen
+  function markRestored() {
+    if (!S.vehicle) return;
+    S.queue.concat(S.restoredFailed).forEach(function (it) {
+      if (it.vehicleId !== S.vehicle.id) return;
+      var st = slotState(it.slot); st.thumb = it.thumb; st.state = it.failed ? 'fehler' : 'wartet'; st.fotoId = it.id; if (it.failed) st.item = it;
+    });
+  }
   var onlineWake = null;
   window.addEventListener('online', function () { if (onlineWake) onlineWake(); });
-  window.addEventListener('beforeunload', function (e) { if (S.queue.length) { e.preventDefault(); e.returnValue = ''; } });
+  window.addEventListener('beforeunload', function (e) { if (S.queue.length && !IDB.ok) { e.preventDefault(); e.returnValue = ''; } });
   async function kick() {
     if (S.uploading) return; S.uploading = true;
     while (S.queue.length) {
-      var it = S.queue[0], st = slotState(it.slot);
+      var it = S.queue[0], mine = !!(S.vehicle && it.vehicleId === S.vehicle.id), st = mine ? slotState(it.slot) : {};
       try {
         st.state = 'sendet'; renderGalleryIfShown();
         if (!it.fileDone) { await S.api.upload(it.path, it.blob); it.fileDone = true; }
         var rep = await S.api.report(it.meta);
-        S.queue.shift(); st.state = 'hochgeladen'; st.err = null; it.blob = null; it.meta = null;
+        S.queue.shift(); st.state = 'hochgeladen'; st.err = null; idbDel(it.id); it.blob = null; it.meta = null;
         if (rep && rep.status) st.server = Object.assign({}, st.server || {}, { status: rep.status });
         saveSession(); renderGalleryIfShown(); schedulePoll(1500);
       } catch (e) {
         it.tries++;
-        if (permanent(e)) { S.queue.shift(); st.state = 'fehler'; st.err = e.message; st.item = it; renderGalleryIfShown(); }
+        if (permanent(e)) { S.queue.shift(); st.state = 'fehler'; st.err = e.message; st.item = it; it.failed = true; idbPut(it); renderGalleryIfShown(); }
         else {
           st.state = 'retry'; st.err = e.message; renderGalleryIfShown();
           var wait = Math.min(30000, 2000 * Math.pow(2, Math.min(it.tries, 4)));
@@ -1091,7 +1173,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
   }
   $('gGrid').addEventListener('click', function (ev) {
     var b = ev.target.closest('.tile'); if (!b) return; var id = b.getAttribute('data-id'), s = S.slots[id];
-    if (s && s.state === 'fehler' && s.item && s.item.blob && /nochmal/.test(ev.target.textContent || '')) { var it = s.item; s.item = null; it.tries = 0; s.state = 'wartet'; S.queue.push(it); renderGallery(); kick(); return; }
+    if (s && s.state === 'fehler' && s.item && s.item.blob && /nochmal/.test(ev.target.textContent || '')) { var it = s.item; s.item = null; it.tries = 0; it.failed = false; idbPut(it); s.state = 'wartet'; S.queue.push(it); renderGallery(); kick(); return; }
     var m = slotMeta(id), isNew = !hasPhoto(id);
     if (!isNew && !confirm('„' + m.name + '“ neu aufnehmen? Das neue Foto ersetzt das alte (das alte bleibt als frühere Version gespeichert).')) return;
     if (m.art === 'zusatz') S.zusatzArt = (s && s.zusatz_art) || 'sonstiges';
@@ -1111,7 +1193,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     $('zBack').onclick = function () { leaveStage().then(showGallery); };
   };
   $('gNew').onclick = function () {
-    if (S.queue.length && !confirm('Es werden noch Fotos hochgeladen. Trotzdem beenden? Nicht hochgeladene Fotos gehen verloren.')) return;
+    if (S.queue.length && !IDB.ok && !confirm('Es werden noch Fotos hochgeladen. Trotzdem beenden? Nicht hochgeladene Fotos gehen verloren.')) return;
     resetVehicle(); showStart();
   };
   function showGallery() { showPage('pGallery'); renderGallery(); schedulePoll(200); }
@@ -1144,7 +1226,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     var rs = load('fa_veh');
     if (rs && rs.vehicle && S.cfg && !S.cfg.bad) {
       $('resumeBox').hidden = false;
-      $('resumeTxt').textContent = 'Es läuft noch ein Fahrzeug: ' + rs.vehicle.marke + ' ' + rs.vehicle.modell + ' (' + rs.vehicle.baujahr + '). Weitermachen? Bilder, die noch nicht hochgeladen waren, fehlen dann.';
+      $('resumeTxt').textContent = 'Es läuft noch ein Fahrzeug: ' + rs.vehicle.marke + ' ' + rs.vehicle.modell + ' (' + rs.vehicle.baujahr + '). Weitermachen? Bilder, die noch auf das Hochladen warten, werden weiter gesendet.';
     } else $('resumeBox').hidden = true;
   }
   function saveSession() {
@@ -1152,11 +1234,12 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     var sl = {}; Object.keys(S.slots).forEach(function (k) { var s = S.slots[k]; if (s.state === 'hochgeladen') sl[k] = { zusatz_art: s.zusatz_art, ampelHandy: s.ampelHandy }; });
     store('fa_veh', { vehicle: S.vehicle, slots: sl });
   }
-  function resetVehicle() { S.vehicle = null; S.slots = {}; S.queue = []; S.camChoice = null; store('fa_veh', null); clearTimeout(S.pollTimer); }
+  function resetVehicle() { S.vehicle = null; S.slots = {}; S.camChoice = null; store('fa_veh', null); clearTimeout(S.pollTimer); }
   $('resumeYes').onclick = function () {
     var rs = load('fa_veh'); if (!rs) return;
     S.vehicle = rs.vehicle; S.slots = {};
     Object.keys(rs.slots || {}).forEach(function (k) { var s = slotState(k); s.state = 'hochgeladen'; s.zusatz_art = rs.slots[k].zusatz_art; s.ampelHandy = rs.slots[k].ampelHandy; });
+    markRestored();
     showGallery();
   };
   $('resumeNo').onclick = function () { resetVehicle(); $('resumeBox').hidden = true; };
@@ -1167,7 +1250,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     var marke = $('fMarke').value.trim(), modell = $('fModell').value.trim(), bj = parseInt($('fBaujahr').value, 10), kar = $('fKar').value;
     if (!marke || !modell) { fmsg('Bitte Marke und Modell eintragen.', true); return; }
     if (!(bj >= 1980 && bj <= 2035)) { fmsg('Bitte das Baujahr vierstellig eintragen, z. B. 2021.', true); return; }
-    if (!S.cfg || S.cfg.bad || (!S.cfg.demo && !S.api)) { fmsg('Dieser Link ist unvollständig. Bitte den Link neu öffnen, den du von AutoScales bekommen hast.', true); return; }
+    if (!S.cfg || S.cfg.bad || (!S.cfg.demo && !S.api)) { fmsg(T('Dieser Link ist unvollständig. Bitte den Link neu öffnen, den du von AutoScales bekommen hast.', 'Dieser Link ist unvollständig. Bitte den Link neu öffnen, den Sie von AutoScales bekommen haben.'), true); return; }
     $('fGo').disabled = true;
     try {
       // 1) Bewegungssensor: Erlaubnis muss direkt aus dem Tipp heraus gefragt werden
@@ -1185,10 +1268,10 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
       fmsg('Kamera … bitte „Erlauben“ tippen');
       try { await camPermission(); }
       catch (e) {
-        fmsg((e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) ? 'Die Kamera wurde nicht erlaubt. Erlaube sie in den Einstellungen des Browsers für diese Seite und lade die Seite neu.' : 'Die Kamera startet auf diesem Handy nicht. (' + errText(e) + ')', true);
+        fmsg((e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) ? T('Die Kamera wurde nicht erlaubt. Erlaube sie in den Einstellungen des Browsers für diese Seite und lade die Seite neu.', 'Die Kamera wurde nicht erlaubt. Erlauben Sie sie in den Einstellungen des Browsers für diese Seite und laden Sie die Seite neu.') : 'Die Kamera startet auf diesem Handy nicht. (' + errText(e) + ')', true);
         $('fGo').disabled = false; return;
       }
-      S.vehicle = v; S.slots = {}; S.queue = []; S.camChoice = null; S.devs = null; S.fallbackInput = false; saveSession();
+      S.vehicle = v; S.slots = {}; S.camChoice = null; S.devs = null; S.fallbackInput = false; saveSession();
       S.sensorPerm = perm;
       fmsg('');
       startSequence(PLAETZE.map(function (p) { return p.key; }), 'seq');
@@ -1268,6 +1351,9 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
      ===================================================================== */
   function init() {
     S.cfg = readCfg();
+    VAR.anrede = (S.cfg && S.cfg.a) || 'sie'; VAR.hoehe = (S.cfg && S.cfg.h) || '1m'; VAR.debug = !!(S.cfg && (S.cfg.debug || S.cfg.demo));
+    Array.prototype.forEach.call(document.querySelectorAll('[data-du]'), function (el) { el.innerHTML = VAR.anrede === 'du' ? el.getAttribute('data-du') : el.getAttribute('data-sie'); });
+    $('hHint').innerHTML = '<b>Kamerahöhe:</b> ' + esc(hoeheHint());
     var note = $('modeNote'), info = $('srvInfo');
     if (S.cfg && S.cfg.demo) {
       S.demo = true; S.api = mkDemoApi();
@@ -1278,9 +1364,10 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
       S.api = mkRealApi(S.cfg);
       note.innerHTML = '<b>Test mit echtem Server.</b> Fotos gehen an den Test-Server der AutoScales GmbH i.G.'; info.textContent = 'Server: ' + S.cfg.url.replace('https://', '');
     } else {
-      note.className = 'note bad'; note.innerHTML = 'Dieser Link ist unvollständig. Bitte den Link neu öffnen, den du von AutoScales bekommen hast. <br><a href="#demo" onclick="setTimeout(function(){location.reload()},0)">Demo ohne Server ansehen</a>'; $('fGo').disabled = true;
+      note.className = 'note bad'; note.innerHTML = T('Dieser Link ist unvollständig. Bitte den Link neu öffnen, den du von AutoScales bekommen hast.', 'Dieser Link ist unvollständig. Bitte den Link neu öffnen, den Sie von AutoScales bekommen haben.') + ' <br><a href="#demo" onclick="setTimeout(function(){location.reload()},0)">Demo ohne Server ansehen</a>'; $('fGo').disabled = true;
     }
     showStart();
+    restoreQueue();
   }
   window.addEventListener('hashchange', function () { if (/(^#|&)(u=|demo)/.test(location.hash)) location.reload(); });
   init();
