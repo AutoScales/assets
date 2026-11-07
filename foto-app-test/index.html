@@ -1,0 +1,1208 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="light">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://*.supabase.co; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; font-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="apple-mobile-web-app-title" content="Foto-App Test">
+<title>Foto-App Test</title>
+<link rel="icon" href="data:,">
+<style>
+@font-face { font-family: 'Michroma'; src: url('fonts/michroma-latin-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Montserrat'; src: url('fonts/montserrat-latin-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Montserrat'; src: url('fonts/montserrat-latin-600.woff2') format('woff2'); font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Montserrat'; src: url('fonts/montserrat-latin-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+:root {
+  --as-white: #FAFAFA; --as-black: #0B0C10; --as-grey: #9CA3AF; --as-gold: #FFC77C;
+  --muted: #55575E; --line: #DCDDE2; --card: #FFFFFF; --bad: #B3261E; --ok: #1E7B45;
+  --font-display: 'Michroma', 'Montserrat', system-ui, sans-serif;
+  --font-body: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-data: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; }
+html, body { touch-action: manipulation; }
+body { margin: 0; background: var(--as-white); color: var(--as-black); font: 400 16px/1.5 var(--font-body);
+  padding: 20px max(16px, env(safe-area-inset-right)) 40px max(16px, env(safe-area-inset-left)); }
+h1, h2, p, ul { margin: 0; }
+button, input, select { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 3px solid var(--as-black); outline-offset: 2px; }
+.page { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+.brand { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.brand img { width: 190px; height: 70px; object-fit: cover; object-position: 50% 47%; margin-left: -4px; }
+.eyebrow { font: 600 11px/1.2 var(--font-body); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 400 clamp(20px, 6.2vw, 26px)/1.2 var(--font-display); text-wrap: balance; }
+h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.sep { display: flex; align-items: center; gap: 10px; color: var(--as-gold); }
+.sep::before, .sep::after { content: ""; height: 1px; flex: 1; background: var(--as-gold); }
+.sep i { width: 7px; height: 7px; background: var(--as-gold); transform: rotate(45deg); }
+.note { border-left: 3px solid var(--as-gold); padding: 8px 0 8px 12px; font-size: 14px; color: var(--muted); }
+.note b { color: var(--as-black); }
+.note.bad { border-color: var(--bad); color: var(--bad); font-weight: 600; }
+.field-l { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 13px; }
+.field { min-height: 48px; padding: 0 12px; background: var(--card); border: 1px solid var(--line); border-radius: 4px; width: 100%; font-size: 17px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.btn { min-height: 48px; padding: 0 18px; border: 1px solid var(--as-black); background: transparent; border-radius: 4px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; text-align: center; }
+.btn.primary { background: var(--as-gold); border-color: var(--as-gold); color: var(--as-black); }
+.btn.dark { background: var(--as-black); border-color: var(--as-black); color: var(--as-gold); }
+.btn.big { min-height: 60px; width: 100%; font-size: 18px; border-radius: 6px; }
+.btn[disabled] { opacity: .4; cursor: not-allowed; }
+.link { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; padding: 10px 0; font-size: 14px; text-align: left; }
+.msg { font-size: 14px; color: var(--muted); min-height: 1.2em; }
+.msg.bad { color: var(--bad); font-weight: 600; }
+.hints { padding-left: 1.1em; display: grid; gap: 6px; font-size: 15px; }
+.priv { font-size: 13px; color: var(--muted); }
+.srv { font: 500 12px/1.4 var(--font-data); color: var(--muted); overflow-wrap: anywhere; }
+
+/* Galerie */
+.prog { display: flex; gap: 4px; }
+.prog i { flex: 1; height: 6px; background: var(--line); border-radius: 2px; }
+.prog i.on { background: var(--as-gold); }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 520px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.tile { background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 0; text-align: left; cursor: pointer; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+.tile .ph { aspect-ratio: 4 / 3; background: #ECEDF0; display: grid; place-items: center; font: 400 26px/1 var(--font-display); color: var(--as-grey); }
+.tile .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tile .cap { padding: 8px 10px 0; font-size: 13px; font-weight: 600; line-height: 1.3; }
+.tile .st { padding: 4px 10px 10px; font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; border: 2px solid var(--muted); vertical-align: baseline; }
+.dot.busy { border-color: var(--as-black); background: linear-gradient(90deg, var(--as-gold) 50%, transparent 50%); }
+.dot.ok { background: var(--as-gold); border-color: var(--as-black); }
+.dot.bad { background: var(--bad); border-color: var(--bad); }
+.dot.warn { border-color: var(--as-black); background: var(--as-white); }
+.amp { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; }
+.amp i { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(0,0,0,.35); }
+.amp .gruen { background: #3FA66B; } .amp .gelb { background: var(--as-gold); } .amp .rot { background: var(--bad); }
+.actions { display: grid; gap: 10px; }
+
+/* Selbsttest */
+.chk { display: grid; grid-template-columns: 28px 1fr; gap: 4px 8px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.chk .ic { font: 700 15px/1.4 var(--font-data); }
+.chk .ic.ok { color: var(--ok); } .chk .ic.bad { color: var(--bad); } .chk .ic.run { color: var(--muted); }
+.chk small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+
+/* Kamera-Bühne (Vollbild) */
+#stage { position: fixed; inset: 0; z-index: 30; background: #000; overflow: hidden; color: #FAFAFA; user-select: none; -webkit-user-select: none; touch-action: none; }
+#vidBox { position: fixed; background: #000; }
+#vidBox video { width: 100%; height: 100%; object-fit: contain; background: #000; display: block; }
+#ui { position: fixed; }
+.pane { position: absolute; inset: 0; }
+.flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; transition: opacity .25s; }
+.flash.on { opacity: .85; transition: none; }
+
+#vTurn { background: var(--as-white); color: var(--as-black); display: grid; place-content: center; text-align: center; gap: 14px; padding: 24px; z-index: 6; }
+#vTurn.over { background: rgba(250,250,250,.96); }
+#vTurn h1 { font-size: clamp(22px, 7vw, 34px); }
+#vTurn p { max-width: 34ch; margin: 0 auto; font-size: 17px; color: var(--muted); }
+.phone { width: 54px; height: 96px; margin: 0 auto; border: 4px solid var(--as-black); border-radius: 10px; position: relative; animation: turn 2.4s ease-in-out infinite; }
+.phone::after { content: ""; position: absolute; left: 50%; top: 6px; width: 16px; height: 3px; margin-left: -8px; background: var(--as-black); border-radius: 2px; }
+@keyframes turn { 0%, 15% { transform: rotate(0); } 55%, 100% { transform: rotate(-90deg); } }
+@media (prefers-reduced-motion: reduce) { .phone { animation: none; transform: rotate(-90deg); } }
+
+#vCam { z-index: 2; }
+.hud-top { position: absolute; left: 14px; right: 14px; top: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.chipbox { max-width: 66%; background: rgba(11,12,16,.72); padding: 8px 12px; border-radius: 4px; }
+.chipbox b { display: block; font: 700 15px/1.3 var(--font-body); }
+.chipbox > span { display: block; font-size: 13px; line-height: 1.35; color: #E5E7EB; margin-top: 2px; }
+.chipbox .amp.l { display: inline-flex; vertical-align: middle; margin-left: 6px; background: rgba(250,250,250,.16); }
+.chipbox .amp i { width: 11px; height: 11px; }
+.xbtn { min-width: 44px; min-height: 44px; border-radius: 50%; border: 0; background: rgba(11,12,16,.72); color: #FAFAFA; font-size: 22px; line-height: 1; cursor: pointer; }
+.lvl { position: absolute; inset: 0; pointer-events: none; }
+.lvl-h { position: absolute; left: 18%; right: 18%; top: 50%; height: 2px; margin-top: -1px; background: var(--as-gold); box-shadow: 0 0 0 1px rgba(0,0,0,.45); transform: translateY(var(--ty, 0px)) rotate(var(--rot, 0deg)); }
+.lvl-c { position: absolute; left: 50%; top: 50%; width: 24px; height: 24px; margin: -12px 0 0 -12px; border: 2px solid #FAFAFA; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0,0,0,.45); }
+.lvl-t { position: absolute; left: 14px; bottom: 74px; font: 600 12px/1 var(--font-data); background: rgba(11,12,16,.72); padding: 6px 8px; border-radius: 3px; }
+.lvl-t[data-ok="1"] { background: var(--as-gold); color: var(--as-black); }
+.mid { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; pointer-events: none; }
+.mid .big { display: inline-block; font: 700 clamp(18px, 4.6vw, 26px)/1.3 var(--font-body); background: rgba(11,12,16,.72); padding: 10px 18px; border-radius: 4px; max-width: 80%; }
+.hud-bot { position: absolute; left: 14px; right: 14px; bottom: 12px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.dots { display: flex; gap: 5px; align-items: center; padding: 8px 10px; background: rgba(11,12,16,.72); border-radius: 4px; }
+.dots i { width: 9px; height: 9px; border-radius: 50%; border: 2px solid #9CA3AF; }
+.dots i.done { background: var(--as-gold); border-color: var(--as-gold); }
+.dots i.cur { border-color: #FAFAFA; background: #FAFAFA; }
+.dots i.gap { width: 6px; border: 0; background: transparent; }
+.stillwrap { flex: 1; display: grid; gap: 6px; max-width: 280px; }
+.stillbar { height: 6px; background: rgba(255,255,255,.28); border-radius: 3px; overflow: hidden; }
+.stillbar i { display: block; height: 100%; width: 0; background: var(--as-gold); }
+.stillwrap span { font-size: 13px; background: rgba(11,12,16,.72); padding: 4px 8px; border-radius: 3px; justify-self: start; }
+.shot { width: 72px; height: 72px; border-radius: 50%; border: 4px solid #FAFAFA; background: var(--as-gold); color: var(--as-black); font: 700 13px/1.1 var(--font-body); cursor: pointer; }
+.toast { position: absolute; left: 50%; top: 64px; transform: translateX(-50%); background: var(--as-gold); color: var(--as-black); font-weight: 700; font-size: 14px; padding: 8px 14px; border-radius: 4px; pointer-events: none; z-index: 8; }
+
+#vRev { background: #000; z-index: 4; }
+#vRev img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.rev-top { position: absolute; left: 14px; right: 14px; top: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
+.rev-top .chipbox { max-width: 78%; }
+.rev-bot { position: absolute; left: 14px; right: 14px; bottom: 12px; display: flex; gap: 12px; align-items: center; justify-content: space-between; }
+.rev-bot .btn { min-height: 56px; font-size: 17px; }
+.rev-bot .btn.neu { background: rgba(11,12,16,.8); color: #FAFAFA; border-color: #FAFAFA; min-width: 110px; }
+.rev-bot .btn.passt { background: var(--as-gold); border-color: var(--as-gold); color: var(--as-black); min-width: 170px; flex: 1; max-width: 300px; }
+.rev-bot .btn.rot { background: rgba(11,12,16,.8); color: #FAFAFA; border-color: #FAFAFA; min-width: 56px; padding: 0 12px; }
+.amp.l { background: rgba(11,12,16,.72); padding: 3px 8px; border-radius: 3px; color: #FAFAFA; font-size: 12px; }
+
+#vBet { background: var(--as-white); color: var(--as-black); display: grid; place-content: center; gap: 14px; padding: 24px; text-align: center; z-index: 7; }
+#vBet h1 { font-size: clamp(20px, 6vw, 30px); }
+#vBet p { max-width: 40ch; margin: 0 auto; color: var(--muted); }
+#vBet .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+#vBet .chips button { min-height: 44px; padding: 0 14px; border: 1px solid var(--as-black); background: var(--card); border-radius: 999px; font-weight: 600; cursor: pointer; }
+#vBet .btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+#vBet .btn { min-width: 200px; }
+</style>
+</head>
+<body>
+
+<!-- Seite 1: Start (hochkant) -->
+<main class="page" id="pStart">
+  <header class="brand"><img src="logo.png" alt="AutoScales"><span class="eyebrow">Foto-App · Testfassung</span></header>
+  <h1>Neues Fahrzeug fotografieren</h1>
+  <div class="note" id="modeNote"></div>
+  <div id="resumeBox" class="note" hidden>
+    <p id="resumeTxt"></p>
+    <div class="actions" style="margin-top:10px"><button class="btn primary" id="resumeYes" type="button">Weitermachen</button><button class="btn" id="resumeNo" type="button">Neues Fahrzeug</button></div>
+  </div>
+  <form id="fForm" class="page" style="gap:14px" autocomplete="off" novalidate>
+    <label class="field-l">Marke<input class="field" id="fMarke" type="text" maxlength="60" autocomplete="off" autocapitalize="words" placeholder="z. B. BMW"></label>
+    <label class="field-l">Modell<input class="field" id="fModell" type="text" maxlength="80" autocomplete="off" autocapitalize="words" placeholder="z. B. X5 xDrive30d"></label>
+    <div class="row2">
+      <label class="field-l">Baujahr<input class="field" id="fBaujahr" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="2021"></label>
+      <label class="field-l">Karosserie (freiwillig)
+        <select class="field" id="fKar"><option value="">–</option><option value="limousine">Limousine</option><option value="kombi">Kombi</option><option value="suv">SUV</option><option value="coupe">Coupé</option><option value="cabrio">Cabrio</option><option value="van">Van</option></select>
+      </label>
+    </div>
+    <button class="btn big primary" id="fGo" type="submit">Fahrzeug anlegen und weiter</button>
+    <p class="msg" id="fMsg" role="status" aria-live="polite"></p>
+  </form>
+  <div class="sep" aria-hidden="true"><i></i></div>
+  <ul class="hints">
+    <li><b>6 Außenbilder</b> in fester Reihenfolge, dann <b>4 Innenbilder</b>. Zusatzbilder sind freiwillig.</li>
+    <li>Handy <b>quer</b> halten, Kamera <b>1x</b>, ruhig und gerade. Die App löst selbst aus.</li>
+    <li>Du siehst jedes Foto und tippst <b>Passt</b> oder <b>Neu</b>. Erst bei „Passt“ geht es hoch.</li>
+  </ul>
+  <p class="priv"><b>Testfassung:</b> bitte nur Testfotos, keine Kundenfahrzeuge mit Personen oder Papieren. Die App schickt Fotos nur an den eingetragenen Test-Server der AutoScales GmbH i.G. (Frankfurt). Auf dem Handy bleibt nichts gespeichert.</p>
+  <p class="srv" id="srvInfo"></p>
+  <button class="link" id="btnSelftest" type="button">Selbsttest der Verbindung</button>
+</main>
+
+<!-- Seite 2: Galerie -->
+<main class="page" id="pGallery" hidden>
+  <header class="brand"><img src="logo.png" alt="AutoScales"><span class="eyebrow">Foto-App · Testfassung</span></header>
+  <h1 id="gTitle">Fahrzeug</h1>
+  <p id="gSum" class="msg"></p>
+  <div class="prog" id="gProg" aria-hidden="true"></div>
+  <div class="grid" id="gGrid"></div>
+  <div class="note" id="gNote">Die Außenbilder werden bei AutoScales in den Showroom gesetzt, das dauert einige Sekunden bis Minuten. Innenbilder bleiben Original. Diese Seite aktualisiert sich selbst.</div>
+  <div class="actions">
+    <button class="btn big primary" id="gNext" type="button">Weiter fotografieren</button>
+    <button class="btn" id="gZusatz" type="button">Zusatzbild aufnehmen</button>
+    <button class="btn" id="gNew" type="button">Fertig, neues Fahrzeug</button>
+  </div>
+  <p class="msg" id="gMsg" role="status" aria-live="polite"></p>
+</main>
+
+<!-- Seite 3: Selbsttest -->
+<main class="page" id="pTest" hidden>
+  <header class="brand"><img src="logo.png" alt="AutoScales"><span class="eyebrow">Foto-App · Selbsttest</span></header>
+  <h1>Selbsttest der Verbindung</h1>
+  <p class="msg" id="tSum">Prüft Zugang, Ablegen, Melden und dass Lesen und Löschen gesperrt sind. Legt ein Probefahrzeug mit einem Mini-Bild an (wird nicht verarbeitet).</p>
+  <div id="tList"></div>
+  <div class="actions">
+    <button class="btn primary" id="tRun" type="button">Test starten</button>
+    <button class="btn" id="tCopy" type="button" hidden>Ergebnis kopieren</button>
+    <button class="btn" id="tBack" type="button">Zurück</button>
+  </div>
+  <p class="msg" id="tMsg"></p>
+</main>
+
+<!-- Kamera-Bühne -->
+<div id="stage" hidden>
+  <div id="vidBox"><video id="video" playsinline muted autoplay></video></div>
+  <div id="ui">
+    <div class="pane" id="vCam" hidden>
+      <div class="lvl" aria-hidden="true"><div class="lvl-h" id="lvlH"></div><div class="lvl-c"></div></div>
+      <div class="lvl-t" id="lvlT">–</div>
+      <div class="hud-top">
+        <div class="chipbox"><b id="camLbl"></b><span id="camHint"></span></div>
+        <button class="xbtn" id="camX" type="button" aria-label="Kamera schließen">×</button>
+      </div>
+      <div class="mid"><span class="big" id="camBig" hidden></span></div>
+      <div class="hud-bot">
+        <div class="dots" id="camDots" aria-hidden="true"></div>
+        <div class="stillwrap"><div class="stillbar"><i id="stillFill"></i></div><span id="stillTxt">–</span></div>
+        <button class="shot" id="shotBtn" type="button" hidden>Jetzt</button>
+      </div>
+      <label class="btn big primary" id="capLabel" hidden style="position:absolute;left:20%;right:20%;top:40%;width:auto">Kamera-App öffnen<input type="file" id="capIn" accept="image/*" capture="environment" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;font-size:0"></label>
+    </div>
+    <div class="pane" id="vRev" hidden>
+      <img id="revImg" alt="Vorschau des Fotos">
+      <div class="rev-top"><div class="chipbox"><b id="revLbl"></b><span id="revInfo"></span></div></div>
+      <div class="rev-bot">
+        <button class="btn neu" id="revNeu" type="button">Neu</button>
+        <button class="btn rot" id="revRot" type="button" aria-label="Foto um eine Vierteldrehung drehen" title="Foto steht schief? Drehen">↻</button>
+        <button class="btn passt" id="revOk" type="button">Passt</button>
+      </div>
+    </div>
+    <div class="pane" id="vBet" hidden><div id="betBox"></div></div>
+    <div class="pane" id="vTurn" hidden>
+      <div class="phone" aria-hidden="true"></div>
+      <h1>Dreh dein Handy quer</h1>
+      <p id="turnTxt">Die Kamera startet, sobald dein Handy quer liegt.</p>
+      <div id="turnBtnBox" hidden><button class="btn dark" id="turnGo" type="button">Trotzdem weiter</button></div>
+    </div>
+    <div class="toast" id="toast" hidden></div>
+    <div class="flash" id="flash"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* =====================================================================
+     Konstanten
+     ===================================================================== */
+  var APP = 'foto-app-test-1';
+  var RAD = Math.PI / 180;
+  var CFG = {
+    LONG_EDGE: 2560, QUALITY: 0.85,
+    SETTLE_MS: 1500,            // Einschwingzeit nach Kamerastart
+    FALLBACK_FIRST_MS: 15000,   // Selbstauslöser: nach so langer Zeit erscheint der Knopf „Jetzt“ (erstes Foto)
+    FALLBACK_NEXT_MS: 6000,     // und bei den folgenden Fotos
+    STILL_P: 0.35, STILL_R: 0.25, STILL_ROLL_MAX: 2.5, STILL_MS: 500, FRESH_MS: 250,   // Schwellen aus Probe 4
+    ZUSATZ_MAX: 6
+  };
+  var PLAETZE = [
+    { key: 'titel', nr: 1, art: 'aussen', name: 'Dreiviertel vorn links', sub: 'Titelbild', hint: 'Schräg vor die linke Vorderecke. Front und linke Seite im Bild.' },
+    { key: 'front', nr: 2, art: 'aussen', name: 'Front', hint: 'Genau vor das Auto, mittig. Das ganze Auto im Bild.' },
+    { key: 'seite', nr: 3, art: 'aussen', name: 'Seite links', hint: 'Seitlich links, Auto mittig. Vorderräder gerade.' },
+    { key: 'dreiviertel_hl', nr: 4, art: 'aussen', name: 'Dreiviertel hinten links', hint: 'Schräg hinter die linke Hinterecke. Heck und linke Seite im Bild.' },
+    { key: 'heck', nr: 5, art: 'aussen', name: 'Heck', hint: 'Genau hinter das Auto, mittig. Das ganze Auto im Bild.' },
+    { key: 'dreiviertel_vr', nr: 6, art: 'aussen', name: 'Dreiviertel vorn rechts', hint: 'Schräg vor die rechte Vorderecke. Front und rechte Seite im Bild.' },
+    { key: 'cockpit', nr: 7, art: 'innen', name: 'Cockpit', hint: 'Fahrertür auf. Durch die Tür auf Lenkrad und Armaturenbrett.' },
+    { key: 'tacho', nr: 8, art: 'innen', name: 'Tacho', hint: 'Zündung an. Kilometerstand gut lesbar.' },
+    { key: 'vordersitze', nr: 9, art: 'innen', name: 'Vordersitze', hint: 'Beide Vordersitze im Bild.' },
+    { key: 'kofferraum', nr: 10, art: 'innen', name: 'Kofferraum', hint: 'Kofferraum offen, alternativ die Rückbank.' }
+  ];
+  var ZUSATZ_ARTEN = [['motorraum', 'Motorraum'], ['felge', 'Felge'], ['schaden', 'Schaden'], ['kofferraum', 'Kofferraum'], ['sonstiges', 'Sonstiges']];
+
+  /* =====================================================================
+     Helfer
+     ===================================================================== */
+  function $(id) { return document.getElementById(id); }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function fmt(x, d, sign) { if (x == null || isNaN(x)) return '–'; var s = x.toFixed(d == null ? 1 : d).replace('.', ','); if (sign && x > 0) s = '+' + s; return s.replace('-', '−'); }
+  function mean(a) { return a.length ? a.reduce(function (t, v) { return t + v; }, 0) / a.length : 0; }
+  function sd(a) { if (a.length < 2) return 0; var m = mean(a); return Math.sqrt(a.reduce(function (s, x) { return s + (x - m) * (x - m); }, 0) / (a.length - 1)); }
+  function median(a) { var x = a.slice().sort(function (p, q) { return p - q; }); return x.length ? x[Math.floor(x.length / 2)] : null; }
+  function errText(e) { if (!e) return 'unbekannter Fehler'; return (e.name ? e.name : 'Fehler') + (e.message ? ': ' + e.message : ''); }
+  function withTimeout(p, ms) { return new Promise(function (res, rej) { var t = setTimeout(function () { rej(new Error('Zeitüberschreitung')); }, ms); p.then(function (v) { clearTimeout(t); res(v); }, function (e) { clearTimeout(t); rej(e); }); }); }
+  function uuid() {
+    try { if (crypto.randomUUID) return crypto.randomUUID(); } catch (e) { /* weiter */ }
+    var b = new Uint8Array(16); crypto.getRandomValues(b); b[6] = (b[6] & 15) | 64; b[8] = (b[8] & 63) | 128;
+    var h = Array.prototype.map.call(b, function (x) { return (x + 256).toString(16).slice(1); }).join('');
+    return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20);
+  }
+  function store(k, v) { try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ohne Speicher weiter */ } }
+  function load(k) { try { return JSON.parse(sessionStorage.getItem(k) || 'null'); } catch (e) { return null; } }
+
+  /* =====================================================================
+     Konfiguration aus dem Link (Teil nach #), nichts davon liegt im Quelltext
+     ===================================================================== */
+  function readCfg() {
+    var h = location.hash.replace(/^#/, ''), cfg = null;
+    if (h) {
+      var p = new URLSearchParams(h);
+      if (p.has('demo')) cfg = { demo: true };
+      else if (p.get('u') && p.get('k') && p.get('z')) cfg = { url: p.get('u').trim().replace(/\/+$/, ''), key: p.get('k').trim(), zugang: p.get('z') };
+      if (cfg) { store('fa_cfg', cfg); try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* egal */ } }
+    }
+    if (!cfg) cfg = load('fa_cfg');
+    if (cfg && !cfg.demo && !/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(cfg.url || '')) cfg = { bad: 'Die Server-Adresse im Link ist nicht erlaubt.' };
+    return cfg;
+  }
+
+  /* =====================================================================
+     Server-Zugriff (Supabase per REST) und Demo ohne Server
+     ===================================================================== */
+  function ApiError(status, message, net) { this.status = status; this.message = message; this.net = !!net; }
+  ApiError.prototype = Object.create(Error.prototype);
+  function permanent(e) { return e && !e.net && e.status >= 400 && e.status < 500 && e.status !== 408 && e.status !== 429; }
+
+  function mkRealApi(cfg) {
+    var base = cfg.url;
+    function hdr(extra) { var h = { apikey: cfg.key }; if (/^eyJ/.test(cfg.key)) h.Authorization = 'Bearer ' + cfg.key; for (var k in extra) h[k] = extra[k]; return h; }
+    async function call(url, opt, ms) {
+      var ctl = new AbortController(), t = setTimeout(function () { ctl.abort(); }, ms || 45000), r;
+      opt.signal = ctl.signal;
+      try { r = await fetch(url, opt); }
+      catch (e) { clearTimeout(t); throw new ApiError(0, e && e.name === 'AbortError' ? 'Zeitüberschreitung' : 'Keine Verbindung', true); }
+      clearTimeout(t);
+      var txt = '', js = null; try { txt = await r.text(); js = txt ? JSON.parse(txt) : null; } catch (e) { /* kein JSON */ }
+      return { status: r.status, ok: r.ok, json: js, text: txt };
+    }
+    function msgOf(r) { var j = r.json; return (j && (j.message || j.error || j.msg)) || r.text || ('HTTP ' + r.status); }
+    async function rpc(name, body) {
+      var r = await call(base + '/rest/v1/rpc/' + name, { method: 'POST', headers: hdr({ 'Content-Type': 'application/json' }), body: JSON.stringify(body || {}) });
+      if (!r.ok) throw new ApiError(r.status, msgOf(r), false);
+      return r.json;
+    }
+    return {
+      real: true,
+      ping: function () { return rpc('app_ping', {}); },
+      createVehicle: function (v) { return rpc('fahrzeug_anlegen', { p_id: v.id, p_zugang: cfg.zugang, p_marke: v.marke, p_modell: v.modell, p_baujahr: v.baujahr, p_karosserie: v.karosserie || null, p_selbsttest: !!v.selbsttest }); },
+      upload: async function (path, blob) {
+        var r = await call(base + '/storage/v1/object/roh/' + path, { method: 'POST', headers: hdr({ 'Content-Type': 'image/jpeg', 'x-upsert': 'false', 'cache-control': 'max-age=3600' }), body: blob }, 90000);
+        if (r.ok) return true;
+        var dup = r.status === 409 || (r.json && String(r.json.statusCode) === '409');
+        if (dup) return true;   // Datei liegt schon (Wiederholung nach Abbruch)
+        throw new ApiError(r.status, msgOf(r), false);
+      },
+      report: function (meta) { return rpc('foto_melden', { p: meta }); },
+      status: function (id) { return rpc('foto_status', { p_fahrzeug_id: id }); },
+      fileThere: function (id, path) { return rpc('selbsttest_datei_da', { p_fahrzeug_id: id, p_pfad: path }); },
+      raw: async function (method, path, extraHdr, body) { var r = await call(base + path, { method: method, headers: hdr(extraHdr || {}), body: body }); return r; },
+      badZugang: function (v) { return rpc('fahrzeug_anlegen', { p_id: v.id, p_zugang: 'falsch-' + uuid(), p_marke: 'x', p_modell: 'x', p_baujahr: 2020, p_karosserie: null, p_selbsttest: true }); }
+    };
+  }
+
+  function mkDemoApi() {
+    var photos = [], vehicles = {}, files = {};
+    return {
+      real: false,
+      ping: async function () { await sleep(200); return { ok: true, schema: 1, zugang_gesetzt: true }; },
+      createVehicle: async function (v) { await sleep(300); vehicles[v.id] = true; return { id: v.id }; },
+      upload: async function (path) { await sleep(500 + Math.random() * 700); if (!vehicles[path.split('/')[0]]) throw new ApiError(400, 'Demo: Ordner unbekannt', false); files[path] = true; return true; },
+      report: async function (m) { await sleep(150); var q = { id: m.id, fahrzeug_id: m.fahrzeug_id, platz: m.platz, zusatz_nr: m.zusatz_nr || null, t: Date.now(), ampel_handy: m.ampel_handy || null }; photos = photos.filter(function (x) { return !(x.fahrzeug_id === q.fahrzeug_id && x.platz === q.platz && x.zusatz_nr === q.zusatz_nr); }); photos.push(q); return { id: m.id, version: 1, status: 'neu' }; },
+      status: async function (id) {
+        await sleep(100);
+        return photos.filter(function (p) { return p.fahrzeug_id === id; }).map(function (p) {
+          var age = (Date.now() - p.t) / 1000, art = p.platz === 'zusatz' || /^(cockpit|tacho|vordersitze|kofferraum)$/.test(p.platz) ? 'orig' : 'show';
+          var st = age < 3 ? 'neu' : age < (art === 'show' ? 9 : 4) ? 'in_arbeit' : 'fertig', amp = null, grund = null, fg = null;
+          if (st === 'fertig') {
+            if (p.platz === 'dreiviertel_hl') { st = 'fehler'; fg = 'Kein Kennzeichen erkannt (Demo)'; amp = 'rot'; grund = fg; }
+            else if (art === 'show') { amp = p.platz === 'seite' ? 'gelb' : 'gruen'; grund = amp === 'gelb' ? 'Auto leicht angeschnitten (Demo)' : null; }
+          }
+          return { platz: p.platz, zusatz_nr: p.zusatz_nr, version: 1, status: st, ampel_handy: p.ampel_handy, ampel_showroom: amp, ampel_showroom_gruende: grund, fehler_grund: fg };
+        });
+      },
+      fileThere: async function (id, path) { return !!files[path]; },
+      raw: async function () { return { status: 401, ok: false, json: { message: 'Demo: gesperrt' } }; },
+      badZugang: async function () { throw new ApiError(403, 'Zugang verweigert (Demo)', false); }
+    };
+  }
+
+  /* =====================================================================
+     Zustand
+     ===================================================================== */
+  var S = {
+    cfg: null, api: null, demo: false,
+    vehicle: null,            // { id, marke, modell, baujahr, karosserie }
+    slots: {},                // id -> Platz-Zustand
+    seq: [], idx: 0, cur: null, mode: 'seq',
+    token: 0, phase: '', turnMan: false,
+    stream: null, track: null, ic: null, vw: 1, vh: 1, devs: null, camChoice: null, camInfo: null, camNote: '',
+    streamOpenedAt: 0, shotsSinceOpen: 0,
+    textRot: 0, lastCls: null, wake: null,
+    queue: [], uploading: false, pollTimer: null,
+    review: null, zusatzArt: null, fallbackInput: false
+  };
+
+  function slotMeta(id) {
+    var m = /^zusatz(\d)$/.exec(id);
+    if (m) return { id: id, key: 'zusatz', nr: null, art: 'zusatz', name: 'Zusatzbild ' + m[1], zusatz_nr: +m[1], hint: 'Zeig, was das Inserat braucht. Handy ruhig halten.' };
+    var p = PLAETZE.filter(function (x) { return x.key === id; })[0];
+    return p ? { id: id, key: p.key, nr: p.nr, art: p.art, name: p.name, sub: p.sub, hint: p.hint, zusatz_nr: null } : null;
+  }
+  function slotState(id) {
+    if (!S.slots[id]) { var m = slotMeta(id); S.slots[id] = { id: id, key: m.key, zusatz_nr: m.zusatz_nr, zusatz_art: null, thumb: null, fotoId: null, state: 'leer', err: null, server: null, ampelHandy: null }; }
+    return S.slots[id];
+  }
+  function zusatzIds() { return Object.keys(S.slots).filter(function (k) { return /^zusatz\d$/.test(k) && S.slots[k].state !== 'leer'; }).sort(); }
+  function hasPhoto(id) { var s = S.slots[id]; return !!(s && (s.state !== 'leer' || s.server)); }
+
+  /* =====================================================================
+     Lagesensor (aus Probe 4: Schwerkraft, Ruhe, frischer Wert)
+     ===================================================================== */
+  var samples = [], sensorsOn = false, lastOriT = 0, oriCount = 0;
+  function uFromOri(b, g) { var B = b * RAD, G = g * RAD; return [-Math.cos(B) * Math.sin(G), Math.sin(B), Math.cos(B) * Math.cos(G)]; }
+  function screenAngle() {
+    var raw = (screen.orientation && typeof screen.orientation.angle === 'number') ? screen.orientation.angle : (typeof window.orientation === 'number' ? window.orientation : 0);
+    return ((Math.round(raw / 90) * 90 % 360) + 360) % 360;
+  }
+  function landscapeNow() { return screen.orientation && screen.orientation.type ? screen.orientation.type.indexOf('landscape') === 0 : window.innerWidth > window.innerHeight; }
+  function attitude(u, angle) {
+    var Sv = { 0: [0, 1], 90: [1, 0], 180: [0, -1], 270: [-1, 0] }[angle] || [0, 1];
+    var Rr = { 0: [1, 0], 90: [0, -1], 180: [-1, 0], 270: [0, 1] }[angle] || [1, 0];
+    var pitch = Math.asin(Math.max(-1, Math.min(1, -u[2]))) / RAD;
+    var roll = Math.atan2(u[0] * Rr[0] + u[1] * Rr[1], u[0] * Sv[0] + u[1] * Sv[1]) / RAD;
+    return { pitch: pitch, roll: roll };
+  }
+  function effAngle(u) {
+    if (Math.abs(u[2]) > 0.8) return screenAngle();
+    if (Math.abs(u[1]) >= Math.abs(u[0])) return u[1] > 0 ? 0 : 180;
+    return u[0] > 0 ? 90 : 270;   // 90: quer, Kopf links; 270: quer, Kopf rechts
+  }
+  function onOri(e) {
+    var t = performance.now();
+    if (e.beta == null || e.gamma == null) return;
+    oriCount++; lastOriT = t;
+    var u = uFromOri(e.beta, e.gamma), a = attitude(u, effAngle(u));
+    samples.push({ t: t, p: a.pitch, r: a.roll, ux: u[0], uy: u[1], uz: u[2] });
+    while (samples.length && t - samples[0].t > 8000) samples.shift();
+  }
+  function sensorsAttach() { if (sensorsOn) return; samples = []; oriCount = 0; lastOriT = performance.now(); window.addEventListener('deviceorientation', onOri); sensorsOn = true; }
+  function sensorsDetach() { window.removeEventListener('deviceorientation', onOri); sensorsOn = false; }
+  async function sensorsPermission() {
+    // MUSS direkt im Tipp-Ereignis starten (iPhone fragt nur dann)
+    var DO = window.DeviceOrientationEvent;
+    if (!DO) return 'fehlt';
+    if (typeof DO.requestPermission === 'function') { try { return await DO.requestPermission(); } catch (e) { return 'Fehler'; } }
+    return 'granted';
+  }
+  function snapshot() {
+    var now = performance.now(), last = samples[samples.length - 1];
+    if (!last) return null;
+    var rec = samples.filter(function (s) { return now - s.t <= 250; });
+    return { age: now - last.t, p: last.p, r: last.r, pMed: median(rec.map(function (s) { return s.p; })), rMed: median(rec.map(function (s) { return s.r; })), n: rec.length };
+  }
+  function shake(ms) {
+    var now = performance.now(), rec = samples.filter(function (s) { return now - s.t <= ms; });
+    if (rec.length < 4) return null;
+    return { p: sd(rec.map(function (s) { return s.p; })), r: sd(rec.map(function (s) { return s.r; })), n: rec.length };
+  }
+  function gravClass() {
+    var n = performance.now(), last = samples[samples.length - 1];
+    if (!last || n - last.t > 600) return null;
+    var rec = samples.filter(function (x) { return n - x.t <= 300; });
+    if (rec.length < 3) return null;
+    var ux = mean(rec.map(function (x) { return x.ux; })), uy = mean(rec.map(function (x) { return x.uy; })), uz = mean(rec.map(function (x) { return x.uz; }));
+    if (Math.abs(uz) > 0.8) return 'flach';
+    if (Math.abs(uy) >= 0.75 && Math.abs(ux) <= 0.65) return uy > 0 ? 'hoch' : 'hoch kopfüber';
+    if (Math.abs(ux) >= 0.75 && Math.abs(uy) <= 0.65) return ux > 0 ? 'quer, Kopf links' : 'quer, Kopf rechts';
+    return 'unklar';
+  }
+  function isLandCls(c) { return c !== null && /^quer/.test(c); }
+  function holdLandscape() { var c = gravClass(); return c === null ? landscapeNow() : isLandCls(c); }
+  // Selbstauslöser: ruhig, fast gerade, frischer Sensorwert, quer. ctl.manual = true löst sofort aus (Knopf „Jetzt“).
+  async function waitStill(my, maxMs, onTick, ctl) {
+    var t0 = performance.now(), okSince = 0;
+    if (!sensorsOn || !lastOriT || performance.now() - lastOriT > 1500) { await sleepC(my, 2500); return { ok: null, noSensor: true, ms: 2500 }; }
+    while (performance.now() - t0 < maxMs) {
+      chk(my);
+      if (ctl && ctl.manual) return { ok: false, manual: true, ms: Math.round(performance.now() - t0) };
+      var now = performance.now(), fresh = sensorsOn && lastOriT && now - lastOriT < CFG.FRESH_MS, sh = shake(700), sn = snapshot();
+      var good = !!(fresh && sh && sh.n >= 4 && sh.p <= CFG.STILL_P && sh.r <= CFG.STILL_R && sn && Math.abs(sn.r) <= CFG.STILL_ROLL_MAX && holdLandscape());
+      if (good) { if (!okSince) okSince = now; if (now - okSince >= CFG.STILL_MS) return { ok: true, ms: Math.round(now - t0) }; }
+      else okSince = 0;
+      if (onTick) onTick(good ? now - okSince : 0, fresh, sh);
+      await sleep(80);
+    }
+    return { ok: false, ms: Math.round(performance.now() - t0) };
+  }
+
+  /* =====================================================================
+     Bühne: Drehung nach Schwerkraft (funktioniert auch mit Ausrichtungssperre)
+     ===================================================================== */
+  function geom(el, rot) {
+    var W = window.innerWidth, H = window.innerHeight;
+    if (!rot) el.style.cssText = 'left:0;top:0;width:' + W + 'px;height:' + H + 'px;transform:none';
+    else el.style.cssText = 'left:50%;top:50%;width:' + H + 'px;height:' + W + 'px;transform:translate(-50%,-50%) rotate(' + rot + 'deg)';
+  }
+  function applyGeom() {
+    geom($('ui'), S.textRot);
+    // Sucherbild: liefert der Browser hochkant-Bilder (mit dem Handy verbunden), dreht sich das Bild mit dem Handy und passt ohne Drehung.
+    // Liefert er quer-Bilder bei gesperrtem Bildschirm, muss das Bild wie der Text gedreht werden.
+    geom($('vidBox'), (S.textRot !== 0 && S.vw >= S.vh) ? S.textRot : 0);
+  }
+  function updateLayout() {
+    var g = gravClass();
+    if (g) S.lastCls = { cls: g, t: performance.now() };
+    var rot = S.textRot;
+    if (isLandCls(g)) rot = landscapeNow() ? 0 : (/Kopf links/.test(g) ? 90 : -90);
+    else if (g === 'hoch' || g === 'hoch kopfüber') rot = 0;
+    if (rot !== S.textRot) { S.textRot = rot; applyGeom(); }
+  }
+  window.addEventListener('resize', function () { if (!$('stage').hidden) applyGeom(); });
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', function () { if (!$('stage').hidden) applyGeom(); });
+
+  /* =====================================================================
+     EXIF (nur Brennweite und Ausrichtung)
+     ===================================================================== */
+  function ratio(n, d) { return d ? n / d : null; }
+  function readIFD(dv, base, off, le) {
+    var out = {};
+    if (base + off + 2 > dv.byteLength) return out;
+    var n = dv.getUint16(base + off, le), sizes = { 1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 7: 1, 9: 4, 10: 8 };
+    for (var i = 0; i < n; i++) {
+      var e = base + off + 2 + i * 12;
+      if (e + 12 > dv.byteLength) break;
+      var tag = dv.getUint16(e, le), type = dv.getUint16(e + 2, le), cnt = dv.getUint32(e + 4, le), total = (sizes[type] || 1) * cnt, vo = total <= 4 ? e + 8 : base + dv.getUint32(e + 8, le);
+      if (vo + total > dv.byteLength || cnt > 4096) continue;
+      var v = null, k;
+      if (type === 2) { var s = ''; for (k = 0; k < cnt; k++) { var ch = dv.getUint8(vo + k); if (ch === 0) break; s += String.fromCharCode(ch); } v = s.trim(); }
+      else if (type === 3) v = cnt === 1 ? dv.getUint16(vo, le) : null;
+      else if (type === 4) v = cnt === 1 ? dv.getUint32(vo, le) : null;
+      else if (type === 5) v = cnt === 1 ? ratio(dv.getUint32(vo, le), dv.getUint32(vo + 4, le)) : null;
+      else if (type === 10) v = cnt === 1 ? ratio(dv.getInt32(vo, le), dv.getInt32(vo + 4, le)) : null;
+      else { out[tag] = null; continue; }
+      out[tag] = v;
+    }
+    return out;
+  }
+  function parseTiff(dv, base) {
+    var le = dv.getUint16(base) === 0x4949;
+    if (dv.getUint16(base + 2, le) !== 42) return null;
+    var ifd0 = readIFD(dv, base, dv.getUint32(base + 4, le), le), ex = ifd0[0x8769] != null ? readIFD(dv, base, ifd0[0x8769], le) : {};
+    return { model: ifd0[0x0110] || null, orientation: ifd0[0x0112] != null ? ifd0[0x0112] : null, focal: ex[0x920A] != null ? ex[0x920A] : null, focal35: ex[0xA405] != null ? ex[0xA405] : null };
+  }
+  async function readExif(blob) {
+    try {
+      var dv = new DataView(await blob.slice(0, 393216).arrayBuffer());
+      if (dv.byteLength < 4 || dv.getUint16(0) !== 0xFFD8) return {};
+      var off = 2;
+      while (off + 4 < dv.byteLength) {
+        var marker = dv.getUint16(off); off += 2;
+        if (marker === 0xFFDA || marker === 0xFFD9) break;
+        var len = dv.getUint16(off);
+        if (marker === 0xFFE1 && dv.getUint32(off + 2) === 0x45786966) return parseTiff(dv, off + 8) || {};
+        off += len;
+      }
+    } catch (e) { /* ohne EXIF weiter */ }
+    return {};
+  }
+
+  /* =====================================================================
+     Kamera
+     ===================================================================== */
+  function classify(label) {
+    var l = (label || '').toLowerCase();
+    if (/front|vorder|selfie|facetime|user/.test(l)) return 'front';
+    if (/ultra/.test(l)) return 'ultra';
+    if (/tele/.test(l)) return 'tele';
+    if (/dual|triple|dreifach|zweifach|virtual/.test(l)) return 'multi';
+    if (/back|rück|rear|arrière|trasera|posteriore|environment|hinten/.test(l)) return 'wide';
+    return 'other';
+  }
+  function gum(c) { return navigator.mediaDevices.getUserMedia(c); }
+  function closeStream() {
+    if (S.stream) S.stream.getTracks().forEach(function (t) { t.stop(); });
+    S.stream = null; S.track = null; S.ic = null;
+    var v = $('video'); v.srcObject = null;
+  }
+  async function camPermission() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { var e0 = new Error('Dein Browser kann die Kamera hier nicht starten.'); e0.name = 'NichtVorhanden'; throw e0; }
+    var s0 = await gum({ audio: false, video: { facingMode: { ideal: 'environment' } } });
+    s0.getTracks().forEach(function (t) { t.stop(); });
+  }
+  async function discover() {
+    var devs = [];
+    try { devs = (await navigator.mediaDevices.enumerateDevices()).filter(function (d) { return d.kind === 'videoinput'; }); } catch (e) { /* ohne Liste weiter */ }
+    S.devs = devs.map(function (d) { return { id: d.deviceId, label: d.label || '', kind: classify(d.label) }; });
+  }
+  async function openStream(dev) {
+    closeStream();
+    function mk(w, h, exact) {
+      var v = { frameRate: { ideal: 30 }, width: exact ? { exact: w } : { ideal: w }, height: exact ? { exact: h } : { ideal: h } };
+      if (dev && dev.id) v.deviceId = { exact: dev.id }; else v.facingMode = { ideal: 'environment' };
+      return { audio: false, video: v };
+    }
+    var tries = [[4032, 3024, true], [3024, 4032, true], [4032, 3024, false], [1920, 1440, false]], s = null, err = null;
+    for (var i = 0; i < tries.length && !s; i++) { try { s = await gum(mk(tries[i][0], tries[i][1], tries[i][2])); } catch (e) { err = e; } }
+    if (!s) throw err || new Error('Kamera startet nicht');
+    S.stream = s; S.track = s.getVideoTracks()[0];
+    var v = $('video'); v.srcObject = s;
+    try { await v.play(); } catch (e) { /* muted autoplay */ }
+    await new Promise(function (res) { if (v.videoWidth) return res(); v.onloadedmetadata = function () { res(); }; setTimeout(res, 3000); });
+    S.vw = v.videoWidth || 1; S.vh = v.videoHeight || 1; applyGeom();
+    S.ic = ('ImageCapture' in window) ? new ImageCapture(S.track) : null;
+    S.streamOpenedAt = performance.now(); S.shotsSinceOpen = 0;
+    S.track.addEventListener('ended', function () { if (S.track && S.track.readyState === 'ended') { S.stream = null; } });
+  }
+  // Dreht der Browser das Kamerabild mit dem Handy, ändern sich die Maße; dann Bühne neu ausrichten
+  $('video').addEventListener('resize', function () { var v = $('video'); if (v.videoWidth) { S.vw = v.videoWidth; S.vh = v.videoHeight; applyGeom(); } });
+  // Hauptkamera sicher wählen: unter Android nennt der Browser die Kameras nur „camera N“. Wir lesen die Kleinbild-Brennweite aus einem Probefoto.
+  async function chooseCamera() {
+    if (S.camChoice !== null) return;
+    var wide = S.devs.filter(function (d) { return d.kind === 'wide'; }), multi = S.devs.filter(function (d) { return d.kind === 'multi'; });
+    if (wide.length === 1) { S.camChoice = wide[0]; S.camNote = 'Kamera: ' + (wide[0].label || 'Hauptkamera'); return; }
+    if (wide.length === 0) { S.camChoice = multi[0] || false; S.camNote = multi[0] ? 'Kamera: ' + multi[0].label : 'Kamera: Standard'; return; }
+    var info = [];
+    for (var i = 0; i < Math.min(wide.length, 4); i++) {
+      var row = { dev: wide[i], f35: null };
+      try {
+        say('Prüfe Kamera ' + (i + 1) + ' von ' + Math.min(wide.length, 4) + ' …');
+        var v = { audio: false, video: { deviceId: { exact: wide[i].id }, width: { ideal: 1280 }, height: { ideal: 960 } } };
+        S.stream = await gum(v); S.track = S.stream.getVideoTracks()[0];
+        if (!('ImageCapture' in window)) throw new Error('ImageCapture fehlt');
+        var ic = new ImageCapture(S.track); await sleep(500);
+        var b = await withTimeout(ic.takePhoto(), 10000), x = await readExif(b); row.f35 = x.focal35;
+      } catch (e) { row.err = errText(e); }
+      closeStream(); info.push(row);
+    }
+    var withF = info.filter(function (r) { return r.f35 != null; }), best = info[0];
+    if (withF.length) best = withF.reduce(function (a, b) { return Math.abs(b.f35 - 26) < Math.abs(a.f35 - 26) ? b : a; });
+    S.camChoice = best.dev; S.camNote = 'Kamera gewählt' + (best.f35 != null ? ' (' + fmt(best.f35, 0) + ' mm)' : ' (Brennweite unbekannt)');
+  }
+
+  /* =====================================================================
+     Fluss: Bühne, Kamera, Auslösen
+     ===================================================================== */
+  var CANCEL = { cancel: true };
+  function chk(my) { if (my !== S.token) throw CANCEL; }
+  async function sleepC(my, ms) { var t0 = performance.now(); while (performance.now() - t0 < ms) { chk(my); await sleep(Math.min(100, ms)); } }
+  function paneShow(id, on) { $(id).hidden = !on; }
+  function say(t) { if (!$('stage').hidden) { var b = $('camBig'); if (t) { b.textContent = t; b.hidden = false; } else b.hidden = true; } }
+  function toast(t, ms) { var el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(function () { el.hidden = true; }, ms || 1800); }
+
+  function enterStage() {
+    $('stage').hidden = false; document.body.style.overflow = 'hidden';
+    paneShow('vCam', false); paneShow('vRev', false); paneShow('vBet', false); paneShow('vTurn', false);
+    sensorsAttach(); updateLayout(); applyGeom();
+    keepAwake();
+  }
+  async function leaveStage() {
+    S.token++; S.phase = ''; closeStream(); sensorsDetach();
+    $('stage').hidden = true; document.body.style.overflow = ''; releaseAwake();
+    if (S.review && S.review.url) { URL.revokeObjectURL(S.review.url); } S.review = null;
+  }
+  async function keepAwake() { try { if (navigator.wakeLock && !S.wake) { S.wake = await navigator.wakeLock.request('screen'); S.wake.addEventListener('release', function () { S.wake = null; }); } } catch (e) { /* egal */ } }
+  function releaseAwake() { try { if (S.wake) S.wake.release(); } catch (e) { /* egal */ } S.wake = null; }
+
+  function startSequence(ids, mode) {
+    S.seq = ids; S.idx = 0; S.mode = mode || 'seq';
+    enterStage();
+    nextShot();
+  }
+  function nextShot() {
+    if (S.idx >= S.seq.length) { endSequence(); return; }
+    S.cur = S.seq[S.idx];
+    runShot();
+  }
+  function endSequence() {
+    leaveStage().then(function () { showGallery(); });
+  }
+  function dotsHtml() {
+    var h = '';
+    var order = PLAETZE.map(function (p) { return p.key; });
+    order.forEach(function (k, i) {
+      if (i === 6) h += '<i class="gap"></i>';
+      var c = k === S.cur ? 'cur' : (hasPhoto(k) ? 'done' : '');
+      h += '<i class="' + c + '"></i>';
+    });
+    return h;
+  }
+  function setLabels() {
+    var m = slotMeta(S.cur), nr = m.nr ? m.nr + ' von 10 · ' : '';
+    $('camLbl').textContent = nr + m.name + (m.sub ? ' (' + m.sub + ')' : '');
+    $('camHint').textContent = m.hint;
+    $('camDots').innerHTML = dotsHtml();
+  }
+
+  async function runShot() {
+    var my = ++S.token, m = slotMeta(S.cur);
+    S.phase = 'start'; S.review = null;
+    paneShow('vRev', false); paneShow('vBet', false);
+    try {
+      if (S.fallbackInput) { await fallbackShot(my); return; }
+      // 1) Querhaltung abwarten (Schwerkraft), erst dann startet die Kamera
+      await waitLandscape(my);
+      // 2) Kamera
+      paneShow('vCam', true); setLabels(); $('shotBtn').hidden = true; $('stillTxt').textContent = ''; $('stillFill').style.width = '0';
+      if (!S.stream || !S.track || S.track.readyState !== 'live') {
+        say('Kamera startet …');
+        if (!S.devs) await discover();
+        await chooseCamera(); chk(my);
+        await openStream(S.camChoice || null); chk(my);
+        if (!S.ic) { closeStream(); S.fallbackInput = true; await fallbackShot(my); return; }
+      }
+      // 3) Einschwingzeit nach dem Kamerastart
+      var settle = CFG.SETTLE_MS - (performance.now() - S.streamOpenedAt);
+      if (settle > 0) { say('Kamera wird bereit …'); S.phase = 'settle'; await sleepC(my, settle); }
+      say('');
+      // 4) Selbstauslöser; nach Ablauf der Zeit erscheint zusätzlich der Knopf „Jetzt“
+      S.phase = 'still';
+      var maxMs = S.shotsSinceOpen === 0 && !hasAnyPhoto() ? CFG.FALLBACK_FIRST_MS : CFG.FALLBACK_NEXT_MS, ctl = { manual: false };
+      $('shotBtn').onclick = function () { ctl.manual = true; };
+      function tick(stillFor, fresh) {
+        $('stillFill').style.width = Math.min(100, stillFor / CFG.STILL_MS * 100) + '%';
+        $('stillTxt').textContent = !fresh ? 'Warte auf Sensorwerte …' : (stillFor > 0 ? 'Halte still …' : 'Handy ruhig und gerade halten');
+      }
+      var res = await waitStill(my, maxMs, tick, ctl);
+      if (!res.ok && !res.noSensor && !res.manual) {
+        $('shotBtn').hidden = false;
+        res = await waitStill(my, 1e9, function (a, f) { tick(a, f); if (a === 0 && f) $('stillTxt').textContent = 'Halte still oder tippe „Jetzt“'; }, ctl);
+      }
+      var auto = !!res.ok;
+      $('shotBtn').hidden = true; $('stillFill').style.width = '100%';
+      chk(my);
+      await shoot(my, { auto: auto, noSensor: !!res.noSensor, waitMs: res.ms || 0 });
+    } catch (e) {
+      if (e === CANCEL) return;
+      problem('Die Kamera hat nicht geklappt', errText(e), true);
+    }
+  }
+  function hasAnyPhoto() { return Object.keys(S.slots).some(function (k) { return S.slots[k].state !== 'leer'; }); }
+
+  async function waitLandscape(my) {
+    S.phase = 'turn'; paneShow('vCam', !!S.stream); paneShow('vTurn', true); $('vTurn').classList.toggle('over', !!S.stream);
+    $('turnBtnBox').hidden = true; $('turnTxt').textContent = 'Die Kamera startet, sobald dein Handy quer liegt.'; S.turnMan = false;
+    var t0 = performance.now(), okSince = 0;
+    $('turnGo').onclick = function () { S.turnMan = true; };
+    for (;;) {
+      chk(my); updateLayout();
+      var c = gravClass(), land = c === null ? landscapeNow() : isLandCls(c), now = performance.now();
+      if (land) { if (!okSince) okSince = now; if (now - okSince >= 400) break; } else okSince = 0;
+      if (S.turnMan) break;
+      if (c === null && now - t0 > 6000) { $('turnTxt').textContent = 'Dein Handy meldet die Lage nicht. Dreh es quer und tippe dann auf „Trotzdem weiter“.'; $('turnBtnBox').hidden = false; }
+      await sleep(100);
+    }
+    paneShow('vTurn', false);
+  }
+
+  /* Überwachung während der Aufnahme: Wasserwaage, Haltung, Pausieren bei Hochformat */
+  var hudTimer = setInterval(function () {
+    if ($('stage').hidden) return;
+    updateLayout();
+    if (S.phase === 'settle' || S.phase === 'still') {
+      var c = gravClass(), upright = c === 'hoch' || c === 'hoch kopfüber';
+      paneShow('vTurn', upright); if (upright) { $('vTurn').classList.add('over'); $('turnBtnBox').hidden = true; $('turnTxt').textContent = 'Das Foto wird gemacht, sobald dein Handy wieder quer liegt.'; }
+    }
+    if (!$('vCam').hidden && S.phase !== 'turn') {
+      var s = snapshot(), t = $('lvlT'), h = $('vCam').clientHeight || 300;
+      if (!s || s.age > 300) { t.textContent = 'Sensor liefert gerade nichts'; t.setAttribute('data-ok', '0'); }
+      else {
+        $('lvlH').style.setProperty('--ty', Math.max(-0.4 * h, Math.min(0.4 * h, s.p * (h / 52))).toFixed(1) + 'px');
+        $('lvlH').style.setProperty('--rot', s.r.toFixed(2) + 'deg');
+        t.textContent = 'Neigung ' + fmt(s.p, 1, true) + '° · Rollen ' + fmt(s.r, 1, true) + '°'; t.setAttribute('data-ok', Math.abs(s.p) <= 2 && Math.abs(s.r) <= 1 ? '1' : '0');
+      }
+    }
+  }, 80);
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') { if (!$('stage').hidden) { closeStream(); S.token++; } }
+    else if (!$('stage').hidden && S.phase !== 'review' && S.cur && $('vBet').hidden && $('vRev').hidden) { keepAwake(); runShot(); }
+  });
+
+  /* =====================================================================
+     Auslösen, Drehen, Verkleinern
+     ===================================================================== */
+  function dev() {
+    var ua = navigator.userAgent, os = '', br = '', m;
+    if (/iPhone|iPad/.test(ua)) { m = /OS (\d+)[_.](\d+)/.exec(ua); os = (/iPad/.test(ua) ? 'iPad' : 'iPhone') + (m ? ' iOS ' + m[1] + '.' + m[2] : ''); }
+    else if (/Android/.test(ua)) { m = /Android ([\d.]+);\s*([^;)]+)/.exec(ua); os = 'Android' + (m ? ' ' + m[1] + ', ' + m[2].trim() : ''); }
+    else os = (navigator.platform || 'Gerät');
+    if (/SamsungBrowser\/(\d+)/.test(ua)) br = 'Samsung Internet ' + RegExp.$1; else if (/CriOS\/(\d+)/.test(ua)) br = 'Chrome iOS ' + RegExp.$1; else if (/Chrome\/(\d+)/.test(ua)) br = 'Chrome ' + RegExp.$1; else if (/Version\/([\d.]+).*Safari/.test(ua)) br = 'Safari ' + RegExp.$1; else br = 'Browser';
+    return (os + ', ' + br).slice(0, 160);
+  }
+  async function decodeImage(blob) {
+    var url = URL.createObjectURL(blob), im = new Image();
+    im.src = url;
+    try { await im.decode(); } catch (e) { await new Promise(function (res, rej) { im.onload = res; im.onerror = function () { rej(new Error('Bild nicht lesbar')); }; if (im.complete && im.naturalWidth) res(); }); }
+    return { el: im, w: im.naturalWidth, h: im.naturalHeight, url: url };
+  }
+  function toBlob(c, q) { return new Promise(function (r) { c.toBlob(r, 'image/jpeg', q); }); }
+  // dreht (rot = Grad im Uhrzeigersinn) und verkleinert auf lange Seite CFG.LONG_EDGE, Qualität CFG.QUALITY
+  async function renderUpright(img, rot) {
+    var quarter = rot === 90 || rot === 270, ow = quarter ? img.h : img.w, oh = quarter ? img.w : img.h, s = Math.min(1, CFG.LONG_EDGE / Math.max(ow, oh));
+    var c = document.createElement('canvas'); c.width = Math.max(1, Math.round(ow * s)); c.height = Math.max(1, Math.round(oh * s));
+    var x = c.getContext('2d'); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
+    x.translate(c.width / 2, c.height / 2); x.rotate(rot * RAD); x.drawImage(img.el, -img.w * s / 2, -img.h * s / 2, img.w * s, img.h * s);
+    var blob = await toBlob(c, CFG.QUALITY);
+    var tw = 320, th = Math.round(320 * c.height / c.width), t = document.createElement('canvas'); t.width = tw; t.height = th; t.getContext('2d').drawImage(c, 0, 0, tw, th);
+    var thumb = t.toDataURL('image/jpeg', 0.7); t.width = 1; t.height = 1;
+    var out = { blob: blob, w: c.width, h: c.height, thumb: thumb }; c.width = 1; c.height = 1;
+    return out;
+  }
+  function ampelHandy(snap, f35) {
+    var lvl = 0, why = [], sensor = !!(snap && snap.p != null);
+    if (sensor) {
+      var ap = Math.abs(snap.p), ar = Math.abs(snap.r);
+      if (ap > 5 || ar > 2.5) { lvl = 2; why.push('Handy schief: Neigung ' + fmt(snap.p, 1) + '°, Rollen ' + fmt(snap.r, 1) + '°'); }
+      else if (ap > 2 || ar > 1) { lvl = 1; why.push('Handy leicht schief: Neigung ' + fmt(snap.p, 1) + '°, Rollen ' + fmt(snap.r, 1) + '°'); }
+    }
+    if (f35 != null) {
+      if (f35 < 20 || f35 > 40) { lvl = 2; why.push('Kamera ist nicht 1x (' + fmt(f35, 0) + ' mm)'); }
+      else if (f35 < 22 || f35 > 30) { lvl = Math.max(lvl, 1); why.push('Kamera weicht von 1x ab (' + fmt(f35, 0) + ' mm)'); }
+    }
+    var amp = (!sensor && lvl === 0) ? null : ['gruen', 'gelb', 'rot'][lvl];
+    if (!sensor) why.push('kein Sensorwert');
+    return { ampel: amp, gruende: why };
+  }
+  async function shoot(my, how) {
+    var snap = snapshot(), cls = (gravClass() || (S.lastCls && performance.now() - S.lastCls.t < 3000 ? S.lastCls.cls : null)), t0 = performance.now(), blob;
+    if (snap && snap.age > 800) snap = null;
+    S.phase = 'shoot'; $('shotBtn').hidden = true; say('Foto wird gemacht …');
+    try { blob = await withTimeout(S.ic.takePhoto(), 15000); }
+    catch (e) { if (my !== S.token) throw CANCEL; problem('Das Foto konnte nicht gemacht werden', errText(e), true); return; }
+    chk(my);
+    flash();
+    var takeMs = Math.round(performance.now() - t0);
+    say('Foto wird verkleinert …');
+    await processAndReview(my, blob, { snap: snap, cls: cls, how: how, takeMs: takeMs, quelle: 'kamera' });
+  }
+  async function processAndReview(my, blob, o) {
+    try {
+      var exif = await readExif(blob), img = await decodeImage(blob), rot = 0, note = '';
+      if (o.quelle === 'kamera' && img.h > img.w) {
+        // Hochformat-Pixel (typisch iPhone, Fold): nach der Schwerkraft quer drehen
+        var cls = o.cls;
+        if (/Kopf links/.test(cls || '')) rot = 270; else if (/Kopf rechts/.test(cls || '')) rot = 90;
+        else if (cls === null) { var a = screenAngle(); rot = a === 90 ? 270 : a === 270 ? 90 : 0; note = 'Drehung ohne Sensor nach Bildschirm'; }
+      }
+      var res = await renderUpright(img, rot); URL.revokeObjectURL(img.url);
+      chk(my);
+      var f35 = exif.focal35 != null ? exif.focal35 : null, am = ampelHandy(o.snap, f35);
+      var r = { slot: S.cur, blob: res.blob, w: res.w, h: res.h, thumb: res.thumb, drehung: rot, hand: 0, f35: f35, exif: { orient: exif.orientation, focal: exif.focal, model: exif.model }, srcW: img.w, srcH: img.h,
+        snap: o.snap, cls: o.cls, ampel: am.ampel, gruende: am.gruende, how: o.how || {}, takeMs: o.takeMs, quelle: o.quelle, note: note, url: null };
+      showReview(r);
+    } catch (e) {
+      if (e === CANCEL) return;
+      problem('Das Foto konnte nicht verarbeitet werden', errText(e), true);
+    }
+  }
+  function flash() { var f = $('flash'); f.classList.add('on'); setTimeout(function () { f.classList.remove('on'); }, 60); try { if (navigator.vibrate) navigator.vibrate(25); } catch (e) { /* egal */ } }
+
+  /* =====================================================================
+     Ansehen: Passt oder Neu
+     ===================================================================== */
+  function ampHtml(a) { return a ? '<span class="amp l"><i class="' + a + '"></i>' + ({ gruen: 'grün', gelb: 'gelb', rot: 'rot' })[a] + '</span>' : ''; }
+  function showReview(r) {
+    S.review = r; S.phase = 'review'; r.url = URL.createObjectURL(r.blob);
+    S.shotsSinceOpen++;
+    $('revImg').src = r.url;
+    var m = slotMeta(r.slot);
+    $('revLbl').textContent = (m.nr ? m.nr + ' von 10 · ' : '') + m.name;
+    $('revInfo').innerHTML = esc(r.gruende.length ? r.gruende.join(' · ') : 'Lage in Ordnung') + (r.ampel ? ' ' + ampHtml(r.ampel) : '');
+    paneShow('vCam', false); paneShow('vTurn', false); paneShow('vRev', true); say('');
+    $('revOk').disabled = false;
+  }
+  $('revNeu').onclick = function () { discardReview(); runShot(); };
+  $('revRot').onclick = async function () {
+    var r = S.review; if (!r) return; $('revRot').disabled = true;
+    try {
+      var img = await decodeImage(r.blob), res = await renderUpright(img, 90); URL.revokeObjectURL(img.url);
+      URL.revokeObjectURL(r.url); r.blob = res.blob; r.w = res.w; r.h = res.h; r.thumb = res.thumb; r.hand = (r.hand + 90) % 360; r.drehung = (r.drehung + 90) % 360; r.url = URL.createObjectURL(r.blob); $('revImg').src = r.url;
+    } catch (e) { toast('Drehen nicht möglich'); }
+    $('revRot').disabled = false;
+  };
+  function discardReview() { var r = S.review; if (r && r.url) URL.revokeObjectURL(r.url); S.review = null; }
+  $('revOk').onclick = function () {
+    var r = S.review; if (!r) return; $('revOk').disabled = true;
+    var st = slotState(r.slot), m = slotMeta(r.slot);
+    st.thumb = r.thumb; st.state = 'wartet'; st.err = null; st.fotoId = uuid(); st.ampelHandy = r.ampel; st.server = null;
+    if (m.art === 'zusatz') st.zusatz_art = S.zusatzArt;
+    var meta = {
+      id: st.fotoId, fahrzeug_id: S.vehicle.id, platz: m.key, zusatz_nr: m.zusatz_nr, zusatz_art: m.art === 'zusatz' ? S.zusatzArt : null,
+      ampel_handy: r.ampel, ampel_handy_gruende: r.gruende.join('; '), geraet: dev(), brennweite_kb: r.f35, neigung: r.snap ? +r.snap.p.toFixed(1) : null, rollen: r.snap ? +r.snap.r.toFixed(1) : null,
+      drehung: r.drehung, breite: r.w, hoehe: r.h, bytes: r.blob.size,
+      app_details: { app: APP, quelle: r.quelle, selbstausloeser: !!r.how.auto, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, aufnahme_ms: r.takeMs, kamera: S.camNote }
+    };
+    var item = { slot: r.slot, id: st.fotoId, path: S.vehicle.id + '/' + m.key + '_' + st.fotoId + '.jpg', blob: r.blob, meta: meta, tries: 0, fileDone: false, state: 'wartet' };
+    discardReview();
+    enqueue(item);
+    toast('Gespeichert, wird hochgeladen');
+    saveSession();
+    S.idx++;
+    // Übergang Außen → Innen
+    if (S.mode === 'seq' && S.seq[S.idx - 1] === 'dreiviertel_vr' && S.idx < S.seq.length) { betweenInnen(); return; }
+    nextShot();
+  };
+
+  function betweenInnen() {
+    S.token++; S.phase = 'between';
+    var m = slotMeta(S.seq[S.idx]);
+    $('betBox').innerHTML = '<h1>Außen fertig</h1><p>Jetzt der Innenraum. Mach die Fahrertür auf und schalte die Zündung ein. Als Erstes: ' + esc(m.name) + '.</p><div class="btns"><button class="btn big primary" id="betGo" type="button">Weiter</button></div>';
+    paneShow('vCam', false); paneShow('vRev', false); paneShow('vTurn', false); paneShow('vBet', true);
+    $('betGo').onclick = function () { paneShow('vBet', false); nextShot(); };
+  }
+  function problem(title, text, retry) {
+    S.token++; S.phase = 'problem';
+    $('betBox').innerHTML = '<h1>' + esc(title) + '</h1><p>' + esc(text) + '</p><div class="btns">' + (retry ? '<button class="btn big primary" id="betRetry" type="button">Nochmal versuchen</button>' : '') + '<button class="btn big" id="betEnd" type="button">Zur Übersicht</button></div>';
+    paneShow('vCam', false); paneShow('vRev', false); paneShow('vTurn', false); paneShow('vBet', true);
+    if (retry) $('betRetry').onclick = function () { paneShow('vBet', false); closeStream(); runShot(); };
+    $('betEnd').onclick = function () { paneShow('vBet', false); endSequence(); };
+  }
+  $('camX').onclick = function () { S.token++; leaveStage().then(showGallery); };
+
+  // Rückfall ohne ImageCapture: Kamera-App des Handys öffnen
+  async function fallbackShot(my) {
+    S.phase = 'fallback'; paneShow('vCam', true); setLabels(); $('capLabel').hidden = false; $('stillTxt').textContent = 'Kamera-App des Handys'; say('');
+    $('capIn').value = '';
+    $('capIn').onchange = async function () {
+      var f = $('capIn').files && $('capIn').files[0]; if (!f) return;
+      $('capLabel').hidden = true; say('Foto wird verkleinert …');
+      await processAndReview(S.token, f, { snap: null, cls: null, how: { auto: false, noSensor: true }, takeMs: null, quelle: 'kamera-app' });
+    };
+  }
+
+  /* =====================================================================
+     Hochladen (im Hintergrund, mit Wiederholung)
+     ===================================================================== */
+  function enqueue(item) { S.queue.push(item); renderGalleryIfShown(); kick(); }
+  var onlineWake = null;
+  window.addEventListener('online', function () { if (onlineWake) onlineWake(); });
+  window.addEventListener('beforeunload', function (e) { if (S.queue.length) { e.preventDefault(); e.returnValue = ''; } });
+  async function kick() {
+    if (S.uploading) return; S.uploading = true;
+    while (S.queue.length) {
+      var it = S.queue[0], st = slotState(it.slot);
+      try {
+        st.state = 'sendet'; renderGalleryIfShown();
+        if (!it.fileDone) { await S.api.upload(it.path, it.blob); it.fileDone = true; }
+        var rep = await S.api.report(it.meta);
+        S.queue.shift(); st.state = 'hochgeladen'; st.err = null; it.blob = null; it.meta = null;
+        if (rep && rep.status) st.server = Object.assign({}, st.server || {}, { status: rep.status });
+        saveSession(); renderGalleryIfShown(); schedulePoll(1500);
+      } catch (e) {
+        it.tries++;
+        if (permanent(e)) { S.queue.shift(); st.state = 'fehler'; st.err = e.message; st.item = it; renderGalleryIfShown(); }
+        else {
+          st.state = 'retry'; st.err = e.message; renderGalleryIfShown();
+          var wait = Math.min(30000, 2000 * Math.pow(2, Math.min(it.tries, 4)));
+          await new Promise(function (res) { var t = setTimeout(res, wait); onlineWake = function () { clearTimeout(t); res(); }; });
+          onlineWake = null;
+        }
+      }
+    }
+    S.uploading = false;
+  }
+
+  /* =====================================================================
+     Galerie
+     ===================================================================== */
+  function amp(a, label) { return a ? '<span class="amp" title="' + esc(label) + '"><i class="' + a + '"></i>' + esc(label) + ' ' + ({ gruen: 'grün', gelb: 'gelb', rot: 'rot' })[a] + '</span>' : ''; }
+  function tileInfo(id) {
+    var s = S.slots[id], m = slotMeta(id);
+    if (!s || (s.state === 'leer' && !s.server)) return { t: 'noch offen', c: '' };
+    if (s.state === 'wartet' || s.state === 'sendet') return { t: 'wird hochgeladen', c: 'busy' };
+    if (s.state === 'retry') return { t: 'wartet auf Netz', c: 'warn' };
+    if (s.state === 'fehler') return { t: 'Senden fehlgeschlagen', c: 'bad' };
+    var sv = s.server && s.server.status;
+    if (sv === 'neu') return { t: 'hochgeladen, wartet', c: 'busy' };
+    if (sv === 'in_arbeit') return { t: 'wird bearbeitet', c: 'busy' };
+    if (sv === 'fertig') return { t: 'fertig', c: 'ok' };
+    if (sv === 'fehler') return { t: (s.server.fehler_grund || 'Bearbeitung fehlgeschlagen'), c: 'bad' };
+    return { t: 'hochgeladen', c: 'busy' };
+  }
+  function showPage(id) { ['pStart', 'pGallery', 'pTest'].forEach(function (p) { $(p).hidden = p !== id; }); window.scrollTo(0, 0); }
+  function renderGalleryIfShown() { if (!$('pGallery').hidden) renderGallery(); }
+  function renderGallery() {
+    var v = S.vehicle; if (!v) return;
+    $('gTitle').textContent = v.marke + ' ' + v.modell + ' (' + v.baujahr + ')';
+    var ids = PLAETZE.map(function (p) { return p.key; }).concat(zusatzIds()), done = PLAETZE.filter(function (p) { return hasPhoto(p.key); }).length;
+    var pending = S.queue.length;
+    $('gSum').textContent = done + ' von 10 Pflichtbildern aufgenommen' + (zusatzIds().length ? ', ' + zusatzIds().length + ' Zusatzbild' + (zusatzIds().length > 1 ? 'er' : '') : '') + (pending ? ' · ' + pending + (pending === 1 ? ' wird' : ' werden') + ' noch hochgeladen' : '');
+    $('gProg').innerHTML = PLAETZE.map(function (p) { return '<i class="' + (hasPhoto(p.key) ? 'on' : '') + '"></i>'; }).join('');
+    $('gGrid').innerHTML = ids.map(function (id) {
+      var s = S.slots[id], m = slotMeta(id), ti = tileInfo(id), ph = s && s.thumb ? '<img alt="" src="' + s.thumb + '">' : (m.nr || '+');
+      var sv = s && s.server ? s.server : null, a1 = s && s.ampelHandy, a2 = sv && sv.ampel_showroom;
+      var retry = s && s.state === 'fehler' && s.item && s.item.blob ? ' · <u>nochmal senden</u>' : '';
+      return '<button class="tile" type="button" data-id="' + id + '"><div class="ph">' + ph + '</div><div class="cap">' + (m.nr ? m.nr + ' · ' : '') + esc(m.name) + (m.art === 'zusatz' && s && s.zusatz_art ? ' · ' + esc((ZUSATZ_ARTEN.filter(function (z) { return z[0] === s.zusatz_art; })[0] || [0, ''])[1]) : '') + '</div>' +
+        '<div class="st"><span><i class="dot ' + ti.c + '"></i>' + esc(ti.t) + retry + '</span>' + amp(a1, 'Handy') + amp(a2, 'Showroom') + '</div></button>';
+    }).join('');
+    var next = PLAETZE.filter(function (p) { return !hasPhoto(p.key); })[0];
+    $('gNext').hidden = !next; $('gNext').textContent = next ? 'Weiter: ' + next.name : '';
+    $('gZusatz').hidden = done < 10 || zusatzIds().length >= CFG.ZUSATZ_MAX;
+    $('gZusatz').textContent = 'Zusatzbild aufnehmen (' + zusatzIds().length + ' von ' + CFG.ZUSATZ_MAX + ')';
+  }
+  $('gGrid').addEventListener('click', function (ev) {
+    var b = ev.target.closest('.tile'); if (!b) return; var id = b.getAttribute('data-id'), s = S.slots[id];
+    if (s && s.state === 'fehler' && s.item && s.item.blob && /nochmal/.test(ev.target.textContent || '')) { var it = s.item; s.item = null; it.tries = 0; s.state = 'wartet'; S.queue.push(it); renderGallery(); kick(); return; }
+    var m = slotMeta(id), isNew = !hasPhoto(id);
+    if (!isNew && !confirm('„' + m.name + '“ neu aufnehmen? Das neue Foto ersetzt das alte (das alte bleibt als frühere Version gespeichert).')) return;
+    if (m.art === 'zusatz') S.zusatzArt = (s && s.zusatz_art) || 'sonstiges';
+    startSequence([id], 'single');
+  });
+  $('gNext').onclick = function () {
+    var rest = PLAETZE.filter(function (p) { return !hasPhoto(p.key); }).map(function (p) { return p.key; });
+    startSequence(rest, 'seq');
+  };
+  $('gZusatz').onclick = function () {
+    var n = 1; while (S.slots['zusatz' + n] && S.slots['zusatz' + n].state !== 'leer') n++;
+    if (n > CFG.ZUSATZ_MAX) return;
+    enterStage(); S.token++; S.phase = 'between';
+    $('betBox').innerHTML = '<h1>Zusatzbild ' + n + ' von ' + CFG.ZUSATZ_MAX + '</h1><p>Was zeigt das Foto?</p><div class="chips">' + ZUSATZ_ARTEN.map(function (z) { return '<button type="button" data-a="' + z[0] + '">' + z[1] + '</button>'; }).join('') + '</div><div class="btns"><button class="btn" id="zBack" type="button">Abbrechen</button></div>';
+    paneShow('vBet', true);
+    $('betBox').querySelectorAll('.chips button').forEach(function (b) { b.onclick = function () { S.zusatzArt = b.getAttribute('data-a'); paneShow('vBet', false); S.seq = ['zusatz' + n]; S.idx = 0; S.mode = 'single'; nextShot(); }; });
+    $('zBack').onclick = function () { leaveStage().then(showGallery); };
+  };
+  $('gNew').onclick = function () {
+    if (S.queue.length && !confirm('Es werden noch Fotos hochgeladen. Trotzdem beenden? Nicht hochgeladene Fotos gehen verloren.')) return;
+    resetVehicle(); showStart();
+  };
+  function showGallery() { showPage('pGallery'); renderGallery(); schedulePoll(200); }
+
+  function allFinal() {
+    var ids = Object.keys(S.slots).filter(function (k) { return hasPhoto(k); });
+    return ids.length > 0 && ids.every(function (k) { var s = S.slots[k]; return s.server && (s.server.status === 'fertig' || s.server.status === 'fehler') && s.state !== 'sendet' && s.state !== 'wartet' && s.state !== 'retry'; });
+  }
+  function schedulePoll(ms) { clearTimeout(S.pollTimer); if ($('pGallery').hidden || !S.vehicle) return; S.pollTimer = setTimeout(poll, ms); }
+  async function poll() {
+    if ($('pGallery').hidden || !S.vehicle) return;
+    try {
+      var list = await S.api.status(S.vehicle.id);
+      (list || []).forEach(function (r) {
+        var id = r.platz === 'zusatz' ? 'zusatz' + r.zusatz_nr : r.platz, s = slotState(id);
+        if (s.state === 'sendet' || s.state === 'wartet') return;
+        if (s.state === 'leer') s.state = 'hochgeladen';
+        s.server = r;
+      });
+      renderGallery();
+    } catch (e) { /* bei Netzfehler später nochmal */ }
+    if (!allFinal() || S.queue.length) schedulePoll(4000);
+  }
+
+  /* =====================================================================
+     Start: Fahrzeug anlegen
+     ===================================================================== */
+  function showStart() {
+    showPage('pStart'); $('fMsg').textContent = ''; $('fMsg').className = 'msg';
+    var rs = load('fa_veh');
+    if (rs && rs.vehicle && S.cfg && !S.cfg.bad) {
+      $('resumeBox').hidden = false;
+      $('resumeTxt').textContent = 'Es läuft noch ein Fahrzeug: ' + rs.vehicle.marke + ' ' + rs.vehicle.modell + ' (' + rs.vehicle.baujahr + '). Weitermachen? Bilder, die noch nicht hochgeladen waren, fehlen dann.';
+    } else $('resumeBox').hidden = true;
+  }
+  function saveSession() {
+    if (!S.vehicle) return;
+    var sl = {}; Object.keys(S.slots).forEach(function (k) { var s = S.slots[k]; if (s.state === 'hochgeladen') sl[k] = { zusatz_art: s.zusatz_art, ampelHandy: s.ampelHandy }; });
+    store('fa_veh', { vehicle: S.vehicle, slots: sl });
+  }
+  function resetVehicle() { S.vehicle = null; S.slots = {}; S.queue = []; S.camChoice = null; store('fa_veh', null); clearTimeout(S.pollTimer); }
+  $('resumeYes').onclick = function () {
+    var rs = load('fa_veh'); if (!rs) return;
+    S.vehicle = rs.vehicle; S.slots = {};
+    Object.keys(rs.slots || {}).forEach(function (k) { var s = slotState(k); s.state = 'hochgeladen'; s.zusatz_art = rs.slots[k].zusatz_art; s.ampelHandy = rs.slots[k].ampelHandy; });
+    showGallery();
+  };
+  $('resumeNo').onclick = function () { resetVehicle(); $('resumeBox').hidden = true; };
+
+  function fmsg(t, bad) { $('fMsg').textContent = t || ''; $('fMsg').className = 'msg' + (bad ? ' bad' : ''); }
+  $('fForm').addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    var marke = $('fMarke').value.trim(), modell = $('fModell').value.trim(), bj = parseInt($('fBaujahr').value, 10), kar = $('fKar').value;
+    if (!marke || !modell) { fmsg('Bitte Marke und Modell eintragen.', true); return; }
+    if (!(bj >= 1980 && bj <= 2035)) { fmsg('Bitte das Baujahr vierstellig eintragen, z. B. 2021.', true); return; }
+    if (!S.cfg || S.cfg.bad || (!S.cfg.demo && !S.api)) { fmsg('Dieser Link ist unvollständig. Bitte den Link neu öffnen, den du von AutoScales bekommen hast.', true); return; }
+    $('fGo').disabled = true;
+    try {
+      // 1) Bewegungssensor: Erlaubnis muss direkt aus dem Tipp heraus gefragt werden
+      fmsg('Bewegungssensor … bitte „Erlauben“ tippen');
+      var perm = await sensorsPermission();
+      // 2) Fahrzeug anlegen
+      fmsg('Fahrzeug wird angelegt …');
+      var v = { id: uuid(), marke: marke, modell: modell, baujahr: bj, karosserie: kar || null };
+      try { await S.api.createVehicle(v); }
+      catch (e) {
+        fmsg(e.net ? 'Keine Verbindung zum Server. Bitte Netz prüfen und nochmal tippen.' : (e.status === 403 || e.status === 401 ? 'Zugang verweigert. Der Link ist ungültig oder abgelaufen.' : 'Der Server hat das Fahrzeug nicht angenommen: ' + e.message), true);
+        $('fGo').disabled = false; return;
+      }
+      // 3) Kamera-Erlaubnis
+      fmsg('Kamera … bitte „Erlauben“ tippen');
+      try { await camPermission(); }
+      catch (e) {
+        fmsg((e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) ? 'Die Kamera wurde nicht erlaubt. Erlaube sie in den Einstellungen des Browsers für diese Seite und lade die Seite neu.' : 'Die Kamera startet auf diesem Handy nicht. (' + errText(e) + ')', true);
+        $('fGo').disabled = false; return;
+      }
+      S.vehicle = v; S.slots = {}; S.queue = []; S.camChoice = null; S.devs = null; S.fallbackInput = false; saveSession();
+      S.sensorPerm = perm;
+      fmsg('');
+      startSequence(PLAETZE.map(function (p) { return p.key; }), 'seq');
+    } catch (e) { fmsg('Das hat nicht geklappt: ' + errText(e), true); }
+    $('fGo').disabled = false;
+  });
+
+  /* =====================================================================
+     Selbsttest
+     ===================================================================== */
+  var tResults = [];
+  function tRender() {
+    $('tList').innerHTML = tResults.map(function (r) { return '<div class="chk"><span class="ic ' + r.s + '">' + (r.s === 'ok' ? '✓' : r.s === 'bad' ? '✗' : '…') + '</span><div>' + esc(r.t) + (r.d ? '<br><small>' + esc(r.d) + '</small>' : '') + '</div></div>'; }).join('');
+  }
+  function tAdd(t) { var r = { t: t, s: 'run', d: '' }; tResults.push(r); tRender(); return { ok: function (d) { r.s = 'ok'; r.d = d || ''; tRender(); }, bad: function (d) { r.s = 'bad'; r.d = d || ''; tRender(); } }; }
+  async function tinyJpeg() { var c = document.createElement('canvas'); c.width = 64; c.height = 48; var x = c.getContext('2d'); x.fillStyle = '#FFC77C'; x.fillRect(0, 0, 64, 48); x.fillStyle = '#0B0C10'; x.fillRect(8, 8, 48, 8); return toBlob(c, 0.8); }
+  async function runSelftest() {
+    tResults = []; tRender(); $('tRun').disabled = true; $('tCopy').hidden = true; $('tMsg').textContent = '';
+    var api = S.api, id = uuid(), fid = uuid(), path = id + '/titel_' + fid + '.jpg', row, blob = await tinyJpeg();
+    try {
+      row = tAdd('Server erreichbar');
+      try { var p = await api.ping(); row.ok('Schema ' + p.schema + (p.zugang_gesetzt === false ? ' · ACHTUNG: Zugangswort noch nicht gesetzt (Zeile aus link-bauen.html ausführen)' : '')); if (p.zugang_gesetzt === false) { tResults[tResults.length - 1].s = 'bad'; tRender(); } } catch (e) { row.bad(e.message + (e.status ? ' (HTTP ' + e.status + ')' : '')); throw e; }
+
+      row = tAdd('Falsches Zugangswort wird abgelehnt');
+      try { await api.badZugang({ id: uuid() }); row.bad('wurde angenommen!'); } catch (e) { (e.status >= 400 && e.status < 500) || !api.real ? row.ok('abgelehnt (HTTP ' + e.status + ')') : row.bad('keine saubere Ablehnung: ' + e.message); }
+
+      row = tAdd('Probefahrzeug anlegen (richtiges Zugangswort)');
+      try { await api.createVehicle({ id: id, marke: 'Selbsttest', modell: 'Probe', baujahr: 2026, selbsttest: true }); row.ok('angelegt'); } catch (e) { row.bad(e.message); throw e; }
+
+      row = tAdd('Mini-Bild ablegen (nur Einfügen)');
+      try { await api.upload(path, blob); row.ok('abgelegt'); } catch (e) { row.bad(e.message + (e.status ? ' (HTTP ' + e.status + ')' : '')); throw e; }
+
+      row = tAdd('Ablegen in fremden Ordner wird abgelehnt');
+      try { await api.upload(uuid() + '/titel_' + uuid() + '.jpg', blob); row.bad('wurde angenommen!'); } catch (e) { (e.status >= 400 && e.status < 500) || !api.real ? row.ok('abgelehnt (HTTP ' + e.status + ')') : row.bad('keine saubere Ablehnung: ' + e.message); }
+
+      row = tAdd('Foto melden');
+      try { var m = await api.report({ id: fid, fahrzeug_id: id, platz: 'titel', geraet: dev(), app_details: { app: APP, selbsttest: true } }); row.ok('Status ' + m.status); } catch (e) { row.bad(e.message); throw e; }
+
+      row = tAdd('Status abrufen');
+      try { var st = await api.status(id); row.ok(st.length + (st.length === 1 ? ' Eintrag' : ' Einträge') + ', keine Pfade'); } catch (e) { row.bad(e.message); }
+
+      row = tAdd('Tabellen lesen ist gesperrt');
+      try {
+        var bad = [];
+        for (var t of ['fotos', 'fahrzeuge', 'app_einstellungen']) { var r = await api.raw('GET', '/rest/v1/' + t + '?select=*&limit=1'); if (r.ok && Array.isArray(r.json) && r.json.length) bad.push(t + ' liefert Zeilen'); }
+        bad.length ? row.bad(bad.join(', ')) : row.ok('keine Zeile lesbar');
+      } catch (e) { row.bad(e.message); }
+
+      row = tAdd('Dateien ansehen ist gesperrt');
+      try {
+        var r1 = await api.raw('GET', '/storage/v1/object/roh/' + path), r2 = await api.raw('GET', '/storage/v1/object/public/roh/' + path), r3 = await api.raw('GET', '/storage/v1/object/authenticated/roh/' + path);
+        (r1.status === 200 || r2.status === 200 || r3.status === 200) ? row.bad('Datei war lesbar (HTTP ' + [r1.status, r2.status, r3.status].join('/') + ')') : row.ok('nicht lesbar (HTTP ' + [r1.status, r2.status, r3.status].join('/') + ')');
+      } catch (e) { row.bad(e.message); }
+
+      row = tAdd('Löschen ist gesperrt');
+      try {
+        var d1 = await api.raw('DELETE', '/rest/v1/fotos?id=eq.' + fid), d2 = await api.raw('DELETE', '/rest/v1/fahrzeuge?id=eq.' + id), d3 = await api.raw('DELETE', '/storage/v1/object/roh/' + path);
+        var still = await api.fileThere(id, path), st2 = await api.status(id);
+        (still === true && st2.length === 1) ? row.ok('Löschversuche wirkungslos (HTTP ' + [d1.status, d2.status, d3.status].join('/') + '), Datei und Zeile sind noch da') : row.bad('Datei oder Zeile fehlt nach dem Löschversuch!');
+      } catch (e) { row.bad(e.message); }
+    } catch (e) { /* Rest abgebrochen */ }
+    var bads = tResults.filter(function (r) { return r.s !== 'ok'; }).length;
+    $('tMsg').textContent = bads ? bads + ' Prüfung(en) rot. Nicht für echte Tests nutzen, bis es grün ist. „Ergebnis kopieren“ und an Giannis schicken.' : 'Alles grün: Server, Zugang, Ablegen, Melden und die Sperren funktionieren.';
+    $('tMsg').className = 'msg' + (bads ? ' bad' : '');
+    $('tRun').disabled = false; $('tRun').textContent = 'Nochmal'; $('tCopy').hidden = false;
+  }
+  $('btnSelftest').onclick = function () { if (!S.api) { fmsg('Dieser Link ist unvollständig.', true); return; } tResults = []; tRender(); $('tMsg').textContent = ''; $('tRun').textContent = 'Test starten'; $('tCopy').hidden = true; showPage('pTest'); };
+  $('tRun').onclick = runSelftest;
+  $('tBack').onclick = showStart;
+  $('tCopy').onclick = async function () {
+    var txt = 'Foto-App Selbsttest (' + APP + ', ' + dev() + ')\n' + tResults.map(function (r) { return (r.s === 'ok' ? '[ok]  ' : '[FEHLER] ') + r.t + (r.d ? ' – ' + r.d : ''); }).join('\n');
+    try { await navigator.clipboard.writeText(txt); $('tMsg').textContent = 'Kopiert.'; } catch (e) { $('tMsg').textContent = 'Kopieren nicht möglich. Bitte Text von Hand markieren.'; }
+  };
+
+  /* =====================================================================
+     Start der Seite
+     ===================================================================== */
+  function init() {
+    S.cfg = readCfg();
+    var note = $('modeNote'), info = $('srvInfo');
+    if (S.cfg && S.cfg.demo) {
+      S.demo = true; S.api = mkDemoApi();
+      note.innerHTML = '<b>DEMO:</b> Es wird nichts an einen Server gesendet. Die Bearbeitung wird nur vorgespielt.'; info.textContent = 'Server: keiner (Demo)';
+    } else if (S.cfg && S.cfg.bad) {
+      note.className = 'note bad'; note.textContent = S.cfg.bad; $('fGo').disabled = true;
+    } else if (S.cfg) {
+      S.api = mkRealApi(S.cfg);
+      note.innerHTML = '<b>Test mit echtem Server.</b> Fotos gehen an den Test-Server der AutoScales GmbH i.G.'; info.textContent = 'Server: ' + S.cfg.url.replace('https://', '');
+    } else {
+      note.className = 'note bad'; note.innerHTML = 'Dieser Link ist unvollständig. Bitte den Link neu öffnen, den du von AutoScales bekommen hast. <br><a href="#demo" onclick="setTimeout(function(){location.reload()},0)">Demo ohne Server ansehen</a>'; $('fGo').disabled = true;
+    }
+    showStart();
+  }
+  window.addEventListener('hashchange', function () { if (/(^#|&)(u=|demo)/.test(location.hash)) location.reload(); });
+  init();
+})();
+</script>
+</body>
+</html>
