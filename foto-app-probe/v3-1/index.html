@@ -1,0 +1,1418 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Foto-App Test">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="robots" content="noindex,nofollow">
+<title>Foto-App Probe 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Michroma&family=Montserrat:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: ein Prüfprotokoll in einer Spalte. Kopf mit Ablauf, fünf nummerierte Prüfschritte mit Status, am Ende das Ergebnisblatt. */
+:root {
+  --bg: #FAFAFA;
+  --fg: #0B0C10;
+  --muted: #55575E;
+  --line: #DCDDE2;
+  --card: #FFFFFF;
+  --gold: #FFC77C;
+  --on-gold: #0B0C10;
+  --bad: #B3261E;
+  --focus: #0B0C10;
+  --screen: #0B0C10;
+  --font-display: 'Michroma', 'Montserrat', system-ui, sans-serif;
+  --font-body: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-data: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0B0C10; --fg: #FAFAFA; --muted: #9CA3AF; --line: #262830; --card: #13151B;
+    --bad: #FF8F85; --focus: #FFC77C; --screen: #000000; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0B0C10; --fg: #FAFAFA; --muted: #9CA3AF; --line: #262830; --card: #13151B;
+  --bad: #FF8F85; --focus: #FFC77C; --screen: #000000; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 400 15px/1.5 var(--font-body);
+  padding-block: 20px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+h1, h2, p, dl, ol { margin: 0; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* Kopf */
+.eyebrow { font: 600 11px/1.2 var(--font-body); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 400 clamp(22px, 7vw, 30px)/1.15 var(--font-display); margin-top: 10px; text-wrap: balance; }
+.lede { margin-top: 12px; color: var(--muted); max-width: 60ch; }
+.sep { display: flex; align-items: center; gap: 10px; color: var(--gold); }
+.sep::before, .sep::after { content: ""; height: 1px; flex: 1; background: var(--gold); }
+.sep i { width: 7px; height: 7px; background: var(--gold); transform: rotate(45deg); }
+.plan { padding-left: 1.2em; display: grid; gap: 4px; }
+.plan li::marker { font-weight: 700; }
+.plan b { font-weight: 600; }
+
+/* Prüfschritt */
+.step { display: flex; flex-direction: column; gap: 14px; }
+.step-h { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
+.num { flex: none; width: 30px; height: 30px; display: grid; place-items: center; background: var(--fg); color: var(--bg); font: 400 13px/1 var(--font-display); }
+h2 { font: 700 17px/1.25 var(--font-body); flex: 1 1 auto; min-width: 0; }
+.how { color: var(--muted); max-width: 60ch; }
+.chip { display: inline-flex; align-items: center; gap: 7px; font: 600 11px/1 var(--font-body); letter-spacing: .06em; text-transform: uppercase; padding: 7px 10px; border: 1px solid var(--line); border-radius: 999px; white-space: nowrap; }
+.chip i { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--muted); }
+.chip[data-s="ok"] i { background: var(--gold); border-color: var(--fg); }
+.chip[data-s="bad"] i { background: var(--bad); border-color: var(--bad); }
+.chip[data-s="warn"] i { background: linear-gradient(90deg, var(--gold) 50%, transparent 50%); border-color: var(--fg); }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.btn { min-height: 46px; padding: 0 18px; border: 1px solid var(--fg); background: transparent; border-radius: 4px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; text-align: center; }
+.btn.primary { background: var(--gold); border-color: var(--gold); color: var(--on-gold); }
+.btn[disabled] { opacity: .4; cursor: not-allowed; }
+.field { min-height: 46px; padding: 0 12px; background: var(--card); border: 1px solid var(--line); border-radius: 4px; min-width: 0; max-width: 100%; }
+label.field-l { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 13px; }
+.file-btn { position: relative; }
+.file-btn input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; font-size: 0; }
+.file-btn:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
+.msg { min-height: 0; color: var(--muted); font-size: 14px; }
+.msg.bad { color: var(--bad); font-weight: 600; }
+.note { border-left: 3px solid var(--gold); padding: 8px 0 8px 12px; font-size: 14px; }
+.note b { font-weight: 700; }
+.kv { display: grid; border-top: 1px solid var(--line); }
+.kv .row { display: grid; grid-template-columns: minmax(7.5rem, 11rem) minmax(0, 1fr); gap: 4px 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.kv dt { color: var(--muted); font-size: 13px; }
+.kv dd { margin: 0; font: 500 13px/1.45 var(--font-data); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.kv .row[data-s] dd::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; border: 2px solid var(--muted); vertical-align: baseline; }
+.kv .row[data-s="ok"] dd::before { background: var(--gold); border-color: var(--fg); }
+.kv .row[data-s="bad"] dd::before { background: var(--bad); border-color: var(--bad); }
+.sub { font: 700 12px/1.2 var(--font-body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+details { font-size: 13px; color: var(--muted); }
+details pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 400 12px/1.4 var(--font-data); margin: 8px 0 0; }
+summary { cursor: pointer; }
+
+/* Sucher */
+.vf { position: relative; aspect-ratio: 4 / 3; max-width: 100%; background: var(--screen); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; display: grid; place-items: center; }
+.vf video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: var(--screen); }
+.vf .empty { position: relative; color: #9CA3AF; font-size: 13px; padding: 0 16px; text-align: center; }
+.vf.live .empty { display: none; }
+.lvl { position: absolute; inset: 0; pointer-events: none; display: none; }
+.vf.lvl-on .lvl { display: block; }
+.lvl-h { position: absolute; left: 15%; right: 15%; top: 50%; height: 2px; margin-top: -1px; background: #FFC77C; transform: translateY(var(--ty, 0px)) rotate(var(--rot, 0deg)); box-shadow: 0 0 0 1px rgba(0,0,0,.45); }
+.lvl-c { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border: 2px solid #FAFAFA; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0,0,0,.45); }
+.lvl-t { position: absolute; left: 8px; bottom: 8px; font: 600 12px/1 var(--font-data); background: rgba(11,12,16,.75); color: #FAFAFA; padding: 6px 8px; border-radius: 3px; }
+.lvl-t[data-ok="1"] { background: #FFC77C; color: #0B0C10; }
+
+/* Lagesensor-Anzeige */
+.gauge { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.gauge > div { border: 1px solid var(--line); background: var(--card); padding: 12px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.gauge .lab { font: 600 12px/1.3 var(--font-body); color: var(--muted); }
+.gauge output { font: 400 clamp(22px, 8vw, 32px)/1.1 var(--font-display); font-variant-numeric: tabular-nums; }
+.gauge .hint { font-size: 12px; color: var(--muted); }
+.gauge > div[data-ok="1"] { border-color: var(--fg); box-shadow: inset 0 -4px 0 var(--gold); }
+.thumbs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.thumbs figure { margin: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.thumbs img { width: 100%; height: auto; border: 1px solid var(--line); background: var(--screen); }
+.thumbs figcaption { font-size: 12px; color: var(--muted); }
+.radios { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.radios legend { font-weight: 600; font-size: 13px; padding: 0; margin-bottom: 6px; }
+.radios label { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; }
+.radios input { width: 20px; height: 20px; accent-color: var(--fg); }
+.sheet { border: 1px solid var(--fg); background: var(--card); padding: 14px; max-height: 70vh; overflow: auto; }
+.sheet pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 400 12.5px/1.5 var(--font-data); }
+.canvas-hidden { display: none; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+@media (max-width: 380px) { .kv .row { grid-template-columns: 1fr; } }
+
+[hidden] { display: none !important; }
+main { gap: 18px; }
+.top { display: grid; gap: 12px; }
+.pg { display: flex; gap: 4px; }
+.pg i { flex: 1; height: 6px; background: var(--line); border-radius: 2px; }
+.pg i.on { background: var(--gold); }
+.pg i.cur { background: var(--fg); }
+.stepno { font: 600 15px/1.2 var(--font-body); color: var(--muted); letter-spacing: .04em; }
+.stepno b { font: 400 22px/1 var(--font-display); color: var(--fg); }
+h1 { font-size: clamp(22px, 7vw, 28px); }
+.say { font-size: 18px; line-height: 1.55; max-width: 36ch; }
+.btn.big { min-height: 62px; width: 100%; font-size: 18px; border-radius: 6px; }
+.actions { display: grid; gap: 10px; }
+.cd { text-align: center; display: grid; gap: 4px; min-height: 0; }
+.cdt { font: 600 17px/1.3 var(--font-body); }
+.cdn { font: 400 clamp(40px, 14vw, 64px)/1.1 var(--font-display); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button { min-height: 40px; padding: 0 12px; border: 1px solid var(--line); background: var(--card); border-radius: 999px; font-weight: 600; cursor: pointer; }
+.priv { border-left: 3px solid var(--gold); padding: 8px 0 8px 12px; font-size: 14px; color: var(--muted); }
+.priv b { color: var(--fg); }
+.head { font: 600 16px/1.5 var(--font-body); border: 1px solid var(--fg); background: var(--card); padding: 14px; }
+.foldrow { display: flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 600; }
+.foldrow input { width: 22px; height: 22px; accent-color: var(--fg); }
+.link { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; padding: 8px 0; font-size: 14px; }
+.lvl-t { max-width: 90%; }
+.bar { position: sticky; bottom: 0; z-index: 20; background: var(--card); border-top: 2px solid var(--fg); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; padding-block: 10px calc(10px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.bar .st { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; font-weight: 600; }
+.bar .st span::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; border: 2px solid var(--muted); vertical-align: baseline; }
+.bar .st span[data-on="1"]::before { background: var(--gold); border-color: var(--fg); }
+.bar .btn { min-height: 40px; }
+.vf .hold { position: absolute; left: 0; right: 0; bottom: 14px; text-align: center; font: 700 15px/1 var(--font-body); color: #0B0C10; display: none; }
+.vf .hold span { background: #FFC77C; padding: 9px 14px; border-radius: 3px; }
+.vf.holding .hold { display: block; }
+body { padding-bottom: 20px; }
+.vf { min-height: 200px; }
+main { padding-bottom: 96px; }
+.bar { flex-wrap: nowrap; }
+.bar .st { flex-direction: column; gap: 2px; }
+.bar .btn { padding: 0 14px; white-space: nowrap; }
+</style>
+<link rel="icon" href="data:,">
+</head>
+<body>
+<main>
+  <header class="top">
+    <div class="eyebrow">AutoScales · Foto-App Test · Fassung 3.1</div>
+    <div class="pg" id="pg" aria-hidden="true"></div>
+  </header>
+
+  <div id="resume" class="note" hidden>
+    <p id="resumeTxt"></p>
+    <div class="controls"><button class="btn primary" id="resumeYes" type="button">Weitermachen</button><button class="btn" id="resumeNo" type="button">Von vorn</button></div>
+  </div>
+
+  <section class="step" aria-live="polite">
+    <p class="stepno" id="stepno"></p>
+    <h1 id="title"></h1>
+    <p class="say" id="text"></p>
+
+    <div id="secDev">
+      <label class="field-l" for="devname">Marke und Modell
+        <input class="field" id="devname" type="text" autocomplete="off" placeholder="z. B. iPhone 11">
+      </label>
+      <div class="chips" aria-label="Schnellauswahl">
+        <button type="button" data-n="iPhone 8">iPhone 8</button>
+        <button type="button" data-n="iPhone 11">iPhone 11</button>
+        <button type="button" data-n="iPhone 16e">iPhone 16e</button>
+        <button type="button" data-n="iPhone 18 Pro Max">iPhone 18 Pro Max</button>
+        <button type="button" data-n="iPhone Duo">iPhone Duo</button>
+        <button type="button" data-n="Samsung Galaxy Fold 8">Galaxy Fold 8</button>
+      </div>
+      <label class="foldrow" id="foldRow"><input type="checkbox" id="foldBox"> Mein Handy ist faltbar</label>
+      <label class="field-l" id="stateRow" for="devstate" hidden>Ist es gerade aufgeklappt oder zugeklappt?
+        <select class="field" id="devstate"><option value="">bitte wählen</option><option>aufgeklappt</option><option>zugeklappt</option></select>
+      </label>
+    </div>
+
+    <div class="vf" id="vf" hidden>
+      <video id="video" playsinline muted autoplay></video>
+      <span class="empty">Das Kamerabild erscheint hier.</span>
+      <div class="lvl" aria-hidden="true"><div class="lvl-h" id="lvlH"></div><div class="lvl-c"></div><div class="lvl-t" id="lvlT">–</div></div>
+      <div class="hold" aria-hidden="true"><span>Halten …</span></div>
+    </div>
+    <div class="cd" id="cd" role="status" aria-live="polite"></div>
+    <p class="msg" id="status" role="status" aria-live="polite"></p>
+
+    <div id="secFoto" hidden>
+      <label class="btn big primary file-btn">Kamera-App öffnen<input type="file" id="inCap" accept="image/*" capture="environment"></label>
+    </div>
+    <fieldset class="radios" id="fovQ" hidden>
+      <legend>Sah dein Foto anders aus als die Vorschau in diesem Test?</legend>
+      <label><input type="radio" name="fov" value="gleich"> gleich</label>
+      <label><input type="radio" name="fov" value="Foto enger"> Foto enger</label>
+      <label><input type="radio" name="fov" value="Foto weiter"> Foto weiter</label>
+      <label><input type="radio" name="fov" value="weiß nicht"> weiß nicht</label>
+    </fieldset>
+
+    <div id="secRes" hidden>
+      <p class="head" id="head"></p>
+      <details><summary>Alle Messwerte ansehen (zum Kopieren)</summary><div class="sheet"><pre id="sum"></pre></div></details>
+    </div>
+
+    <div class="actions">
+      <button class="btn big primary" id="primary" type="button"></button>
+      <button class="btn" id="skip" type="button" hidden></button>
+    </div>
+
+    <div class="priv" id="secPriv"><b>Datenschutz:</b> Diese Seite schickt keine Fotos und keine Daten an AutoScales oder an andere. Alle Messungen bleiben auf deinem Handy. Nur den Ergebnistext am Ende schickst du selbst ab. Darin stehen dein Handymodell und Messwerte, keine Fotos und keine Namen.</div>
+  </section>
+
+  <footer><button class="link" id="restart" type="button">Von vorn beginnen</button></footer>
+</main>
+
+<div class="bar" id="bar">
+  <div class="st"><span id="barCam" data-on="0">Kamera aus</span><span id="barSen" data-on="0">Lagesensor aus</span></div>
+  <button class="btn" id="stopBtn" type="button" disabled>Kamera stoppen</button>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var RAD = Math.PI / 180, T0 = performance.now();
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function fmt(x, d, sign) {
+    if (x == null || typeof x !== 'number' || isNaN(x)) return '–';
+    var s = Math.abs(x).toFixed(d == null ? 1 : d).replace('.', ',');
+    var nz = parseFloat(s.replace(',', '.')) !== 0;
+    return (x < 0 && nz ? '−' : (sign && nz ? '+' : '')) + s;
+  }
+  function bytes(n) { if (n == null) return '–'; if (n < 1024) return n + ' B'; if (n < 1048576) return fmt(n / 1024, 0) + ' KB'; return fmt(n / 1048576, 1) + ' MB'; }
+  function mp(w, h) { return w && h ? fmt(w * h / 1e6, 1) + ' MP' : '–'; }
+  function ori(w, h) { return w && h ? (w >= h ? 'quer' : 'hochkant') : ''; }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function errText(e) { if (!e) return 'unbekannter Fehler'; return (e.name ? e.name : 'Fehler') + (e.message ? ': ' + e.message : ''); }
+  function kv(rows) {
+    return '<dl class="kv">' + rows.filter(Boolean).map(function (r) {
+      return '<div class="row"' + (r[2] ? ' data-s="' + r[2] + '"' : '') + '><dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd></div>';
+    }).join('') + '</dl>';
+  }
+  function setChip(id, s, text) { var c = $(id); if (!c) return; c.setAttribute('data-s', s); c.querySelector('b').textContent = text; }
+  function say(id, text, bad) { var m = $(id); m.textContent = text || ''; m.className = 'msg' + (bad ? ' bad' : ''); }
+  function withTimeout(p, ms) {
+    return Promise.race([p, new Promise(function (_, rej) { setTimeout(function () { var e = new Error('keine Antwort nach ' + (ms / 1000) + ' s'); e.name = 'Zeitüberschreitung'; rej(e); }, ms); })]);
+  }
+
+  /* ---------- Zustand ---------- */
+  var R = { devices: [], plan: [], matrix: [], land: null, photos: {}, events: [], guidedRes: [], win: { n: 0 }, sensor: { restarts: 0, why: [] }, camErr: null, testErr: null };
+  var stream = null, track = null, lastOpen = null, running = false, aborted = false, camWanted = false, senWanted = false, guided = null, camMarks = [];
+  var framed; try { framed = window.self !== window.top; } catch (e) { framed = true; }
+  var pp = document.permissionsPolicy || document.featurePolicy;
+  function allowed(f) { try { return pp && pp.allowsFeature ? pp.allowsFeature(f) : null; } catch (e) { return null; } }
+  function tri(v) { return v === true ? ['ja', 'ok'] : v === false ? ['nein', 'bad'] : ['unbekannt', '']; }
+  function screenAngle() {
+    var raw = (screen.orientation && typeof screen.orientation.angle === 'number') ? screen.orientation.angle : (typeof window.orientation === 'number' ? window.orientation : 0);
+    return ((Math.round(raw / 90) * 90 % 360) + 360) % 360;
+  }
+  function otype() { return screen.orientation && screen.orientation.type ? screen.orientation.type : 'unbekannt'; }
+  function landscapeNow() { return screen.orientation && screen.orientation.type ? screen.orientation.type.indexOf('landscape') === 0 : window.innerWidth > window.innerHeight; }
+  function envNow() {
+    var vv = window.visualViewport;
+    return { iw: window.innerWidth, ih: window.innerHeight, sw: screen.width, sh: screen.height, ang: screenAngle(), vis: document.visibilityState, vvw: vv ? Math.round(vv.width) : null, vvh: vv ? Math.round(vv.height) : null, dpr: window.devicePixelRatio || 1 };
+  }
+  function envTxt(e) { return 'Fenster ' + e.iw + '×' + e.ih + ', Bildschirm ' + e.sw + '×' + e.sh + ', Winkel ' + e.ang + '°, ' + (e.vis === 'visible' ? 'sichtbar' : 'verborgen'); }
+  var ENV0 = envNow(), envRef = envNow();
+  function parseUA() {
+    var ua = navigator.userAgent, os = 'unbekannt', osv = '', br = 'unbekannt', brv = '', m;
+    var ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (ios) { os = 'iOS/iPadOS'; m = ua.match(/OS (\d+)[_.](\d+)(?:[_.](\d+))?/); if (m && /iPhone|iPad|iPod/.test(ua)) osv = m[1] + '.' + m[2] + (m[3] ? '.' + m[3] : ''); }
+    else if (/Android/.test(ua)) { os = 'Android'; m = ua.match(/Android (\d+(?:\.\d+)*)/); if (m) osv = m[1]; }
+    else if (/Mac OS X/.test(ua)) os = 'macOS';
+    else if (/Windows/.test(ua)) os = 'Windows';
+    else if (/Linux/.test(ua)) os = 'Linux';
+    var list = [[/CriOS\/([\d.]+)/, 'Chrome (iOS)'], [/FxiOS\/([\d.]+)/, 'Firefox (iOS)'], [/EdgiOS\/([\d.]+)/, 'Edge (iOS)'], [/EdgA?\/([\d.]+)/, 'Edge'], [/SamsungBrowser\/([\d.]+)/, 'Samsung Internet'], [/Firefox\/([\d.]+)/, 'Firefox'], [/Chrome\/([\d.]+)/, 'Chrome'], [/Version\/([\d.]+).*Safari/, 'Safari']];
+    for (var i = 0; i < list.length; i++) { var mm = ua.match(list[i][0]); if (mm) { br = list[i][1]; brv = mm[1]; break; } }
+    return { os: os, osv: osv, br: br, brv: brv, ua: ua };
+  }
+  var UA = parseUA();
+  function isStandalone() { try { return window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches; } catch (e) { return false; } }
+  function devName() { return ($('devname').value || '').trim(); }
+  function devState() { return $('devstate').value || ''; }
+
+  /* ---------- Lage aus Lagesensor, mit Aussetzer-Wächter ---------- */
+  function uFromOri(b, g) { var B = b * RAD, G = g * RAD; return [-Math.cos(B) * Math.sin(G), Math.sin(B), Math.cos(B) * Math.cos(G)]; }
+  function attitude(u, angle) {
+    var S = { 0: [0, 1], 90: [1, 0], 180: [0, -1], 270: [-1, 0] }[angle] || [0, 1];
+    var Rr = { 0: [1, 0], 90: [0, -1], 180: [-1, 0], 270: [0, 1] }[angle] || [1, 0];
+    var pitch = Math.asin(Math.max(-1, Math.min(1, -u[2]))) / RAD;
+    var roll = Math.atan2(u[0] * Rr[0] + u[1] * Rr[1], u[0] * S[0] + u[1] * S[1]) / RAD;
+    return { pitch: pitch, roll: roll };
+  }
+  var samples = [], lastAcc = null, accSign = 0, sensorsOn = false;
+  var oriSeen = 0, oriCount = 0, oriT0 = 0, oriTLast = 0, accCount = 0;
+  var lastOriT = 0, gapMax = 0, gaps = [], curGap = null, beat = performance.now(), lateMax = 0, lastRestartAt = -99999, lastCamRestartAt = -99999;
+  var phaseLog = [];
+  function ph(name) { phaseLog.push({ t: performance.now(), name: name }); if (phaseLog.length > 400) phaseLog.shift(); }
+  function phasesIn(a, b) {
+    var out = [], prev = 'Ruhe';
+    phaseLog.forEach(function (p) { if (p.t <= a) prev = p.name; });
+    out.push(prev);
+    phaseLog.forEach(function (p) { if (p.t > a && p.t <= b && out.indexOf(p.name) < 0) out.push(p.name); });
+    return out.filter(function (n) { return n !== 'Ruhe' || out.length === 1; });
+  }
+  function camNear(a, b) { return camMarks.some(function (t) { return t >= a - 1500 && t <= b + 1500; }); }
+  function onOri(e) {
+    var t = performance.now();
+    if (e.beta == null || e.gamma == null) return;
+    oriSeen++; oriCount++; if (!oriT0) oriT0 = t; oriTLast = t;
+    if (lastOriT) {
+      var dtt = t - lastOriT; if (dtt > gapMax) gapMax = dtt;
+      if (curGap) { curGap.len = t - curGap.t0; curGap.near = camNear(curGap.t0, t); curGap.phases = phasesIn(curGap.t0, t); gaps.push(curGap); curGap = null; }
+    }
+    lastOriT = t;
+    var ang = screenAngle(), u = uFromOri(e.beta, e.gamma), a = attitude(u, ang), pa = null, ra = null;
+    if (lastAcc && t - lastAcc.t < 300) {
+      var n = Math.sqrt(lastAcc.x * lastAcc.x + lastAcc.y * lastAcc.y + lastAcc.z * lastAcc.z);
+      if (n > 1) {
+        var ua = [lastAcc.x / n, lastAcc.y / n, lastAcc.z / n];
+        var d = ua[0] * u[0] + ua[1] * u[1] + ua[2] * u[2];
+        if (!accSign && Math.abs(d) > 0.8) accSign = d > 0 ? 1 : -1;
+        if (accSign) { var q = attitude([ua[0] * accSign, ua[1] * accSign, ua[2] * accSign], ang); pa = q.pitch; ra = q.roll; }
+      }
+    }
+    samples.push({ t: t, p: a.pitch, r: a.roll, pa: pa, ra: ra });
+    while (samples.length && t - samples[0].t > 8000) samples.shift();
+  }
+  function onMot(e) { var g = e.accelerationIncludingGravity; if (g && g.x != null) { lastAcc = { x: g.x, y: g.y, z: g.z, t: performance.now() }; accCount++; } }
+  function median(a) { var x = a.slice().sort(function (p, q) { return p - q; }); return x.length ? x[Math.floor(x.length / 2)] : null; }
+  function stats(a) {
+    var n = a.length; if (!n) return null;
+    var m = a.reduce(function (s, v) { return s + v; }, 0) / n;
+    var v = n > 1 ? a.reduce(function (s, x) { return s + (x - m) * (x - m); }, 0) / (n - 1) : 0;
+    return { n: n, mean: m, sd: Math.sqrt(v), min: Math.min.apply(null, a), max: Math.max.apply(null, a) };
+  }
+  function snapshot() {
+    var now = performance.now(), last = samples[samples.length - 1];
+    if (!last) return null;
+    var rec = samples.filter(function (s) { return now - s.t <= 250; });
+    return { age: now - last.t, p: last.p, r: last.r, pMed: median(rec.map(function (s) { return s.p; })), rMed: median(rec.map(function (s) { return s.r; })), n: rec.length };
+  }
+  function shake(ms) {
+    var now = performance.now(), rec = samples.filter(function (s) { return now - s.t <= ms; });
+    if (rec.length < 4) return null;
+    return { p: stats(rec.map(function (s) { return s.p; })).sd, r: stats(rec.map(function (s) { return s.r; })).sd, n: rec.length };
+  }
+  function hz() { return oriCount > 2 && oriTLast > oriT0 ? (oriCount - 1) / ((oriTLast - oriT0) / 1000) : null; }
+  function sensorsAttach() {
+    samples = []; lastAcc = null; accSign = 0; oriCount = 0; oriT0 = 0; oriTLast = 0; accCount = 0;
+    lastOriT = performance.now();
+    window.addEventListener('deviceorientation', onOri); window.addEventListener('devicemotion', onMot);
+    sensorsOn = true; $('vf').classList.add('lvl-on'); renderBar();
+  }
+  function sensorsDetach() {
+    if (sensorsOn) R.sensor.lastHz = hz();
+    window.removeEventListener('deviceorientation', onOri); window.removeEventListener('devicemotion', onMot);
+    sensorsOn = false; curGap = null; $('vf').classList.remove('lvl-on'); renderBar();
+  }
+  function sensorsRestart(why) { sensorsDetach(); sensorsAttach(); R.sensor.restarts++; R.sensor.why.push(why); }
+  async function sensorsStart() {
+    var DO = window.DeviceOrientationEvent, DM = window.DeviceMotionEvent, perm = {};
+    try {
+      if (!DO && !DM) { var e0 = new Error('DeviceOrientationEvent und DeviceMotionEvent fehlen'); e0.name = 'NichtVorhanden'; throw e0; }
+      if (DO && typeof DO.requestPermission === 'function') perm.ori = await DO.requestPermission();
+      if (DM && typeof DM.requestPermission === 'function') { try { perm.mot = await DM.requestPermission(); } catch (e1) { perm.mot = 'Fehler: ' + errText(e1); } }
+      R.sensor.perm = perm;
+      if (perm.ori === 'denied' || perm.mot === 'denied') { var e2 = new Error('Erlaubnis verweigert. Seite komplett neu laden und „Erlauben“ wählen.'); e2.name = 'NotAllowedError'; throw e2; }
+      if (sensorsOn) sensorsDetach();
+      sensorsAttach(); senWanted = true; R.sensor.err = null;
+      await sleep(1200);
+      R.sensor.silent = oriCount === 0;
+      return !R.sensor.silent;
+    } catch (e) {
+      R.sensor.err = errText(e); sensorsDetach(); senWanted = false;
+      return false;
+    }
+  }
+  function liveTick() {
+    if (!sensorsOn) return;
+    var s = snapshot(); if (!s) return;
+    var okP = Math.abs(s.p) <= 2, okR = Math.abs(s.r) <= 1;
+    var h = $('vf').clientHeight || 300, ty = Math.max(-0.4 * h, Math.min(0.4 * h, s.p * (h / 52)));
+    $('lvlH').style.setProperty('--ty', ty.toFixed(1) + 'px');
+    $('lvlH').style.setProperty('--rot', s.r.toFixed(2) + 'deg');
+    var t = $('lvlT'); t.textContent = 'Neigung ' + fmt(s.p, 1, true) + '° · Rollen ' + fmt(s.r, 1, true) + '°'; t.setAttribute('data-ok', okP && okR ? '1' : '0');
+  }
+  setInterval(liveTick, 80);
+  // Wächter: misst Aussetzer des Lagesensors und prüft, ob der Hauptprozess selbst blockiert war
+  setInterval(function () {
+    var n = performance.now(), late = n - beat - 100; beat = n; if (late > lateMax) lateMax = late;
+    if (!(sensorsOn && senWanted && document.visibilityState === 'visible' && lastOriT)) return;
+    var g = n - lastOriT;
+    if (g > 800 && !curGap) curGap = { t0: lastOriT, late: 0, len: 0 };
+    if (curGap) {
+      if (late > curGap.late) curGap.late = late;
+      if (g > 2500 && n - lastRestartAt > 8000) { lastRestartAt = n; curGap.restarted = true; sensorsRestart('Aussetzer über 2,5 s'); }
+    }
+  }, 100);
+
+  /* ---------- EXIF ---------- */
+  function ratio(n, d) { return d ? n / d : null; }
+  function readIFD(dv, base, off, le) {
+    var out = {};
+    if (base + off + 2 > dv.byteLength) return out;
+    var n = dv.getUint16(base + off, le);
+    var sizes = { 1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 7: 1, 9: 4, 10: 8 };
+    for (var i = 0; i < n; i++) {
+      var e = base + off + 2 + i * 12;
+      if (e + 12 > dv.byteLength) break;
+      var tag = dv.getUint16(e, le), type = dv.getUint16(e + 2, le), cnt = dv.getUint32(e + 4, le);
+      var total = (sizes[type] || 1) * cnt;
+      var vo = total <= 4 ? e + 8 : base + dv.getUint32(e + 8, le);
+      if (vo + total > dv.byteLength || cnt > 4096) continue;
+      var v = null, k;
+      if (type === 2) { var s = ''; for (k = 0; k < cnt; k++) { var ch = dv.getUint8(vo + k); if (ch === 0) break; s += String.fromCharCode(ch); } v = s.trim(); }
+      else if (type === 3) { v = cnt === 1 ? dv.getUint16(vo, le) : null; }
+      else if (type === 4) { v = cnt === 1 ? dv.getUint32(vo, le) : null; }
+      else if (type === 5) { v = cnt === 1 ? ratio(dv.getUint32(vo, le), dv.getUint32(vo + 4, le)) : null; }
+      else if (type === 10) { v = cnt === 1 ? ratio(dv.getInt32(vo, le), dv.getInt32(vo + 4, le)) : null; }
+      else { out[tag] = null; continue; }
+      out[tag] = v;
+    }
+    return out;
+  }
+  function hexTags(o) { return Object.keys(o).map(function (k) { return (+k).toString(16).toUpperCase(); }); }
+  function parseTiff(dv, base) {
+    var le = dv.getUint16(base) === 0x4949;
+    if (dv.getUint16(base + 2, le) !== 42) return { error: 'EXIF-Kopf ungültig' };
+    var ifd0 = readIFD(dv, base, dv.getUint32(base + 4, le), le);
+    var exif = ifd0[0x8769] != null ? readIFD(dv, base, ifd0[0x8769], le) : {};
+    return {
+      make: ifd0[0x010F] || null, model: ifd0[0x0110] || null, software: ifd0[0x0131] || null,
+      orientation: ifd0[0x0112] != null ? ifd0[0x0112] : null,
+      exposure: exif[0x829A] != null ? exif[0x829A] : null, fnumber: exif[0x829D] != null ? exif[0x829D] : null,
+      iso: exif[0x8827] != null ? exif[0x8827] : null, focal: exif[0x920A] != null ? exif[0x920A] : null,
+      focal35: exif[0xA405] != null ? exif[0xA405] : null, digitalZoom: exif[0xA404] != null ? exif[0xA404] : null,
+      lens: exif[0xA434] || null, hasGps: ifd0[0x8825] != null,
+      tags0: hexTags(ifd0), tagsE: hexTags(exif)
+    };
+  }
+  async function readExif(blob) {
+    var buf = await blob.slice(0, 393216).arrayBuffer();
+    var dv = new DataView(buf), segs = [];
+    if (dv.byteLength < 4 || dv.getUint16(0) !== 0xFFD8) return { error: 'kein JPEG (Typ ' + (blob.type || 'unbekannt') + '), EXIF nicht gelesen', segs: segs };
+    var off = 2, res = null, sofW = null, sofH = null;
+    while (off + 4 < dv.byteLength) {
+      var marker = dv.getUint16(off); off += 2;
+      if (marker === 0xFFDA || marker === 0xFFD9) break;
+      var len = dv.getUint16(off), name = (marker & 0xFF).toString(16).toUpperCase();
+      if (marker >= 0xFFC0 && marker <= 0xFFC2 && sofW == null) { sofH = dv.getUint16(off + 3); sofW = dv.getUint16(off + 5); }
+      if (marker === 0xFFE1 && dv.getUint32(off + 2) === 0x45786966) { segs.push('E1 Exif ' + bytes(len)); if (!res) res = parseTiff(dv, off + 8); }
+      else if (marker === 0xFFE1) segs.push('E1 anderes (XMP o. ä.) ' + bytes(len));
+      else if (marker === 0xFFE0) segs.push('E0 JFIF');
+      else if (marker === 0xFFE2) segs.push('E2 Farbprofil ' + bytes(len));
+      else segs.push(name);
+      off += len;
+    }
+    if (!res) res = { error: 'keine EXIF-Daten im Bild' };
+    res.segs = segs; res.sofW = sofW; res.sofH = sofH;
+    return res;
+  }
+
+  /* ---------- Bildanalyse ---------- */
+  async function loadBitmap(blob) {
+    if (window.createImageBitmap) { try { return await createImageBitmap(blob); } catch (e) { /* weiter mit Image */ } }
+    return await new Promise(function (res, rej) {
+      var url = URL.createObjectURL(blob), im = new Image();
+      im.onload = function () { URL.revokeObjectURL(url); res(im); };
+      im.onerror = function () { URL.revokeObjectURL(url); rej(new Error('Bild nicht lesbar (Typ ' + (blob.type || 'unbekannt') + ')')); };
+      im.src = url;
+    });
+  }
+  // Schärfe: Varianz des Laplace-Filters bei fester Breite. Nur zum Vergleich desselben Motivs; Bildrauschen erhöht den Wert.
+  function lapVar(src, sw, sh, W) {
+    var H = Math.max(1, Math.round(sh * W / sw));
+    var c = document.createElement('canvas'); c.width = W; c.height = H;
+    var x = c.getContext('2d', { willReadFrequently: true });
+    x.drawImage(src, 0, 0, W, H);
+    var d = x.getImageData(0, 0, W, H).data, g = new Float32Array(W * H), sum = 0, i, j;
+    for (i = 0, j = 0; i < d.length; i += 4, j++) { var v = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]; g[j] = v; sum += v; }
+    var m = 0, m2 = 0, n = 0;
+    for (var y = 1; y < H - 1; y++) for (var xx = 1; xx < W - 1; xx++) { var k = y * W + xx, l = 4 * g[k] - g[k - 1] - g[k + 1] - g[k - W] - g[k + W]; m += l; m2 += l * l; n++; }
+    var mean = m / n; c.width = 1; c.height = 1;
+    return { sharp: m2 / n - mean * mean, bright: sum / (W * H) };
+  }
+  // Kleines Graustufenbild (lange Seite 128) für den Sichtfeld-Vergleich
+  function smallOf(src, sw, sh) {
+    var L = 128, w = sw >= sh ? L : Math.max(1, Math.round(L * sw / sh)), h = sw >= sh ? Math.max(1, Math.round(L * sh / sw)) : L;
+    var c = document.createElement('canvas'); c.width = w; c.height = h;
+    var x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(src, 0, 0, w, h);
+    var d = x.getImageData(0, 0, w, h).data, g = new Float32Array(w * h);
+    for (var i = 0, j = 0; i < d.length; i += 4, j++) g[j] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+    c.width = 1; c.height = 1;
+    return { w: w, h: h, g: g };
+  }
+  // Sichtfeld-Faktor f: Bild B zeigt dieselbe Szene wie A mit f-fachem Blickwinkel (1 = gleich, unter 1 = enger, über 1 = weiter)
+  function rotSmall(S, cw) {
+    var w = S.h, h = S.w, g = new Float32Array(w * h);
+    for (var y = 0; y < S.h; y++) for (var x = 0; x < S.w; x++) { var nx = cw ? S.h - 1 - y : y, ny = cw ? x : S.w - 1 - x; g[ny * w + nx] = S.g[y * S.w + x]; }
+    return { w: w, h: h, g: g };
+  }
+  // Foto hochkant, Live-Bild quer (oder umgekehrt): B in beide Richtungen drehen, die bessere Übereinstimmung gilt und zeigt zugleich die nötige Drehrichtung
+  function fovFit(A, B) {
+    if (!A || !B) return null;
+    if (A.w === B.w && A.h === B.h) return fovFit1(A, B);
+    if (A.w === B.h && A.h === B.w) {
+      var c1 = fovFit1(A, rotSmall(B, true)), c2 = fovFit1(A, rotSmall(B, false));
+      if (!c1 && !c2) return null;
+      var cw = c1 && (!c2 || c1.r >= c2.r), best = cw ? c1 : c2;
+      best.rot = cw ? 'im Uhrzeigersinn' : 'gegen den Uhrzeigersinn';
+      return best;
+    }
+    return null;
+  }
+  function fovFit1(A, B) {
+    if (!A || !B || A.w !== B.w || A.h !== B.h) return null;
+    var w = A.w, h = A.h, cx = (w - 1) / 2, cy = (h - 1) / 2;
+    function sample(g, x, y) {
+      if (x < 0 || y < 0 || x > w - 1 || y > h - 1) return NaN;
+      var x0 = Math.floor(x), y0 = Math.floor(y), fx = x - x0, fy = y - y0, x1 = Math.min(w - 1, x0 + 1), y1 = Math.min(h - 1, y0 + 1);
+      return (g[y0 * w + x0] * (1 - fx) + g[y0 * w + x1] * fx) * (1 - fy) + (g[y1 * w + x0] * (1 - fx) + g[y1 * w + x1] * fx) * fy;
+    }
+    function ncc(f, tx, ty) {
+      var n = 0, sa = 0, sb = 0, saa = 0, sbb = 0, sab = 0;
+      for (var y = 0; y < h; y++) for (var x = 0; x < w; x++) {
+        var a = sample(A.g, (x - cx) * f + cx + tx, (y - cy) * f + cy + ty);
+        if (a !== a) continue;
+        var b = B.g[y * w + x]; n++; sa += a; sb += b; saa += a * a; sbb += b * b; sab += a * b;
+      }
+      if (n < w * h * 0.3) return -1;
+      var cov = sab - sa * sb / n, va = saa - sa * sa / n, vb = sbb - sb * sb / n;
+      return va > 1e-6 && vb > 1e-6 ? cov / Math.sqrt(va * vb) : -1;
+    }
+    var best = { f: 1, r: -1 };
+    function scan(f0, f1, step) { for (var f = f0; f <= f1 + 1e-9; f += step) for (var ty = -2; ty <= 2; ty++) for (var tx = -2; tx <= 2; tx++) { var r = ncc(f, tx, ty); if (r > best.r) best = { f: f, r: r }; } }
+    scan(0.7, 1.4, 0.02); var c0 = best.f; scan(c0 - 0.02, c0 + 0.02, 0.004);
+    return { f: best.f, r: best.r };
+  }
+  function fovWord(f) { return f > 1.03 ? 'Foto weiter als Live-Bild' : f < 0.97 ? 'Foto enger als Live-Bild' : 'gleich'; }
+  function metrics(src, sw, sh) {
+    var a = lapVar(src, sw, sh, 1024), b = sw >= 2048 ? lapVar(src, sw, sh, 2048) : null;
+    return { sharp: a.sharp, sharp2: b ? b.sharp : null, bright: a.bright };
+  }
+  function yieldUI() { return new Promise(function (r) { setTimeout(r, 0); }); }
+  // w, h = Größe nach dem Laden (mit EXIF-Drehung, wie sie das Bild zeigt); sofW, sofH = Pixel laut JPEG-Kopf; noneW, noneH = Laden ohne Drehung
+  async function analyzeBlob(blob, keep) {
+    var out = { type: blob.type || 'unbekannt', bytes: blob.size };
+    ph('Analyse');
+    try { out.exif = await readExif(blob); } catch (e) { out.exif = { error: errText(e) }; }
+    await yieldUI();
+    try {
+      var bm = await loadBitmap(blob), w = bm.width || bm.naturalWidth, h = bm.height || bm.naturalHeight;
+      out.w = w; out.h = h;
+      await yieldUI();
+      var m = metrics(bm, w, h); out.sharp = m.sharp; out.sharp2 = m.sharp2; out.bright = m.bright;
+      await yieldUI();
+      out.small = smallOf(bm, w, h);
+      if (bm.close) bm.close();
+      if (window.createImageBitmap) {
+        try { var b2 = await createImageBitmap(blob, { imageOrientation: 'none' }); out.noneW = b2.width; out.noneH = b2.height; if (b2.close) b2.close(); } catch (e2) { out.noneErr = errText(e2); }
+      }
+    } catch (e) { out.decodeErr = errText(e); }
+    if (keep) out.blob = blob;
+    ph('Ruhe');
+    return out;
+  }
+  function pixTxt(a) {
+    var x = a.exif || {}, p = [];
+    if (x.sofW) p.push('Pixel im JPEG ' + x.sofW + '×' + x.sofH + ' (' + ori(x.sofW, x.sofH) + ')');
+    p.push('EXIF-Ausrichtung ' + (x.orientation != null ? x.orientation : 'keine'));
+    if (a.noneW) p.push('Laden ohne Drehung ' + a.noneW + '×' + a.noneH);
+    return p.join(', ');
+  }
+  // Verkleinern im Browser: Zeit und Größe messen (Grenze mobile.de: 2 MiB je Bild)
+  function rotThumb(bm, cw) {
+    var W = bm.width, H = bm.height, sc = 360 / Math.max(W, H), w = Math.round(W * sc), h = Math.round(H * sc);
+    var c = document.createElement('canvas'); c.width = h; c.height = w;
+    var x = c.getContext('2d'); x.translate(h / 2, w / 2); x.rotate((cw ? 1 : -1) * Math.PI / 2); x.drawImage(bm, -w / 2, -h / 2, w, h);
+    var u = c.toDataURL('image/jpeg', 0.7); c.width = 1; c.height = 1; return u;
+  }
+  async function shrinkTest(blob, heldAng, a0) {
+    var rows = [], bm = null;
+    try { bm = await loadBitmap(blob); } catch (e) { return [{ n: 'Bild laden', err: errText(e) }]; }
+    var W = bm.width, H = bm.height, c = document.createElement('canvas');
+    // Handy quer gehalten, Foto kommt hochkant: Drehung im Browser messen und beide Richtungen zeigen
+    if (heldAng != null && H > W) {
+      var tr0 = performance.now(), cw = null, ccw = null;
+      /* keine Vorschaubilder */
+      var rw = Math.round(H * Math.min(1, 2560 / Math.max(W, H))), rh = Math.round(W * Math.min(1, 2560 / Math.max(W, H))), tr1 = performance.now();
+      try {
+        c.width = rw; c.height = rh; var rx = c.getContext('2d'); rx.translate(rw / 2, rh / 2); rx.rotate(Math.PI / 2); rx.drawImage(bm, -rh / 2, -rw / 2, rh, rw);
+        var rb = await new Promise(function (r) { c.toBlob(r, 'image/jpeg', 0.85); });
+        rows.push({ n: 'quer drehen im Browser (Handy-Winkel ' + heldAng + '°), lange Seite 2560, Qualität 0,85', w: rw, h: rh, bytes: rb ? rb.size : null, ms: Math.round(performance.now() - tr1), under: rb ? rb.size <= 2 * 1048576 : null, rot: { cw: cw, ccw: ccw } });
+      } catch (e) { rows.push({ n: 'quer drehen im Browser', err: errText(e), rot: { cw: cw, ccw: ccw } }); }
+    }
+    var variants = [['voll ' + mp(W, H) + ', Qualität 0,70', Infinity, 0.7], ['lange Seite 3000, Qualität 0,85', 3000, 0.85], ['lange Seite 2560, Qualität 0,85', 2560, 0.85], ['lange Seite 2048, Qualität 0,85', 2048, 0.85]];
+    for (var i = 0; i < variants.length; i++) {
+      var sc = Math.min(1, variants[i][1] / Math.max(W, H)), w = Math.round(W * sc), h = Math.round(H * sc), t0 = performance.now();
+      try {
+        c.width = w; c.height = h; c.getContext('2d').drawImage(bm, 0, 0, w, h);
+        var b = await new Promise(function (r) { c.toBlob(r, 'image/jpeg', variants[i][2]); });
+        rows.push({ n: variants[i][0], w: w, h: h, bytes: b ? b.size : null, ms: Math.round(performance.now() - t0), under: b ? b.size <= 2 * 1048576 : null });
+      } catch (e) { rows.push({ n: variants[i][0], err: errText(e) }); }
+    }
+    c.width = 1; c.height = 1; if (bm.close) bm.close();
+    return rows;
+  }
+  function lensClass(f35, zoom) {
+    if (f35 == null) return '';
+    var c = f35 < 18 ? 'Ultraweitwinkel (0,5x)' : f35 < 32 ? 'Hauptkamera (1x)' : f35 < 65 ? 'Tele 2x oder Ausschnitt' : 'Tele';
+    return c + (zoom && Math.abs(zoom - 1) > 0.05 ? ', Digitalzoom ' + fmt(zoom, 2) : '');
+  }
+  function sharpTxt(a) { return a && a.sharp != null ? 'Schärfe ' + fmt(a.sharp, 0) + (a.sharp2 != null ? ' / ' + fmt(a.sharp2, 0) : '') : ''; }
+  function exifShort(x) {
+    if (!x) return '';
+    if (x.error) return 'EXIF: ' + x.error;
+    return 'EXIF ' + ((x.tags0 || []).length + (x.tagsE || []).length) + ' Felder' + (x.orientation != null ? ', Ausrichtung ' + x.orientation : '') + (x.make || x.model || x.focal != null ? ', mit Kamera-Angaben (' + [x.make, x.model].filter(Boolean).join(' ') + (x.focal != null ? ', ' + fmt(x.focal, 1) + ' mm real' : '') + (x.focal35 != null ? ', ' + fmt(x.focal35, 0) + ' mm Kleinbild' : '') + (x.lens ? ', ' + x.lens : '') + ')' : ', ohne Kamera-Angaben');
+  }
+  function stillTxt(s) {
+    if (!s) return 'nicht gemacht';
+    if (s.err) return 'Fehler ' + s.err;
+    return s.w + '×' + s.h + ' (' + ori(s.w, s.h) + ', ' + mp(s.w, s.h) + '), ' + bytes(s.bytes) + ', ' + s.ms + ' ms, ' + sharpTxt(s);
+  }
+  function takeTxt(t) {
+    if (t.err) return 'Fehler ' + t.err;
+    var a = t.a; if (!a) return 'kein Ergebnis';
+    return (a.w ? a.w + '×' + a.h + ' (' + ori(a.w, a.h) + ', ' + mp(a.w, a.h) + ')' : 'Größe unbekannt') + ', ' + bytes(a.bytes) + ', ' + a.ms + ' ms' + (sharpTxt(a) ? ', ' + sharpTxt(a) : '') + ' [' + pixTxt(a) + '] ' + exifShort(a.exif) + (t.land != null ? ', Handy ' + (t.land ? 'quer' : 'hochkant') + ' gehalten (Winkel ' + t.ang + '°)' : '') + (a.decodeErr ? ', ' + a.decodeErr : '');
+  }
+  function exifRows(a, prefix) {
+    var rows = [], x = a.exif || {};
+    if (x.segs && x.segs.length) rows.push([prefix + 'JPEG-Abschnitte', x.segs.join(', ')]);
+    if (x.error) { rows.push([prefix + 'EXIF', x.error, 'bad']); return rows; }
+    rows.push([prefix + 'EXIF-Felder gefunden', (x.tags0 || []).length + ' + ' + (x.tagsE || []).length + ' (' + (x.tags0 || []).concat(x.tagsE || []).join(' ') + ')']);
+    rows.push([prefix + 'Pixel und Drehung', pixTxt(a)]);
+    rows.push([prefix + 'Gerät laut EXIF', ((x.make || '') + ' ' + (x.model || '')).trim() || 'nicht enthalten']);
+    rows.push([prefix + 'Brennweite', x.focal != null ? fmt(x.focal, 1) + ' mm real' + (x.focal35 != null ? ', ' + fmt(x.focal35, 0) + ' mm Kleinbild' : ', Kleinbild-Wert fehlt') : 'nicht enthalten', x.focal != null || x.focal35 != null ? 'ok' : 'bad']);
+    rows.push([prefix + 'Kamera-Einordnung', lensClass(x.focal35, x.digitalZoom) || 'nicht bestimmbar']);
+    rows.push([prefix + 'Standortdaten im Bild', x.hasGps ? 'ja (nicht angezeigt)' : 'nein']);
+    return rows;
+  }
+
+  /* ---------- Kamera ---------- */
+  function classify(label) {
+    var l = (label || '').toLowerCase();
+    if (/front|vorder|selfie|facetime|user/.test(l)) return 'front';
+    if (/ultra/.test(l)) return 'ultra';
+    if (/tele/.test(l)) return 'tele';
+    if (/dual|triple|dreifach|zweifach|virtual/.test(l)) return 'multi';
+    if (/back|rück|rear|arrière|trasera|posteriore|environment|hinten/.test(l)) return 'wide';
+    return 'other';
+  }
+  var KIND = { wide: 'einzelne Weitwinkel-Hauptkamera (1x)', multi: 'zusammengeschaltete Kamera (mehrere Linsen)', ultra: 'Ultraweitwinkel', tele: 'Tele', front: 'vorne', other: 'unklar' };
+  function gum(c) { return navigator.mediaDevices.getUserMedia(c); }
+  function closeStream() {
+    if (stream) { camMarks.push(performance.now()); stream.getTracks().forEach(function (t) { t.stop(); }); }
+    stream = null; track = null;
+    var v = $('video'); v.srcObject = null; $('vf').classList.remove('live'); renderBar();
+  }
+  function watchTrack(t) {
+    ['ended', 'mute', 'unmute'].forEach(function (n) {
+      t.addEventListener(n, function () { if (t === track) logEvent('Kamera-Spur: ' + ({ ended: 'beendet', mute: 'stummgeschaltet', unmute: 'wieder aktiv' })[n]); });
+    });
+  }
+  async function openStream(dev, w, h, exact) {
+    closeStream(); camMarks.push(performance.now());
+    function mk(W, H) {
+      var v = { frameRate: { ideal: 30 } };
+      v.width = exact ? { exact: W } : { ideal: W }; v.height = exact ? { exact: H } : { ideal: H };
+      if (dev && dev.id) v.deviceId = { exact: dev.id }; else v.facingMode = { ideal: 'environment' };
+      return { audio: false, video: v };
+    }
+    var t0 = performance.now(), s = null, err = null, swapped = false;
+    try { s = await gum(mk(w, h)); }
+    catch (e) { err = e; if (exact) { try { s = await gum(mk(h, w)); swapped = true; err = null; } catch (e2) { err = e2; } } }
+    if (!s) return { err: errText(err) + (err && err.constraint ? ' (' + err.constraint + ')' : '') };
+    stream = s; track = s.getVideoTracks()[0]; lastOpen = { dev: dev, w: w, h: h, exact: exact }; watchTrack(track);
+    var v = $('video'); v.srcObject = s;
+    try { await v.play(); } catch (e) { /* muted autoplay */ }
+    await new Promise(function (res) { if (v.videoWidth) return res(); v.onloadedmetadata = function () { res(); }; setTimeout(res, 3000); });
+    // Sucher folgt der gelieferten Ausrichtung, damit hochkant nicht verkleinert und damit scheinbar "weiter" aussieht
+    if (v.videoWidth && v.videoHeight) { var ratio0 = v.videoWidth / v.videoHeight; $('vf').style.aspectRatio = v.videoWidth + ' / ' + v.videoHeight; $('vf').style.width = 'min(100%, ' + (70 * ratio0).toFixed(1) + 'vh)'; }
+    $('vf').classList.add('live'); camMarks.push(performance.now()); renderBar();
+    return { ms: Math.round(performance.now() - t0), swapped: swapped };
+  }
+  function fpsFor(ms) {
+    var v = $('video');
+    return new Promise(function (res) {
+      if (!v.requestVideoFrameCallback) { setTimeout(function () { res(null); }, ms); return; }
+      var n = 0, t0 = null, done = false;
+      function fin(val) { if (!done) { done = true; res(val); } }
+      v.requestVideoFrameCallback(function cb(now) {
+        if (done) return;
+        if (t0 === null) t0 = now; n++;
+        if (now - t0 < ms && stream) v.requestVideoFrameCallback(cb); else fin(n > 1 ? (n - 1) / ((now - t0) / 1000) : 0);
+      });
+      setTimeout(function () { fin(n > 1 && t0 !== null ? n / (ms / 1000) : 0); }, ms + 1500);
+    });
+  }
+  var cv = document.createElement('canvas');
+  async function stillFromVideo() {
+    var v = $('video'), w = v.videoWidth, h = v.videoHeight;
+    if (!w) return { err: 'Videobild leer' };
+    var t0 = performance.now();
+    try {
+      cv.width = w; cv.height = h; cv.getContext('2d').drawImage(v, 0, 0, w, h);
+      var blob = await new Promise(function (r) { cv.toBlob(r, 'image/jpeg', 0.92); });
+      var ms = Math.round(performance.now() - t0), m = metrics(cv, w, h), small = smallOf(cv, w, h);
+      cv.width = 1; cv.height = 1;
+      return { w: w, h: h, bytes: blob ? blob.size : null, ms: ms, sharp: m.sharp, sharp2: m.sharp2, bright: m.bright, thumb: m.thumb, small: small };
+    } catch (e) { cv.width = 1; cv.height = 1; return { err: errText(e) }; }
+  }
+  async function tryGrab(ic) {
+    var t0 = performance.now();
+    try { var bm = await withTimeout(ic.grabFrame(), 5000), r = { w: bm.width, h: bm.height, ms: Math.round(performance.now() - t0) }; if (bm.close) bm.close(); return r; }
+    catch (e) { return { err: errText(e) }; }
+  }
+  async function tryTake(ic, name, opts, keep) {
+    var t0 = performance.now(), req = opts ? opts.imageWidth + '×' + opts.imageHeight : 'ohne Angaben';
+    $('vf').classList.add('holding');
+    try {
+      var b = await withTimeout(ic.takePhoto(opts), 10000), ms = Math.round(performance.now() - t0);
+      $('vf').classList.remove('holding');
+      var a = await analyzeBlob(b, keep); a.ms = ms;
+      return { name: name, req: req, a: a };
+    } catch (e) { $('vf').classList.remove('holding'); return { name: name, req: req, err: errText(e) }; }
+  }
+  async function photoCaps(ic) {
+    var o = {};
+    try {
+      var c = await withTimeout(ic.getPhotoCapabilities(), 4000);
+      o.caps = c;
+      o.txt = (c.imageWidth ? 'Breite ' + c.imageWidth.min + '–' + c.imageWidth.max : 'Breite nicht gemeldet') + ', ' + (c.imageHeight ? 'Höhe ' + c.imageHeight.min + '–' + c.imageHeight.max : 'Höhe nicht gemeldet');
+    } catch (e) { o.err = errText(e); }
+    try { if (ic.getPhotoSettings) { var s = await withTimeout(ic.getPhotoSettings(), 4000); o.set = (s.imageWidth ? s.imageWidth + '×' + s.imageHeight : 'ohne Größe'); } } catch (e) { o.setErr = errText(e); }
+    return o;
+  }
+
+
+  async function camPermission() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { var e0 = new Error('navigator.mediaDevices fehlt (kein sicherer Kontext oder gesperrt)'); e0.name = 'NichtVorhanden'; throw e0; }
+    try { var s0 = await gum({ audio: false, video: { facingMode: { ideal: 'environment' } } }); R.firstCam = s0.getVideoTracks()[0].label || '(ohne Namen)'; s0.getTracks().forEach(function (t) { t.stop(); }); }
+    catch (e) { R.camErr = errText(e); throw e; }
+  }
+  async function discover() {
+    var devs = [];
+    try { devs = (await navigator.mediaDevices.enumerateDevices()).filter(function (d) { return d.kind === 'videoinput'; }); } catch (e) { R.devErr = errText(e); }
+    R.devices = devs.map(function (d) { return { id: d.deviceId, label: d.label || '(ohne Namen)', kind: classify(d.label) }; });
+    var wide = R.devices.filter(function (d) { return d.kind === 'wide'; }), multi = R.devices.filter(function (d) { return d.kind === 'multi'; });
+    var MA = [[4032, 3024], [2592, 1944], [1920, 1440], [1920, 1080]], MB = [[4032, 3024], [1920, 1080]], plan = [];
+    wide.slice(0, 2).forEach(function (d) { plan.push({ dev: d, name: d.label, modes: MA }); });
+    if (!wide.length && !multi.length) plan.push({ dev: null, name: 'Standard (hinten)', modes: MA });
+    if (multi.length) plan.push({ dev: multi[0], name: multi[0].label, modes: wide.length ? MB : MA });
+    R.plan = plan;
+  }
+  var STRAT = { ohne: { n: 'ohne Angaben', o: undefined } };
+  function maxStrat(c) { return c && c.imageWidth && c.imageHeight ? { n: 'Größtwert laut Kamera', o: { imageWidth: c.imageWidth.max, imageHeight: c.imageHeight.max } } : null; }
+
+  function stopAll(reason) {
+    camWanted = false; senWanted = false; closeStream(); sensorsDetach();
+    if (reason) R.stopNote = reason;
+    renderBar();
+  }
+
+  /* ---------- Ereignisse: Klappen, Hintergrund, Neustart ---------- */
+  function camHealth() { var v = $('video'); return { has: !!stream, state: track ? track.readyState : '–', t: v ? v.currentTime : 0 }; }
+  function realChange(e) { return e.sw !== envRef.sw || e.sh !== envRef.sh || e.ang !== envRef.ang || Math.abs(e.iw - envRef.iw) / Math.max(1, envRef.iw) >= 0.05; }
+  function winNote() {
+    var e = envNow(), W = R.win; W.n++;
+    W.minW = W.minW == null ? e.iw : Math.min(W.minW, e.iw); W.maxW = W.maxW == null ? e.iw : Math.max(W.maxW, e.iw);
+    W.minH = W.minH == null ? e.ih : Math.min(W.minH, e.ih); W.maxH = W.maxH == null ? e.ih : Math.max(W.maxH, e.ih);
+    if (realChange(e)) { logEvent('Bildschirm oder Fensterbreite geändert'); envRef = envNow(); }
+  }
+  function logEvent(name) {
+    var now = performance.now(), last = R.events[R.events.length - 1];
+    if (last && last.name === name && now - last.at < 600 && !last.post) { last.env = envNow(); return; }
+    var e = { at: now, t: (now - T0) / 1000, name: name, env: envNow(), cam0: camHealth(), sen0: oriSeen, wantC: camWanted, wantS: senWanted && sensorsOn, post: null };
+    R.events.push(e); if (R.events.length > 40) R.events.shift();
+    setTimeout(function () { finishEvent(e); }, 2000);
+    render();
+  }
+  async function finishEvent(e) {
+    var v = $('video'), vis = document.visibilityState === 'visible';
+    function health() {
+      var c = e.wantC ? (camWanted ? !!(stream && track && track.readyState === 'live' && v.currentTime - e.cam0.t > 0.5) : null) : null;
+      var s = e.wantS ? (senWanted && sensorsOn ? (oriSeen - e.sen0 > 3) : null) : null;
+      return { cam: c, sen: s };
+    }
+    var h = health(); e.post = { cam: h.cam, sen: h.sen, env: envNow(), restart: null, skipped: null };
+    if (running) { e.post.skipped = 'während eines Laufs'; render(); return; }
+    if (!vis) { e.post.skipped = 'Seite im Hintergrund'; render(); return; }
+    if (h.cam === false || h.sen === false) {
+      var rs = {}, now = performance.now();
+      try {
+        if (h.cam === false && lastOpen && now - lastCamRestartAt > 8000) { lastCamRestartAt = now; var o = await openStream(lastOpen.dev, lastOpen.w, lastOpen.h, lastOpen.exact); rs.camTried = true; rs.camErr = o.err || null; }
+        if (h.sen === false && now - lastRestartAt > 8000) { lastRestartAt = now; sensorsRestart('Ereignis-Prüfung'); rs.senTried = true; }
+      } catch (er) { rs.err = errText(er); }
+      if (rs.camTried || rs.senTried) {
+        await sleep(2000);
+        var v2 = $('video');
+        rs.camOk = rs.camTried ? !!(stream && track && track.readyState === 'live' && v2.videoWidth > 0) : null;
+        rs.senOk = rs.senTried ? oriCount > 3 : null;
+      } else { rs.pause = true; }
+      e.post.restart = rs;
+    }
+    renderBar(); saveState();
+  }
+  function bindEnv() {
+    window.addEventListener('resize', winNote);
+    window.addEventListener('orientationchange', winNote);
+    if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', winNote);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', winNote);
+    document.addEventListener('visibilitychange', function () {
+      var vis = document.visibilityState === 'visible';
+      if (!vis) { curGap = null; } else { lastOriT = performance.now(); }
+      logEvent(vis ? 'Seite wieder sichtbar' : 'Seite verborgen');
+      if (guided && guided.kind === 'app') { if (!vis) guided.hidden = true; else if (guided.hidden) scheduleGuidedFinish(6000); }
+    });
+    window.addEventListener('pagehide', function () { logEvent('Seite verlassen (pagehide)'); });
+    window.addEventListener('pageshow', function (ev) { logEvent(ev.persisted ? 'Seite aus dem Zwischenspeicher' : 'Seite angezeigt'); });
+    document.addEventListener('freeze', function () { logEvent('Seite eingefroren'); });
+    document.addEventListener('resume', function () { logEvent('Seite aufgetaut'); });
+    if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) navigator.mediaDevices.addEventListener('devicechange', function () { logEvent('Kameraliste geändert'); });
+  }
+
+
+  /* ================== Geführter Assistent ================== */
+  function render() { renderBar(); }
+  var gTimer = null, refSmall = null, S = { step: 0, phase: 'ready', fold: false, res: {}, h: {}, camOK: null, fovAns: '', finished: false };
+  var STEPS = ['geraet', 'kamera', 'hoch', 'quer', 'foto', 'klapp', 'ergebnis'];
+  var SKEY = 'fotoAppProbe3.state', NKEY = 'fotoAppProbe3.name';
+  function steps() { return S.fold ? STEPS : STEPS.filter(function (x) { return x !== 'klapp'; }); }
+  function curId() { return steps()[S.step]; }
+  function setCd(text, n) { $('cd').innerHTML = (text ? '<span class="cdt">' + esc(text) + '</span>' : '') + (n != null ? '<span class="cdn">' + n + '</span>' : ''); }
+  async function countdown(label, secs) {
+    var end = performance.now() + secs * 1000;
+    while (performance.now() < end && !S.skipCd) { setCd(label, Math.max(1, Math.ceil((end - performance.now()) / 1000))); await sleep(200); }
+    setCd('', null);
+  }
+  function sayS(text, bad) { var m = $('status'); m.textContent = text || ''; m.className = 'msg' + (bad ? ' bad' : ''); }
+
+  /* ---------- Aufnahme und Auswertung getrennt ---------- */
+  async function takeOnly(ic, name, opts) {
+    var t0 = performance.now(), req = opts ? opts.imageWidth + '×' + opts.imageHeight : 'ohne Angaben';
+    $('vf').classList.add('holding');
+    try {
+      var b = await withTimeout(ic.takePhoto(opts), 10000);
+      $('vf').classList.remove('holding');
+      return { name: name, req: req, blob: b, ms: Math.round(performance.now() - t0) };
+    } catch (e) { $('vf').classList.remove('holding'); return { name: name, req: req, err: errText(e) }; }
+  }
+  async function captureSet(pl, opt) {
+    var v = $('video'), st = track && track.getSettings ? track.getSettings() : {};
+    var rec = { cam: pl.name, ask: opt.ask, startMs: opt.startMs, takes: [], hold: { ang: screenAngle(), type: otype() }, vw: v.videoWidth, vh: v.videoHeight, zoom: st.zoom != null ? st.zoom : null };
+    ph('Standbild');
+    try { rec._still = window.createImageBitmap ? await createImageBitmap(v) : null; } catch (e) { rec._still = null; }
+    if (!rec._still) { try { var c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0); rec._still = c; } catch (e2) { rec.stillErr = errText(e2); } }
+    ph('Ruhe');
+    if ('ImageCapture' in window) {
+      var ic = null;
+      try { ic = new ImageCapture(track); } catch (e) { rec.icErr = errText(e); }
+      if (ic) {
+        ph('grabFrame'); rec.grab = await tryGrab(ic); rec.pc = await photoCaps(ic); ph('Ruhe');
+        var seq = opt.seq;
+        for (var i = 0; i < seq.length; i++) {
+          var tok = seq[i], base = tok.split('+')[0], extra = tok.split('+')[1] || '';
+          var s2 = base === 'max' ? maxStrat(rec.pc.caps) : STRAT.ohne;
+          if (!s2) continue;
+          if (opt.onTake) opt.onTake(i + 1, seq.length);
+          var waitMs = /^\d+s$/.test(extra) ? parseInt(extra, 10) * 1000 : 800;
+          if (extra === 'neu') {
+            closeStream(); await sleep(400);
+            var o2 = await openStream(pl.dev, 4032, 3024, true); if (o2.err) o2 = await openStream(pl.dev, 4032, 3024, false);
+            if (o2.err) { rec.reopenErr = o2.err; continue; }
+            try { ic = new ImageCapture(track); } catch (e3) { rec.icErr = errText(e3); continue; }
+            camWanted = true; $('vf').hidden = false; waitMs = 900;
+          }
+          await sleep(waitMs);
+          var sh0 = shake(600), land = landscapeNow(), ang0 = screenAngle();
+          ph('takePhoto');
+          var t = await takeOnly(ic, s2.n, s2.o); t.shake = sh0; t.no = i + 1; t.land = land; t.ang = ang0; t.token = tok; rec.takes.push(t);
+        }
+        ph('Ruhe');
+      }
+    } else { rec.noIC = true; }
+    return rec;
+  }
+  async function analyzeStill(src) {
+    var w = src.width, h = src.height, t0 = performance.now();
+    try {
+      cv.width = w; cv.height = h; cv.getContext('2d').drawImage(src, 0, 0);
+      var blob = await new Promise(function (r) { cv.toBlob(r, 'image/jpeg', 0.92); });
+      var ms = Math.round(performance.now() - t0), m = metrics(cv, w, h), small = smallOf(cv, w, h);
+      cv.width = 1; cv.height = 1; if (src.close) src.close();
+      return { w: w, h: h, bytes: blob ? blob.size : null, ms: ms, sharp: m.sharp, sharp2: m.sharp2, small: small };
+    } catch (e) { cv.width = 1; cv.height = 1; return { err: errText(e) }; }
+  }
+  async function analyzeSet(rec, opt) {
+    ph('Analyse');
+    if (rec._still) { rec.still = await analyzeStill(rec._still); rec._still = null; } else rec.still = { err: rec.stillErr || 'kein Standbild' };
+    await yieldUI();
+    var shrinkBlob = null;
+    for (var i = 0; i < rec.takes.length; i++) {
+      var t = rec.takes[i]; if (!t.blob) continue;
+      t.a = await analyzeBlob(t.blob, false); t.a.ms = t.ms;
+      if (opt.shrink && !shrinkBlob && t.name === 'ohne Angaben' && t.a.w) shrinkBlob = t.blob;
+      t.blob = null; await yieldUI();
+    }
+    var first = rec.takes.filter(function (t) { return t.a && t.a.small && t.name === 'ohne Angaben'; })[0];
+    if (first) {
+      refSmall = { small: first.a.small, label: rec.cam + ' ' + rec.ask };
+      if (rec.still && rec.still.small) { try { rec.fov = fovFit(rec.still.small, first.a.small); } catch (e) { rec.fov = null; } }
+    }
+    if (rec.still) delete rec.still.small;
+    rec.takes.forEach(function (t) { if (t.a && t !== first) delete t.a.small; });
+    if (shrinkBlob) { try { rec.shrink = await shrinkTest(shrinkBlob, opt.heldAng, null); } catch (e) { rec.shrink = [{ n: 'Verkleinern', err: errText(e) }]; } }
+    ph('Ruhe');
+  }
+  function recLines(r) {
+    var L = [];
+    if (r.err) { L.push('Kamera öffnen: FEHLER ' + r.err); return L; }
+    L.push('Kamera: ' + r.cam + ' · angefragt ' + r.ask + ' → geliefert ' + r.vw + '×' + r.vh + ' (' + ori(r.vw, r.vh) + ')' + (r.zoom != null ? ' · Zoom ' + fmt(r.zoom, 2) + 'x' : '') + (r.startMs != null ? ' · Start ' + r.startMs + ' ms' : ''));
+    L.push('Gehalten: ' + (r.heldAs || '–') + ' (Winkel ' + r.hold.ang + '°, ' + r.hold.type + ')');
+    if (r.win) L.push('Ruhe 5 s: Neigung σ ' + fmt(r.win.p, 2) + '° (Spanne ' + fmt(r.win.pSpan, 1) + '°), Rollen σ ' + fmt(r.win.r, 2) + '° (Spanne ' + fmt(r.win.rSpan, 1) + '°), ' + r.win.n + ' Werte');
+    L.push('Standbild aus dem Live-Bild: ' + stillTxt(r.still));
+    if (r.grab) L.push('grabFrame: ' + (r.grab.err ? 'Fehler ' + r.grab.err : r.grab.w + '×' + r.grab.h + ', ' + r.grab.ms + ' ms'));
+    if (r.pc) L.push('Foto-Fähigkeiten (takePhoto): ' + (r.pc.err ? 'Fehler ' + r.pc.err : r.pc.txt) + (r.pc.set ? ', Einstellung ' + r.pc.set : ''));
+    if (r.noIC) L.push('takePhoto: ImageCapture fehlt auf diesem Handy');
+    r.takes.forEach(function (t) { L.push('takePhoto ' + t.name + (t.req === 'ohne Angaben' ? '' : ' (' + t.req + ')') + ' #' + t.no + (t.token && t.token !== 'ohne' ? ' [' + t.token + ']' : '') + ': ' + takeTxt(t) + (t.shake ? ', Wackeln σ ' + fmt(t.shake.p, 2) + '°/' + fmt(t.shake.r, 2) + '°' : '')); });
+    if (r.fov) L.push('Sichtfeld takePhoto gegenüber Live-Standbild: Faktor ' + fmt(r.fov.f, 2) + ' (' + fovWord(r.fov.f) + '), Übereinstimmung ' + fmt(r.fov.r, 2) + (r.fov.r < 0.6 ? ' (niedrig, unsicher)' : '') + (r.fov.rot ? ', Foto passte nach Drehung ' + r.fov.rot : ''));
+    if (r.shrink) r.shrink.forEach(function (s) { L.push('Verkleinern: ' + s.n + ': ' + (s.err ? 'Fehler ' + s.err : s.w + '×' + s.h + ', ' + bytes(s.bytes) + ', ' + s.ms + ' ms, unter 2 MB: ' + (s.under ? 'ja' : 'nein'))); });
+    return L;
+  }
+  function winStats(t0) {
+    var set = samples.filter(function (s) { return s.t >= t0; });
+    if (set.length < 5) return null;
+    var p = stats(set.map(function (s) { return s.p; })), r = stats(set.map(function (s) { return s.r; }));
+    return { p: p.sd, r: r.sd, pSpan: p.max - p.min, rSpan: r.max - r.min, n: set.length };
+  }
+  function digestHold(kind, rec, heldOK) {
+    var heads = { hoch: 'AUFRECHT-LAUF (Schritt 3)', quer: 'QUERFORMAT-LAUF (Schritt 4)' };
+    var ok = rec.takes.filter(function (t) { return t.a && t.a.w && t.name === 'ohne Angaben'; });
+    var L = [heads[kind]].concat(recLines(rec));
+    if (ok.length) {
+      var a1 = ok[0].a, x1 = a1.exif || {};
+      L.push('Ausrichtung des Fotos: Handy ' + (ok[0].land ? 'quer' : 'hochkant') + ' gehalten (Winkel ' + ok[0].ang + '°), Pixel im JPEG ' + (x1.sofW ? x1.sofW + '×' + x1.sofH + ' (' + ori(x1.sofW, x1.sofH) + ')' : 'unbekannt') + ', EXIF-Ausrichtung ' + (x1.orientation != null ? x1.orientation : 'keine') + ', angezeigt ' + a1.w + '×' + a1.h + ' (' + ori(a1.w, a1.h) + '); Live-Bild kam ' + ori(rec.vw, rec.vh));
+      S.h.orient = S.h.orient || []; S.h.orient.push({ held: ok[0].land ? 'quer' : 'hoch', pixLand: x1.sofW ? x1.sofW >= x1.sofH : null, exifO: x1.orientation, shownLand: a1.w >= a1.h });
+    }
+    var ser = rec.takes.filter(function (t) { return t.a && t.a.w; }).map(function (t) { return fmt(t.a.bytes / 1048576, 1) + ' MB/' + fmt(t.a.sharp, 0) + (t.token && t.token !== 'ohne' ? ' (' + t.token + ')' : ''); });
+    if (ser.length > 1) { L.push('Serie (Größe/Schärfe je Foto, 1. Foto zuerst): ' + ser.join(' → ')); S.h.series = S.h.series || {}; S.h.series[kind] = ser.join(' → '); }
+    S.res[kind] = { lines: L };
+    S.h.fullTried = true; if (rec.noIC) S.h.noIC = true;
+    if (ok.length) {
+      var b = ok.reduce(function (a, c) { return c.a.w * c.a.h > a.a.w * a.a.h ? c : a; });
+      if (!S.h.full || b.a.w * b.a.h > S.h.full.w * S.h.full.h) S.h.full = { w: b.a.w, h: b.a.h, ms: ok[0].a.ms, land: b.a.w >= b.a.h };
+    }
+    if (rec.win) { S.h.swayK = S.h.swayK || {}; S.h.swayK[kind] = { p: rec.win.p, r: rec.win.r, valid: !!heldOK }; }
+    if (rec.fov && S.h.fov == null) S.h.fov = rec.fov.f;
+    if (kind === 'quer') {
+      S.h.quer = { held: heldOK, streamLand: rec.vw >= rec.vh, takeLand: ok.length ? ok[0].a.w >= ok[0].a.h : null };
+      if (rec.shrink) { var sr = rec.shrink.filter(function (s) { return /2560/.test(s.n) && !s.err && !/quer drehen/.test(s.n); })[0]; if (sr) S.h.shrink = { under: !!sr.under, ms: sr.ms, mb: sr.bytes }; }
+    }
+  }
+  function swayWord() {
+    var k = S.h.swayK; if (!k) return 'keine Daten';
+    var parts = [];
+    ['hoch', 'quer'].forEach(function (x) {
+      var w = k[x]; if (!w) return;
+      var word = (w.p <= 0.5 && w.r <= 0.33) ? 'gut' : (w.p <= 0.67 && w.r <= 0.5) ? 'knapp' : 'zu unruhig';
+      parts.push((x === 'hoch' ? 'aufrecht ' : 'quer ') + word + ' (σ ' + fmt(w.p, 2) + '°/' + fmt(w.r, 2) + '°)' + (w.valid ? '' : ' [Haltung stimmte nicht]'));
+    });
+    return parts.join(', ') || 'keine Daten';
+  }
+  function orientLines() {
+    var o = S.h.orient; if (!o || !o.length) return [];
+    var L = ['AUSRICHTUNG DES TAKEPHOTO-FOTOS'];
+    o.forEach(function (x) { L.push('  Handy ' + (x.held === 'quer' ? 'quer' : 'aufrecht') + ' gehalten → Pixel ' + (x.pixLand == null ? '?' : x.pixLand ? 'quer' : 'hochkant') + ', EXIF ' + (x.exifO != null ? x.exifO : 'keine') + ', angezeigt ' + (x.shownLand ? 'quer' : 'hochkant')); });
+    var same = o.length > 1 && o.every(function (x) { return x.pixLand === o[0].pixLand && x.exifO === o[0].exifO; }) && o.some(function (x) { return x.held === 'quer'; }) && o.some(function (x) { return x.held === 'hoch'; });
+    if (same) L.push('  Ergebnis: Das Foto folgt der Haltung nicht. Pixel und EXIF-Ausrichtung sind in beiden Haltungen gleich, die App muss nach dem Winkel des Handys selbst drehen.');
+    return L;
+  }
+  function headline() {
+    var h = S.h, p = [];
+    p.push('Volles Foto: ' + (h.full ? 'ja, ' + mp(h.full.w, h.full.h) + (h.full.ms ? ' in ' + h.full.ms + ' ms' : '') : h.noIC ? 'nein (takePhoto fehlt)' : h.fullTried ? 'nein' : '–'));
+    p.push('Wasserwaage: ' + swayWord());
+    var q = (h.orient || []).filter(function (x) { return x.held === 'quer'; })[0];
+    p.push('Quer: ' + (h.quer ? (h.quer.held ? (q ? (q.shownLand ? 'ja, Foto kommt quer' : 'Foto kommt hochkant (EXIF ' + (q.exifO != null ? q.exifO : 'keine') + '), App muss drehen') : 'ohne Foto') : 'Querformat nicht gehalten') : '–'));
+    if (h.fov != null) p.push('Sichtfeld Foto/Live: ' + (h.fov > 1.03 ? 'Foto weiter' : h.fov < 0.97 ? 'Foto enger' : 'gleich') + ' (' + fmt(h.fov, 2) + ')');
+    if (h.series && h.series.quer) p.push('Serie quer: ' + h.series.quer);
+    if (h.shrink) p.push('2 MB: ' + (h.shrink.under ? 'ja' : 'nein') + ' (' + fmt(h.shrink.mb / 1048576, 1) + ' MB, ' + h.shrink.ms + ' ms)');
+    p.push('Kamera-App-Foto: ' + (h.app ? mp(h.app.w, h.app.h) : '–'));
+    if (S.fold) p.push('Klappen: ' + (h.fold ? (h.fold.camDead || h.fold.senDead ? 'Neustart nötig' + (h.fold.camDead ? ' (Kamera)' : '') + (h.fold.senDead ? ' (Sensor)' : '') : 'läuft weiter') : '–'));
+    return p.join(' · ');
+  }
+
+  /* ---------- Protokoll-Zeilen ---------- */
+  function gapLines() {
+    var L = [], real = gaps.filter(function (x) { return x.len >= 800; });
+    if (!real.length && !curGap) { L.push('Aussetzer des Lagesensors: keine über 0,8 s. Größte Lücke zwischen zwei Messwerten ' + fmt(gapMax, 0) + ' ms.'); return L; }
+    var blocked = real.filter(function (x) { return x.late >= 0.6 * x.len; }).length, cam = real.filter(function (x) { return x.near; }).length, rest = real.filter(function (x) { return x.restarted; }).length;
+    L.push('Aussetzer des Lagesensors über 0,8 s: ' + real.length + ' (davon bei Kamera-Wechsel ' + cam + ', Hauptprozess blockiert ' + blocked + ', Neustart nötig ' + rest + '), längster ' + fmt(real.length ? Math.max.apply(null, real.map(function (x) { return x.len; })) : 0, 0) + ' ms. Größte Lücke gesamt ' + fmt(gapMax, 0) + ' ms.');
+    real.slice(-10).forEach(function (x) { L.push('  bei ' + fmt((x.t0 - T0) / 1000, 1) + ' s: ' + fmt(x.len, 0) + ' ms, in Phase ' + ((x.phases || []).join(' → ') || '–') + (x.near ? ', Kamera wurde gerade geöffnet oder geschlossen' : '') + (x.late >= 0.6 * x.len ? ', Hauptprozess war blockiert' : ', Hauptprozess lief') + (x.restarted ? ', Neustart' : '')); });
+    return L;
+  }
+  function winLine() {
+    var W = R.win; if (!W.n) return null;
+    return 'Fenstergröße schwankte (' + W.n + ' Ereignisse): Breite ' + W.minW + '–' + W.maxW + ', Höhe ' + W.minH + '–' + W.maxH + '. Bildschirm und Winkel ' + (envRef.sw === ENV0.sw && envRef.sh === ENV0.sh && envRef.ang === ENV0.ang ? 'unverändert (vermutlich Browserleiste)' : 'haben sich zwischendurch geändert') + '.';
+  }
+  function evRows() {
+    return R.events.map(function (e) {
+      var p = e.post, txt = e.name + ' · ' + envTxt(e.env), parts = [];
+      if (!p) parts.push('prüft noch …');
+      else if (p.skipped) parts.push('nicht geprüft (' + p.skipped + ')');
+      else {
+        parts.push('Kamera ' + (p.cam === null ? 'nicht in Betrieb' : p.cam ? 'läuft weiter' : 'liefert nichts mehr') + ', Lagesensor ' + (p.sen === null ? 'nicht in Betrieb' : p.sen ? 'läuft weiter' : 'liefert nichts mehr'));
+        if (p.restart) {
+          var r = p.restart, bits = [];
+          if (r.pause) bits.push('Neustart-Pause');
+          if (r.camTried) bits.push('Kamera neu gestartet: ' + (r.camOk ? 'läuft wieder' : 'läuft nicht' + (r.camErr ? ' (' + r.camErr + ')' : '')));
+          if (r.senTried) bits.push('Lagesensor neu gestartet: ' + (r.senOk ? 'läuft wieder' : 'läuft nicht'));
+          if (r.err) bits.push(r.err);
+          parts.push('Neustart nötig, ' + bits.join('; '));
+        }
+      }
+      return [fmt(e.t, 1) + ' s', txt + ' → ' + parts.join(' · ')];
+    });
+  }
+  function protokollLines() {
+    var L = ['PROTOKOLL (nur Änderungen von Bildschirm, Winkel, Sichtbarkeit, Kamera)'];
+    gapLines().forEach(function (x) { L.push('  ' + x); });
+    var w = winLine(); if (w) L.push('  ' + w);
+    if (!R.events.length) L.push('  keine Einzelereignisse');
+    evRows().forEach(function (r) { L.push('  ' + r[0] + ' · ' + r[1]); });
+    return L;
+  }
+
+  /* ---------- Wechsel-Tests ---------- */
+  async function liveCamStart() {
+    var pl = R.plan[0] || { dev: null }, o = await openStream(pl.dev, 1920, 1440, true);
+    if (o.err) o = await openStream(pl.dev, 1920, 1080, false);
+    if (o.err) o = await openStream(null, 1280, 720, false);
+    camWanted = !o.err; R.live = o.err ? 'Kamera nicht gestartet: ' + o.err : 'Kamera lief (' + $('video').videoWidth + '×' + $('video').videoHeight + ')';
+    return camWanted;
+  }
+  function scheduleGuidedFinish(ms) { if (!guided || guided.finishing) return; guided.finishing = true; clearTimeout(gTimer); gTimer = setTimeout(function () { guidedFinish('Rückkehr erkannt'); }, ms); }
+  function guidedVerdict(g) {
+    var evs = R.events.filter(function (e) { return e.at >= g.t0; }), L = [], o = {};
+    var hid = evs.filter(function (e) { return /verborgen|verlassen|eingefroren/.test(e.name); }).length;
+    var chg = evs.filter(function (e) { return /Bildschirm oder Fensterbreite|Haltung|Segmente/.test(e.name); }).length;
+    L.push('Ereignisse im Test: ' + evs.length + ' (Seite verborgen ' + hid + 'x, Bildschirm oder Fensterbreite geändert ' + chg + 'x)');
+    o.camDead = evs.filter(function (e) { return e.post && e.post.cam === false; }).length; o.senDead = evs.filter(function (e) { return e.post && e.post.sen === false; }).length;
+    var rs = evs.map(function (e) { return e.post && e.post.restart; }).filter(Boolean);
+    function rtxt(tried, ok) { var a = rs.filter(function (r) { return r[tried]; }); return a.length ? (a.some(function (r) { return r[ok]; }) ? ', Neustart hat geklappt' : ', Neustart hat nicht geklappt') : ', kein Neustart versucht'; }
+    L.push('Kamera: ' + (o.camDead ? 'lieferte nach ' + o.camDead + ' Ereignis(sen) nichts mehr' + rtxt('camTried', 'camOk') : 'lief durchgehend'));
+    L.push('Lagesensor: ' + (o.senDead ? 'lieferte nach ' + o.senDead + ' Ereignis(sen) nichts mehr' + rtxt('senTried', 'senOk') : 'lief durchgehend'));
+    var gs = gaps.filter(function (x) { return x.t0 >= g.t0; });
+    L.push('Aussetzer des Lagesensors im Test: ' + gs.length + (gs.length ? ' (längster ' + Math.round(Math.max.apply(null, gs.map(function (x) { return x.len; }))) + ' ms)' : ''));
+    o.lines = L; o.events = evs.length; o.hidden = hid; o.changes = chg;
+    return o;
+  }
+  async function guidedFinish(why) {
+    if (!guided) return;
+    var g = guided; clearTimeout(gTimer); guided = null;
+    var v = guidedVerdict(g);
+    stopAll(g.kind === 'app' ? 'Ende des Wechsel-Tests' : 'Ende des Klapp-Tests'); $('vf').hidden = true; setCd('', null);
+    if (g.kind === 'app') { S.res.wechsel = { lines: ['WECHSEL IN DIE KAMERA-APP (' + why + ')'].concat(v.lines) }; S.h.wechsel = { camDead: v.camDead, senDead: v.senDead, hidden: v.hidden }; }
+    else { S.res.klapp = { lines: ['KLAPP-TEST (' + why + ')'].concat(v.lines) }; S.h.fold = { camDead: v.camDead, senDead: v.senDead, events: v.events }; }
+  }
+
+  /* ---------- Schritte ---------- */
+  async function holdStill(wantLand, secs) {
+    var end = performance.now() + secs * 1000, resets = 0, bad = false;
+    while (performance.now() < end) {
+      if (landscapeNow() !== wantLand) { resets++; end = performance.now() + secs * 1000; setCd(wantLand ? 'Bitte quer halten … ' : 'Bitte aufrecht halten … ', null); if (resets > 60) { bad = true; break; } }
+      else setCd('Halte still … ', Math.max(1, Math.ceil((end - performance.now()) / 1000)));
+      await sleep(200);
+    }
+    setCd('', null); return { resets: resets, bad: bad };
+  }
+  async function runKamera() {
+    S.phase = 'run'; ui(); sayS('Bewegungssensor … bitte „Erlauben“ tippen');
+    var okS = false;
+    try {
+      okS = await sensorsStart();
+      sayS('Kamera … bitte „Erlauben“ tippen');
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { var e0 = new Error('Dein Browser kann die Kamera hier nicht starten (navigator.mediaDevices fehlt).'); e0.name = 'NichtVorhanden'; throw e0; }
+      await camPermission(); await discover();
+      var pl = R.plan[0] || { dev: null, name: 'Standard (hinten)' };
+      var o = await openStream(pl.dev, 1920, 1440, false);
+      if (o.err) throw new Error(o.err);
+      camWanted = true; $('vf').hidden = false; sayS('');
+      await countdown('Kamera läuft … ', 5);
+      S.camOK = true;
+      S.res.kamera = { lines: ['KAMERA (Schritt 2)', 'Kamera gestartet: ' + $('video').videoWidth + '×' + $('video').videoHeight + ' · Bewegungssensor: ' + (okS ? 'liefert Daten' : (R.sensor.err ? 'FEHLER ' + R.sensor.err : 'liefert keine Daten'))] };
+      S.phase = 'done';
+    } catch (e) {
+      S.camOK = false; S.phase = 'fail';
+      var nm = e && e.name;
+      sayS((nm === 'NotAllowedError' || nm === 'SecurityError' ? 'Die Kamera wurde nicht erlaubt. Erlaube sie in den Einstellungen des Browsers für diese Seite und lade die Seite neu. ' : 'Die Kamera startet auf diesem Handy nicht. ') + '(' + errText(e) + ')', true);
+      S.res.kamera = { lines: ['KAMERA (Schritt 2)', 'FEHLER ' + errText(e) + ' · Bewegungssensor: ' + (okS ? 'liefert Daten' : (R.sensor.err ? 'FEHLER ' + R.sensor.err : 'liefert keine Daten'))] };
+    }
+    stopAll('Ende von Schritt 2'); $('vf').hidden = true; setCd('', null);
+    saveState(); ui();
+  }
+  async function runHold(kind) {
+    var wantLand = kind === 'quer', rec = null, heldOK = false;
+    S.phase = 'run'; S.skipCd = false; ui(); running = true;
+    try {
+      sayS('Bewegungssensor …');
+      await sensorsStart();
+      var t0 = performance.now();
+      while (landscapeNow() !== wantLand && performance.now() - t0 < 12000) { setCd(wantLand ? 'Drehe das Handy jetzt quer … ' : 'Halte das Handy aufrecht … ', Math.ceil((12000 - (performance.now() - t0)) / 1000)); await sleep(250); }
+      heldOK = landscapeNow() === wantLand; setCd('', null);
+      if (!heldOK) sayS(wantLand ? 'Querformat nicht erkannt, der Test läuft trotzdem weiter. Ist die Drehsperre an?' : 'Hochformat nicht erkannt, der Test läuft trotzdem weiter.', true); else sayS('');
+      if (!R.plan.length) { await camPermission(); await discover(); }
+      var pl = R.plan[0] || { dev: null, name: 'Standard (hinten)' };
+      $('vf').hidden = false;
+      var o = await openStream(pl.dev, 4032, 3024, true);
+      if (o.err) o = await openStream(pl.dev, 4032, 3024, false);
+      if (o.err) throw new Error(o.err);
+      camWanted = true; ph('Kamera bereit'); await sleep(900);
+      var hs = await holdStill(wantLand, 5), w0 = performance.now() - 5000;
+      var win = winStats(w0);
+      if (hs.bad) heldOK = false;
+      sayS('Jetzt werden mehrere Fotos gemacht. Bitte weiter ganz ruhig halten.');
+      var seq = kind === 'hoch' ? ['ohne', 'ohne'] : ['ohne', 'ohne', 'ohne+4s', 'ohne+neu'];
+      rec = await captureSet(pl, { ask: '4032×3024', startMs: o.ms, seq: seq, onTake: function (i, n) { setCd('Foto ' + i + ' von ' + n + ' … halte still', null); } });
+      var heldEnd = landscapeNow() === wantLand; if (!heldEnd) heldOK = false;
+      rec.win = win; rec.heldAs = (heldOK ? (wantLand ? 'quer' : 'hochkant') : 'nicht wie verlangt (Haltung wurde während des Tests gewechselt oder war falsch)');
+      stopAll('Ende von Schritt ' + (wantLand ? 4 : 3)); $('vf').hidden = true;
+      running = false; setCd('Ich rechne … du darfst das Handy jetzt bewegen', null); sayS('');
+      await sleep(400);
+      await analyzeSet(rec, { shrink: wantLand, heldAng: wantLand ? screenAngle() : null });
+      digestHold(kind, rec, heldOK);
+      S.phase = 'done';
+    } catch (e) {
+      S.phase = 'fail'; sayS('Dieser Schritt hat nicht geklappt: ' + errText(e), true);
+      S.res[kind] = { lines: [(kind === 'hoch' ? 'HOCHKANT-LAUF (Schritt 3)' : 'QUERFORMAT-LAUF (Schritt 4)'), 'FEHLER ' + errText(e)].concat(rec ? recLines(rec) : []) };
+      stopAll('Fehler in Schritt ' + (wantLand ? 4 : 3)); $('vf').hidden = true;
+    }
+    running = false; setCd('', null); saveState(); ui();
+  }
+  async function runFotoPrep() {
+    S.phase = 'run'; ui(); sayS('Kamera und Bewegungssensor werden eingeschaltet …');
+    guided = { kind: 'app', t0: performance.now(), hidden: false };
+    try {
+      await sensorsStart();
+      if (!R.plan.length) { await camPermission(); await discover(); }
+      var ok = await liveCamStart();
+      if (!ok) throw new Error(R.live);
+      $('vf').hidden = false; S.phase = 'live'; sayS('Bereit. Tippe jetzt auf „Kamera-App öffnen“.');
+      clearTimeout(gTimer); gTimer = setTimeout(function () { guidedFinish('keine Rückkehr innerhalb von 3 Minuten'); S.phase = 'done'; ui(); }, 180000);
+    } catch (e) {
+      guided = null; stopAll(); $('vf').hidden = true; S.phase = 'live'; sayS('Kamera und Sensor ließen sich nicht einschalten (' + errText(e) + '). Du kannst trotzdem ein Foto mit der Kamera-App machen.', true);
+      S.res.wechsel = { lines: ['WECHSEL IN DIE KAMERA-APP', 'nicht geprüft: ' + errText(e)] };
+    }
+    ui();
+  }
+  async function onPhotoChosen(ev) {
+    var f = ev.target.files && ev.target.files[0]; if (!f) return;
+    S.phase = 'check'; ui();
+    try {
+      if (guided && guided.kind === 'app') { scheduleGuidedFinish(6000); sayS('Ich prüfe, ob Kamera und Bewegung noch laufen …'); await countdown('Prüfe … ', 6); while (guided) await sleep(300); }
+      sayS('Ich lese dein Foto … bitte kurz warten.'); setCd('Ich rechne …', null); await sleep(300);
+      var a = await analyzeBlob(f, false), L = ['FOTO AUS DER KAMERA-APP (Schritt 5)'], x = a.exif || {};
+      L.push((a.w ? a.w + '×' + a.h + ' (' + ori(a.w, a.h) + ', ' + mp(a.w, a.h) + '), ' : '') + bytes(a.bytes) + ', ' + a.type + (sharpTxt(a) ? ', ' + sharpTxt(a) : ''));
+      L.push(pixTxt(a));
+      if (x.segs) L.push('JPEG-Abschnitte: ' + x.segs.join(', '));
+      if (x.error) L.push('EXIF: ' + x.error);
+      else {
+        L.push('EXIF-Felder: ' + (x.tags0 || []).length + ' + ' + (x.tagsE || []).length + ' (' + (x.tags0 || []).concat(x.tagsE || []).join(' ') + ')');
+        L.push('Gerät ' + (((x.make || '') + ' ' + (x.model || '')).trim() || 'nicht enthalten') + ' · Brennweite ' + (x.focal != null ? fmt(x.focal, 1) + ' mm' : 'fehlt') + ' · Kleinbild ' + (x.focal35 != null ? fmt(x.focal35, 0) + ' mm' : 'fehlt') + ' · ' + (lensClass(x.focal35, x.digitalZoom) || 'Kamera unklar') + ' · Standortdaten ' + (x.hasGps ? 'ja' : 'nein'));
+      }
+      if (refSmall && a.small && (a.small.w === refSmall.small.w && a.small.h === refSmall.small.h || a.small.w === refSmall.small.h && a.small.h === refSmall.small.w)) {
+        var fr = fovFit(refSmall.small, a.small);
+        if (fr) L.push('Sichtfeld Kamera-App-Foto gegenüber takePhoto-Foto (' + refSmall.label + '): Faktor ' + fmt(fr.f, 2) + ', Übereinstimmung ' + fmt(fr.r, 2) + (fr.r < 0.6 ? ' (niedrig, Standort oder Motiv weicht ab)' : '') + (fr.rot ? ', nach Drehung ' + fr.rot : ''));
+      }
+      S.res.foto = { lines: L }; S.h.app = { w: a.w, h: a.h };
+      sayS('Foto gelesen. Danke!'); S.phase = 'done';
+    } catch (e) { S.res.foto = { lines: ['FOTO AUS DER KAMERA-APP (Schritt 5)', 'FEHLER ' + errText(e)] }; sayS('Das Foto ließ sich nicht lesen: ' + errText(e), true); S.phase = 'done'; }
+    ev.target.value = ''; setCd('', null); saveState(); ui();
+  }
+  async function runKlapp() {
+    S.phase = 'run'; S.skipCd = false; ui(); sayS('Kamera und Bewegungssensor werden eingeschaltet …');
+    guided = { kind: 'fold', t0: performance.now() };
+    try {
+      await sensorsStart();
+      if (!R.plan.length) { await camPermission(); await discover(); }
+      var ok = await liveCamStart();
+      if (!ok) throw new Error(R.live);
+      $('vf').hidden = false; sayS('');
+      var phases = [['Klappe das Handy jetzt zu und warte 3 Sekunden. ', 12], ['Klappe das Handy jetzt wieder auf. ', 12], ['Bitte ruhig warten. ', 6]];
+      for (var i = 0; i < phases.length && !S.skipCd; i++) await countdown(phases[i][0], phases[i][1]);
+      setCd('Ich prüfe …', null); sayS('');
+      await sleep(6000);
+      await guidedFinish('Ablauf beendet');
+      S.phase = 'done';
+    } catch (e) {
+      if (guided) { guided = null; }
+      stopAll(); $('vf').hidden = true; S.phase = 'fail'; sayS('Der Klapp-Test hat nicht geklappt: ' + errText(e), true);
+      S.res.klapp = { lines: ['KLAPP-TEST', 'FEHLER ' + errText(e)] };
+    }
+    setCd('', null); saveState(); ui();
+  }
+
+  /* ---------- Ergebnis ---------- */
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function deviceLines() {
+    var e = envNow(), d = new Date(), L = [];
+    L.push('Stand: ' + d.getDate() + '.' + (d.getMonth() + 1) + '.' + d.getFullYear() + ', ' + pad(d.getHours()) + ':' + pad(d.getMinutes()));
+    L.push('Gerät (eingetragen): ' + (devName() || '–') + ' · faltbar: ' + (S.fold ? 'ja' : 'nein') + (S.fold ? ' · Zustand beim Start: ' + (devState() || 'nicht gewählt') : ''));
+    L.push('System laut Browserkennung: ' + UA.os + ' ' + UA.osv + ' · ' + UA.br + ' ' + UA.brv + (R.androidModel ? ' · Modell laut Browser: ' + R.androidModel : ''));
+    L.push('Bildschirm: ' + e.sw + '×' + e.sh + ' @' + e.dpr + 'x · Fenster ' + e.iw + '×' + e.ih + ' · beim Laden ' + ENV0.iw + '×' + ENV0.ih + ' Winkel ' + ENV0.ang + '° · als Web-App gestartet: ' + (isStandalone() ? 'ja' : 'nein') + ' · https: ' + (window.isSecureContext ? 'ja' : 'nein'));
+    L.push('Seite in Rahmen: ' + (framed ? 'ja' : 'nein') + ' · ImageCapture: ' + (('ImageCapture' in window) ? 'ja' : 'nein') + ' · Teilen-Funktion: ' + (navigator.share ? 'ja' : 'nein'));
+    if (R.foldHints && R.foldHints.length) L.push('Faltgerät-Hinweise vom Browser: ' + R.foldHints.join('; '));
+    return L;
+  }
+  function buildSummary() {
+    var L = ['FOTO-APP PROBE 3.1 · Ergebnis', 'KURZ: ' + (devName() || '–') + ' → ' + headline()];
+    L = L.concat(deviceLines());
+    if (R.devices.length) { L.push('KAMERAS'); R.devices.forEach(function (x) { L.push('  ' + x.label + ' = ' + (KIND[x.kind] || x.kind)); }); }
+    var Sn = R.sensor, rate = sensorsOn ? hz() : Sn.lastHz;
+    L.push('LAGESENSOR: Erlaubnis ' + (Sn.perm ? 'Ausrichtung ' + (Sn.perm.ori || 'nicht nötig') + ', Bewegung ' + (Sn.perm.mot || 'nicht nötig') : 'nicht abgefragt') + (Sn.err ? ' · FEHLER ' + Sn.err : '') + (Sn.silent ? ' · keine Messwerte' : '') + ' · Messrate zuletzt ' + (rate ? fmt(rate, 0) + '/s' : '–') + ' · Neustarts durch die Seite: ' + Sn.restarts + (Sn.why.length ? ' (' + Sn.why.join(', ') + ')' : ''));
+    ['kamera', 'hoch', 'quer', 'foto', 'wechsel', 'klapp'].forEach(function (k) { if (S.res[k]) S.res[k].lines.forEach(function (x) { L.push(x); }); });
+    orientLines().forEach(function (x) { L.push(x); });
+    if (S.fovAns) L.push('Sichtfeld Vorschau gegenüber Foto laut Augenschein: ' + S.fovAns);
+    L = L.concat(protokollLines());
+    if (R.stopNote) L.push('Kamera und Sensor wurden zuletzt ausgeschaltet: ' + R.stopNote);
+    return L.join('\n');
+  }
+  async function copyText(text) {
+    try { await navigator.clipboard.writeText(text); return true; }
+    catch (e) {
+      try { var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); return true; }
+      catch (e2) { return false; }
+    }
+  }
+  async function shareResult() {
+    S.res.protokoll = null; var text = buildSummary();
+    if (navigator.share) {
+      try { await navigator.share({ title: 'Foto-App Test', text: text }); sayS('Danke! Das Ergebnis wurde geteilt.'); return; }
+      catch (e) { if (e && e.name === 'AbortError') { sayS('Abgebrochen. Du kannst auch auf „Text kopieren“ tippen.'); return; } }
+    }
+    sayS((await copyText(text)) ? 'Teilen geht hier nicht. Der Text ist kopiert, bitte in eine Nachricht an Giannis einfügen.' : 'Teilen und Kopieren gehen hier nicht. Bitte den Text unten markieren und kopieren.', false);
+  }
+
+  /* ---------- Zustand sichern, damit ein Neuladen nichts kostet ---------- */
+  function saveState() {
+    try {
+      S.res.protokoll = { lines: protokollLines() };
+      localStorage.setItem(SKEY, JSON.stringify({ t: Date.now(), step: S.step, fold: S.fold, name: devName(), state: devState(), res: S.res, h: S.h, camOK: S.camOK, fovAns: S.fovAns, finished: S.finished }));
+    } catch (e) { /* ohne Speicher weiter */ }
+  }
+  function saveRun() { saveState(); }
+  function loadState() {
+    try {
+      var s = localStorage.getItem(SKEY); if (!s) return null;
+      var o = JSON.parse(s); if (!o || Date.now() - o.t > 3 * 3600 * 1000) return null;
+      return o;
+    } catch (e) { return null; }
+  }
+
+  /* ---------- Oberfläche ---------- */
+  var DEF = {
+    geraet: ['Dein Handy', 'Schreibe Marke und Modell deines Handys auf, zum Beispiel „iPhone 11“ oder „Samsung Galaxy S24“. Bitte keinen Namen einer Person eintragen.'],
+    kamera: ['Kamera erlauben', 'Tippe auf „Kamera starten“. Dein Handy fragt dich gleich um Erlaubnis für die Kamera und für die Bewegung. Tippe jedes Mal auf „Erlauben“. Danach warte 5 Sekunden.'],
+    hoch: ['Aufrecht ganz ruhig halten', 'Peile etwas Großes an, zum Beispiel einen Schrank oder einen Fernseher, 2 bis 3 Meter weit weg und bei gutem Licht. Halte das Handy aufrecht (hochkant, wie beim Lesen einer Nachricht) und stütze die Ellbogen am Körper ab. Wenn du es zwischendurch drehst, fängt der Countdown neu an.'],
+    quer: ['Quer ganz ruhig halten', 'Drehe das Handy jetzt zur Seite (quer, wie einen Fernseher) und peile dasselbe Motiv an. Halte es ganz ruhig, bis alle Fotos gemacht sind. Dreht sich das Bild nicht mit, schalte die Drehsperre aus.'],
+    foto: ['Foto mit der Kamera-App', 'Tippe zuerst auf „Kamera einschalten“. Danach auf „Kamera-App öffnen“. Mache ein Foto vom selben Motiv, ohne Zoom, und tippe auf „Foto verwenden“ oder „Fertig“.'],
+    klapp: ['Zuklappen und aufklappen', 'Tippe auf „Start“. Klappe dein Handy dann zu, warte 3 Sekunden und klappe es wieder auf. Du hast 30 Sekunden Zeit.'],
+    ergebnis: ['Fertig', 'Danke! Die Kamera ist aus. Schicke das Ergebnis jetzt an Giannis. Im Text stehen nur dein Handymodell und Messwerte, keine Fotos und keine Namen.']
+  };
+  function next() { S.step = Math.min(S.step + 1, steps().length - 1); S.phase = 'ready'; S.skipCd = false; setCd('', null); sayS(''); enterStep(); }
+  function enterStep() {
+    var id = curId();
+    if ((id === 'hoch' || id === 'quer') && S.camOK === false) { S.phase = 'done'; if (!S.res[id]) S.res[id] = { lines: [(id === 'hoch' ? 'HOCHKANT-LAUF (Schritt 3)' : 'QUERFORMAT-LAUF (Schritt 4)'), 'übersprungen, weil die Kamera in Schritt 2 nicht gestartet ist'] }; sayS('Dieser Schritt entfällt, weil die Kamera nicht gestartet ist.'); }
+    if (id === 'ergebnis') { S.finished = true; stopAll('Ende des Tests'); $('vf').hidden = true; }
+    saveState(); ui(); window.scrollTo(0, 0);
+  }
+  function btn(label, disabled, fn) { var b = $('primary'); b.textContent = label; b.disabled = !!disabled; b.hidden = false; b.onclick = fn; }
+  function skipBtn(label, fn) { var b = $('skip'); if (!label) { b.hidden = true; return; } b.hidden = false; b.textContent = label; b.onclick = fn; }
+  function ui() {
+    var id = curId(), list = steps(), n = list.length, d = DEF[id];
+    $('stepno').innerHTML = 'Schritt <b>' + (S.step + 1) + '</b> von <b>' + n + '</b>';
+    var pg = ''; for (var i = 0; i < n; i++) pg += '<i class="' + (i < S.step ? 'on' : i === S.step ? 'cur' : '') + '"></i>';
+    $('pg').innerHTML = pg;
+    $('title').textContent = d[0]; $('text').textContent = d[1];
+    $('secDev').hidden = id !== 'geraet'; $('secPriv').hidden = !(id === 'geraet' || id === 'ergebnis');
+    $('secFoto').hidden = !(id === 'foto' && S.phase === 'live'); $('secRes').hidden = id !== 'ergebnis';
+    $('foldRow').hidden = id !== 'geraet'; $('stateRow').hidden = !(id === 'geraet' && S.fold);
+    if (id !== 'hoch' && id !== 'quer' && id !== 'kamera' && id !== 'foto' && id !== 'klapp') $('vf').hidden = true;
+    skipBtn(null);
+    var p = S.phase, busy = p === 'run' || p === 'check';
+    if (id === 'geraet') btn('Weiter', devName().length < 3, function () { try { localStorage.setItem(NKEY, devName()); } catch (e) { /* egal */ } next(); });
+    else if (id === 'kamera') {
+      if (p === 'ready') btn('Kamera starten', false, runKamera);
+      else if (busy) btn('Läuft …', true, null);
+      else if (p === 'done') btn('Weiter', false, next);
+      else { btn('Nochmal versuchen', false, runKamera); skipBtn('Weiter ohne Kamera', function () { S.camOK = false; next(); }); }
+    } else if (id === 'hoch' || id === 'quer') {
+      if (p === 'ready') { btn('Los, ich halte still', false, function () { runHold(id); }); }
+      else if (busy) btn('Läuft … bitte ruhig halten', true, null);
+      else if (p === 'done') btn('Weiter', false, next);
+      else { btn('Nochmal versuchen', false, function () { runHold(id); }); skipBtn('Überspringen', next); }
+    } else if (id === 'foto') {
+      if (p === 'ready') { btn('Kamera einschalten', false, runFotoPrep); skipBtn('Ohne Wechsel-Test: nur Foto machen', function () { S.phase = 'live'; ui(); }); }
+      else if (p === 'live') { $('primary').hidden = true; skipBtn('Überspringen', function () { if (guided) guidedFinish('übersprungen'); S.phase = 'done'; S.res.foto = S.res.foto || { lines: ['FOTO AUS DER KAMERA-APP (Schritt 5)', 'übersprungen'] }; next(); }); }
+      else if (busy) btn('Ich prüfe … bitte warten', true, null);
+      else btn('Weiter', false, next);
+      if (p === 'done') $('fovQ').hidden = false; else $('fovQ').hidden = true;
+    } else if (id === 'klapp') {
+      if (p === 'ready') btn('Start', false, runKlapp);
+      else if (busy) { btn('Läuft …', true, null); skipBtn('Ich bin schon fertig', function () { S.skipCd = true; }); }
+      else if (p === 'done') btn('Weiter', false, next);
+      else { btn('Nochmal versuchen', false, runKlapp); skipBtn('Überspringen', next); }
+    } else if (id === 'ergebnis') {
+      btn('Ergebnis an Giannis senden', false, shareResult);
+      skipBtn('Text kopieren', async function () { S.res.protokoll = null; sayS((await copyText(buildSummary())) ? 'Text kopiert. Bitte in eine Nachricht an Giannis einfügen.' : 'Kopieren geht hier nicht. Bitte den Text unten markieren und kopieren.'); });
+      $('head').textContent = headline(); $('sum').textContent = buildSummary();
+    }
+    renderBar();
+  }
+
+  function renderBar() {
+    var c = !!stream, s = sensorsOn;
+    $('barCam').setAttribute('data-on', c ? '1' : '0'); $('barCam').textContent = c ? 'Kamera läuft' : 'Kamera aus';
+    $('barSen').setAttribute('data-on', s ? '1' : '0'); $('barSen').textContent = s ? 'Lagesensor läuft' : 'Lagesensor aus';
+    $('stopBtn').disabled = !(c || s);
+  }
+
+  /* ---------- Start ---------- */
+  function foldGuess() {
+    var n = devName(), ua = navigator.userAgent;
+    return /duo|fold|flip|faltbar/i.test(n) || /SM-F\d/i.test(n + ' ' + (R.androidModel || '')) || /SM-F\d/i.test(ua);
+  }
+  function detectAndroid() {
+    var m = navigator.userAgent.match(/;\s*(SM-[A-Z0-9]+|[A-Z][A-Za-z0-9 \-]{2,20})\s+Build\//);
+    function fill(model) {
+      if (!model) return; R.androidModel = model;
+      if ($('devname').value === '') { $('devname').value = (/^SM-/.test(model) ? 'Samsung ' : '') + model; }
+      S.fold = S.fold || foldGuess(); $('foldBox').checked = S.fold; ui();
+    }
+    if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+      navigator.userAgentData.getHighEntropyValues(['model']).then(function (v) { fill(v.model || (m && m[1])); }).catch(function () { fill(m && m[1]); });
+    } else if (/Android/.test(navigator.userAgent)) fill(m && m[1]);
+  }
+  function foldWatch() {
+    R.foldHints = [];
+    try { if (window.matchMedia) { ['(horizontal-viewport-segments: 2)', '(vertical-viewport-segments: 2)', '(device-posture: folded)', '(device-posture: continuous)'].forEach(function (q) { var mq = window.matchMedia(q); if (mq.media !== 'not all' && !/^not all/.test(mq.media)) { R.foldHints.push(q + ' = ' + (mq.matches ? 'ja' : 'nein')); if (mq.addEventListener) mq.addEventListener('change', function () { logEvent('Haltung oder Segmente geändert: ' + q + ' ' + (mq.matches ? 'ja' : 'nein')); }); } }); } } catch (e) { /* egal */ }
+    try { if (navigator.devicePosture && navigator.devicePosture.addEventListener) { R.foldHints.push('devicePosture = ' + navigator.devicePosture.type); navigator.devicePosture.addEventListener('change', function () { logEvent('Haltung geändert: ' + navigator.devicePosture.type); }); } } catch (e) { /* egal */ }
+    try { if (typeof screen.isExtended === 'boolean') R.foldHints.push('screen.isExtended = ' + screen.isExtended); } catch (e) { /* egal */ }
+  }
+  $('devname').addEventListener('input', function () { if (!S.fold && foldGuess()) { S.fold = true; $('foldBox').checked = true; } ui(); });
+  $('foldBox').addEventListener('change', function () { S.fold = $('foldBox').checked; ui(); });
+  $('devstate').addEventListener('change', function () { saveState(); });
+  document.querySelectorAll('.chips button').forEach(function (b) { b.addEventListener('click', function () { $('devname').value = b.getAttribute('data-n'); if (foldGuess()) { S.fold = true; $('foldBox').checked = true; } ui(); }); });
+  document.querySelectorAll('input[name="fov"]').forEach(function (r) { r.addEventListener('change', function () { S.fovAns = r.value; saveState(); }); });
+  $('inCap').addEventListener('change', onPhotoChosen);
+  $('stopBtn').addEventListener('click', function () {
+    S.skipCd = true;
+    if (guided) { guidedFinish('von Hand gestoppt'); } else { stopAll('von Hand gestoppt'); }
+    $('vf').hidden = true; setCd('', null); sayS('Kamera und Bewegungssensor sind aus.'); renderBar();
+  });
+  $('restart').addEventListener('click', function () { try { localStorage.removeItem(SKEY); } catch (e) { /* egal */ } location.reload(); });
+  $('resumeYes').addEventListener('click', function () {
+    var o = loadState(); if (!o) return;
+    S.fold = !!o.fold; S.res = o.res || {}; S.h = o.h || {}; S.camOK = o.camOK; S.fovAns = o.fovAns || ''; S.finished = !!o.finished; $('foldBox').checked = S.fold;
+    if (o.name) $('devname').value = o.name; if (o.state) $('devstate').value = o.state;
+    S.step = Math.min(o.step, steps().length - 1); S.phase = 'ready'; $('resume').hidden = true; enterStep();
+  });
+  $('resumeNo').addEventListener('click', function () { try { localStorage.removeItem(SKEY); } catch (e) { /* egal */ } $('resume').hidden = true; });
+
+  bindEnv(); foldWatch();
+  try { var nm = localStorage.getItem(NKEY); if (nm) $('devname').value = nm; } catch (e) { /* egal */ }
+  detectAndroid();
+  var old = loadState();
+  if (old && old.step > 0 && !old.finished) { $('resume').hidden = false; $('resumeTxt').textContent = 'Du warst bei Schritt ' + (old.step + 1) + '. Möchtest du dort weitermachen? Der Teil nach dem Wechsel in die Kamera-App wird dann neu gestartet.'; }
+  ui();
+})();
+</script>
+</body>
+</html>
