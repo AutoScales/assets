@@ -197,6 +197,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .shut .in { position: absolute; inset: 13px; border-radius: 50%; background: var(--t); opacity: .94; box-shadow: 0 2px 10px rgba(0,0,0,.3); display: grid; place-items: center; font: 700 12px/1 var(--font-body); color: var(--base); }
 .shut.ready .in { background: var(--as-gold); color: #0B0C10; opacity: 1; }
 .shut:disabled { cursor: default; }
+.shut[aria-disabled="true"] .in { opacity: .34; box-shadow: none; }
+.shut[aria-disabled="true"] { cursor: default; }
 .railtitle { display: grid; gap: 2px; text-align: center; font: inherit; color: var(--t); background: var(--chipbg); border: 1px solid var(--gb); border-radius: var(--rs); padding: 7px 8px; width: 120px; max-width: 100%; cursor: pointer; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); flex: none; }
 .railtitle .nr { font: 600 10px/1.2 var(--font-body); letter-spacing: .1em; text-transform: uppercase; color: var(--t2); }
 .railtitle b { font: 700 12px/1.25 var(--font-body); overflow-wrap: anywhere; }
@@ -276,7 +278,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   </form>
   <div class="glass how">
     <div><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="22" height="10" rx="2.5"/><path d="M8 14h.01"/></svg><span><b>6 Außenbilder</b> einmal ums Auto (4 × schräg, Front, Heck), dann <b>4 innen</b> (mit Rücksitzbank). Seiten und Kofferraum sind freiwillig.</span></div>
-    <div><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="24" height="14" rx="3"/><circle cx="14" cy="14" r="4"/></svg><span>Handy <b>quer</b>, Kamera <b>1x</b>, ruhig halten. Die App löst selbst aus.</span></div>
+    <div><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="24" height="14" rx="3"/><circle cx="14" cy="14" r="4"/></svg><span>Handy <b>quer</b>, Kamera <b>1x</b>, ruhig halten. Wird der Auslöser <b>gold</b>, antippen.</span></div>
     <div><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10V4h6M18 4h6v6M24 18v6h-6M10 24H4v-6"/></svg><span>Das <b>ganze Auto mit etwas Rand</b> in die Schablone</span></div>
     <div><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="9" r="4"/><path d="M6 23c0-4.5 3.5-7 8-7s8 2.5 8 7"/><path d="M4 4l20 20"/></svg><span><b>Niemand im Auto</b>, auch nicht auf den Sitzen</span></div>
   </div>
@@ -287,7 +289,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       <li data-du="Handy leicht nach unten neigen (ca. 10°); die Wasserwaage zeigt es." data-sie="Handy leicht nach unten neigen (ca. 10°); die Wasserwaage zeigt es.">Handy leicht nach unten neigen (ca. 10°); die Wasserwaage zeigt es.</li>
       <li data-du="Du siehst jedes Foto und tippst <b>Passt</b> oder <b>Neu</b>. Erst bei „Passt“ geht es hoch." data-sie="Sie sehen jedes Foto und tippen auf <b>Passt</b> oder <b>Neu</b>. Erst bei „Passt“ wird hochgeladen.">Du siehst jedes Foto und tippst <b>Passt</b> oder <b>Neu</b>. Erst bei „Passt“ geht es hoch.</li>
       <li id="hHint"></li>
-      <li>Die Seiten (links und rechts) und Zusatzbilder sind freiwillig; die Seiten bietet die App nach dem letzten Außenbild an, alle sind auch in der Galerie. Die Karosserie bestimmt die Schablone im Sucher; die Auto-Erkennung vergleicht das Auto damit und zeigt grün, wenn es passt.</li>
+      <li>Die Seiten (Fahrerseite und Beifahrerseite) und Zusatzbilder sind freiwillig; die Seiten bietet die App nach dem letzten Außenbild an, alle sind auch in der Galerie. Die Karosserie bestimmt die Schablone im Sucher; die Auto-Erkennung vergleicht das Auto damit und zeigt grün, wenn es passt.</li>
     </ul>
   </details>
   <div class="glass set" id="setBox">
@@ -359,8 +361,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       </div>
       <div class="rail R">
         <div class="rgrp"><span class="rtxt" id="fitTxt"></span><span class="rtxt" id="stillTxt">–</span></div>
-        <button class="shut" id="shotBtn" type="button" aria-label="Jetzt auslösen" disabled><svg viewBox="0 0 78 78" aria-hidden="true"><circle class="bg" cx="39" cy="39" r="35" fill="none" stroke-width="4"/><circle class="arc" id="stillArc" cx="39" cy="39" r="35" fill="none" stroke-width="4" stroke-linecap="round"/></svg><span class="in" id="shotIn"></span></button>
-        <span class="rtxt" id="stillSub">Löst von selbst aus</span>
+        <button class="shut" id="shotBtn" type="button" aria-label="Auslösen" aria-disabled="true" disabled><svg viewBox="0 0 78 78" aria-hidden="true"><circle class="bg" cx="39" cy="39" r="35" fill="none" stroke-width="4"/><circle class="arc" id="stillArc" cx="39" cy="39" r="35" fill="none" stroke-width="4" stroke-linecap="round"/></svg><span class="in" id="shotIn"></span></button>
+        <span class="rtxt" id="stillSub">Noch nicht frei</span>
       </div>
       <div class="topwrap"><div class="cglass hintcard" id="camHint" hidden></div></div>
       <div class="mid"><span class="big" id="camBig" hidden></span></div>
@@ -408,8 +410,10 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   var CFG = {
     LONG_EDGE: 2560, QUALITY: 0.85,
     SETTLE_MS: 1500,            // Einschwingzeit nach Kamerastart
-    FALLBACK_FIRST_MS: 15000,   // Selbstauslöser: nach so langer Zeit erscheint der Knopf „Jetzt“ (erstes Foto)
-    FALLBACK_NEXT_MS: 6000,     // und bei den folgenden Fotos
+    FREIGABE_FIRST_MS: 10000,   // Auslöser von Hand: bleiben die Bedingungen so lange unerfüllt, gibt die App trotzdem frei (erstes Foto), mit gelbem Hinweis
+    FREIGABE_NEXT_MS: 7000,     // und bei den folgenden Fotos
+    FREIGABE_OHNE_SENSOR_MS: 2500,   // ohne Sensorwerte gibt die App nach so langer Zeit frei (gelber Hinweis)
+    NACH_MAX_MS: 900, NACH_FENSTER_MS: 220, NACH_RUHIG_MS: 120,   // nach dem Tipp kurz nachstabilisieren (der Tipp wackelt), höchstens so lange
     STILL_P: 0.35, STILL_R: 0.25, STILL_ROLL_MAX: 2.5, STILL_MS: 500, FRESH_MS: 250,   // Schwellen aus Probe 4
     ZUSATZ_MAX: 6
   };
@@ -434,16 +438,16 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     return 'Handy auf Bauch- bis Brusthöhe (ca. 1,2 bis 1,5 m).';
   }
   // Bildfolge seit 08.11.2026 (Giannis: „4x 3/4 je vorne L+R und hinten L+R (seiten dann optional), Front und Heck“): einmal ums Auto.
-  // Pflicht: 6 außen + 4 innen (Cockpit, Tacho, Vordersitze, Rücksitzbank). Freiwillig: Seite links und rechts (SEITEN) und Kofferraum (INNEN_FREI).
+  // Pflicht: 6 außen + 4 innen (Cockpit, Tacho, Vordersitze, Rücksitzbank). Freiwillig: Seite Fahrerseite und Beifahrerseite (SEITEN) und Kofferraum (INNEN_FREI).
   // Rücksitzbank: bei Coupé/Sport und Cabrio/Roadster nicht Pflicht (siehe RUECKBANK_COUPE). Schlüssel wie im Schema `plaetze` (titel = dreiviertel_vl).
   var PLAETZE = [
-    { key: 'titel', nr: 1, art: 'aussen', name: 'Dreiviertel vorn links', sub: 'Titelbild', hint: 'Schräg vor die linke Vorderecke, etwa 2 m Abstand. Scheinwerfer und linke Seite im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'titel', nr: 1, art: 'aussen', name: 'Dreiviertel vorn Fahrerseite', sub: 'Titelbild', hint: 'Schräg vor die vordere Ecke auf der Fahrerseite, etwa 2 m Abstand. Scheinwerfer und Fahrerseite im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
     { key: 'front', nr: 2, art: 'aussen', name: 'Front', hint: 'Genau vor das Auto, mittig, etwa 2 m vor der Stoßstange. Scheinwerfer im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
-    { key: 'dreiviertel_vr', nr: 3, art: 'aussen', name: 'Dreiviertel vorn rechts', hint: 'Schräg vor die rechte Vorderecke, etwa 2 m Abstand. Scheinwerfer und rechte Seite im Bild (vorn, nicht das Heck), das ganze Auto mit Rand. Niemand im Auto.' },
-    { key: 'dreiviertel_hr', nr: 4, art: 'aussen', name: 'Dreiviertel hinten rechts', hint: 'Schräg hinter die rechte Hinterecke, etwa 2 m Abstand. Rückleuchten und rechte Seite im Bild (hinten, nicht die Front), das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'dreiviertel_vr', nr: 3, art: 'aussen', name: 'Dreiviertel vorn Beifahrerseite', hint: 'Schräg vor die vordere Ecke auf der Beifahrerseite, etwa 2 m Abstand. Scheinwerfer und Beifahrerseite im Bild (vorn, nicht das Heck), das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'dreiviertel_hr', nr: 4, art: 'aussen', name: 'Dreiviertel hinten Beifahrerseite', hint: 'Schräg hinter die hintere Ecke auf der Beifahrerseite, etwa 2 m Abstand. Rückleuchten und Beifahrerseite im Bild (hinten, nicht die Front), das ganze Auto mit Rand. Niemand im Auto.' },
     { key: 'heck', nr: 5, art: 'aussen', name: 'Heck', hint: 'Genau hinter das Auto, mittig, etwa 2 m hinter der Stoßstange. Rückleuchten im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
-    { key: 'dreiviertel_hl', nr: 6, art: 'aussen', name: 'Dreiviertel hinten links', hint: 'Schräg hinter die linke Hinterecke, etwa 2 m Abstand. Rückleuchten und linke Seite im Bild (hinten, nicht die Front), das ganze Auto mit Rand. Niemand im Auto.' },
-    { key: 'cockpit', nr: 7, art: 'innen', name: 'Cockpit', hint: 'Zündung an. Von der Rücksitzbank aus nach vorn: Lenkrad und Armaturenbrett im Bild.' },
+    { key: 'dreiviertel_hl', nr: 6, art: 'aussen', name: 'Dreiviertel hinten Fahrerseite', hint: 'Schräg hinter die hintere Ecke auf der Fahrerseite, etwa 2 m Abstand. Rückleuchten und Fahrerseite im Bild (hinten, nicht die Front), das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'cockpit', nr: 7, art: 'innen', name: 'Cockpit', hint: 'Foto von Rücksitzbank aus, mittig. Zündung an, Lenkrad und Armaturenbrett im Bild.' },
     { key: 'tacho', nr: 8, art: 'innen', name: 'Tacho', hint: 'Zündung an. Kilometerstand gut lesbar.' },
     { key: 'vordersitze', nr: 9, art: 'innen', name: 'Vordersitze', hint: 'Fahrertür auf. Von außen durch die offene Tür beide Vordersitze im Bild.' },
     { key: 'ruecksitzbank', nr: 10, art: 'innen', name: 'Rücksitzbank', hint: 'Hintertür auf. Von außen durch die offene Tür die ganze Rücksitzbank im Bild.' }
@@ -454,8 +458,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   // Rücksitzbank bei Coupé/Sport und Cabrio/Roadster: 'frei' = freiwillig (Vorschlag Alfred, bei Giannis offen), 'weg' = gar nicht anbieten. Eine Zeile ändern genügt.
   var RUECKBANK_COUPE = 'frei';
   var SEITEN = [
-    { key: 'seite_l', name: 'Seite links', hint: 'Freiwillig. Seitlich links, Auto mittig, etwa 6 m von der Automitte (in engen Garagen mindestens etwa 4,5 m). Vorderräder gerade. Das ganze Auto mit Rand im Bild, links und rechts etwas Platz. Niemand im Auto.' },
-    { key: 'seite_r', name: 'Seite rechts', hint: 'Freiwillig. Seitlich rechts, Auto mittig, etwa 6 m von der Automitte (in engen Garagen mindestens etwa 4,5 m). Vorderräder gerade. Das ganze Auto mit Rand im Bild, links und rechts etwas Platz. Niemand im Auto.' }
+    { key: 'seite_l', name: 'Fahrerseite', hint: 'Freiwillig. Seitlich auf der Fahrerseite, Auto mittig, etwa 6 m von der Automitte (in engen Garagen mindestens etwa 4,5 m). Vorderräder gerade. Das ganze Auto mit Rand im Bild, vorn und hinten je etwas Platz. Niemand im Auto.' },
+    { key: 'seite_r', name: 'Beifahrerseite', hint: 'Freiwillig. Seitlich auf der Beifahrerseite, Auto mittig, etwa 6 m von der Automitte (in engen Garagen mindestens etwa 4,5 m). Vorderräder gerade. Das ganze Auto mit Rand im Bild, vorn und hinten je etwas Platz. Niemand im Auto.' }
   ];
   function ohneRueck() { var v = S.vehicle; return !!(v && (v.klasse === 'coupe' || v.cabrio)); }
   function rueckPflicht() { return !ohneRueck(); }
@@ -797,7 +801,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function slotMeta(id) {
     var m = /^zusatz(\d)$/.exec(id);
     if (m) return { id: id, key: 'zusatz', nr: null, art: 'zusatz', name: 'Zusatzbild ' + m[1], zusatz_nr: +m[1], hint: T('Zeig, was das Inserat braucht. Handy ruhig halten.', 'Zeigen Sie, was das Inserat braucht. Handy ruhig halten.') };
-    var sd = SEITEN.filter(function (x) { return x.key === id; })[0] || (id === 'seite' ? { key: 'seite', name: 'Seite links', hint: SEITEN[0].hint } : null);
+    var sd = SEITEN.filter(function (x) { return x.key === id; })[0] || (id === 'seite' ? { key: 'seite', name: 'Fahrerseite', hint: SEITEN[0].hint } : null);
     if (sd) return { id: id, key: sd.key, nr: null, art: 'aussen', frei: true, name: sd.name, sub: null, hint: sd.hint, zusatz_nr: null };
     var fi = INNEN_FREI.filter(function (x) { return x.key === id; })[0];
     if (fi) return { id: id, key: fi.key, nr: null, art: 'innen', frei: true, name: fi.name, sub: null, hint: fi.hint, zusatz_nr: null };
@@ -876,21 +880,68 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   }
   function isLandCls(c) { return c !== null && /^quer/.test(c); }
   function holdLandscape() { var c = gravClass(); return c === null ? landscapeNow() : isLandCls(c); }
-  // Selbstauslöser: ruhig, fast gerade, frischer Sensorwert, quer. ctl.manual = true löst sofort aus (Knopf „Jetzt“).
-  async function waitStill(my, maxMs, onTick, ctl) {
-    var t0 = performance.now(), okSince = 0;
-    if (!sensorsOn || !lastOriT || performance.now() - lastOriT > 1500) { await sleepC(my, 2500); return { ok: null, noSensor: true, ms: 2500 }; }
-    while (performance.now() - t0 < maxMs) {
+  // Freigabe des Auslösers (Giannis 08.11.2026): kein Selbstauslöser mehr, der Nutzer löst immer selbst aus.
+  // Frei, wenn quer, fast gerade (Rollen), ruhig und der Sensorwert frisch ist, zusammen STILL_MS lang; die Neigung bleibt nur Anzeige.
+  // Kein Festhängen: ohne Sensor nach FREIGABE_OHNE_SENSOR_MS, sonst nach maxMs gibt die App trotzdem frei (gelber Hinweis).
+  function gateState() {
+    var now = performance.now();
+    if (!sensorsOn || !lastOriT || now - lastOriT > 1500) return { good: false, noSensor: true, why: 'Warte auf Sensor …' };
+    var sh = shake(700), sn = snapshot();
+    if (now - lastOriT >= CFG.FRESH_MS || !sn) return { good: false, why: 'Warte auf Sensor …' };
+    if (!holdLandscape()) return { good: false, why: T('Halte das Handy quer', 'Handy quer halten') };
+    if (Math.abs(sn.r) > CFG.STILL_ROLL_MAX) return { good: false, why: T('Halte es gerade', 'Handy gerade halten') };
+    if (!sh || sh.n < 4 || sh.p > CFG.STILL_P || sh.r > CFG.STILL_R) return { good: false, why: T('Halte still', 'Handy ruhig halten') };
+    return { good: true };
+  }
+  function gateUi(ctl, prog) {
+    var key = ctl.forced ? (ctl.noSensor ? 'fn' : 'f') : ctl.released ? 'ok' : 'dim:' + ctl.shown;
+    if (ctl.ui !== key) {
+      ctl.ui = key;
+      if (ctl.released) {
+        shotReady(true);
+        $('stillTxt').innerHTML = ctl.forced ? '<i class="dot warn"></i> ' + (ctl.noSensor ? 'Ohne Sensor, trotzdem möglich' : 'Nicht ruhig genug, trotzdem möglich') : '<i class="dot ok"></i> Jetzt auslösen';
+        $('stillSub').textContent = ctl.forced ? 'Jetzt auslösen' : '';
+        setStill(100);
+      } else {
+        shotReady(false);
+        $('stillTxt').textContent = ctl.shown || T('Halte still …', 'Halten Sie still …');
+        $('stillSub').textContent = 'Noch nicht frei';
+      }
+    }
+    if (!ctl.released) setStill(prog);
+  }
+  async function gateLoop(my, maxMs, ctl) {
+    var t0 = performance.now(), okSince = 0, badSince = 0;
+    while (!ctl.tapped) {
       chk(my);
-      if (ctl && ctl.manual) return { ok: false, manual: true, ms: Math.round(performance.now() - t0) };
-      var now = performance.now(), fresh = sensorsOn && lastOriT && now - lastOriT < CFG.FRESH_MS, sh = shake(700), sn = snapshot();
-      var good = !!(fresh && sh && sh.n >= 4 && sh.p <= CFG.STILL_P && sh.r <= CFG.STILL_R && sn && Math.abs(sn.r) <= CFG.STILL_ROLL_MAX && holdLandscape());
-      if (good) { if (!okSince) okSince = now; if (now - okSince >= CFG.STILL_MS) return { ok: true, ms: Math.round(now - t0) }; }
-      else okSince = 0;
-      if (onTick) onTick(good ? now - okSince : 0, fresh, sh);
+      var now = performance.now(), el = now - t0, g = gateState();
+      if (!ctl.forced) {
+        if (g.good) { badSince = 0; if (!okSince) okSince = now; if (!ctl.released && now - okSince >= CFG.STILL_MS) { ctl.released = true; ctl.at = Math.round(el); haptic(18); } }
+        else {
+          okSince = 0;
+          if (ctl.released) { if (!badSince) badSince = now; if (now - badSince > 400) { ctl.released = false; badSince = 0; } }
+        }
+        if (!ctl.released && (g.noSensor ? el >= CFG.FREIGABE_OHNE_SENSOR_MS : el >= maxMs)) { ctl.released = true; ctl.forced = true; ctl.noSensor = !!g.noSensor; ctl.at = Math.round(el); haptic(18); }
+      }
+      ctl.reason = g.good ? '' : g.why;
+      if (g.good) { ctl.shown = ''; ctl.shownT = now; } else if (!ctl.shown || now - ctl.shownT > 700) { ctl.shown = g.why; ctl.shownT = now; }   // der Grund flackert nicht: mindestens 0,7 s stehen lassen
+      gateUi(ctl, okSince ? (now - okSince) / CFG.STILL_MS * 100 : 0);
       await sleep(80);
     }
-    return { ok: false, ms: Math.round(performance.now() - t0) };
+  }
+  function haptic(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* egal */ } }
+  // Der Tipp bewegt das Handy: erst wenn es wieder ruhig ist (kurzes Fenster), wird das Foto gemacht, höchstens NACH_MAX_MS
+  async function afterTap(my) {
+    var t0 = performance.now(), calm = 0;
+    if (!sensorsOn || !lastOriT || performance.now() - lastOriT > 1500) { await sleepC(my, 120); return { ms: 120, ruhig: null }; }
+    while (performance.now() - t0 < CFG.NACH_MAX_MS) {
+      chk(my);
+      var now = performance.now(), sh = shake(CFG.NACH_FENSTER_MS);
+      if (sh && sh.n >= 3 && sh.p <= CFG.STILL_P && sh.r <= CFG.STILL_R) { if (!calm) calm = now; if (now - calm >= CFG.NACH_RUHIG_MS) return { ms: Math.round(now - t0), ruhig: true }; }
+      else calm = 0;
+      await sleep(40);
+    }
+    return { ms: Math.round(performance.now() - t0), ruhig: false };
   }
 
   /* =====================================================================
@@ -1002,7 +1053,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   $('camChip').onclick = function () { clearTimeout(chipT); hintOpen($('camChip').getAttribute('aria-expanded') !== 'true'); };
   $('camHint').onclick = function () { clearTimeout(chipT); hintOpen(false); };
   function setStill(p) { $('stillArc').style.strokeDashoffset = (220 * (1 - Math.max(0, Math.min(100, p)) / 100)).toFixed(1); }
-  function shotReady(on) { var b = $('shotBtn'); b.disabled = !on; b.classList.toggle('ready', !!on); $('shotIn').textContent = on ? 'Jetzt' : ''; $('stillSub').textContent = on ? 'Oder jetzt tippen' : 'Löst von selbst aus'; }
+  function shotReady(on) { var b = $('shotBtn'); b.classList.toggle('ready', !!on); b.setAttribute('aria-disabled', on ? 'false' : 'true'); $('shotIn').textContent = on ? 'Jetzt' : ''; }
 
   /* Simulation (nur Demo mit &sim im Link): gezeichnete Kamera und erfundene Sensorwerte, damit man die Oberfläche am Computer durchklicken kann. Keine Kamera, kein Server. */
   function simSnap() { var t = performance.now() / 1000, p = AMPEL.p0 + Math.sin(t * .8) * 3.2 + Math.sin(t * 2.1) * .9, r = Math.sin(t * 1.1) * .45; return { age: 0, p: p, r: r, pMed: p, rMed: r, n: 9 }; }
@@ -1027,7 +1078,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   /* =====================================================================
      Auto-Erkennung im Sucher (Abgleich mit der Schablone). Läuft nur auf dem Gerät: MediaPipe Object Detector mit EfficientDet-Lite0 (COCO),
      Bibliothek und Modell liegen selbst gehostet unter ai/ (kein Fremd-CDN, Lizenztexte dabei). Kein Kamerabild verlässt das Gerät, nur Zahlen gehen in app_details.
-     Stufe 1 (Entscheidung Giannis 08.11.2026): zeigen und protokollieren, der Selbstauslöser bleibt unverändert.
+     Stufe 1 (Entscheidung Giannis 08.11.2026): zeigen und protokollieren; seit dem manuellen Auslösen gibt es keinen Selbstauslöser mehr. Nach der ersten Testfahrt soll die Erkennung Teil der Freigabe werden.
      Rechnung: Rahmen des erkannten Autos gegen den gerechneten Rahmen der Schablone (Überdeckung IoU, Größe, Mitte); Schwellen sind Vorschlag und werden an echten Fotos eingestellt.
      Rückfall: lädt oder läuft die Erkennung nicht, bleibt es bei der reinen Schablone als Orientierung.
      ===================================================================== */
@@ -1411,7 +1462,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       '<rect x="0" y="0" width="100" height="100" rx="10" style="fill:var(--glass)"/>' +
       '<rect x="' + x0.toFixed(1) + '" y="' + y0.toFixed(1) + '" width="' + B.toFixed(1) + '" height="' + L.toFixed(1) + '" rx="6" style="fill:var(--car)"/>' +
       '<path d="M' + (50 - B * 0.3).toFixed(1) + ' ' + (y0 + L * 0.22).toFixed(1) + ' L' + (50 + B * 0.3).toFixed(1) + ' ' + (y0 + L * 0.22).toFixed(1) + ' L' + (50 + B * 0.36).toFixed(1) + ' ' + (y0 + L * 0.34).toFixed(1) + ' L' + (50 - B * 0.36).toFixed(1) + ' ' + (y0 + L * 0.34).toFixed(1) + ' Z" style="fill:var(--t2);opacity:.6"/>' +
-      '<path d="M' + (50 - 4.5) + ' ' + y0.toFixed(1) + ' L50 ' + (y0 - 6.5).toFixed(1) + ' L' + (50 + 4.5) + ' ' + y0.toFixed(1) + ' Z" fill="#FFC77C"/>';
+      '<path d="M' + (50 - 4.5) + ' ' + y0.toFixed(1) + ' L50 ' + (y0 - 6.5).toFixed(1) + ' L' + (50 + 4.5) + ' ' + y0.toFixed(1) + ' Z" fill="#FFC77C"/>' +
+      '<circle cx="' + (50 - B * 0.2).toFixed(1) + '" cy="' + (y0 + L * 0.46).toFixed(1) + '" r="' + Math.max(1.5, B * 0.14).toFixed(1) + '" fill="none" style="stroke:var(--t)" stroke-width="1.1"/>';
     [fy, ry].forEach(function (wy) { [x0 - 1.4, x0 + B - 1.2].forEach(function (wx) { s += '<rect x="' + wx.toFixed(1) + '" y="' + (wy - 3.6).toFixed(1) + '" width="2.6" height="7.2" rx="1" fill="#111"/>'; }); });
     // vorn oder hinten: helle Scheinwerfer vorn, rote Rückleuchten hinten, dazu VORN und HINTEN am Rand (auf der Seite ohne Standort)
     [x0 + 2.4, x0 + B - 2.4].forEach(function (lx) { s += '<circle cx="' + lx.toFixed(1) + '" cy="' + (y0 + 2).toFixed(1) + '" r="1.6" fill="#FFF3C4"/><circle cx="' + lx.toFixed(1) + '" cy="' + (y0 + L - 2).toFixed(1) + '" r="1.6" fill="#E5484D"/>'; });
@@ -1453,7 +1505,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       // 1) Querhaltung abwarten (Schwerkraft), erst dann startet die Kamera
       await waitLandscape(my);
       // 2) Kamera
-      paneShow('vCam', true); setLabels(); shotReady(false); $('stillTxt').textContent = ''; setStill(0);
+      paneShow('vCam', true); setLabels(); shotReady(false); $('shotBtn').disabled = true; $('stillTxt').textContent = ''; $('stillSub').textContent = 'Noch nicht frei'; setStill(0);
       if (!S.stream || !S.track || S.track.readyState !== 'live') {
         say('Kamera startet …');
         if (S.cfg && S.cfg.sim) { await openSim(); chk(my); }
@@ -1468,23 +1520,16 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       var settle = CFG.SETTLE_MS - (performance.now() - S.streamOpenedAt);
       if (settle > 0) { say('Kamera wird bereit …'); S.phase = 'settle'; warmUp(); await sleepC(my, settle); }
       say('');
-      // 4) Selbstauslöser; nach Ablauf der Zeit erscheint zusätzlich der Knopf „Jetzt“
+      // 4) Auslösen von Hand: der Knopf ist gedämpft, bis die Bedingungen passen (mit Grund), dann gold; nach dem Tipp kurz nachstabilisieren
       S.phase = 'still';
-      var maxMs = S.shotsSinceOpen === 0 && !hasAnyPhoto() ? CFG.FALLBACK_FIRST_MS : CFG.FALLBACK_NEXT_MS, ctl = { manual: false };
-      $('shotBtn').onclick = function () { ctl.manual = true; };
-      function tick(stillFor, fresh) {
-        setStill(stillFor / CFG.STILL_MS * 100);
-        $('stillTxt').textContent = !fresh ? 'Warte auf Sensorwerte …' : (stillFor > 0 ? T('Halte still …', 'Halten Sie still …') : 'Handy ruhig und gerade halten');
-      }
-      var res = await waitStill(my, maxMs, tick, ctl);
-      if (!res.ok && !res.noSensor && !res.manual) {
-        shotReady(true);
-        res = await waitStill(my, 1e9, function (a, f) { tick(a, f); if (a === 0 && f) $('stillTxt').textContent = T('Halte still oder tippe „Jetzt“', 'Halten Sie still oder tippen Sie auf „Jetzt“'); }, ctl);
-      }
-      var auto = !!res.ok;
-      shotReady(false); setStill(100);
+      var maxMs = S.shotsSinceOpen === 0 && !hasAnyPhoto() ? CFG.FREIGABE_FIRST_MS : CFG.FREIGABE_NEXT_MS, ctl = { tapped: false, released: false, forced: false, noSensor: false, reason: '', at: 0, ui: '' };
+      $('shotBtn').disabled = false;
+      $('shotBtn').onclick = function () { if (ctl.released) ctl.tapped = true; else toast(ctl.reason || 'Noch nicht frei', 1200); };
+      await gateLoop(my, maxMs, ctl);
+      shotReady(false); $('shotBtn').disabled = true; setStill(100); $('stillTxt').textContent = T('Halte still …', 'Halten Sie still …'); $('stillSub').textContent = '';
+      var nach = await afterTap(my);
       chk(my);
-      await shoot(my, { auto: auto, noSensor: !!res.noSensor, waitMs: res.ms || 0 });
+      await shoot(my, { auto: false, noSensor: ctl.noSensor, forced: ctl.forced, waitMs: ctl.at || 0, nach: nach });
     } catch (e) {
       if (e === CANCEL) return;
       problem('Die Kamera hat nicht geklappt', errText(e), true);
@@ -1732,7 +1777,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       id: st.fotoId, fahrzeug_id: S.vehicle.id, platz: m.key, zusatz_nr: m.zusatz_nr, zusatz_art: m.art === 'zusatz' ? S.zusatzArt : null,
       ampel_handy: r.ampel, ampel_handy_gruende: r.gruende.join('; '), geraet: dev(), brennweite_kb: r.f35, neigung: r.snap ? +r.snap.p.toFixed(1) : null, rollen: r.snap ? +r.snap.r.toFixed(1) : null,
       drehung: r.drehung, breite: r.w, hoehe: r.h, bytes: r.blob.size,
-      app_details: { app: APP, quelle: r.quelle, selbstausloeser: !!r.how.auto, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, klasse: (S.vehicle && S.vehicle.klasse && KLASSE_NAME[S.vehicle.klasse]) || null, cabrio: !!(S.vehicle && S.vehicle.cabrio), ruecksitzbank: rueckPflicht() ? 'pflicht' : RUECKBANK_COUPE, design: 'v4', abgleich: r.fit || null, aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, folge: 'rundum-v2', winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v1: gelb ab ' + AMPEL.gelb.p + '/' + AMPEL.gelb.r + ', rot ab ' + AMPEL.rot.p + '/' + AMPEL.rot.r + ', Soll-Neigung ' + AMPEL.p0 } }
+      app_details: { app: APP, quelle: r.quelle, selbstausloeser: false, ausloeser: { art: 'manuell', freigabe: r.quelle === 'kamera-app' ? 'kamera_app' : (r.how.forced ? (r.how.noSensor ? 'erzwungen_ohne_sensor' : 'erzwungen') : 'frei'), frei_nach_ms: r.how.waitMs || 0, nachstabil_ms: r.how.nach ? r.how.nach.ms : null, nachstabil_ruhig: r.how.nach ? r.how.nach.ruhig : null }, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, klasse: (S.vehicle && S.vehicle.klasse && KLASSE_NAME[S.vehicle.klasse]) || null, cabrio: !!(S.vehicle && S.vehicle.cabrio), ruecksitzbank: rueckPflicht() ? 'pflicht' : RUECKBANK_COUPE, design: 'v4', abgleich: r.fit || null, aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, folge: 'rundum-v3', winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v1: gelb ab ' + AMPEL.gelb.p + '/' + AMPEL.gelb.r + ', rot ab ' + AMPEL.rot.p + '/' + AMPEL.rot.r + ', Soll-Neigung ' + AMPEL.p0 } }
     };
     var item = { slot: r.slot, id: st.fotoId, path: S.vehicle.id + '/' + m.key + '_' + st.fotoId + '.jpg', blob: r.blob, meta: meta, tries: 0, fileDone: false, state: 'wartet' };
     discardReview();
