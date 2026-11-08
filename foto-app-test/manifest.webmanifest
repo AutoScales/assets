@@ -1,7 +1,7 @@
 {
-  "name": "AutoScales Foto-App (Test)",
-  "short_name": "Foto-App Test",
-  "description": "Testfassung der AutoScales Foto-App",
+  "name": "AutoScales Studio",
+  "short_name": "Studio",
+  "description": "AutoScales Studio, Testfassung",
   "display": "standalone",
   "background_color": "#0B0C10",
   "theme_color": "#0B0C10",
