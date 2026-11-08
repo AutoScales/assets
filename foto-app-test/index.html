@@ -209,16 +209,12 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .hintcard { pointer-events: auto; max-width: 100%; padding: 10px 14px; font: 500 13px/1.45 var(--font-body); color: var(--t); text-align: left; cursor: pointer; border-radius: var(--r); }
 .mid { position: absolute; left: var(--ix); width: var(--iw); top: 50%; transform: translateY(-50%); text-align: center; pointer-events: none; z-index: 6; }
 .mid .big { display: inline-block; font: 700 clamp(15px, 3.6vw, 22px)/1.3 var(--font-body); background: var(--chipbg); border: 1px solid var(--gb); color: var(--t); padding: 10px 18px; border-radius: var(--r); max-width: 90%; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
-.lvl { position: absolute; z-index: 3; left: var(--ix); top: var(--iy); width: var(--iw); height: var(--ih); pointer-events: none; --lc: var(--lvl-ok); }
-.lvl[data-s="warn"] { --lc: #FFC77C; } .lvl[data-s="bad"] { --lc: #FF6B5E; } .lvl[data-s="off"] { --lc: #9CA3AF; }
-.lvl .h { position: absolute; left: 22%; right: 22%; top: 50%; height: 3px; margin-top: -1.5px; border-radius: 2px; background: var(--lc); box-shadow: 0 0 0 1px rgba(0,0,0,.45); transform: translateY(var(--ty, 0px)) rotate(var(--rot, 0deg)); transition: background .15s; }
-.lvl .c { position: absolute; left: 50%; top: 50%; width: var(--ring, 28px); height: var(--ring, 28px); margin: calc(var(--ring, 28px) / -2) 0 0 calc(var(--ring, 28px) / -2); border: 2px solid var(--lc); border-radius: 50%; box-shadow: 0 0 0 1px rgba(0,0,0,.45); transition: border-color .15s; }
-.lvl .tick { position: absolute; top: 50%; width: 16px; height: 2px; margin-top: -1px; background: var(--lc); opacity: .9; box-shadow: 0 0 0 1px rgba(0,0,0,.35); }
-.lvl .tick.a { left: calc(22% - 24px); } .lvl .tick.b { right: calc(22% - 24px); }
-#lvlMsg { position: absolute; z-index: 5; left: var(--ix); width: var(--iw); top: calc(var(--iy) + var(--ih) * .5 + 30px); text-align: center; pointer-events: none; }
-#lvlMsg span { display: inline-block; font: 700 12px/1.3 var(--font-body); padding: 6px 12px; border-radius: 999px; background: var(--as-gold); color: #0B0C10; }
+#lvlMsg { position: absolute; z-index: 5; left: var(--ix); width: var(--iw); bottom: calc(var(--fh) - var(--iy) - var(--ih) + 50px); text-align: center; pointer-events: none; }
+#lvlMsg span { display: inline-flex; align-items: center; gap: 9px; font: 700 15px/1.2 var(--font-body); padding: 9px 17px 9px 14px; border-radius: 999px; background: var(--chipbg); border: 1px solid var(--gb); color: var(--t); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 2px 12px rgba(0,0,0,.28); }
+#lvlMsg span::before { content: ''; width: 11px; height: 11px; border-radius: 50%; background: var(--as-gold); flex: none; }
+#lvlMsg[data-l="rot"] span::before { background: #FF6B5E; }
 #noRueck { position: absolute; z-index: 6; left: calc(var(--ix) + var(--iw) - 8px); transform: translateX(-100%); bottom: calc(var(--fh) - var(--iy) - var(--ih) + 48px); font: 600 12px/1.2 var(--font-body); padding: 9px 12px; border-radius: var(--rs); cursor: pointer; }
-.lvlt { white-space: pre-line; position: absolute; z-index: 5; left: calc(var(--ix) + 8px); bottom: calc(var(--fh) - var(--iy) - var(--ih) + 48px); font: 600 11px/1 var(--font-data); padding: 7px 9px; border-radius: 6px; background: var(--chipbg); border: 1px solid var(--gb); color: var(--t); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.lvlt { white-space: pre-line; position: absolute; z-index: 5; left: calc(var(--ix) + 8px); top: calc(var(--iy) + 8px); font: 600 11px/1 var(--font-data); padding: 7px 9px; border-radius: 6px; background: var(--chipbg); border: 1px solid var(--gb); color: var(--t); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
 .lvlt[data-ok="1"] { border-color: var(--ok); }
 .toast { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); background: var(--as-gold); color: #0B0C10; font-weight: 700; font-size: 14px; padding: 8px 14px; border-radius: 999px; pointer-events: none; z-index: 12; }
 #revDbg { font: 500 11px/1.35 var(--font-data); color: var(--t2); overflow-wrap: anywhere; }
@@ -353,7 +349,6 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       <canvas id="ovCv" aria-hidden="true"></canvas>
       <i class="brk tl"></i><i class="brk tr"></i><i class="brk bl"></i><i class="brk br"></i>
       <div id="detBox" hidden aria-hidden="true"></div>
-      <div class="lvl" id="lvl" aria-hidden="true" data-s="off"><i class="tick a"></i><i class="tick b"></i><div class="h" id="lvlH"></div><div class="c"></div></div>
       <div id="lvlMsg" hidden><span id="lvlMsgT"></span></div>
       <div class="lvlt" id="lvlT" hidden>–</div>
       <button class="cglass" id="noRueck" type="button" hidden>Kein Rücksitz (Zweisitzer)</button>
@@ -410,40 +405,87 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
      ===================================================================== */
   var APP = 'foto-app-test-2';
   var RAD = Math.PI / 180;
+  /* =====================================================================
+     ZAHLEN DER FÜHRUNG (Giannis 08.11.2026 21:32: die Optik ist final, danach werden nur noch Zahlen nachgestellt, und zwar hier).
+     Alles in diesem Block sind VORSCHLAGSWERTE, OFFEN: Die Zahlen liefert der Autobuilder (bis dahin gelten diese). Nichts außerhalb dieses Blocks muss beim Nachstellen angefasst werden.
+     Vorzeichen der Neigung wie in der Anzeige: negativ = Kamera schaut nach unten, 0 = Handy senkrecht.
+     ===================================================================== */
+  var FUEHRUNG = {
+    stand: 'v9-autobuilder-18118d7',
+    // Quelle: Autobuilder, werkzeuge/arbeiter/fuehrung.json (Commit 18118d7, 08.11.2026 abends). (S) = Schätzung, bleibt Vorschlag. Nur die Zahlen hier stellt man nach, die Optik bleibt.
+    // Maßstab des Autobuilders: Grün = bis 7,5 cm Höhenfehler im Showroom (ohnehin unvermeidbar), Gelb = bis 15 cm (Grenze 1,05 bis 1,65 m), Rot = mehr.
+
+    // Abstand (m): mitte = waagerecht von der Kamera zur AUTOMITTE (Räume: Kamera 4,7 m vor der Tellermitte). Seite 5,2 m: Giannis hat „5.2“ entschieden (08.11. ca. 21:50, gesagt dem Autobuilder; ersetzt die 6 m).
+    // zone: um die Bodentiefe zum nächsten Radaufstand: grün [näher, weiter], gelb [näher, weiter]; näher als gelb = rot, weiter als gelb = rot (ferneRot) oder gelb (ferneRot: false).
+    // boden: Bodentiefe zum nächsten Radaufstand je Platz und Klasse (Reihenfolge Kleinwagen, Kompakt, Limousine/Kombi, SUV, Coupé/Sport, Cabrio) bei Soll-Abstand; fehlt ein Wert, wird aus dem Rahmen der Schablone gerechnet.
+    // rotBreite, halbbreite: nur Optik (wie tief die rote Zone gezeichnet wird, halbe Breite am Boden); seiteVoll: Seite zu nah, wenn das Auto so viel der Bildbreite füllt (92-%-Warnung)
+    abstand: {
+      mitte: { rundum: 4.7, seite: 5.2 },
+      zone: { rundum: { gruen: [-0.20, 0.25], gelb: [-0.35, 0.50] }, seite: { gruen: [-0.30, 0.20], gelb: [-0.50, 1.00] } },
+      ferneRot: true, rotBreite: 1.2, halbbreite: 2.4, seiteVoll: 0.92,
+      bodenKlassen: ['kleinwagen', 'kompakt', 'limousine_kombi', 'suv', 'coupe_sport', 'cabrio'],
+      boden: {
+      titel: [3.29, 3.19, 2.91, 3.00, 3.16, 3.22],
+      dreiviertel_vr: [3.29, 3.19, 2.91, 3.00, 3.16, 3.22],
+      dreiviertel_hl: [3.12, 3.10, 3.09, 3.07, 3.21, 3.22],
+      dreiviertel_hr: [3.12, 3.10, 3.09, 3.07, 3.21, 3.22],
+      front: [3.53, 3.43, 3.14, 3.24, 3.40, 3.46],
+      heck: [3.35, 3.33, 3.34, 3.32, 3.46, 3.46],
+      seite_l: [4.33, 4.31, 4.28, 4.28, 4.29, 4.31],
+      seite_r: [4.33, 4.32, 4.28, 4.28, 4.29, 4.31]
+      }
+    },
+    // Gruppe je Platz für die Neigung
+    gruppe: { titel: 'v34', dreiviertel_vr: 'v34', dreiviertel_hl: 'h34', dreiviertel_hr: 'h34', front: 'frontheck', heck: 'frontheck', seite_l: 'seite', seite_r: 'seite', seite: 'seite' },
+    // Zielneigung je Haltehöhe aus dem Link (&h=1m|bereich|brust = 1,20 | 1,35 | 1,50 m), Grad, negativ = Kamera schaut nach unten; bild = Auto mit 5 % Rand ganz im Bild: außerhalb rot
+    neigung: {
+      v34: { ziel: { '1m': -9, bereich: -11, brust: -14 }, bild: [-17, -6] },
+      h34: { ziel: { '1m': -9, bereich: -11, brust: -14 }, bild: [-16, -6] },
+      frontheck: { ziel: { '1m': -8, bereich: -11, brust: -13 }, bild: [-17, -5] },
+      seite: { ziel: { '1m': -6, bereich: -8, brust: -10 }, bild: [-18, 4] }
+    },
+    neigungTol: { gruen: 3, gelb: 5 },                       // Außenplätze: grün ±3° um das Ziel (S), gelb ±5°
+    rollen: { aussen: { gruen: 1, gelb: 2 }, innen: { gruen: 2, gelb: 4 } },   // (S) Ziel 0°
+    // Innenplätze (S): Zielneigung, grün ±, gelb ± (Innenbilder bleiben im Original, nur für einheitliche Bilder)
+    innen: { cockpit: { ziel: -5, gruen: 5, gelb: 10 }, tacho: { ziel: -15, gruen: 7, gelb: 12 }, vordersitze: { ziel: -10, gruen: 5, gelb: 10 }, ruecksitzbank: { ziel: -10, gruen: 5, gelb: 10 }, kofferraum: { ziel: -25, gruen: 8, gelb: 15 } },
+    // Auto im Sucher (S): Abstand der Automitte von der Mitte der Schablone, Anteil der Bildbreite: grün, gelb, darüber rot; rand = Mindestrand zum Bildrand
+    mitte: { gruen: 0.05, gelb: 0.10, rand: 0.02 },
+    // Haltehöhe: grün 1,15 bis 1,55 m, gelb 1,05 bis 1,65 m (Räume 1,20 / 1,35 / 1,50): die drei Links-Werte liegen immer im Grün. Die Höhe je Person messen kommt später (Hinweis des Autobuilders).
+    haltehoehe: { gruen: [1.15, 1.55], gelb: [1.05, 1.65] },
+    // Ruhig: Schwankung (Standardabweichung in Grad) über 0,7 s (Schwellen aus Probe 4)
+    ruhig: { p: 0.35, r: 0.25 },
+    // Zeiten in ms: notloesung = so lange darf der Händler ohne Grün warten, dann darf er trotzdem auslösen (Foto gilt als „nicht geprüft“); ohneSensor = dasselbe ohne Sensor;
+    // ruhig = so lange müssen alle Punkte grün sein, bevor es freigegeben wird; erkennung = frühestens alle so viele ms eine Auto-Erkennung (am iPhone flüssig halten)
+    zeiten: { notloesung: 10000, ohneSensor: 2500, ruhig: 500, erkennung: 300 },
+    // Klick-Ton bei Grün (wird nach dem ersten Tippen freigeschaltet, wegen iOS)
+    ton: true
+  };
   var CFG = {
     LONG_EDGE: 2560, QUALITY: 0.85,
     SETTLE_MS: 1500,            // Einschwingzeit nach Kamerastart
-    FREIGABE_FIRST_MS: 10000,   // Auslöser von Hand: bleiben die Bedingungen so lange unerfüllt, gibt die App trotzdem frei (erstes Foto), mit gelbem Hinweis
-    FREIGABE_NEXT_MS: 7000,     // und bei den folgenden Fotos
-    FREIGABE_OHNE_SENSOR_MS: 2500,   // ohne Sensorwerte gibt die App nach so langer Zeit frei (gelber Hinweis)
-    // Notlösung bei Gelb oder Rot (bei Giannis OFFEN, Alfred stellt um): darf man nach FREIGABE_FIRST_MS / FREIGABE_NEXT_MS trotzdem auslösen?
-    //   'gelb_rot' = bei Gelb und Rot (bisheriges Verhalten), 'gelb' = nur bei Gelb, 'aus' = nie, nur bei Grün. Ohne Sensor bleibt es bei FREIGABE_OHNE_SENSOR_MS.
-    NOTLOESUNG: 'gelb_rot',
     NACH_MAX_MS: 900, NACH_FENSTER_MS: 220, NACH_RUHIG_MS: 120,   // nach dem Tipp kurz nachstabilisieren (der Tipp wackelt), höchstens so lange
-    STILL_P: 0.35, STILL_R: 0.25, STILL_MS: 500, FRESH_MS: 250,   // Schwellen aus Probe 4 (ruhig); Neigung und Rollen kommen aus AMPEL
+    STILL_P: FUEHRUNG.ruhig.p, STILL_R: FUEHRUNG.ruhig.r, STILL_MS: FUEHRUNG.zeiten.ruhig, FRESH_MS: 250,   // ruhig (Schwellen aus Probe 4); FRESH_MS: Sensorwert höchstens so alt
     ZUSATZ_MAX: 6
   };
   // Umschaltbare Vorgaben. VORSCHLAG, OFFEN (nicht von Giannis entschieden, Stand 08.11.2026):
   // Anrede „Sie“, Kamerahöhe ca. 1 m (Unterkante Frontscheibe), Ampel-Grenzen unverändert bis nach dem Händlertest.
   // Umschalten im Link: &a=du|sie, &h=bereich|1m|brust, &debug (Messwerte in der Ansicht). Die Wahl landet in app_details.variante.
   var VAR = { anrede: 'sie', hoehe: 'bereich', debug: false };
-  // Ampel (Giannis 08.11.2026 21:16): Rahmen, Waage und Auslöser zeigen Grün (Winkel im Ziel und Handy ruhig: Foto möglich), Gelb (knapp daneben, bitte anpassen), Rot (deutlich daneben).
-  // Neigung wird als Abweichung vom Zielwinkel des Platzes (ZIEL_NEIGUNG) bewertet. Vorzeichen wie in der Anzeige: negativ = Kamera schaut nach unten, 0 = Handy senkrecht.
-  // VORSCHLAG, OFFEN (bei Giannis): gelb = ab dieser Abweichung gelb (bis dahin grün), rot = ab dieser Abweichung rot. Grün: Neigung ±3°, Rollen ±1,5°; Gelb bis ±6° und ±3°; darüber Rot.
-  // Warum ±3°: 3° Neigung verschieben das Auto im Bild um ca. 5 % der Bildhöhe, so viel Rand lässt der Rahmen; 6° wären ca. 10 %. (Bisher: grün ±6° / ±1°, rot ab ±12° / ±2,5° mit Ziel −10° für alle Plätze.)
-  var AMPEL = { gelb: { p: 3, r: 1.5 }, rot: { p: 6, r: 3 }, p0: -10 };
-  // Zielwinkel je Platz (Neigung in Grad, Rollen immer 0°). VORSCHLAG, OFFEN (mit dem Autobuilder abzustimmen):
-  // Rundum −10° aus Giannis' Freihand-Fotos (Mittel 10,4°, bestätigt 08.11.2026); Seite (6 m, weiter weg, flacher) −7°: dort steht das Auto bei −7° senkrecht mittig im Bild.
-  // Zur Info (Auto senkrecht mittig im 4:3-Bild): Rundum −11° bei Kamerahöhe 1,20 m, −14° bei 1,35 m, −16,5° bei 1,50 m; Seite −5° / −7° / −8,5°. Innenplätze: Neigung frei, nur Rollen zählt.
-  var ZIEL_NEIGUNG = { titel: -10, dreiviertel_vr: -10, front: -10, dreiviertel_hr: -10, heck: -10, dreiviertel_hl: -10, seite_l: -7, seite_r: -7, seite: -7 };
-  function zielP(key) { return ZIEL_NEIGUNG[key] != null ? ZIEL_NEIGUNG[key] : null; }
-  function drawP(key) { var z = zielP(key); return z != null ? z : AMPEL.p0; }   // Neigung, mit der die Schablone gezeichnet wird
+  function platzMeta(key) { var m = key ? slotMeta(key) : null; return m || {}; }
+  function zielP(key) {   // Zielneigung des Platzes (Außen: je Haltehöhe, Innen: fest) oder null (frei)
+    var g = FUEHRUNG.gruppe[key]; if (g) return FUEHRUNG.neigung[g].ziel[VAR.hoehe];
+    var i = FUEHRUNG.innen[key]; return i ? i.ziel : null;
+  }
+  function tolP(key) { var i = FUEHRUNG.innen[key]; return i ? { g: i.gruen, y: i.gelb } : { g: FUEHRUNG.neigungTol.gruen, y: FUEHRUNG.neigungTol.gelb }; }   // grün ±g, gelb ±y
+  function tolR(key) { var r = FUEHRUNG.innen[key] ? FUEHRUNG.rollen.innen : FUEHRUNG.rollen.aussen; return { g: r.gruen, y: r.gelb }; }
+  function bildBereich(key) { var g = FUEHRUNG.gruppe[key]; return g ? FUEHRUNG.neigung[g].bild : null; }
+  function drawP(key) { var z = zielP(key); return z != null ? z : FUEHRUNG.neigung.v34.ziel[VAR.hoehe]; }   // Neigung, mit der die Schablone und Beispielbilder gezeichnet werden
   // Vorgaben aus Giannis' Freihand-Fotos vom 08.11.2026 (Messung Autobuilder, Audi A6, Tiefgarage). VORSCHLAG, OFFEN, bis Giannis die Werte bestätigt.
   // winkel: Dreiviertel, Richtung Kamera zur Fahrzeugmitte gegen die Längsachse (heute 21 bis 23°, V2 hatte 28°).
   // eckeM: Abstand zur nächsten Ecke bzw. Stoßstange (heute 1,9 bis 2,2 m; V2: 5,0 m zur Mitte = 2,4 m zur Ecke, 4,5 m bei Front/Heck = 2,0 m).
   // seiteMitteM: Seite wurde heute nicht gemessen, nur V2 (5,0 m zur Mitte); dafür nennen die Hinweistexte keine Zahl.
   // Seite: 6,0 m zur Fahrzeugmitte seit dem Design-Stand (Vorgabe Autobuilder, A6 füllt dort 73 %); am echten Auto noch nicht geprüft.
-  var GEO = { stand: 'freihand-2026-11-08+seite6', winkel: 22, eckeM: 2.0, seiteMitteM: 6.0, autoL: 4.9, autoB: 1.9 };
+  var GEO = { stand: 'autobuilder-f708078', winkel: 22, eckeM: 0, seiteMitteM: FUEHRUNG.abstand.mitte.seite, mitteM: FUEHRUNG.abstand.mitte.rundum, autoL: 4.9, autoB: 1.9 };   // Standpunkt: 22° neben der Längsachse, mitteM zur Automitte (eckeM nicht mehr benutzt)
   function T(du, sie) { return VAR.anrede === 'du' ? du : sie; }
   function hoeheHint() {
     if (VAR.hoehe === 'brust') return 'Handy auf Brusthöhe (ca. 1,5 m).';
@@ -454,12 +496,12 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   // Pflicht: 6 außen + 4 innen (Cockpit, Tacho, Vordersitze, Rücksitzbank). Freiwillig: Seite Fahrerseite und Beifahrerseite (SEITEN) und Kofferraum (INNEN_FREI).
   // Rücksitzbank: bei allen Autos Pflicht; ein Zweisitzer meldet sich mit dem Knopf „Kein Rücksitz“ (dann 9 Bilder). Schlüssel wie im Schema `plaetze` (titel = dreiviertel_vl).
   var PLAETZE = [
-    { key: 'titel', nr: 1, art: 'aussen', name: 'Dreiviertel vorn Fahrerseite', sub: 'Titelbild', hint: 'Schräg vor die vordere Ecke auf der Fahrerseite, etwa 2 m Abstand. Scheinwerfer und Fahrerseite im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
-    { key: 'front', nr: 2, art: 'aussen', name: 'Front', hint: 'Genau vor das Auto, mittig, etwa 2 m vor der Stoßstange. Scheinwerfer im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
-    { key: 'dreiviertel_vr', nr: 3, art: 'aussen', name: 'Dreiviertel vorn Beifahrerseite', hint: 'Schräg vor die vordere Ecke auf der Beifahrerseite, etwa 2 m Abstand. Scheinwerfer und Beifahrerseite im Bild (vorn, nicht das Heck), das ganze Auto mit Rand. Niemand im Auto.' },
-    { key: 'dreiviertel_hr', nr: 4, art: 'aussen', name: 'Dreiviertel hinten Beifahrerseite', hint: 'Schräg hinter die hintere Ecke auf der Beifahrerseite, etwa 2 m Abstand. Rückleuchten und Beifahrerseite im Bild (hinten, nicht die Front), das ganze Auto mit Rand. Niemand im Auto.' },
-    { key: 'heck', nr: 5, art: 'aussen', name: 'Heck', hint: 'Genau hinter das Auto, mittig, etwa 2 m hinter der Stoßstange. Rückleuchten im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
-    { key: 'dreiviertel_hl', nr: 6, art: 'aussen', name: 'Dreiviertel hinten Fahrerseite', hint: 'Schräg hinter die hintere Ecke auf der Fahrerseite, etwa 2 m Abstand. Rückleuchten und Fahrerseite im Bild (hinten, nicht die Front), das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'titel', nr: 1, art: 'aussen', name: 'Dreiviertel vorn Fahrerseite', sub: 'Titelbild', hint: 'Schräg vor die vordere Ecke auf der Fahrerseite, etwa 5 m von der Automitte. Scheinwerfer und Fahrerseite im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'front', nr: 2, art: 'aussen', name: 'Front', hint: 'Genau vor das Auto, mittig, etwa 5 m von der Automitte, also etwa 2,5 m vor dem Kennzeichen. Scheinwerfer im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'dreiviertel_vr', nr: 3, art: 'aussen', name: 'Dreiviertel vorn Beifahrerseite', hint: 'Schräg vor die vordere Ecke auf der Beifahrerseite, etwa 5 m von der Automitte. Scheinwerfer und Beifahrerseite im Bild (vorn, nicht das Heck), das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'dreiviertel_hr', nr: 4, art: 'aussen', name: 'Dreiviertel hinten Beifahrerseite', hint: 'Schräg hinter die hintere Ecke auf der Beifahrerseite, etwa 5 m von der Automitte. Rückleuchten und Beifahrerseite im Bild (hinten, nicht die Front), das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'heck', nr: 5, art: 'aussen', name: 'Heck', hint: 'Genau hinter das Auto, mittig, etwa 5 m von der Automitte, also etwa 2,5 m hinter dem Kennzeichen. Rückleuchten im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'dreiviertel_hl', nr: 6, art: 'aussen', name: 'Dreiviertel hinten Fahrerseite', hint: 'Schräg hinter die hintere Ecke auf der Fahrerseite, etwa 5 m von der Automitte. Rückleuchten und Fahrerseite im Bild (hinten, nicht die Front), das ganze Auto mit Rand. Niemand im Auto.' },
     { key: 'cockpit', nr: 7, art: 'innen', name: 'Cockpit', hint: 'Foto von Rücksitzbank aus, mittig. Zündung an, Lenkrad und Armaturenbrett im Bild.' },
     { key: 'tacho', nr: 8, art: 'innen', name: 'Tacho', hint: 'Zündung an. Kilometerstand gut lesbar.' },
     { key: 'vordersitze', nr: 9, art: 'innen', name: 'Vordersitze', hint: 'Fahrertür auf. Von außen durch die offene Tür beide Vordersitze im Bild.' },
@@ -470,8 +512,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   ];
   // Rücksitzbank: bei allen Autos Pflicht (Giannis 08.11.2026). Hat ein Auto keine (Zweisitzer), meldet der Händler das mit dem Knopf „Kein Rücksitz“; dann gelten 9 Bilder als vollständig.
   var SEITEN = [
-    { key: 'seite_l', name: 'Fahrerseite', hint: 'Freiwillig. Seitlich auf der Fahrerseite, Auto mittig, etwa 6 m von der Automitte (in engen Garagen mindestens etwa 4,5 m). Vorderräder gerade. Das ganze Auto mit Rand im Bild, vorn und hinten je etwas Platz. Niemand im Auto.' },
-    { key: 'seite_r', name: 'Beifahrerseite', hint: 'Freiwillig. Seitlich auf der Beifahrerseite, Auto mittig, etwa 6 m von der Automitte (in engen Garagen mindestens etwa 4,5 m). Vorderräder gerade. Das ganze Auto mit Rand im Bild, vorn und hinten je etwas Platz. Niemand im Auto.' }
+    { key: 'seite_l', name: 'Fahrerseite', hint: 'Freiwillig. Seitlich auf der Fahrerseite, Auto mittig, etwa 5 m von der Automitte (in engen Garagen mindestens etwa 4,5 m). Vorderräder gerade. Das ganze Auto mit Rand im Bild, vorn und hinten je etwas Platz. Niemand im Auto.' },
+    { key: 'seite_r', name: 'Beifahrerseite', hint: 'Freiwillig. Seitlich auf der Beifahrerseite, Auto mittig, etwa 5 m von der Automitte (in engen Garagen mindestens etwa 4,5 m). Vorderräder gerade. Das ganze Auto mit Rand im Bild, vorn und hinten je etwas Platz. Niemand im Auto.' }
   ];
   function ohneRueck() { return !!(S.vehicle && S.vehicle.keineRueck); }
   function rueckPflicht() { return !ohneRueck(); }
@@ -573,16 +615,15 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   // Kamerahöhe aus der Link-Wahl: Räume 1,20 / 1,35 / 1,50 m (Autobuilder)
   function camH() { return VAR.hoehe === 'brust' ? 1.5 : VAR.hoehe === '1m' ? 1.2 : 1.35; }
   function klasseOf() { var k = S.vehicle && S.vehicle.klasse; if (k === 'van') k = 'suv'; return k && KINDS[k] ? k : null; }
-  function camPose(key, kind, h, ang, eck) {
-    var K = KINDS[kind], hl = K.L / 2, hw = K.W / 2, a = ang * RAD;
-    if (key === 'front') return { P: [hl + eck, 0, h], d: hl + eck, ang: 0 };
-    if (key === 'heck') return { P: [-(hl + eck), 0, h], d: hl + eck, ang: 0 };
-    if (key === 'seite' || key === 'seite_l') return { P: [0, GEO.seiteMitteM, h], d: GEO.seiteMitteM, ang: 90 };
-    if (key === 'seite_r') return { P: [0, -GEO.seiteMitteM, h], d: GEO.seiteMitteM, ang: 90 };
-    var fx = (key === 'dreiviertel_hl' || key === 'dreiviertel_hr') ? -1 : 1, fy = (key === 'dreiviertel_vr' || key === 'dreiviertel_hr') ? -1 : 1, cx = fx * hl, cy = fy * hw, lo = 3.5, hi = 14, i;
-    for (i = 0; i < 40; i++) { var m = (lo + hi) / 2, d = Math.hypot(fx * m * Math.cos(a) - cx, fy * m * Math.sin(a) - cy); if (d < eck) lo = m; else hi = m; }
-    var dd = (lo + hi) / 2;
-    return { P: [fx * dd * Math.cos(a), fy * dd * Math.sin(a), h], d: dd, ang: ang };
+  // Standpunkt des Händlers: Front und Heck auf der Längsachse, Dreiviertel 22° neben der Längsachse, jeweils GEO.mitteM zur Automitte; Seite 90° davon, seiteMitteM (dOff: nur Demo-Kamera)
+  function camPose(key, kind, h, ang, eck, dOff) {
+    var d0 = dOff || 0, D = GEO.mitteM + d0, S2 = GEO.seiteMitteM + d0, a = ang * RAD;
+    if (key === 'front') return { P: [D, 0, h], d: D, ang: 0 };
+    if (key === 'heck') return { P: [-D, 0, h], d: D, ang: 0 };
+    if (key === 'seite' || key === 'seite_l') return { P: [0, S2, h], d: S2, ang: 90 };
+    if (key === 'seite_r') return { P: [0, -S2, h], d: S2, ang: 90 };
+    var fx = (key === 'dreiviertel_hl' || key === 'dreiviertel_hr') ? -1 : 1, fy = (key === 'dreiviertel_vr' || key === 'dreiviertel_hr') ? -1 : 1;
+    return { P: [fx * D * Math.cos(a), fy * D * Math.sin(a), h], d: D, ang: ang };
   }
   // Pinhole-Kamera: f aus 26 mm (Kleinbild) und Bildbreite; Blick auf Zielpunkt T (Höhe 0) mit Neigung pitchDeg
   function makeCam(P, f, cx0, cy0, pitchDeg, T) {
@@ -632,7 +673,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     function two(build, w1, w2, fillCol) { [['rgba(0,0,0,.45)', w1], [col, w2]].forEach(function (ps) { build(); if (fillCol && ps[0] === col) { c.fillStyle = fillCol; c.fill(); } c.strokeStyle = ps[0]; c.lineWidth = ps[1]; c.stroke(); }); }
     function frame() { c.beginPath(); c.moveTo(rx + rr, ry); c.arcTo(rx + rw, ry, rx + rw, ry + rh, rr); c.arcTo(rx + rw, ry + rh, rx, ry + rh, rr); c.arcTo(rx, ry + rh, rx, ry, rr); c.arcTo(rx, ry, rx + rw, ry, rr); c.closePath(); }
     c.setLineDash([12 * lk, 9 * lk]); two(frame, 7 * lk, 3.8 * lk); c.setLineDash([]);
-    M.wheels.forEach(function (w) { var p = cam([w.x, w.y, 0]); if (p[2] < .2) return; two(function () { c.beginPath(); c.ellipse(p[0], p[1], 8 * lk, 2.8 * lk, 0, 0, 6.2832); }, 4 * lk, 1.2 * lk, col); });
+    // Radmarken: passt der Abstand (Räder in der grünen Zone), gehen sie auf, also nur noch als offener Ring
+    M.wheels.forEach(function (w) { var p = cam([w.x, w.y, 0]); if (p[2] < .2) return; if (o.open) two(function () { c.beginPath(); c.ellipse(p[0], p[1], 10 * lk, 3.6 * lk, 0, 0, 6.2832); }, 5 * lk, 2.2 * lk); else two(function () { c.beginPath(); c.ellipse(p[0], p[1], 8 * lk, 2.8 * lk, 0, 0, 6.2832); }, 4 * lk, 1.2 * lk, col); });
+    if (o.res) o.res.rect = { rx: rx, ry: ry, rw: rw, rh: rh };
     c.restore();
   }
   function drawCar(c, cam, kind, o) {
@@ -660,8 +703,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   }
   // Szene w x hh (Bildfläche, Breite = Bildbreite): Auto, wie der Händler es ausrichtet
   function drawScene(cv, w, hh, o) {
-    var c = setup(cv, w, hh), kind = o.kind, pose = camPose(o.key, kind, o.h, o.ang, GEO.eckeM), cam = makeCam(pose.P, frameF(w), w / 2, hh / 2, o.pitch, [aimShift(o.key, kind, o.h, o.ang, o.pitch, w, hh), 0, 0]);
+    var c = setup(cv, w, hh), kind = o.kind, pose = camPose(o.key, kind, o.h, o.ang, GEO.eckeM, o.dOff), cam = makeCam(pose.P, frameF(w), w / 2, hh / 2, o.pitch, [aimShift(o.key, kind, o.h, o.ang, o.pitch, w, hh) + (o.dx || 0), 0, 0]);
     c.clearRect(0, 0, w, hh);
+    if (o.roll) { c.translate(w / 2, hh / 2); c.rotate(o.roll * RAD); c.translate(-w / 2, -hh / 2); }   // nur Demo-Kamera: Handy schief
     if (o.bg === 'hof') bgHof(c, w, hh, cam);
     drawCar(c, cam, kind, o);
   }
@@ -722,7 +766,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         if (p.get('ai') === 'aus') cfg.ai = 'aus';   // Auto-Erkennung abschalten (falls sie am Handy stört)
         if (p.has('hs')) cfg.hs = true;                // Home-Bildschirm: Link-Teil bleibt in der Adresse, damit das Symbol ihn mitnimmt
         if (p.has('sim') && cfg.demo) cfg.sim = true;  // nur im Demo ohne Server: gezeichnete Kamera
-        if (cfg.demo && /^-?\d{1,2}(\.\d)?$/.test(p.get('simoff') || '')) { cfg.sim = true; cfg.simOff = parseFloat(p.get('simoff')); }
+        if (cfg.demo && /^(gruen|rot|gelb|fern|nein|winkel|schief|mitte)$/.test(p.get('simz') || '')) { cfg.sim = true; cfg.simz = p.get('simz'); }
         if (cfg.demo && /^[\w.\/-]{1,80}$/.test(p.get('simimg') || '')) { cfg.sim = true; cfg.simImg = p.get('simimg'); }   // nur Test: Bild statt Zeichnung
         store('fa_cfg', cfg); if (!cfg.hs) { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* egal */ } } }
     }
@@ -887,12 +931,14 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (rec.length < 4) return null;
     return { p: sd(rec.map(function (s) { return s.p; })), r: sd(rec.map(function (s) { return s.r; })), n: rec.length };
   }
-  // Stufe des Winkels für den Platz: 0 grün, 1 gelb, 2 rot; why = die Anweisung für die größere Abweichung (Neigung nur bei Außenplätzen mit Zielwinkel)
+  // Stufe des Winkels für den Platz: 0 grün, 1 gelb, 2 rot; why = die Anweisung für die größere Abweichung. Außen: Neigung zum Ziel des Platzes (±3° grün, ±5° gelb, außerhalb des Bildbereichs rot), Rollen ±1° / ±2°.
+  // Innen: Neigung zum Ziel des Platzes mit eigenen Grenzen, Rollen ±2° / ±4°. Plätze ohne Ziel (Zusatzbilder): nur Rollen.
   function ampelWinkel(slotId, s) {
-    var m = slotId ? slotMeta(slotId) : null, z = (m && m.art === 'aussen') ? zielP(m.key) : null, dp = z != null ? s.p - z : 0, ap = Math.abs(dp), ar = Math.abs(s.r);
-    var lvl = (ap > AMPEL.rot.p || ar > AMPEL.rot.r) ? 2 : (ap > AMPEL.gelb.p || ar > AMPEL.gelb.r) ? 1 : 0, why = '';
-    if (lvl) why = (ar / AMPEL.gelb.r >= ap / AMPEL.gelb.p) ? T('Halte es gerade', 'Handy gerade halten') : (dp > 0 ? 'Handy mehr nach unten neigen' : 'Handy etwas aufrichten');
-    return { lvl: lvl, dp: dp, p0: z, why: why };
+    var m = platzMeta(slotId), key = m.key, z = zielP(key), tp = tolP(key), tr = tolR(key), dp = z != null ? s.p - z : 0, ap = Math.abs(dp), ar = Math.abs(s.r), br = m.art === 'aussen' ? bildBereich(key) : null;
+    var raus = !!(br && (s.p < br[0] || s.p > br[1]));
+    var lvl = (ap > tp.y || ar > tr.y || raus) ? 2 : (ap > tp.g || ar > tr.g) ? 1 : 0, why = '';
+    if (lvl) why = (ar / tr.g >= ap / tp.g) ? 'Gerade halten' : (dp > 0 ? 'Handy etwas nach unten kippen' : 'Handy etwas nach oben kippen');
+    return { lvl: lvl, dp: dp, p0: z, tolG: tp.g, why: why };
   }
   function gravClass() {
     var n = performance.now(), last = samples[samples.length - 1];
@@ -908,56 +954,49 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function isLandCls(c) { return c !== null && /^quer/.test(c); }
   function holdLandscape() { var c = gravClass(); return c === null ? landscapeNow() : isLandCls(c); }
   // Freigabe des Auslösers (Giannis 08.11.2026): kein Selbstauslöser mehr, der Nutzer löst immer selbst aus.
-  // Frei (grün), wenn quer, Winkel im Ziel (Neigung und Rollen, siehe AMPEL und ZIEL_NEIGUNG), ruhig und der Sensorwert frisch ist, zusammen STILL_MS lang.
-  // Kein Festhängen: ohne Sensor nach FREIGABE_OHNE_SENSOR_MS, sonst je nach CFG.NOTLOESUNG nach maxMs trotzdem frei (gelber Hinweis).
+  // Frei (grün), wenn alle Punkte passen (Abstand, Mitte, Winkel, ruhig; siehe fuehrung()), zusammen FUEHRUNG.zeiten.ruhig lang.
+  // Kein Festhängen: nach FUEHRUNG.zeiten.notloesung (ohne Sensor ohneSensor) gibt die App trotzdem frei; das Foto gilt dann als „nicht geprüft“ (app_details.fuehrung).
   function gateState() {
-    var now = performance.now();
-    if (S.cfg && S.cfg.sim) { var ss = simSnap(), sa = ampelWinkel(S.cur, ss); return sa.lvl ? { good: false, lvl: sa.lvl, why: sa.why } : { good: true, lvl: 0 }; }   // nur Demo mit &sim: erfundene Sensorwerte, immer ruhig
-    if (!sensorsOn || !lastOriT || now - lastOriT > 1500) return { good: false, noSensor: true, lvl: 1, why: 'Warte auf Sensor …' };
-    var sh = shake(700), sn = snapshot();
-    if (now - lastOriT >= CFG.FRESH_MS || !sn) return { good: false, lvl: 1, why: 'Warte auf Sensor …' };
-    if (!holdLandscape()) return { good: false, lvl: 2, why: T('Halte das Handy quer', 'Handy quer halten') };
-    var aw = ampelWinkel(S.cur, sn);
-    if (aw.lvl) return { good: false, lvl: aw.lvl, why: aw.why };
-    if (!sh || sh.n < 4 || sh.p > CFG.STILL_P || sh.r > CFG.STILL_R) return { good: false, lvl: 1, why: T('Halte still', 'Handy ruhig halten') };
-    return { good: true, lvl: 0 };
+    var R = fuehrung();
+    if (!R.sensor) return { good: false, noSensor: true, lvl: 1, why: '', R: R };
+    return { good: R.alle, lvl: R.lvl, why: R.hint, R: R };
   }
   function gateUi(ctl, prog) {
-    var key = ctl.forced ? (ctl.noSensor ? 'fn' : 'f') : ctl.released ? 'ok' : 'dim:' + ctl.shown;
+    var key = ctl.forced ? (ctl.noSensor ? 'fn' : 'f') : ctl.released ? 'ok' : 'dim';
     if (ctl.ui !== key) {
       ctl.ui = key;
       if (ctl.released) {
         shotReady(true, ctl.forced);
-        $('stillTxt').innerHTML = ctl.forced ? '<i class="dot warn"></i> ' + (ctl.noSensor ? 'Ohne Sensor, trotzdem möglich' : 'Nicht ideal, trotzdem möglich') : '<i class="dot ok"></i> Jetzt auslösen';
-        $('stillSub').textContent = ctl.forced ? 'Jetzt auslösen' : '';
+        $('stillTxt').innerHTML = ctl.forced ? '<i class="dot warn"></i> ' + (ctl.noSensor ? 'Ohne Sensor, nicht geprüft' : 'Nicht geprüft, trotzdem möglich') : '<i class="dot ok"></i> Passt, jetzt auslösen';
+        $('stillSub').textContent = '';
         setStill(100);
       } else {
         shotReady(false);
-        $('stillTxt').textContent = ctl.shown || T('Halte still …', 'Halten Sie still …');
-        $('stillSub').textContent = 'Noch nicht frei';
+        $('stillTxt').textContent = 'Noch nicht frei';
+        $('stillSub').textContent = '';
       }
     }
     if (!ctl.released) setStill(prog);
   }
-  function notlosungOk(lvl) { return CFG.NOTLOESUNG === 'gelb_rot' || (CFG.NOTLOESUNG === 'gelb' && lvl <= 1); }
   async function gateLoop(my, maxMs, ctl) {
     var t0 = performance.now(), okSince = 0, badSince = 0;
     while (!ctl.tapped) {
       chk(my);
       var now = performance.now(), el = now - t0, g = gateState();
+      ctl.g = g.R;
       if (g.good) {
         badSince = 0; if (!okSince) okSince = now;
         if (now - okSince >= CFG.STILL_MS) {
-          if (!ctl.released) { ctl.released = true; ctl.at = Math.round(el); haptic(18); }
-          else if (ctl.forced) { ctl.forced = false; ctl.noSensor = false; haptic(18); }   // Notlösung war frei, jetzt passt alles: wieder grün
+          if (!ctl.released) { ctl.released = true; ctl.at = Math.round(el); haptic(18); sndKlick(); }
+          else if (ctl.forced) { ctl.forced = false; ctl.noSensor = false; ctl.grund = []; haptic(18); sndKlick(); }   // Notlösung war frei, jetzt passt alles: wieder grün
         }
       } else {
         okSince = 0;
         if (ctl.released && !ctl.forced) { if (!badSince) badSince = now; if (now - badSince > 400) { ctl.released = false; badSince = 0; } }
       }
-      if (!ctl.released && (g.noSensor ? el >= CFG.FREIGABE_OHNE_SENSOR_MS : (notlosungOk(g.lvl) && el >= maxMs))) { ctl.released = true; ctl.forced = true; ctl.noSensor = !!g.noSensor; ctl.at = Math.round(el); haptic(18); }
-      ctl.reason = g.good ? '' : g.why;
-      if (g.good) { ctl.shown = ''; ctl.shownT = now; } else if (!ctl.shown || now - ctl.shownT > 700) { ctl.shown = g.why; ctl.shownT = now; }   // der Grund flackert nicht: mindestens 0,7 s stehen lassen
+      // Notlösung (Giannis 08.11.2026): wird es nicht grün, darf der Händler nach FUEHRUNG.zeiten trotzdem auslösen; das Foto gilt dann als „nicht geprüft“
+      if (!ctl.released && (g.noSensor ? el >= FUEHRUNG.zeiten.ohneSensor : el >= maxMs)) { ctl.released = true; ctl.forced = true; ctl.noSensor = !!g.noSensor; ctl.at = Math.round(el); ctl.grund = g.R.grund.slice(); haptic(18); }
+      ctl.reason = g.good ? '' : (g.why || 'Noch nicht frei');
       gateUi(ctl, okSince ? (now - okSince) / CFG.STILL_MS * 100 : 0);
       await sleep(80);
     }
@@ -1019,25 +1058,168 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     drawOverlay(); if (!$('vRev').hidden && S.review) drawExample();
   }
   // Schablone (Umriss des Autos, wie es im Bild stehen soll) über dem Kamerabild; Innenplätze: gestrichelter Rahmen. Nur zur Orientierung.
-  // Farbe von Rahmen und Schablone nach der Ampel (S.frameCol, gesetzt in der Überwachung): grün = Foto möglich, gelb = bitte anpassen, rot = falsch
-  function frameCol() { return S.frameCol === 'gruen' ? '#5BD08A' : S.frameCol === 'rot' ? '#FF6B5E' : '#FFC77C'; }
+  /* =====================================================================
+     Führung beim Fotografieren (Giannis 08.11.2026 21:32). Was gezeichnet und gesagt wird, kommt aus fuehrung(); alle Zahlen stehen in FUEHRUNG.
+     Boden: aus der Neigung laut Sensor und der Haltehöhe aus dem Link (&h) wird gerechnet, es wird nichts gemessen. Die Erkennung liefert nur Unterkante und Mitte des Autos.
+     Reihenfolge der Hinweise, immer nur einer: Abstand, Mitte, Winkel, zuletzt Ruhig halten. Grün heißt: alles passt und das Handy ist ruhig.
+     ===================================================================== */
+  var COLG = '#5BD08A', COLY = '#FFC77C', COLR = '#FF6B5E';
+  function hexA(hex, a) { var n = parseInt(hex.slice(1), 16); return 'rgba(' + (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255) + ',' + a + ')'; }
+  function lvlCol(l) { return l >= 2 ? COLR : l === 1 ? COLY : COLG; }
+  // Bildzeile eines Bodenpunkts in der Tiefe Z (m, waagerecht entlang der Blickrichtung); p = Neigung in Grad (negativ = nach unten), f = Brennweite in Pixeln, cy = Bildmitte
+  function bodenV(Z, h, p, f, cy) { return cy + f * Math.tan(Math.atan2(h, Z) + p * RAD); }
+  function bodenU(X, Z, h, p, f, cx) { var d = -p * RAD; return cx + f * X / (Z * Math.cos(d) + h * Math.sin(d)); }
+  // rückwärts: Tiefe des Bodenpunkts in Bildzeile v (null, wenn die Zeile über dem Horizont liegt)
+  function bodenZ(v, h, p, f, cy) { var a = Math.atan((v - cy) / f) - p * RAD; return a > .02 ? h / Math.tan(a) : null; }
+  // Soll-Abstand zum nächsten Bodenpunkt des Autos: fest aus FUEHRUNG.abstand.soll oder aus dem Rahmen der Schablone (Unterkante) gerechnet
+  var zonenCache = {};
+  // Bodentiefe der Unterkante des Rahmens der Schablone (also des Autos im Bild) aus dem Kameramodell: so sieht die Unterkante aus, wenn der Händler richtig steht
+  function sollModell(key, kind) {
+    var ck = [key, kind, camH(), drawP(key)].join('|'); if (zonenCache[ck]) return zonenCache[ck];
+    var sb = schabBox(key, kind), D = bodenZ(sb.y1 * 480, camH(), drawP(key), frameF(640), 240);
+    return (zonenCache[ck] = D || 3);
+  }
+  // Soll-Bodentiefe der Zonen (zum nächsten Radaufstand): Tabelle des Autobuilders, sonst aus dem Modell
+  function sollTiefe(key, kind) {
+    var A = FUEHRUNG.abstand, kn = KLASSE_NAME[kind], i = A.bodenKlassen.indexOf(kn), row = A.boden[key];
+    if (row && i >= 0 && row[i] != null) return row[i] + (/^seite/.test(key) ? A.mitte.seite - 5.2 : A.mitte.rundum - 4.7);   // Tabelle gilt bei 4,7 m (Rundum) bzw. 5,2 m (Seite); wer den Abstand umstellt, verschiebt die Zonen mit
+    return sollModell(key, kind);
+  }
+  function abstandZonen(key, kind) {
+    var D = sollTiefe(key, kind), A = FUEHRUNG.abstand, Z = A.zone[/^seite/.test(key) ? 'seite' : 'rundum'];
+    var gl = Math.max(.6, D + Z.gruen[0]), gh = D + Z.gruen[1], yl = Math.max(.5, D + Z.gelb[0]), yh = D + Z.gelb[1];
+    return { soll: D, gruenLo: gl, gruenHi: gh, gelbLo: yl, gelbHi: yh, rotVon: Math.max(.4, yl - A.rotBreite), rotBis: yh + A.rotBreite };
+  }
+  // Stand der Auto-Erkennung für den Platz: erkannt (mit Rahmen), kein Auto, Erkennung nicht verfügbar
+  function aiDetNow() {
+    if (!aiOuter()) return { state: null };
+    if (AI.state !== 'bereit') return { state: 'aus' };
+    var c = AI.cur, now = performance.now();
+    if (!c || c.t == null || AI.n === 0) return { state: 'kein', suche: true };
+    if (now - c.t > AI.every * 2 + 600 || c.status === 'keins' || !c.box) return { state: 'kein' };
+    return { state: 'erkannt', box: c.box };
+  }
+  // Ein Ergebnis aus Sensor, Haltehöhe und Erkennung: Stufen je Punkt, der eine Hinweis, die Gründe, Zonen
+  function fuehrung() {
+    var now = performance.now(), sim = !!(S.cfg && S.cfg.sim), m = S.cur ? slotMeta(S.cur) : null, kind = klasseOf(), aussen = !!(m && m.art === 'aussen' && kind);
+    var s = sim ? simSnap() : ((sensorsOn && lastOriT && now - lastOriT <= 1500) ? snapshot() : null);
+    var R = { aussen: aussen, sensor: !!s, lvl: 0, wlvl: 1, alvl: 0, mlvl: 0, alle: false, hint: '', grund: [], det: null, zone: null };
+    if (!s) { R.lvl = 1; R.grund = ['kein_sensor']; return R; }
+    R.p = s.p; R.r = s.r;
+    if (!sim && s.age >= CFG.FRESH_MS) { R.lvl = 1; R.warte = true; return R; }
+    var f = frameF(LAY.iw), cy = LAY.ih / 2, h = camH(), ab = { lvl: 0 }, mi = { lvl: 0 }, wi, ru;
+    if (aussen) {
+      var Zn = abstandZonen(m.key, kind), det = aiDetNow(); R.zonen = Zn; R.soll = Zn.soll; R.det = det.state; R.suche = !!det.suche;
+      if (det.state === 'erkannt') {
+        var b = det.box, sb = schabBox(m.key, kind), Zd = bodenZ(b.y1 * LAY.ih, h, s.p, f, cy), rm = FUEHRUNG.mitte.rand, A = FUEHRUNG.abstand;
+        var cutB = b.y1 > 1 - rm || (b.x0 < rm && b.x1 > 1 - rm) || (/^seite/.test(m.key) && b.x1 - b.x0 >= A.seiteVoll);   // unten oder an beiden Seiten angeschnitten, Seite: ab 92 % der Bildbreite = zu nah; nur an einer Seite zählt als Mitte
+        // Die Unterkante des erkannten Autos ist vorn und hinten die Stoßstange, nicht das Rad: auf die Tiefe der Radaufstände umrechnen (Unterschied aus dem Modell), damit sie zu den Zonen passt
+        if (Zd != null) Zd += sollTiefe(m.key, kind) - sollModell(m.key, kind);
+        R.abst = Zd; R.dx = (b.x0 + b.x1) / 2 - (sb.x0 + sb.x1) / 2;
+        if (cutB || (Zd != null && Zd < Zn.gelbLo)) { ab = { lvl: 2, hint: 'Schritt zurück', grund: 'abstand_zu_nah' }; R.zone = 'rotnah'; }
+        else if (Zd != null && Zd < Zn.gruenLo) { ab = { lvl: 1, hint: 'Schritt zurück', grund: 'abstand_zu_nah' }; R.zone = 'gelbnah'; }
+        else if (Zd == null || Zd > Zn.gelbHi) { ab = { lvl: A.ferneRot ? 2 : 1, hint: 'Schritt vor', grund: 'abstand_zu_weit' }; R.zone = A.ferneRot ? 'rotfern' : 'gelbfern'; }
+        else if (Zd > Zn.gruenHi) { ab = { lvl: 1, hint: 'Schritt vor', grund: 'abstand_zu_weit' }; R.zone = 'gelbfern'; }
+        else R.zone = 'ok';
+        var adx = Math.abs(R.dx);
+        if (adx > FUEHRUNG.mitte.gruen) mi = { lvl: adx > FUEHRUNG.mitte.gelb ? 2 : 1, hint: R.dx > 0 ? 'Etwas nach rechts' : 'Etwas nach links', grund: R.dx > 0 ? 'mitte_rechts' : 'mitte_links' };
+      }
+    }
+    R.alvl = ab.lvl; R.mlvl = mi.lvl;
+    if (!sim && !holdLandscape()) wi = { lvl: 2, hint: 'Handy quer halten', grund: 'nicht_quer' };
+    else { var aw = ampelWinkel(S.cur, s); wi = { lvl: aw.lvl, hint: aw.why, grund: aw.lvl ? (aw.why === 'Gerade halten' ? 'winkel_rollen' : 'winkel_neigung') : '' }; R.p0 = aw.p0; R.tolG = aw.tolG; }
+    R.wlvl = wi.lvl;
+    var calm = true; if (!sim) { var sh = shake(700); calm = !!(sh && sh.n >= 4 && sh.p <= CFG.STILL_P && sh.r <= CFG.STILL_R); }
+    ru = calm ? { lvl: 0 } : { lvl: 1, hint: 'Ruhig halten', grund: 'unruhig' };
+    [ab, mi, wi, ru].forEach(function (x) { if (x.lvl) { R.lvl = Math.max(R.lvl, x.lvl); R.grund.push(x.grund); if (!R.hint) R.hint = x.hint; } });
+    R.alle = !R.grund.length;
+    return R;
+  }
+  // Klick-Ton bei Grün: erst nach dem ersten Tippen freigeschaltet (iOS erlaubt Ton nur nach einer Berührung)
+  var Snd = { ctx: null };
+  function sndUnlock() {
+    if (!FUEHRUNG.ton) return;
+    try { if (!Snd.ctx) { var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; Snd.ctx = new AC(); } if (Snd.ctx.state === 'suspended') Snd.ctx.resume(); } catch (e) { /* ohne Ton */ }
+  }
+  ['pointerdown', 'touchend', 'click'].forEach(function (ev) { document.addEventListener(ev, sndUnlock, { capture: true, passive: true }); });
+  function sndKlick() {
+    var c = Snd.ctx; if (!FUEHRUNG.ton || !c || c.state !== 'running') return;
+    try {
+      var t0 = c.currentTime, o = c.createOscillator(), g = c.createGain();
+      o.type = 'triangle'; o.frequency.setValueAtTime(2200, t0); o.frequency.exponentialRampToValueAtTime(1500, t0 + .03);
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.22, t0 + .004); g.gain.exponentialRampToValueAtTime(0.0001, t0 + .05);
+      o.connect(g); g.connect(c.destination); o.start(t0); o.stop(t0 + .06);
+    } catch (e) { /* ohne Ton */ }
+  }
+
+  // ---- Zeichnen: Boden, Rahmen C, Marken, Horizont mit Ausrichtungspunkt ----
+  function setupKeep(cv, w, hh) {
+    var r = Math.min(3, Math.max(2, (window.devicePixelRatio || 1) * 1.5)), W = Math.round(w * r), H = Math.round(hh * r);
+    if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+    var c = cv.getContext('2d'); c.setTransform(r, 0, 0, r, 0, 0); c.clearRect(0, 0, w, hh); return c;
+  }
+  // Farbe von Rahmen und Schablone nach der Ampel (S.frameCol, gesetzt in der Überwachung): grün = Foto möglich, gelb = bitte anpassen, rot = deutlich daneben
+  function frameCol() { return S.frameCol === 'gruen' ? COLG : S.frameCol === 'rot' ? COLR : COLY; }
+  function glassLine(c, col, w, halo) { c.strokeStyle = 'rgba(0,0,0,' + (halo == null ? .4 : halo) + ')'; c.lineWidth = w + 2.6; c.stroke(); c.strokeStyle = col; c.lineWidth = w; c.stroke(); }
+  // Bodenzonen wie bei der Rückfahrkamera: rot = zu nah, grün = passt, gelb = zu weit; liegen perspektivisch auf dem Boden und kippen mit dem Rollen
+  function drawZonen(c, R, w, hh, f, lk) {
+    var Z = R.zonen, A = FUEHRUNG.abstand, L = A.halbbreite, cx = w / 2, cy = hh / 2, h = camH(), p = R.p;
+    var fr = FUEHRUNG.abstand.ferneRot ? COLR : COLY, bands = [['rotnah', Z.rotVon, Z.gelbLo, COLR], ['gelbnah', Z.gelbLo, Z.gruenLo, COLY], ['ok', Z.gruenLo, Z.gruenHi, COLG], ['gelbfern', Z.gruenHi, Z.gelbHi, COLY], ['rotfern', Z.gelbHi, Z.rotBis, fr]];
+    function V(z) { return bodenV(z, h, p, f, cy); }
+    function U(x, z) { return bodenU(x, z, h, p, f, cx); }
+    c.save(); c.translate(cx, cy); c.rotate(R.r * RAD); c.translate(-cx, -cy); c.lineJoin = 'round'; c.lineCap = 'round';
+    bands.forEach(function (b) {
+      var act = R.zone === b[0];
+      c.beginPath(); c.moveTo(U(-L, b[1]), V(b[1])); c.lineTo(U(L, b[1]), V(b[1])); c.lineTo(U(L, b[2]), V(b[2])); c.lineTo(U(-L, b[2]), V(b[2])); c.closePath();
+      c.fillStyle = hexA(b[3], act ? .30 : (R.zone ? .12 : .17)); c.fill();
+    });
+    // Seitenlinien der Spur, dünn
+    c.setLineDash([6 * lk, 7 * lk]); [-L, L].forEach(function (x) { c.beginPath(); c.moveTo(U(x, Z.rotVon), V(Z.rotVon)); c.lineTo(U(x, Z.rotBis), V(Z.rotBis)); glassLine(c, 'rgba(255,255,255,.55)', 1.3 * lk, .25); }); c.setLineDash([]);
+    // Grenzen der Zonen
+    [[Z.rotVon, COLR], [Z.gelbLo, COLY], [Z.gruenLo, COLG], [Z.gruenHi, COLG], [Z.gelbHi, COLY], [Z.rotBis, fr]].forEach(function (g) { c.beginPath(); c.moveTo(U(-L, g[0]), V(g[0])); c.lineTo(U(L, g[0]), V(g[0])); glassLine(c, hexA(g[1], .95), 2.2 * lk, .35); });
+    c.restore();
+  }
+  // Marken links und rechts: das Auto soll dazwischen stehen (Mitte); Farbe nach dem Abstand der Automitte
+  function drawMitte(c, rect, R, w, lk) {
+    var gap = .028 * w, y0 = rect.ry + rect.rh * .36, y1 = rect.ry + rect.rh * .74, arm = 10 * lk, col = R && R.det === 'erkannt' ? lvlCol(R.mlvl) : 'rgba(255,255,255,.8)';
+    c.save(); c.lineCap = 'round'; c.lineJoin = 'round';
+    [[rect.rx - gap, 1], [rect.rx + rect.rw + gap, -1]].forEach(function (k) { c.beginPath(); c.moveTo(k[0] + k[1] * arm, y0); c.lineTo(k[0], y0); c.lineTo(k[0], y1); c.lineTo(k[0] + k[1] * arm, y1); glassLine(c, col, 3.4 * lk, .4); });
+    c.restore();
+  }
+  // Waage: der Horizont als Linie quer übers Bild (zeigt Kippen und Schiefhalten), dazu der Ausrichtungspunkt (Ring) an der Zielhöhe; Linie durch den Ring und waagerecht = Winkel erreicht
+  function drawHorizont(c, w, hh, f, R, pz, lk) {
+    var cx = w / 2, cy = hh / 2, live = !!(R && R.sensor), free = pz == null, col = lvlCol(live ? R.wlvl : 1), p = live ? R.p : (free ? 0 : pz), rl = live ? R.r : 0, tg = (R && R.tolG != null) ? R.tolG : FUEHRUNG.neigungTol.gruen;
+    var yT = free ? cy : cy + f * Math.tan(pz * RAD), yH = free ? cy : cy + f * Math.tan(p * RAD), lim0 = 10 * lk, lim1 = hh - 10 * lk, clamped = false;
+    if (yH < lim0 || yH > lim1) { yH = Math.max(lim0, Math.min(lim1, yH)); clamped = true; }
+    var tol = free ? 15 * lk : Math.max(13 * lk, f * (Math.tan((pz + tg) * RAD) - Math.tan(pz * RAD)));
+    c.save(); c.lineCap = 'round';
+    c.beginPath(); c.arc(cx, yT, tol, 0, 6.2832); glassLine(c, col, 2.4 * lk, .4);
+    c.beginPath(); c.arc(cx, yT, 2.4 * lk, 0, 6.2832); c.fillStyle = col; c.fill();
+    c.translate(cx, cy); c.rotate(rl * RAD); c.translate(-cx, -cy);
+    if (clamped) c.setLineDash([9 * lk, 7 * lk]);
+    c.beginPath(); c.moveTo(w * .03, yH); c.lineTo(w * .97, yH); glassLine(c, col, 2.6 * lk, .4);
+    c.setLineDash([]);
+    [w * .03, w * .97].forEach(function (x) { c.beginPath(); c.moveTo(x, yH - 7 * lk); c.lineTo(x, yH + 7 * lk); glassLine(c, col, 2.6 * lk, .4); });
+    c.restore();
+  }
   function drawOverlay() {
     var cv = $('ovCv'); if (!cv) return;
     var m = S.cur ? slotMeta(S.cur) : null, kind = klasseOf();
-    cv.width = 1; cv.height = 1;
-    if (!m || !LAY.aligned || LAY.iw < 100 || LAY.iw / LAY.ih < 1.1 || S.vw < S.vh) return;
+    if (!m || !LAY.aligned || LAY.iw < 100 || LAY.iw / LAY.ih < 1.1 || S.vw < S.vh) { if (cv.width > 1) { cv.width = 1; cv.height = 1; } return; }
+    var R = S.guide || null, w = LAY.iw, hh = LAY.ih, lk = Math.max(.6, hh / 390), col = frameCol(), f = frameF(w), c = setupKeep(cv, w, hh);
     if (m.art === 'aussen' && kind) {
-      var c = setup(cv, LAY.iw, LAY.ih), pose = camPose(m.key, kind, camH(), GEO.winkel, GEO.eckeM);
-      var pz = drawP(m.key), cam = makeCam(pose.P, frameF(LAY.iw), LAY.iw / 2, LAY.ih / 2, pz, [aimShift(m.key, kind, camH(), GEO.winkel, pz, LAY.iw, LAY.ih), 0, 0]);
-      drawCar(c, cam, kind, { fill: false, outline: true, line: frameCol(), lw: Math.max(.6, LAY.ih / 390) });
-      if (/^seite/.test(m.key)) {   // Randlinien: bis hierher darf das Auto reichen (92 % der Bildbreite), mehr ist zu nah
-        c.save(); c.setLineDash([7, 9]); c.lineWidth = Math.max(1, LAY.ih / 300); c.strokeStyle = 'rgba(255,199,124,.5)';
-        [.04, .96].forEach(function (f) { c.beginPath(); c.moveTo(LAY.iw * f, LAY.ih * .14); c.lineTo(LAY.iw * f, LAY.ih * .86); c.stroke(); }); c.restore();
-      }
+      var pz = drawP(m.key), pose = camPose(m.key, kind, camH(), GEO.winkel, GEO.eckeM), res = {};
+      if (R && R.sensor && R.zonen) drawZonen(c, R, w, hh, f, lk);
+      var cam = makeCam(pose.P, f, w / 2, hh / 2, pz, [aimShift(m.key, kind, camH(), GEO.winkel, pz, w, hh), 0, 0]);
+      drawCar(c, cam, kind, { fill: false, outline: true, line: col, lw: lk, open: !!(R && R.zone === 'ok'), res: res });
+      if (res.rect) drawMitte(c, res.rect, R, w, lk);
+      drawHorizont(c, w, hh, f, R, pz, lk);
     } else if (m.art === 'innen') {
-      var c2 = setup(cv, LAY.iw, LAY.ih), w = LAY.iw * .74, h = LAY.ih * .62, x = (LAY.iw - w) / 2, y = (LAY.ih - h) / 2 - LAY.ih * .02, r = 14;
-      c2.lineWidth = 3.5; c2.setLineDash([12, 9]); c2.strokeStyle = frameCol(); c2.fillStyle = 'rgba(0,0,0,.14)';
-      c2.beginPath(); c2.moveTo(x + r, y); c2.arcTo(x + w, y, x + w, y + h, r); c2.arcTo(x + w, y + h, x, y + h, r); c2.arcTo(x, y + h, x, y, r); c2.arcTo(x, y, x + w, y, r); c2.closePath(); c2.fill(); c2.stroke();
+      var wd = w * .74, hd = hh * .62, x = (w - wd) / 2, y = (hh - hd) / 2 - hh * .02, r = 14 * lk;
+      c.lineWidth = 3.5 * lk; c.setLineDash([12 * lk, 9 * lk]); c.fillStyle = 'rgba(0,0,0,.14)';
+      c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + wd, y, x + wd, y + hd, r); c.arcTo(x + wd, y + hd, x, y + hd, r); c.arcTo(x, y + hd, x, y, r); c.arcTo(x, y, x + wd, y, r); c.closePath(); c.fill();
+      glassLine(c, col, 3.2 * lk, .4); c.setLineDash([]);
+      drawHorizont(c, w, hh, f, R, zielP(m.key), lk);
     }
   }
 
@@ -1091,13 +1273,34 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function shotReady(on, forced) { var b = $('shotBtn'); b.classList.toggle('ready', !!on); b.classList.toggle('forced', !!on && !!forced); b.setAttribute('aria-disabled', on ? 'false' : 'true'); $('shotIn').textContent = on ? 'Jetzt' : ''; }
 
   /* Simulation (nur Demo mit &sim im Link): gezeichnete Kamera und erfundene Sensorwerte, damit man die Oberfläche am Computer durchklicken kann. Keine Kamera, kein Server. */
-  function simSnap() {   // &simoff=8 im Demo-Link verschiebt die Neigung (Test von Gelb und Rot)
-    var t = performance.now() / 1000, off = S.cfg && S.cfg.simOff != null ? S.cfg.simOff : 0, amp = off ? .3 : 3.2, z = S.cur ? zielP((slotMeta(S.cur) || {}).key) : null, p = (z != null ? z : AMPEL.p0) + off + Math.sin(t * .8) * amp + Math.sin(t * 2.1) * (off ? .1 : .9), r = Math.sin(t * 1.1) * (off ? .2 : .45); return { age: 0, p: p, r: r, pMed: p, rMed: r, n: 9 }; }
+  // Zustände der Demo-Kamera zum Prüfen der Führung (Link: #demo&sim&simz=gruen|rot|gelb|fern|nein|winkel|schief|mitte); ohne simz: gruen
+  //   d = Kamera so viele Meter näher (−) oder weiter weg (+), p = Neigung daneben (Grad), r = Rollen (Grad), x = seitlich versetzt (Meter am Auto), nodet = keine Erkennung
+  var SIMZ = { gruen: {}, rot: { d: -0.9 }, gelb: { d: 0.4 }, fern: { d: 1.2 }, nein: { nodet: 1 }, winkel: { p: 4 }, schief: { r: 3 }, mitte: { x: 0.5 } };
+  function simPre() { return SIMZ[(S.cfg && S.cfg.simz) || 'gruen'] || {}; }
+  function simSnap() {
+    var t = performance.now() / 1000, pre = simPre(), mm = S.cur ? slotMeta(S.cur) : null, z = mm ? zielP(mm.key) : null;
+    var p = (z != null ? z : -14) + (pre.p || 0) + Math.sin(t * 2.3) * .12, r = (pre.r || 0) + Math.sin(t * 1.7) * .08;
+    return { age: 0, p: p, r: r, pMed: p, rMed: r, n: 9 };
+  }
+  // Rahmen des Autos im Bild (normiert) aus dem Kameramodell: Neigung p, Abstand dOff (m), seitlicher Versatz dx (m)
+  function modelBox(key, kind, p, dOff, dx) {
+    var w = 640, hh = 480, pose = camPose(key, kind, camH(), GEO.winkel, GEO.eckeM, dOff), cam = makeCam(pose.P, frameF(w), w / 2, hh / 2, p, [aimShift(key, kind, camH(), GEO.winkel, p, w, hh) + (dx || 0), 0, 0]);
+    var M = buildModel(kind), b = { x0: 1e9, x1: -1e9, y0: 1e9, y1: -1e9 };
+    M.faces.forEach(function (fc) { fc.poly.forEach(function (q0) { var q = cam(q0); if (q[2] < .2) return; b.x0 = Math.min(b.x0, q[0]); b.x1 = Math.max(b.x1, q[0]); b.y0 = Math.min(b.y0, q[1]); b.y1 = Math.max(b.y1, q[1]); }); });
+    M.wheels.forEach(function (wh) { var q = cam([wh.x, wh.y, 0]); if (q[2] > .2) b.y1 = Math.max(b.y1, q[1]); });
+    return { x0: b.x0 / w, x1: b.x1 / w, y0: b.y0 / hh, y1: b.y1 / hh };
+  }
+  function simDet(W, H) {
+    var pre = simPre(), m = S.cur ? slotMeta(S.cur) : null, kind = klasseOf();
+    if (pre.nodet || !m || m.art !== 'aussen' || !kind) return { detections: [] };
+    var b = modelBox(m.key, kind, simSnap().p, pre.d || 0, pre.x || 0);
+    return { detections: [{ boundingBox: { originX: b.x0 * W, originY: b.y0 * H, width: (b.x1 - b.x0) * W, height: (b.y1 - b.y0) * H }, categories: [{ score: .9, categoryName: 'car' }] }] };
+  }
   function simScene() {
     var cv = S.simCv; if (!cv) return;
     if (S.simImgEl) { cv.width = 1280; cv.height = 960; cv.getContext('2d').drawImage(S.simImgEl, 0, 0, 1280, 960); return; }
-    var m = slotMeta(S.cur), kind = klasseOf() || 'limousine';
-    drawScene(cv, 640, 480, { kind: kind, key: m.art === 'aussen' ? m.key : 'titel', h: camH() + .04, ang: GEO.winkel + (m.art === 'aussen' ? 3 : 0), pitch: drawP(m.art === 'aussen' ? m.key : 'titel') + 2.5, bg: 'hof', fill: true });
+    var m = slotMeta(S.cur), kind = klasseOf() || 'limousine', pre = simPre(), sn = simSnap();
+    drawScene(cv, 640, 480, { kind: kind, key: m.art === 'aussen' ? m.key : 'titel', h: camH(), ang: GEO.winkel, pitch: sn.p, dOff: pre.d || 0, dx: pre.x || 0, roll: sn.r, bg: 'hof', fill: true });
   }
   async function openSim() {
     closeStream();
@@ -1118,7 +1321,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
      Rechnung: Rahmen des erkannten Autos gegen den gerechneten Rahmen der Schablone (Überdeckung IoU, Größe, Mitte); Schwellen sind Vorschlag und werden an echten Fotos eingestellt.
      Rückfall: lädt oder läuft die Erkennung nicht, bleibt es bei der reinen Schablone als Orientierung.
      ===================================================================== */
-  var AI = { state: 'aus', det: null, err: null, loadMs: null, delegate: 'CPU', model: 'efficientdet_lite0_int8', timer: null, every: 250, lastTs: 0, fails: 0, slow: 0, tms: [], ema: null, cur: { status: 'aus' }, greenSince: 0, n: 0, since: 0,
+  var AI = { state: 'aus', det: null, err: null, loadMs: null, delegate: 'CPU', model: 'efficientdet_lite0_int8', timer: null, every: FUEHRUNG.zeiten.erkennung, lastTs: 0, fails: 0, slow: 0, tms: [], ema: null, cur: { status: 'aus' }, greenSince: 0, n: 0, since: 0,
     // Schwellen (VORSCHLAG): an 9 Außenfotos von Giannis' A6 (Freihand 08.11.) geeicht: bester Abgleich dort IoU 0,52 bis 0,82, der erkannte Rahmen ist im Mittel
     // etwa 0,9-mal so breit wie der gerechnete Rahmen der Schablone (K_SCALE). Nach der ersten Testfahrt mit den protokollierten Werten nachstellen.
     IOU_GRUEN: 0.55, IOU_GELB: 0.40, K_SCALE: 0.90, K_SEITE: 0.94, FILL_WARN: 0.92, SCALE_LO: 0.85, SCALE_HI: 1.20, DX_MAX: 0.15, DY_MAX: 0.20, GRUEN_MS: 500, SCORE_MIN: 0.30 };
@@ -1126,6 +1329,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   // Läuft im Hintergrund ab „Fahrzeug anlegen“; der Sucher geht sofort, bis dahin nur die Schablone
   async function aiLoad() {
     if (AI.state !== 'aus') return;
+    if (S.cfg && S.cfg.sim) { AI.state = 'bereit'; AI.det = null; AI.loadMs = 0; aiFitUi(); return; }   // Demo mit &sim: erfundene Erkennung (simDet)
     if (S.cfg && S.cfg.ai === 'aus') { AI.state = 'fehler'; AI.err = 'im Link abgeschaltet'; aiFitUi(); return; }
     if (!window.WebAssembly) { AI.state = 'fehler'; AI.err = 'kein WebAssembly'; aiFitUi(); return; }
     AI.state = 'laedt'; aiFitUi();
@@ -1159,7 +1363,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   // Auswertung eines Messwerts: glätten, vergleichen, Stand bestimmen
   function aiUpdate(best, sb) {
     var now = performance.now(), prev = AI.cur.status;
-    if (!best) { AI.ema = null; AI.greenSince = 0; AI.cur = { status: 'keins', n: AI.n }; return; }
+    if (!best) { AI.ema = null; AI.greenSince = 0; AI.cur = { status: 'keins', n: AI.n, t: now }; return; }
     var e = AI.ema ? { x0: AI.ema.x0 + (best.x0 - AI.ema.x0) * .5, y0: AI.ema.y0 + (best.y0 - AI.ema.y0) * .5, x1: AI.ema.x1 + (best.x1 - AI.ema.x1) * .5, y1: AI.ema.y1 + (best.y1 - AI.ema.y1) * .5 } : { x0: best.x0, y0: best.y0, x1: best.x1, y1: best.y1 };
     AI.ema = e;
     var iou = iouOf(e, sb), sw = sb.x1 - sb.x0, sh = sb.y1 - sb.y0, scale = (e.x1 - e.x0) / sw, dx = ((e.x0 + e.x1) / 2 - (sb.x0 + sb.x1) / 2) / sw, dy = ((e.y0 + e.y1) / 2 - (sb.y0 + sb.y1) / 2) / sh;
@@ -1178,7 +1382,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       else if (dx < -AI.DX_MAX) hint = 'Handy etwas nach links schwenken';
       else if (status !== 'fast') hint = 'Fast, noch etwas ausrichten';
     }
-    AI.cur = { status: status, hint: hint, iou: iou, fill: fill, scale: scale, scaleN: scaleN, dx: dx, dy: dy, box: e, sch: sb, kat: best.kat, score: best.score, cut: cut, greenSince: AI.greenSince, n: AI.n };
+    AI.cur = { status: status, hint: hint, iou: iou, fill: fill, scale: scale, scaleN: scaleN, dx: dx, dy: dy, box: e, sch: sb, kat: best.kat, score: best.score, cut: cut, greenSince: AI.greenSince, n: AI.n, t: now };
     if (prev !== status) aiFitUi();
   }
   function aiStep() {
@@ -1190,16 +1394,16 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       if (v.readyState >= 2 && v.videoWidth) {
         try {
           var t0 = performance.now(), ts = Math.max(AI.lastTs + 1, Math.round(t0)); AI.lastTs = ts;
-          var res = AI.det.detectForVideo(v, ts), dt = performance.now() - t0, kind = klasseOf(), sb = schabBox(m.key, kind), best = null, W = v.videoWidth, H = v.videoHeight;
+          var res = (S.cfg && S.cfg.sim) ? simDet(v.videoWidth, v.videoHeight) : AI.det.detectForVideo(v, ts), dt = performance.now() - t0, kind = klasseOf(), sb = schabBox(m.key, kind), best = null, W = v.videoWidth, H = v.videoHeight;
           AI.tms.push(dt); if (AI.tms.length > 8) AI.tms.shift(); AI.fails = 0; AI.n++;
           (res.detections || []).forEach(function (d) {
             var b = d.boundingBox, c = d.categories && d.categories[0]; if (!c || c.score < AI.SCORE_MIN) return;
             var bx = { x0: b.originX / W, y0: b.originY / H, x1: (b.originX + b.width) / W, y1: (b.originY + b.height) / H, score: c.score, kat: c.categoryName };
-            bx.iou = iouOf(bx, sb); if (!best || bx.iou > best.iou) best = bx;   // es zählt das Auto mit der größten Überdeckung
+            bx.area = (bx.x1 - bx.x0) * (bx.y1 - bx.y0) * c.score; if (!best || bx.area > best.area) best = bx;   // es zählt das größte (nächste) Auto, egal wo es im Bild steht
           });
-          aiUpdate(best && best.iou > 0.05 ? best : null, sb);
+          aiUpdate(best, sb);
           // zu langsam: Intervall anpassen, bei dauerhaft zu langsam abschalten (Rückfall auf reine Schablone)
-          var avg = aiAvg(); AI.every = Math.max(250, Math.min(1500, Math.round(avg * 2)));
+          var avg = aiAvg(); AI.every = Math.max(FUEHRUNG.zeiten.erkennung, Math.min(1500, Math.round(avg * 3)));   // höchstens etwa ein Drittel der Zeit rechnen, damit es am iPhone flüssig bleibt
           if (avg > 700) AI.slow++; else AI.slow = 0;
           if (AI.slow >= 4) { AI.state = 'fehler'; AI.err = 'zu langsam (' + Math.round(avg) + ' ms je Bild)'; AI.cur = { status: 'aus' }; }
         } catch (e) { AI.fails++; if (AI.fails >= 3) { AI.state = 'fehler'; AI.err = errText(e).slice(0, 120); AI.cur = { status: 'aus' }; } }
@@ -1212,23 +1416,18 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function aiStop() { clearTimeout(AI.timer); AI.timer = null; AI.ema = null; AI.greenSince = 0; if (AI.cur.status !== 'aus') AI.cur = { status: 'aus' }; }
   // Anzeige: Chip in der rechten Leiste, Farbe der Schablone und Ecken, im Messwerte-Modus Rahmen des Autos
   function aiFitUi() {
-    var chip = $('fitTxt'), m = aiOuter(), st = AI.cur.status, cam = $('vCam');
+    var chip = $('fitTxt'), m = aiOuter(), cam = $('vCam');
     if (!chip) return;
-    var txt = '', dot = '', green = false;
+    var txt = '', dot = '';
     if (!m) { txt = ''; }
-    else if (AI.state === 'laedt' || AI.state === 'aus') { txt = 'Erkennung lädt …'; dot = ''; }
-    else if (AI.state === 'fehler') { txt = 'Nur Orientierung'; dot = ''; }
-    else if (st === 'gruen') { txt = 'Auto passt'; dot = 'ok'; green = true; }
-    else if (st === 'fast') { txt = 'Gleich passt es'; dot = 'ok'; }
-    else if (st === 'gelb' || st === 'rot') { txt = AI.cur.hint || 'Auto ausrichten'; dot = st === 'rot' ? 'bad' : 'warn'; }
-    else if (st === 'keins') { txt = 'Auto wird gesucht …'; dot = ''; }
-    else { txt = 'Orientierung'; dot = ''; }
-    chip.innerHTML = txt ? (dot ? '<i class="dot ' + dot + '"></i> ' : '') + esc(txt) : '';
-    var was = cam.getAttribute('data-fit') === 'gruen';
-    cam.setAttribute('data-fit', green ? 'gruen' : 'aus');
-    if (was !== green) drawOverlay();
+    else if (AI.state === 'laedt' || AI.state === 'aus') { txt = 'Erkennung lädt …'; }
+    else if (AI.state === 'fehler') { txt = 'Nur Orientierung'; }
+    else { var d = aiDetNow(); if (d.state === 'erkannt') { txt = 'Auto erkannt'; dot = 'ok'; } else if (d.suche) { txt = 'Auto wird gesucht …'; } else { txt = 'Auto nicht erkannt'; dot = 'warn'; } }
+    var html = txt ? (dot ? '<i class="dot ' + dot + '"></i> ' : '') + esc(txt) : '';
+    if (chip.innerHTML !== html) chip.innerHTML = html;
+    var fit = S.frameCol === 'gruen' ? 'gruen' : 'aus'; if (cam.getAttribute('data-fit') !== fit) cam.setAttribute('data-fit', fit);
     var box = $('detBox'); if (!box) return;
-    if (VAR.debug && m && AI.cur.box && (st !== 'aus')) {
+    if (VAR.debug && m && AI.cur.box && (AI.cur.status !== 'aus')) {
       var b = AI.cur.box; box.hidden = false;
       box.style.left = (LAY.ix + b.x0 * LAY.iw) + 'px'; box.style.top = (LAY.iy + b.y0 * LAY.ih) + 'px'; box.style.width = ((b.x1 - b.x0) * LAY.iw) + 'px'; box.style.height = ((b.y1 - b.y0) * LAY.ih) + 'px';
     } else box.hidden = true;
@@ -1472,25 +1671,23 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var wasSeq = S.mode === 'seq';
     leaveStage().then(function () { if (wasSeq && pflicht().every(function (p) { return hasPhoto(p.key); })) showEnd(); else showGallery(); });
   }
-  // Skizze von oben: Auto (Front oben), Standort des Händlers, Blickrichtung, Maßlinie zur nächsten Ecke bzw. Stoßstange.
-  // Maßstab und Standorte werden aus GEO gerechnet (Winkel zur Längsachse, Abstand zur Ecke), nicht von Hand gesetzt. Seite: ohne Maßlinie (nicht gemessen).
+  // Skizze von oben: Auto (Front oben), Standort des Händlers, Blickrichtung, Maßlinie zur Automitte.
+  // Maßstab und Standorte werden aus GEO gerechnet (Winkel zur Längsachse, Abstand zur Automitte), nicht von Hand gesetzt.
   function diagGeom(key) {
     var L = GEO.autoL, B = GEO.autoB, hl = L / 2, hb = B / 2, a = GEO.winkel * RAD;
     // Innenplätze: Standort und Blickrichtung (Grad, 0 = nach rechts, −90 = nach vorn); Cockpit von der Rücksitzbank aus, Sitze von außen durch die offene Tür, Kofferraum von hinten
     var IN = { cockpit: [0, .75, -90], tacho: [-.5, .1, -90], vordersitze: [-(hb + 1.5), -.5, 0], ruecksitzbank: [-(hb + 1.5), .9, 0], kofferraum: [0, hl + 1.6, -90] };
     if (IN[key]) return { x: IN[key][0], y: IN[key][1], ang: IN[key][2], mass: null };
-    if (key === 'front' || key === 'heck') { var d = hl + GEO.eckeM; return { x: 0, y: key === 'front' ? -d : d, mass: { x: 0, y: key === 'front' ? -hl : hl } }; }
+    var D = GEO.mitteM;
+    if (key === 'front' || key === 'heck') return { x: 0, y: key === 'front' ? -D : D, mass: { x: 0, y: 0 }, txt: D };
     if (key === 'seite' || key === 'seite_l') return { x: -GEO.seiteMitteM, y: 0, mass: { x: 0, y: 0 }, txt: GEO.seiteMitteM };
     if (key === 'seite_r') return { x: GEO.seiteMitteM, y: 0, mass: { x: 0, y: 0 }, txt: GEO.seiteMitteM };
     var sy = (key === 'titel' || key === 'dreiviertel_vr') ? -1 : 1, sx = (key === 'dreiviertel_vr' || key === 'dreiviertel_hr') ? 1 : -1;
-    var cx = sx * hb, cy = sy * hl, lo = 1, hi = 12;
-    for (var i = 0; i < 40; i++) { var m = (lo + hi) / 2; if (Math.hypot(sx * m * Math.sin(a) - cx, sy * m * Math.cos(a) - cy) < GEO.eckeM) lo = m; else hi = m; }
-    var dd = (lo + hi) / 2;
-    return { x: sx * dd * Math.sin(a), y: sy * dd * Math.cos(a), mass: { x: cx, y: cy } };
+    return { x: sx * D * Math.sin(a), y: sy * D * Math.cos(a), mass: { x: 0, y: 0 }, txt: D };
   }
   function diagSvg(key) {
     var g = diagGeom(key); if (!g) return '';
-    var k = /^seite/.test(key) ? 6.2 : 8.5, X = function (m) { return 50 + m * k; }, Y = function (m) { return 50 + m * k; };
+    var k = /^seite/.test(key) ? 6.2 : 7.4, X = function (m) { return 50 + m * k; }, Y = function (m) { return 50 + m * k; };
     var L = GEO.autoL * k, B = GEO.autoB * k, x0 = 50 - B / 2, y0 = 50 - L / 2;
     var px = X(g.x), py = Y(g.y), ang = g.ang != null ? g.ang : Math.atan2(50 - py, 50 - px) / RAD;
     var fy = Y(-(GEO.autoL / 2 - 0.9)), ry = Y(GEO.autoL / 2 - 1.1);
@@ -1513,7 +1710,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       else if (/^seite/.test(key)) { tx = mx2; ty = my2 - 5; anc = 'middle'; }
       else { var dx = mx - px, dy = my - py, dl = Math.hypot(dx, dy) || 1, nx = -dy / dl, ny = dx / dl; if (nx * (px - 50) < 0) { nx = -nx; ny = -ny; } tx = mx2 + nx * 8; ty = my2 + ny * 8 + 4.5; anc = nx < 0 ? 'end' : 'start'; }
       s += '<line x1="' + px.toFixed(1) + '" y1="' + py.toFixed(1) + '" x2="' + mx.toFixed(1) + '" y2="' + my.toFixed(1) + '" style="stroke:var(--t)" stroke-width="1.6" stroke-dasharray="3 2.5"/>' +
-        '<text x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" text-anchor="' + anc + '" font-family="Montserrat,sans-serif" font-weight="700" font-size="13" style="fill:var(--t);stroke:var(--base);stroke-width:2.6px;paint-order:stroke">' + String(g.txt != null ? g.txt : GEO.eckeM).replace('.', ',') + ' m</text>';
+        '<text x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" text-anchor="' + anc + '" font-family="Montserrat,sans-serif" font-weight="700" font-size="13" style="fill:var(--t);stroke:var(--base);stroke-width:2.6px;paint-order:stroke">' + String(g.txt).replace('.', ',') + ' m</text>';
     }
     s += '</svg>';
     return s;
@@ -1559,14 +1756,14 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       say('');
       // 4) Auslösen von Hand: der Knopf ist gedämpft, bis die Bedingungen passen (mit Grund), dann gold; nach dem Tipp kurz nachstabilisieren
       S.phase = 'still';
-      var maxMs = S.shotsSinceOpen === 0 && !hasAnyPhoto() ? CFG.FREIGABE_FIRST_MS : CFG.FREIGABE_NEXT_MS, ctl = { tapped: false, released: false, forced: false, noSensor: false, reason: '', at: 0, ui: '' };
+      var maxMs = FUEHRUNG.zeiten.notloesung, ctl = { tapped: false, released: false, forced: false, noSensor: false, reason: '', at: 0, ui: '' };
       $('shotBtn').disabled = false; S.gate = ctl;
       $('shotBtn').onclick = function () { if (ctl.released) ctl.tapped = true; else toast(ctl.reason || 'Noch nicht frei', 1200); };
       try { await gateLoop(my, maxMs, ctl); } finally { S.gate = null; }
       shotReady(false); $('shotBtn').disabled = true; setStill(100); $('stillTxt').textContent = T('Halte still …', 'Halten Sie still …'); $('stillSub').textContent = '';
       var nach = await afterTap(my);
       chk(my);
-      await shoot(my, { auto: false, noSensor: ctl.noSensor, forced: ctl.forced, waitMs: ctl.at || 0, nach: nach });
+      await shoot(my, { auto: false, noSensor: ctl.noSensor, forced: ctl.forced, waitMs: ctl.at || 0, nach: nach, g: ctl.g || null, grund: ctl.grund || [] });
     } catch (e) {
       if (e === CANCEL) return;
       problem('Die Kamera hat nicht geklappt', errText(e), true);
@@ -1599,21 +1796,19 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       paneShow('vTurn', upright); if (upright) { $('vTurn').classList.add('over'); $('turnBtnBox').hidden = true; $('turnTxt').textContent = T('Das Foto wird gemacht, sobald dein Handy wieder quer liegt.', 'Das Foto wird gemacht, sobald Ihr Handy wieder quer liegt.'); }
     }
     if (!$('vCam').hidden && S.phase !== 'turn') {
-      var s = (S.cfg && S.cfg.sim) ? simSnap() : snapshot(), lv = $('lvl'), tt = $('lvlT'), hh = LAY.ih || 300, msg = $('lvlMsg');
-      tt.hidden = !VAR.debug;
-      var fs;
-      if (!s || s.age > 300) { lv.setAttribute('data-s', 'off'); msg.hidden = true; fs = 'gelb'; if (VAR.debug) { tt.textContent = 'Sensor liefert gerade nichts'; tt.setAttribute('data-ok', '0'); } }
-      else {
-        var aw = ampelWinkel(S.cur, s), st = aw.lvl === 0 ? 'ok' : aw.lvl === 1 ? 'warn' : 'bad', ring = Math.max(22, Math.min(90, 2 * AMPEL.gelb.p * (hh / 52))).toFixed(0) + 'px';
-        $('lvlH').style.setProperty('--ty', Math.max(-0.4 * hh, Math.min(0.4 * hh, aw.dp * (hh / 52))).toFixed(1) + 'px');
-        $('lvlH').style.setProperty('--rot', s.r.toFixed(2) + 'deg');
-        if (lv.style.getPropertyValue('--ring') !== ring) lv.style.setProperty('--ring', ring);   // Ausrichtungspunkt = grüne Toleranz
-        lv.setAttribute('data-s', st);
-        if (aw.lvl === 0 || (S.gate && S.gate.released && !S.gate.forced)) msg.hidden = true; else { $('lvlMsgT').textContent = aw.why; msg.hidden = false; }   // frei (grün) = keine Anweisung mehr
-        fs = (S.gate && S.gate.released && !S.gate.forced) ? 'gruen' : aw.lvl === 2 ? 'rot' : 'gelb';   // Rahmen grün = Auslösen geht
-        if (VAR.debug) { tt.textContent = 'Neigung ' + fmt(s.p, 1, true) + '° (Ziel ' + (aw.p0 != null ? fmt(aw.p0, 0, true) + '°' : 'frei') + ') · Rollen ' + fmt(s.r, 1, true) + '°' + (aiOuter() ? '\n' + aiDebugText() : ''); tt.setAttribute('data-ok', st === 'ok' ? '1' : '0'); }
+      var R = fuehrung(), msg = $('lvlMsg'), tt = $('lvlT'), n2 = performance.now(), frei = !!(S.gate && S.gate.released && !S.gate.forced);
+      S.guide = R; tt.hidden = !VAR.debug;
+      S.frameCol = frei ? 'gruen' : (R.sensor && R.lvl >= 2) ? 'rot' : 'gelb';   // Rahmen grün = Auslösen geht
+      // immer nur ein Hinweis; ein neuer Hinweis erscheint frühestens nach 0,5 s, ein leerer (grün) sofort
+      var want = frei ? '' : R.hint;
+      if (want === '' || !S.hintTxt || n2 - (S.hintT || 0) >= 500) { if (want !== S.hintTxt) { S.hintTxt = want; S.hintT = n2; } }
+      msg.hidden = !S.hintTxt; if (S.hintTxt) { $('lvlMsgT').textContent = S.hintTxt; msg.setAttribute('data-l', R.lvl >= 2 ? 'rot' : 'gelb'); }
+      aiFitUi(); drawOverlay();
+      if (VAR.debug) {
+        var zt = zielP(S.cur ? (slotMeta(S.cur) || {}).key : null);
+        tt.textContent = R.sensor ? 'Neigung ' + fmt(R.p, 1, true) + '° (Ziel ' + (zt != null ? fmt(zt, 0, true) + '°' : 'frei') + ') · Rollen ' + fmt(R.r, 1, true) + '°' + (R.aussen ? '\nAbstand ' + (R.abst != null ? fmt(R.abst, 2) : '–') + ' m (Soll ' + fmt(R.soll, 2) + ', ' + fmt(R.zonen.gruenLo, 1) + ' bis ' + fmt(R.zonen.gruenHi, 1) + ') · Mitte ' + (R.dx != null ? fmt(R.dx, 2, true) : '–') + '\n' + aiDebugText() : '') : 'Sensor liefert gerade nichts';
+        tt.setAttribute('data-ok', R.alle ? '1' : '0');
       }
-      if (fs !== S.frameCol) { S.frameCol = fs; drawOverlay(); }
     }
   }, 80);
 
@@ -1816,7 +2011,12 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       id: st.fotoId, fahrzeug_id: S.vehicle.id, platz: m.key, zusatz_nr: m.zusatz_nr, zusatz_art: m.art === 'zusatz' ? S.zusatzArt : null,
       ampel_handy: r.ampel, ampel_handy_gruende: r.gruende.join('; '), geraet: dev(), brennweite_kb: r.f35, neigung: r.snap ? +r.snap.p.toFixed(1) : null, rollen: r.snap ? +r.snap.r.toFixed(1) : null,
       drehung: r.drehung, breite: r.w, hoehe: r.h, bytes: r.blob.size,
-      app_details: { app: APP, quelle: r.quelle, selbstausloeser: false, ausloeser: { art: 'manuell', freigabe: r.quelle === 'kamera-app' ? 'kamera_app' : (r.how.forced ? (r.how.noSensor ? 'erzwungen_ohne_sensor' : 'erzwungen') : 'frei'), frei_nach_ms: r.how.waitMs || 0, nachstabil_ms: r.how.nach ? r.how.nach.ms : null, nachstabil_ruhig: r.how.nach ? r.how.nach.ruhig : null }, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, klasse: (S.vehicle && S.vehicle.klasse && KLASSE_NAME[S.vehicle.klasse]) || null, cabrio: klasseOf() === 'cabrio', schablone: 'rahmen-c', ziel_neigung: (function () { var m = S.cur ? slotMeta(S.cur) : null; return m && m.art === 'aussen' ? zielP(m.key) : null; })(), notloesung: CFG.NOTLOESUNG, ruecksitzbank: rueckPflicht() ? 'pflicht' : 'keine', design: 'v4', abgleich: r.fit || null, aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, folge: 'rundum-v4', winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v2: gelb ab ' + AMPEL.gelb.p + '/' + AMPEL.gelb.r + ', rot ab ' + AMPEL.rot.p + '/' + AMPEL.rot.r + ' (Neigung/Rollen), Ziel-Neigung je Platz' } }
+      app_details: { app: APP, quelle: r.quelle, selbstausloeser: false, ausloeser: { art: 'manuell', freigabe: r.quelle === 'kamera-app' ? 'kamera_app' : (r.how.forced ? (r.how.noSensor ? 'erzwungen_ohne_sensor' : 'erzwungen') : 'frei'), frei_nach_ms: r.how.waitMs || 0, nachstabil_ms: r.how.nach ? r.how.nach.ms : null, nachstabil_ruhig: r.how.nach ? r.how.nach.ruhig : null }, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, klasse: (S.vehicle && S.vehicle.klasse && KLASSE_NAME[S.vehicle.klasse]) || null, cabrio: klasseOf() === 'cabrio', schablone: 'rahmen-c', ziel_neigung: (function () { var m = S.cur ? slotMeta(S.cur) : null; return m && m.art === 'aussen' ? zielP(m.key) : null; })(),
+        nicht_geprueft: (function () { return !(r.quelle === 'kamera' && !!(r.how && r.how.g) && !r.how.forced); })(),
+        nicht_geprueft_grund: (function () { if (r.quelle !== 'kamera') return 'kamera_app'; if (!(r.how && r.how.g)) return 'ohne_fuehrung'; return r.how.forced ? ((r.how.grund || []).join(',') || 'notloesung') : ''; })(),
+        fuehrung: (function () { var g = (r.how && r.how.g) || {}, r2 = function (x) { return x == null ? null : Math.round(x * 100) / 100; }, ok = r.quelle === 'kamera' && !!(r.how && r.how.g) && !r.how.forced;
+          return { stand: FUEHRUNG.stand, geprueft: ok, grund: ok ? [] : (r.quelle === 'kamera' ? ((r.how && r.how.grund) || []) : ['kamera_app']), umfang: g.det === 'erkannt' ? 'voll' : 'winkel', erkannt: g.det || null, zone: g.zone || null, abstand_m: r2(g.abst), soll_m: r2(g.soll), mitte: r2(g.dx), neigung: r2(g.p), rollen: r2(g.r), hoehe_m: camH() }; })(),
+        ruecksitzbank: rueckPflicht() ? 'pflicht' : 'keine', design: 'v4', abgleich: r.fit || null, aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, folge: 'rundum-v4', winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v3 ' + FUEHRUNG.stand + ': Neigung grün ±' + FUEHRUNG.neigungTol.gruen + ' gelb ±' + FUEHRUNG.neigungTol.gelb + ', Rollen grün ±' + FUEHRUNG.rollen.aussen.gruen + ' gelb ±' + FUEHRUNG.rollen.aussen.gelb + ', Ziel-Neigung je Platz' } }
     };
     var item = { slot: r.slot, id: st.fotoId, path: S.vehicle.id + '/' + m.key + '_' + st.fotoId + '.jpg', blob: r.blob, meta: meta, tries: 0, fileDone: false, state: 'wartet' };
     discardReview();
