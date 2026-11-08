@@ -17,7 +17,7 @@
 <title>Foto-App Test</title>
 <link rel="icon" href="icon-180.png" type="image/png">
 <script>
-(function(){try{var d=document.documentElement,ua=navigator.userAgent;d.setAttribute('data-dev',/Android/.test(ua)?'android':'iphone');var m='auto';try{var o=JSON.parse(localStorage.getItem('fa_ui')||'null');if(o&&/^(hell|dunkel)$/.test(o.mode))m=o.mode;}catch(e){}var dark=m==='dunkel'||(m==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);d.setAttribute('data-dir',dark?'a':'b');}catch(e){}})();
+(function(){try{var d=document.documentElement,ua=navigator.userAgent;d.setAttribute('data-dev',/Android/.test(ua)?'android':'iphone');d.setAttribute('data-dir',window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'a':'b');}catch(e){}})();
 </script>
 <style>
 @font-face { font-family: 'Michroma'; src: url('fonts/michroma-latin-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
@@ -90,9 +90,9 @@ h2 { font: 700 13px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
 .fld input { font: 500 17px/1 var(--font-body); min-height: 50px; padding: 0 14px; border-radius: var(--rs); border: 1px solid var(--gb); background: var(--glass2); color: var(--t); width: 100%; min-width: 0; outline: none; }
 .fld input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 35%, transparent); }
 .two { display: grid; grid-template-columns: 1fr 112px; gap: 10px; }
-.kar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.kar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .kar button { font: 600 10.5px/1 var(--font-body); border: 1px solid var(--gb); background: var(--glass); color: var(--t); border-radius: var(--rs); padding: 8px 2px 9px; display: grid; gap: 5px; justify-items: center; cursor: pointer; min-width: 0; }
-.kar button canvas { width: 60px; height: 24px; max-width: 100%; }
+.kar button canvas { width: 72px; height: 29px; max-width: 100%; }
 .kar button[aria-pressed="true"] { background: var(--prim); color: var(--prim-t); border-color: transparent; }
 .how { padding: 14px 16px; display: grid; gap: 11px; }
 .how div { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: center; font-size: 14px; line-height: 1.4; }
@@ -102,9 +102,6 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .hints { padding-left: 1.1em; display: grid; gap: 6px; font-size: 14px; margin-top: 6px; }
 .set { padding: 14px 16px; display: grid; gap: 12px; }
 .set .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 14px; }
-.mseg { display: inline-flex; padding: 3px; gap: 2px; border-radius: 999px; background: var(--glass); border: 1px solid var(--gb); }
-.mseg button { font: 700 12px/1 var(--font-body); min-height: 34px; padding: 0 14px; border-radius: 999px; border: 0; background: transparent; color: var(--t); cursor: pointer; }
-.mseg button[aria-pressed="true"] { background: var(--prim); color: var(--prim-t); }
 .sw { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; }
 .sw input { width: 20px; height: 20px; accent-color: var(--acc); }
 .hs-tip { font-size: 13px; color: var(--t2); }
@@ -266,7 +263,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       <label class="fld"><span class="lbl">Baujahr</span><input id="fBaujahr" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="2021"></label>
     </div>
     <label class="fld"><span class="lbl">Modell</span><input id="fModell" type="text" maxlength="80" autocomplete="off" autocapitalize="words" placeholder="z. B. X5 xDrive30d"></label>
-    <div class="fld"><span class="lbl">Karosserie (bestimmt die Schablone)</span><div class="kar" id="karBox" role="group" aria-label="Karosserie"></div></div>
+    <div class="fld"><span class="lbl">Karosserie (bestimmt die Schablone)</span><div class="kar" id="karBox" role="group" aria-label="Karosserie"></div><p class="hs-tip">Cabrio: die Klasse des Grundmodells wählen.</p></div>
     <button class="btn big primary" id="fGo" type="submit">Fahrzeug anlegen und weiter</button>
     <p class="msg" id="fMsg" role="status" aria-live="polite"></p>
   </form>
@@ -285,7 +282,6 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     </ul>
   </details>
   <div class="glass set" id="setBox">
-    <div class="row"><span class="lbl">Darstellung</span><span class="mseg" id="segDir" role="group" aria-label="Darstellung"><button type="button" data-m="auto">Auto</button><button type="button" data-m="hell">Hell</button><button type="button" data-m="dunkel">Dunkel</button></span></div>
     <div class="row"><label class="sw"><input type="checkbox" id="chkMess"> Messwerte anzeigen (für den Testplan)</label></div>
     <p class="hs-tip" id="hsTip" hidden></p>
   </div>
@@ -465,19 +461,18 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   /* =====================================================================
      Darstellung: Hell und Dunkel nach Systemeinstellung (Schalter Auto, Hell, Dunkel), Messwerte-Schalter
      ===================================================================== */
-  var UI = { mode: 'auto', mess: false };
-  try { var uiSaved = JSON.parse(localStorage.getItem('fa_ui') || 'null'); if (uiSaved) { if (/^(auto|hell|dunkel)$/.test(uiSaved.mode)) UI.mode = uiSaved.mode; UI.mess = !!uiSaved.mess; } } catch (e) { /* ohne Speicher weiter */ }
+  var UI = { mess: false };   // Hell und Dunkel folgt nur der Handy-Einstellung (Entscheidung Giannis 08.11.2026), kein eigener Schalter
+  try { var uiSaved = JSON.parse(localStorage.getItem('fa_ui') || 'null'); if (uiSaved) UI.mess = !!uiSaved.mess; } catch (e) { /* ohne Speicher weiter */ }
   function saveUI() { try { localStorage.setItem('fa_ui', JSON.stringify(UI)); } catch (e) { /* egal */ } }
   var DIR = document.documentElement.getAttribute('data-dir') === 'a' ? 'a' : 'b';
   var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
   function applyTheme() {
-    var dark = UI.mode === 'dunkel' || (UI.mode === 'auto' && !!(mq && mq.matches)), d = dark ? 'a' : 'b', changed = d !== DIR;
+    var dark = !!(mq && mq.matches), d = dark ? 'a' : 'b', changed = d !== DIR;
     DIR = d; document.documentElement.setAttribute('data-dir', d);
     var mt = document.getElementById('metaTheme'); if (mt) mt.setAttribute('content', dark ? '#0B0C10' : '#EEF0F4');
-    Array.prototype.forEach.call(document.querySelectorAll('#segDir button'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-m') === UI.mode ? 'true' : 'false'); });
     if (changed && typeof buildKar === 'function') { buildKar(); renderGalleryIfShown(); }
   }
-  if (mq) { var onMq = function () { if (UI.mode === 'auto') applyTheme(); }; if (mq.addEventListener) mq.addEventListener('change', onMq); else if (mq.addListener) mq.addListener(onMq); }
+  if (mq) { if (mq.addEventListener) mq.addEventListener('change', applyTheme); else if (mq.addListener) mq.addListener(applyTheme); }
 
   /* =====================================================================
      Fahrzeug-Zeichnung (aus der Designvorlage Version 4): einfache Körper nach Klassen-Maßen, Schablone im Sucher, Beispielbilder, Kacheln
@@ -487,16 +482,18 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   var KINDS = {
     kleinwagen: { n: 'Kleinwagen', L: 3.938, W: 1.736, gc: .13, rw: .31, wb: 2.518, fo: .80, zNose: .55, zHood: .82, zTail: .90, xWS: 1.07, xRS: -1.82, cab: { rf: .2, rr: -1.35, H: 1.422, w: .85, rear: [-1.82, .90] } },
     kompakt: { n: 'Kompakt', L: 4.305, W: 1.802, gc: .14, rw: .325, wb: 2.639, fo: .88, zNose: .60, zHood: .88, zTail: .95, xWS: 1.15, xRS: -1.95, cab: { rf: .3, rr: -1.5, H: 1.483, w: .84, rear: [-1.95, .95] } },
-    limousine: { n: 'Limousine', L: 4.949, W: 1.88, gc: .15, rw: .35, wb: 2.925, fo: .91, zNose: .62, zHood: .93, zTail: .98, xWS: 1.33, xRS: -1.42, cab: { rf: .45, rr: -.95, H: 1.457, w: .84, rear: [-1.42, .98] } },
+    limousine: { n: 'Limousine/Kombi', L: 4.949, W: 1.88, gc: .15, rw: .35, wb: 2.925, fo: .91, zNose: .62, zHood: .93, zTail: .98, xWS: 1.33, xRS: -1.42, cab: { rf: .45, rr: -.95, H: 1.457, w: .84, rear: [-1.42, .98] } },
     kombi: { n: 'Kombi', L: 4.949, W: 1.88, gc: .15, rw: .35, wb: 2.925, fo: .91, zNose: .62, zHood: .93, zTail: 1.0, xWS: 1.33, xRS: -2.35, cab: { rf: .45, rr: -1.95, H: 1.46, w: .84, rear: [-2.35, 1.0] } },
     suv: { n: 'SUV', L: 4.696, W: 1.891, gc: .22, rw: .37, wb: 2.842, fo: .89, zNose: .85, zHood: 1.08, zTail: 1.12, xWS: 1.22, xRS: -2.2, cab: { rf: .35, rr: -1.75, H: 1.66, w: .86, rear: [-2.2, 1.12] } },
-    coupe: { n: 'Coupé', L: 4.495, W: 1.888, gc: .12, rw: .35, wb: 2.536, fo: .95, zNose: .55, zHood: .82, zTail: .90, xWS: 1.05, xRS: -1.55, cab: { rf: -.05, rr: -.75, H: 1.305, w: .82, rear: [-1.55, .90] } },
+    coupe: { n: 'Coupé/Sport', L: 4.495, W: 1.888, gc: .12, rw: .35, wb: 2.536, fo: .95, zNose: .55, zHood: .82, zTail: .90, xWS: 1.05, xRS: -1.55, cab: { rf: -.05, rr: -.75, H: 1.305, w: .82, rear: [-1.55, .90] } },
     cabrio: { n: 'Cabrio', L: 4.305, W: 1.802, gc: .14, rw: .325, wb: 2.639, fo: .88, zNose: .60, zHood: .88, zTail: .92, xWS: 1.15, xRS: -2.0, cab: { rf: .62, rr: .52, H: 1.38, w: .84, rear: [.52, .88], thin: true } },
     van: { n: 'Van', L: 5.00, W: 1.95, gc: .22, rw: .36, wb: 3.00, fo: .95, zNose: .75, zHood: 1.0, zTail: 1.0, xWS: 1.6, xRS: -2.5, cab: { rf: .85, rr: -2.45, H: 1.95, w: .94, rear: [-2.5, 1.0] } }
   };
-  var ORDER = ['kleinwagen', 'kompakt', 'limousine', 'kombi', 'suv', 'coupe', 'cabrio', 'van'];
+  var ORDER = ['kleinwagen', 'kompakt', 'limousine', 'suv', 'coupe', 'van'];   // Klassen des Autobuilders (Giannis 08.11.2026); Kombi und Cabrio gibt es nur noch als Zeichnung für alte Sitzungen
   // Der Server kennt nur diese Werte (check-Regel im Schema); Kleinwagen und Kompakt gehen als null, die Klasse steht in app_details.
-  var DBKAR = { limousine: 'limousine', kombi: 'kombi', suv: 'suv', coupe: 'coupe', cabrio: 'cabrio', van: 'van' };
+  var DBKAR = { suv: 'suv', coupe: 'coupe', van: 'van' };
+  // Klassenname in app_details (für den Autobuilder); Kleinwagen, Kompakt und Limousine/Kombi haben im Schema keinen eigenen Wert
+  var KLASSE_NAME = { kleinwagen: 'kleinwagen', kompakt: 'kompakt', limousine: 'limousine_kombi', kombi: 'limousine_kombi', suv: 'suv', coupe: 'coupe_sport', cabrio: 'kompakt', van: 'van' };
   var modelCache = {};
   function sub3(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
   function dot3(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
@@ -646,7 +643,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var box = document.getElementById('karBox'); if (!box) return; box.innerHTML = '';
     ORDER.forEach(function (k) {
       var b = document.createElement('button'), on = S.klasse === k; b.type = 'button'; b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.innerHTML = '<canvas></canvas><span>' + KINDS[k].n + '</span>';
-      box.appendChild(b); drawSide(b.querySelector('canvas'), k, 60, 24, on ? (DIR === 'a' ? '#0B0C10' : '#FAFAFA') : (DIR === 'a' ? '#C4CAD4' : '#59626F'));
+      box.appendChild(b); drawSide(b.querySelector('canvas'), k, 72, 29, on ? (DIR === 'a' ? '#0B0C10' : '#FAFAFA') : (DIR === 'a' ? '#C4CAD4' : '#59626F'));
       b.onclick = function () { S.klasse = k; buildKar(); fmsg(''); };
     });
   }
@@ -1495,7 +1492,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       id: st.fotoId, fahrzeug_id: S.vehicle.id, platz: m.key, zusatz_nr: m.zusatz_nr, zusatz_art: m.art === 'zusatz' ? S.zusatzArt : null,
       ampel_handy: r.ampel, ampel_handy_gruende: r.gruende.join('; '), geraet: dev(), brennweite_kb: r.f35, neigung: r.snap ? +r.snap.p.toFixed(1) : null, rollen: r.snap ? +r.snap.r.toFixed(1) : null,
       drehung: r.drehung, breite: r.w, hoehe: r.h, bytes: r.blob.size,
-      app_details: { app: APP, quelle: r.quelle, selbstausloeser: !!r.how.auto, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, klasse: (S.vehicle && S.vehicle.klasse) || null, design: 'v4', aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v1: gelb ab ' + AMPEL.gelb.p + '/' + AMPEL.gelb.r + ', rot ab ' + AMPEL.rot.p + '/' + AMPEL.rot.r + ', Soll-Neigung ' + AMPEL.p0 } }
+      app_details: { app: APP, quelle: r.quelle, selbstausloeser: !!r.how.auto, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, klasse: (S.vehicle && S.vehicle.klasse && KLASSE_NAME[S.vehicle.klasse]) || null, design: 'v4', aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v1: gelb ab ' + AMPEL.gelb.p + '/' + AMPEL.gelb.r + ', rot ab ' + AMPEL.rot.p + '/' + AMPEL.rot.r + ', Soll-Neigung ' + AMPEL.p0 } }
     };
     var item = { slot: r.slot, id: st.fotoId, path: S.vehicle.id + '/' + m.key + '_' + st.fotoId + '.jpg', blob: r.blob, meta: meta, tries: 0, fileDone: false, state: 'wartet' };
     discardReview();
@@ -1869,7 +1866,6 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     restoreQueue();
   }
   function initSettings() {
-    Array.prototype.forEach.call($('segDir').children, function (b) { b.onclick = function () { UI.mode = b.getAttribute('data-m'); saveUI(); applyTheme(); }; });
     $('chkMess').checked = !!VAR.debug;
     $('chkMess').onchange = function () { VAR.debug = this.checked; UI.mess = this.checked; saveUI(); };
     var standalone = (navigator.standalone === true) || !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches), tip = $('hsTip');
