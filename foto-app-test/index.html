@@ -164,6 +164,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .card p { color: var(--t2); font-size: 15px; max-width: 40ch; }
 .card .btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; width: 100%; }
 .card .btns .btn { min-width: 180px; flex: 1; }
+.card .btns.small .btn { min-width: 0; min-height: 46px; font-size: 14px; padding: 0 10px; }
 .card .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .card .chips button { min-height: 44px; padding: 0 14px; border: 1px solid var(--gb); background: var(--glass2); border-radius: 999px; font-weight: 600; cursor: pointer; }
 .rot { width: 96px; height: 96px; position: relative; }
@@ -188,7 +189,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 #vCam[data-fit="gruen"] .brk { border-color: var(--lvl-ok); }
 #detBox { position: absolute; z-index: 4; border: 2px dashed var(--lvl-ok); pointer-events: none; }
 .form .msg:empty { display: none; }
-.rtxt { font: 600 12px/1.3 var(--font-body); text-align: center; color: var(--t); background: var(--chipbg); border: 1px solid var(--gb); border-radius: var(--rs); padding: 7px 8px; width: 100%; max-width: 132px; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); overflow-wrap: anywhere; }
+.rtxt { font: 600 12px/1.3 var(--font-body); text-align: center; color: var(--t); background: var(--chipbg); border: 1px solid var(--gb); border-radius: var(--rs); padding: 7px 8px; width: 120px; max-width: 100%; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); overflow-wrap: anywhere; }
 .shut { width: 78px; height: 78px; position: relative; cursor: pointer; border: 0; background: transparent; padding: 0; flex: none; }
 .shut svg { width: 100%; height: 100%; display: block; transform: rotate(-90deg); }
 .shut svg .bg { stroke: var(--gb); }
@@ -196,7 +197,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .shut .in { position: absolute; inset: 13px; border-radius: 50%; background: var(--t); opacity: .94; box-shadow: 0 2px 10px rgba(0,0,0,.3); display: grid; place-items: center; font: 700 12px/1 var(--font-body); color: var(--base); }
 .shut.ready .in { background: var(--as-gold); color: #0B0C10; opacity: 1; }
 .shut:disabled { cursor: default; }
-.railtitle { display: grid; gap: 2px; text-align: center; font: inherit; color: var(--t); background: var(--chipbg); border: 1px solid var(--gb); border-radius: var(--rs); padding: 7px 8px; width: 100%; max-width: 148px; cursor: pointer; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); flex: none; }
+.railtitle { display: grid; gap: 2px; text-align: center; font: inherit; color: var(--t); background: var(--chipbg); border: 1px solid var(--gb); border-radius: var(--rs); padding: 7px 8px; width: 120px; max-width: 100%; cursor: pointer; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); flex: none; }
 .railtitle .nr { font: 600 10px/1.2 var(--font-body); letter-spacing: .1em; text-transform: uppercase; color: var(--t2); }
 .railtitle b { font: 700 12px/1.25 var(--font-body); overflow-wrap: anywhere; }
 .railtitle .more { font: 600 10.5px/1.2 var(--font-body); color: var(--t2); }
@@ -214,7 +215,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 #lvlMsg span { display: inline-block; font: 700 12px/1.3 var(--font-body); padding: 6px 12px; border-radius: 999px; background: var(--as-gold); color: #0B0C10; }
 .lvlt { white-space: pre-line; position: absolute; z-index: 5; left: calc(var(--ix) + 8px); bottom: calc(var(--fh) - var(--iy) - var(--ih) + 48px); font: 600 11px/1 var(--font-data); padding: 7px 9px; border-radius: 6px; background: var(--chipbg); border: 1px solid var(--gb); color: var(--t); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
 .lvlt[data-ok="1"] { border-color: var(--ok); }
-.toast { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); background: var(--as-gold); color: #0B0C10; font-weight: 700; font-size: 14px; padding: 8px 14px; border-radius: 999px; pointer-events: none; z-index: 12; }
+.toast { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); background: var(--as-gold); color: #0B0C10; font-weight: 700; font-size: 14px; padding: 8px 14px; border-radius: 999px; pointer-events: none; z-index: 12; }
 #revDbg { font: 500 11px/1.35 var(--font-data); color: var(--t2); overflow-wrap: anywhere; }
 
 /* Kleine Galerie im Sucher */
@@ -239,13 +240,14 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .rv-cap { position: absolute; z-index: 3; left: calc(var(--sl, 0px) + 10px); top: 10px; }
 .rv-panel { position: absolute; z-index: 3; left: calc(var(--sl, 0px) + var(--rw) + 10px); right: calc(var(--sr, 0px) + 10px); top: 10px; bottom: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; overflow: auto; }
 .rv-panel h2 { font: 400 15px/1.3 var(--font-display); letter-spacing: .01em; text-transform: none; color: var(--t); }
-.checks { display: flex; flex-wrap: wrap; gap: 5px; }
-.checks .chip { backdrop-filter: none; -webkit-backdrop-filter: none; font-size: 11.5px; }
-.ex { display: grid; gap: 4px; align-content: start; flex: none; }
-#vRev.dbg .ex canvas { height: clamp(60px, calc(var(--fh) - 270px), 150px); }
-.ex canvas { height: clamp(70px, calc(var(--fh) - 210px), 150px); aspect-ratio: 4 / 3; max-width: 100%; border-radius: var(--rs); border: 1px solid var(--gb); display: block; }
+.checks { display: flex; flex-wrap: wrap; gap: 6px; }
+.rv-checks { position: absolute; z-index: 3; left: calc(var(--sl, 0px) + 10px); bottom: 10px; max-width: calc(var(--rw) - 20px); }
+.checks .chip { font-size: 11.5px; }
+.ex { display: flex; flex-direction: column; gap: 4px; flex: 1; min-height: 0; }
+.exw { flex: 1; min-height: 0; position: relative; }
+.exw canvas { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: var(--rs); border: 1px solid var(--gb); display: block; }
 .rv-btns { display: grid; grid-template-columns: 1fr 52px 1.3fr; gap: 8px; margin-top: auto; padding-top: 4px; }
-.rv-btns .btn { min-height: 48px; font-size: 15px; padding: 0 10px; }
+.rv-btns .btn { min-height: 48px; font-size: 15px; padding: 0 10px; border-radius: var(--rs); }
 .rv-btns.two { grid-template-columns: 1fr 1.3fr; }
 .rv-btns .btn[hidden] { display: none; }
 </style>
@@ -272,9 +274,10 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     <p class="msg" id="fMsg" role="status" aria-live="polite"></p>
   </form>
   <div class="glass how">
-    <div><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="22" height="10" rx="2.5"/><path d="M8 14h.01"/></svg><span><b>6 Außenbilder</b> in fester Reihenfolge, dann <b>4 innen</b></span></div>
+    <div><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="22" height="10" rx="2.5"/><path d="M8 14h.01"/></svg><span><b>6 Außenbilder</b> einmal ums Auto (4 × schräg, Front, Heck), dann <b>4 innen</b>. Die beiden Seiten sind freiwillig.</span></div>
     <div><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="24" height="14" rx="3"/><circle cx="14" cy="14" r="4"/></svg><span>Handy <b>quer</b>, Kamera <b>1x</b>, ruhig halten. Die App löst selbst aus.</span></div>
     <div><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10V4h6M18 4h6v6M24 18v6h-6M10 24H4v-6"/></svg><span>Das <b>ganze Auto mit etwas Rand</b> in die Schablone</span></div>
+    <div><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="9" r="4"/><path d="M6 23c0-4.5 3.5-7 8-7s8 2.5 8 7"/><path d="M4 4l20 20"/></svg><span><b>Niemand im Auto</b>, auch nicht auf den Sitzen</span></div>
   </div>
   <p class="hs-tip" id="aiTip"><b>Auto-Erkennung:</b> Beim Anlegen lädt die App einmalig rund 20 MB im Hintergrund (der Browser merkt sich das). Danach prüft sie im Sucher auf dem Gerät, ob das Auto in der Schablone steht. Das Kamerabild bleibt auf dem Gerät. Ohne Erkennung bleibt die Schablone eine Orientierung.</p>
   <details class="more">
@@ -283,7 +286,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       <li data-du="Handy leicht nach unten neigen (ca. 10°); die Wasserwaage zeigt es." data-sie="Handy leicht nach unten neigen (ca. 10°); die Wasserwaage zeigt es.">Handy leicht nach unten neigen (ca. 10°); die Wasserwaage zeigt es.</li>
       <li data-du="Du siehst jedes Foto und tippst <b>Passt</b> oder <b>Neu</b>. Erst bei „Passt“ geht es hoch." data-sie="Sie sehen jedes Foto und tippen auf <b>Passt</b> oder <b>Neu</b>. Erst bei „Passt“ wird hochgeladen.">Du siehst jedes Foto und tippst <b>Passt</b> oder <b>Neu</b>. Erst bei „Passt“ geht es hoch.</li>
       <li id="hHint"></li>
-      <li>Zusatzbilder sind freiwillig. Die Karosserie bestimmt nur die Schablone im Sucher; sie ist eine Orientierung, kein Abgleich.</li>
+      <li>Die Seiten (links und rechts) und Zusatzbilder sind freiwillig; die Seiten bietet die App nach dem letzten Außenbild an, alle sind auch in der Galerie. Die Karosserie bestimmt die Schablone im Sucher; die Auto-Erkennung vergleicht das Auto damit und zeigt grün, wenn es passt.</li>
     </ul>
   </details>
   <div class="glass set" id="setBox">
@@ -366,11 +369,11 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     <div class="pane" id="vRev" hidden>
       <div class="rv-photo"><img id="revImg" alt="Vorschau des Fotos"></div>
       <div class="chip rv-cap"><i class="dot go"></i><span id="revLbl"></span></div>
+      <div class="checks rv-checks" id="revInfo"></div>
       <div class="glass rv-panel">
         <h2 id="revTitle">Passt das Foto?</h2>
-        <div class="checks" id="revInfo"></div>
         <span id="revDbg" hidden></span>
-        <div class="ex" id="exBox"><span class="lbl">So soll es aussehen</span><canvas id="exCv"></canvas></div>
+        <div class="ex" id="exBox"><span class="lbl">So soll es aussehen</span><div class="exw"><canvas id="exCv"></canvas></div></div>
         <div class="rv-btns" id="revBtns">
           <button class="btn" id="revNeu" type="button">Neu</button>
           <button class="btn" id="revRot" type="button" aria-label="Foto um eine Vierteldrehung drehen" title="Foto steht schief? Drehen">↻</button>
@@ -429,17 +432,23 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (VAR.hoehe === '1m') return 'Handy vor dem Bauch (ca. 1,2 m).';
     return 'Handy auf Bauch- bis Brusthöhe (ca. 1,2 bis 1,5 m).';
   }
+  // Bildfolge seit 08.11.2026 (Giannis: „4x 3/4 je vorne L+R und hinten L+R (seiten dann optional), Front und Heck“): einmal ums Auto.
+  // Pflicht: 6 außen + 4 innen. Seite links und rechts sind freiwillig (SEITEN). Schlüssel wie im Schema `plaetze` (titel = dreiviertel_vl).
   var PLAETZE = [
-    { key: 'titel', nr: 1, art: 'aussen', name: 'Dreiviertel vorn links', sub: 'Titelbild', hint: 'Schräg vor die linke Vorderecke, etwa 2 m Abstand. Front und linke Seite im Bild, das ganze Auto mit Rand.' },
-    { key: 'front', nr: 2, art: 'aussen', name: 'Front', hint: 'Genau vor das Auto, mittig, etwa 2 m vor der Stoßstange. Das ganze Auto mit Rand im Bild.' },
-    { key: 'seite', nr: 3, art: 'aussen', name: 'Seite links', hint: 'Seitlich links, Auto mittig. Vorderräder gerade. Das ganze Auto mit Rand im Bild.' },
-    { key: 'dreiviertel_hl', nr: 4, art: 'aussen', name: 'Dreiviertel hinten links', hint: 'Schräg hinter die linke Hinterecke, etwa 2 m Abstand. Heck und linke Seite im Bild, das ganze Auto mit Rand.' },
-    { key: 'heck', nr: 5, art: 'aussen', name: 'Heck', hint: 'Genau hinter das Auto, mittig, etwa 2 m hinter der Stoßstange. Das ganze Auto mit Rand im Bild.' },
-    { key: 'dreiviertel_vr', nr: 6, art: 'aussen', name: 'Dreiviertel vorn rechts', hint: 'Schräg vor die rechte Vorderecke, etwa 2 m Abstand. Front und rechte Seite im Bild, das ganze Auto mit Rand.' },
+    { key: 'titel', nr: 1, art: 'aussen', name: 'Dreiviertel vorn links', sub: 'Titelbild', hint: 'Schräg vor die linke Vorderecke, etwa 2 m Abstand. Front und linke Seite im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'front', nr: 2, art: 'aussen', name: 'Front', hint: 'Genau vor das Auto, mittig, etwa 2 m vor der Stoßstange. Das ganze Auto mit Rand im Bild. Niemand im Auto.' },
+    { key: 'dreiviertel_vr', nr: 3, art: 'aussen', name: 'Dreiviertel vorn rechts', hint: 'Schräg vor die rechte Vorderecke, etwa 2 m Abstand. Front und rechte Seite im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'dreiviertel_hr', nr: 4, art: 'aussen', name: 'Dreiviertel hinten rechts', hint: 'Schräg hinter die rechte Hinterecke, etwa 2 m Abstand. Heck und rechte Seite im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'heck', nr: 5, art: 'aussen', name: 'Heck', hint: 'Genau hinter das Auto, mittig, etwa 2 m hinter der Stoßstange. Das ganze Auto mit Rand im Bild. Niemand im Auto.' },
+    { key: 'dreiviertel_hl', nr: 6, art: 'aussen', name: 'Dreiviertel hinten links', hint: 'Schräg hinter die linke Hinterecke, etwa 2 m Abstand. Heck und linke Seite im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
     { key: 'cockpit', nr: 7, art: 'innen', name: 'Cockpit', hint: 'Fahrertür auf. Durch die Tür auf Lenkrad und Armaturenbrett.' },
     { key: 'tacho', nr: 8, art: 'innen', name: 'Tacho', hint: 'Zündung an. Kilometerstand gut lesbar.' },
     { key: 'vordersitze', nr: 9, art: 'innen', name: 'Vordersitze', hint: 'Beide Vordersitze im Bild.' },
     { key: 'kofferraum', nr: 10, art: 'innen', name: 'Kofferraum', hint: 'Kofferraum offen, alternativ die Rückbank.' }
+  ];
+  var SEITEN = [
+    { key: 'seite_l', name: 'Seite links', hint: 'Freiwillig. Seitlich links, Auto mittig, etwa 6 m von der Automitte. Vorderräder gerade. Das ganze Auto mit Rand im Bild. Niemand im Auto.' },
+    { key: 'seite_r', name: 'Seite rechts', hint: 'Freiwillig. Seitlich rechts, Auto mittig, etwa 6 m von der Automitte. Vorderräder gerade. Das ganze Auto mit Rand im Bild. Niemand im Auto.' }
   ];
   var ZUSATZ_ARTEN = [['motorraum', 'Motorraum'], ['felge', 'Felge'], ['schaden', 'Schaden'], ['kofferraum', 'Kofferraum'], ['sonstiges', 'Sonstiges']];
 
@@ -543,8 +552,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var K = KINDS[kind], hl = K.L / 2, hw = K.W / 2, a = ang * RAD;
     if (key === 'front') return { P: [hl + eck, 0, h], d: hl + eck, ang: 0 };
     if (key === 'heck') return { P: [-(hl + eck), 0, h], d: hl + eck, ang: 0 };
-    if (key === 'seite') return { P: [0, GEO.seiteMitteM, h], d: GEO.seiteMitteM, ang: 90 };
-    var fx = key === 'dreiviertel_hl' ? -1 : 1, fy = key === 'dreiviertel_vr' ? -1 : 1, cx = fx * hl, cy = fy * hw, lo = 3.5, hi = 14, i;
+    if (key === 'seite' || key === 'seite_l') return { P: [0, GEO.seiteMitteM, h], d: GEO.seiteMitteM, ang: 90 };
+    if (key === 'seite_r') return { P: [0, -GEO.seiteMitteM, h], d: GEO.seiteMitteM, ang: 90 };
+    var fx = (key === 'dreiviertel_hl' || key === 'dreiviertel_hr') ? -1 : 1, fy = (key === 'dreiviertel_vr' || key === 'dreiviertel_hr') ? -1 : 1, cx = fx * hl, cy = fy * hw, lo = 3.5, hi = 14, i;
     for (i = 0; i < 40; i++) { var m = (lo + hi) / 2, d = Math.hypot(fx * m * Math.cos(a) - cx, fy * m * Math.sin(a) - cy); if (d < eck) lo = m; else hi = m; }
     var dd = (lo + hi) / 2;
     return { P: [fx * dd * Math.cos(a), fy * dd * Math.sin(a), h], d: dd, ang: ang };
@@ -667,6 +677,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         if (p.get('a') === 'du' || p.get('a') === 'sie') cfg.a = p.get('a');
         if (p.get('h') === '1m' || p.get('h') === 'brust' || p.get('h') === 'bereich') cfg.h = p.get('h');
         if (p.has('debug')) cfg.debug = true;
+        if (p.get('ai') === 'aus') cfg.ai = 'aus';   // Auto-Erkennung abschalten (falls sie am Handy stört)
         if (p.has('hs')) cfg.hs = true;                // Home-Bildschirm: Link-Teil bleibt in der Adresse, damit das Symbol ihn mitnimmt
         if (p.has('sim') && cfg.demo) cfg.sim = true;  // nur im Demo ohne Server: gezeichnete Kamera
         if (cfg.demo && /^[\w.\/-]{1,80}$/.test(p.get('simimg') || '')) { cfg.sim = true; cfg.simImg = p.get('simimg'); }   // nur Test: Bild statt Zeichnung
@@ -766,6 +777,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function slotMeta(id) {
     var m = /^zusatz(\d)$/.exec(id);
     if (m) return { id: id, key: 'zusatz', nr: null, art: 'zusatz', name: 'Zusatzbild ' + m[1], zusatz_nr: +m[1], hint: T('Zeig, was das Inserat braucht. Handy ruhig halten.', 'Zeigen Sie, was das Inserat braucht. Handy ruhig halten.') };
+    var sd = SEITEN.filter(function (x) { return x.key === id; })[0] || (id === 'seite' ? { key: 'seite', name: 'Seite links', hint: SEITEN[0].hint } : null);
+    if (sd) return { id: id, key: sd.key, nr: null, art: 'aussen', frei: true, name: sd.name, sub: null, hint: sd.hint, zusatz_nr: null };
     var p = PLAETZE.filter(function (x) { return x.key === id; })[0];
     return p ? { id: id, key: p.key, nr: p.nr, art: p.art, name: p.name, sub: p.sub, hint: p.hint + (p.key === 'titel' ? ' ' + hoeheHint() : ''), zusatz_nr: null } : null;
   }
@@ -895,7 +908,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var vd = $('video').style;
     if (LAY.aligned) { vd.left = LAY.ix + 'px'; vd.top = LAY.iy + 'px'; vd.width = LAY.iw + 'px'; vd.height = LAY.ih + 'px'; }
     else { vd.left = '0'; vd.top = '0'; vd.width = '100%'; vd.height = '100%'; }
-    drawOverlay();
+    drawOverlay(); if (!$('vRev').hidden && S.review) drawExample();
   }
   // Schablone (Umriss des Autos, wie es im Bild stehen soll) über dem Kamerabild; Innenplätze: gestrichelter Rahmen. Nur zur Orientierung.
   function drawOverlay() {
@@ -998,6 +1011,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   // Läuft im Hintergrund ab „Fahrzeug anlegen“; der Sucher geht sofort, bis dahin nur die Schablone
   async function aiLoad() {
     if (AI.state !== 'aus') return;
+    if (S.cfg && S.cfg.ai === 'aus') { AI.state = 'fehler'; AI.err = 'im Link abgeschaltet'; aiFitUi(); return; }
     if (!window.WebAssembly) { AI.state = 'fehler'; AI.err = 'kein WebAssembly'; aiFitUi(); return; }
     AI.state = 'laedt'; aiFitUi();
     var t0 = performance.now();
@@ -1345,8 +1359,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function diagGeom(key) {
     var L = GEO.autoL, B = GEO.autoB, hl = L / 2, hb = B / 2, a = GEO.winkel * RAD;
     if (key === 'front' || key === 'heck') { var d = hl + GEO.eckeM; return { x: 0, y: key === 'front' ? -d : d, mass: { x: 0, y: key === 'front' ? -hl : hl } }; }
-    if (key === 'seite') return { x: -GEO.seiteMitteM, y: 0, mass: null };
-    var sy = (key === 'titel' || key === 'dreiviertel_vr') ? -1 : 1, sx = key === 'dreiviertel_vr' ? 1 : -1;
+    if (key === 'seite' || key === 'seite_l') return { x: -GEO.seiteMitteM, y: 0, mass: null };
+    if (key === 'seite_r') return { x: GEO.seiteMitteM, y: 0, mass: null };
+    var sy = (key === 'titel' || key === 'dreiviertel_vr') ? -1 : 1, sx = (key === 'dreiviertel_vr' || key === 'dreiviertel_hr') ? 1 : -1;
     var cx = sx * hb, cy = sy * hl, lo = 1, hi = 12;
     for (var i = 0; i < 40; i++) { var m = (lo + hi) / 2; if (Math.hypot(sx * m * Math.sin(a) - cx, sy * m * Math.cos(a) - cy) < GEO.eckeM) lo = m; else hi = m; }
     var dd = (lo + hi) / 2;
@@ -1378,7 +1393,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   }
   function setLabels() {
     var m = slotMeta(S.cur), nr = m.nr ? m.nr + ' von 10 · ' : '';
-    $('camNr').textContent = m.nr ? m.nr + ' von 10' : 'Zusatzbild';
+    $('camNr').textContent = m.frei ? 'Freiwillig' : (m.nr ? m.nr + ' von 10' : 'Zusatzbild');
     $('camLbl').textContent = m.name + (m.sub ? ' (' + m.sub + ')' : '');
     $('camHint').textContent = m.hint;
     $('camDiag').innerHTML = diagSvg(m.key);
@@ -1594,6 +1609,13 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
      Ansehen: Passt oder Neu
      ===================================================================== */
   function ampHtml(a) { return a ? '<span class="amp l"><i class="' + a + '"></i>' + ({ gruen: 'grün', gelb: 'gelb', rot: 'rot' })[a] + '</span>' : ''; }
+  // Beispielbild („so soll es aussehen“): so groß wie sein Feld (gleiche Breite wie die Schaltflächen), nach Klasse und Kamerahöhe gezeichnet
+  function drawExample() {
+    var r = S.review, box = $('exBox'); if (!r || box.hidden || $('vRev').hidden) return;
+    var m = slotMeta(r.slot), kind = klasseOf(), wrap = box.querySelector('.exw'), w = wrap.clientWidth, h = wrap.clientHeight;
+    if (!kind || !m || m.art !== 'aussen' || w < 60 || h < 40) return;
+    drawScene($('exCv'), w, h, { kind: kind, key: m.key, h: camH(), ang: GEO.winkel, pitch: AMPEL.p0, bg: 'hof', fill: true });
+  }
   function showReview(r) {
     S.review = r; S.phase = 'review'; r.url = URL.createObjectURL(r.blob);
     S.shotsSinceOpen++;
@@ -1605,7 +1627,6 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     $('revInfo').innerHTML = list.length ? list.map(function (g) { return '<span class="chip"><i class="dot ' + (r.ampel === 'rot' ? 'bad' : 'warn') + '"></i>' + esc(g) + '</span>'; }).join('') : '<span class="chip"><i class="dot ok"></i>Lage in Ordnung</span>';
     // Beispielbild: so soll es aussehen (nur Außenplätze, gezeichnet nach der Klasse)
     var kind = klasseOf(); $('exBox').hidden = !(m.art === 'aussen' && kind);
-    if (!$('exBox').hidden) drawScene($('exCv'), 188, 141, { kind: kind, key: m.key, h: camH(), ang: GEO.winkel, pitch: AMPEL.p0, bg: 'hof', fill: true });
     $('revRot').hidden = false; $('revBtns').classList.remove('two'); $('revNeu').textContent = 'Neu'; $('revOk').textContent = 'Passt';
     var dbg = $('revDbg'); dbg.hidden = !VAR.debug; $('vRev').classList.toggle('dbg', !!VAR.debug);
     if (VAR.debug) {
@@ -1613,7 +1634,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       dbg.textContent = dtxt(null);
       if (r.fovP) r.fovP.then(function (f) { if (S.review === r) dbg.textContent = dtxt(f); });
     }
-    paneShow('vCam', false); paneShow('vTurn', false); paneShow('vRev', true); say('');
+    paneShow('vCam', false); paneShow('vTurn', false); paneShow('vRev', true); say(''); drawExample();
     $('revOk').disabled = false;
   }
   $('revNeu').onclick = function () { if (S.phase === 'view') { paneShow('vRev', false); runShot(); return; } discardReview(); runShot(); };
@@ -1638,7 +1659,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       id: st.fotoId, fahrzeug_id: S.vehicle.id, platz: m.key, zusatz_nr: m.zusatz_nr, zusatz_art: m.art === 'zusatz' ? S.zusatzArt : null,
       ampel_handy: r.ampel, ampel_handy_gruende: r.gruende.join('; '), geraet: dev(), brennweite_kb: r.f35, neigung: r.snap ? +r.snap.p.toFixed(1) : null, rollen: r.snap ? +r.snap.r.toFixed(1) : null,
       drehung: r.drehung, breite: r.w, hoehe: r.h, bytes: r.blob.size,
-      app_details: { app: APP, quelle: r.quelle, selbstausloeser: !!r.how.auto, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, klasse: (S.vehicle && S.vehicle.klasse && KLASSE_NAME[S.vehicle.klasse]) || null, design: 'v4', abgleich: r.fit || null, aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v1: gelb ab ' + AMPEL.gelb.p + '/' + AMPEL.gelb.r + ', rot ab ' + AMPEL.rot.p + '/' + AMPEL.rot.r + ', Soll-Neigung ' + AMPEL.p0 } }
+      app_details: { app: APP, quelle: r.quelle, selbstausloeser: !!r.how.auto, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, klasse: (S.vehicle && S.vehicle.klasse && KLASSE_NAME[S.vehicle.klasse]) || null, design: 'v4', abgleich: r.fit || null, aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, folge: 'rundum-v1', winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v1: gelb ab ' + AMPEL.gelb.p + '/' + AMPEL.gelb.r + ', rot ab ' + AMPEL.rot.p + '/' + AMPEL.rot.r + ', Soll-Neigung ' + AMPEL.p0 } }
     };
     var item = { slot: r.slot, id: st.fotoId, path: S.vehicle.id + '/' + m.key + '_' + st.fotoId + '.jpg', blob: r.blob, meta: meta, tries: 0, fileDone: false, state: 'wartet' };
     discardReview();
@@ -1646,18 +1667,29 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     toast('Gespeichert, wird hochgeladen');
     saveSession();
     S.idx++;
+    // freiwilliges Seitenbild aus dem Zwischenbildschirm: danach zurück dorthin
+    if (S.mode === 'side') { var rs = S.resume; S.resume = null; if (rs) { S.seq = rs.seq; S.idx = rs.idx; S.mode = rs.mode; } if (rs && S.idx < S.seq.length) { betweenInnen(); return; } endSequence(); return; }
     // Übergang Außen → Innen
-    if (S.mode === 'seq' && S.seq[S.idx - 1] === 'dreiviertel_vr' && S.idx < S.seq.length) { betweenInnen(); return; }
+    if (S.mode === 'seq' && S.seq[S.idx - 1] === 'dreiviertel_hl' && S.idx < S.seq.length) { betweenInnen(); return; }
     nextShot();
   };
 
+  function startSide(id) {
+    S.resume = { seq: S.seq.slice(), idx: S.idx, mode: S.mode };
+    S.seq = [id]; S.idx = 0; S.mode = 'side'; paneShow('vBet', false); nextShot();
+  }
   function betweenInnen() {
     S.token++; S.phase = 'between';
     var m = slotMeta(S.seq[S.idx]);
-    $('betBox').innerHTML = '<h1>Außen fertig</h1><p>' + T('Jetzt der Innenraum. Mach die Fahrertür auf und schalte die Zündung ein. Als Erstes: ', 'Jetzt der Innenraum. Öffnen Sie die Fahrertür und schalten Sie die Zündung ein. Als Erstes: ') + esc(m.name) + '.</p><div class="btns"><button class="btn big primary" id="betGo" type="button">Weiter</button><button class="btn big" id="betGal" type="button">Innenraum später</button></div>';
+    var side = SEITEN.map(function (s) { return '<button class="btn" type="button" data-side="' + s.key + '">' + (hasPhoto(s.key) ? '✓ ' : '') + esc(s.name) + '</button>'; }).join('');
+    $('betBox').innerHTML = '<h1>Außen fertig</h1><p>' + T('Jetzt der Innenraum. Mach die Fahrertür auf und schalte die Zündung ein. Als Erstes: ', 'Jetzt der Innenraum. Öffnen Sie die Fahrertür und schalten Sie die Zündung ein. Als Erstes: ') + esc(m.name) + '.</p>' +
+      '<div class="btns"><button class="btn big primary" id="betGo" type="button">Weiter</button></div>' +
+      '<div class="btns small">' + side + '<button class="btn" id="betGal" type="button">Innenraum später</button></div>' +
+      '<p class="hs-tip">Die beiden Seiten sind freiwillig.</p>';
     paneShow('vCam', false); paneShow('vRev', false); paneShow('vTurn', false); paneShow('vBet', true);
     $('betGo').onclick = function () { paneShow('vBet', false); nextShot(); };
     $('betGal').onclick = function () { paneShow('vBet', false); endSequence(); };
+    Array.prototype.forEach.call($('betBox').querySelectorAll('[data-side]'), function (b) { b.onclick = function () { startSide(b.getAttribute('data-side')); }; });
   }
   function problem(title, text, retry) {
     S.token++; S.phase = 'problem';
@@ -1779,7 +1811,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var v = S.vehicle; if (!v) return;
     $('gTitle').textContent = v.marke + ' ' + v.modell;
     $('gChip').textContent = (KINDS[v.klasse] ? KINDS[v.klasse].n + ' · ' : '') + v.baujahr;
-    var ids = PLAETZE.map(function (p) { return p.key; }).concat(zusatzIds()), done = PLAETZE.filter(function (p) { return hasPhoto(p.key); }).length, kind = klasseOf();
+    var ids = PLAETZE.map(function (p) { return p.key; }).concat(SEITEN.map(function (s) { return s.key; }), hasPhoto('seite') ? ['seite'] : [], zusatzIds()), done = PLAETZE.filter(function (p) { return hasPhoto(p.key); }).length, kind = klasseOf();
     var pending = S.queue.length;
     $('gSum').textContent = done + ' von 10 Pflichtbildern aufgenommen' + (zusatzIds().length ? ', ' + zusatzIds().length + ' Zusatzbild' + (zusatzIds().length > 1 ? 'er' : '') : '') + (pending ? ' · ' + pending + (pending === 1 ? ' wird' : ' werden') + ' noch hochgeladen' : '');
     $('gProg').innerHTML = '<i style="width:' + (done * 10) + '%"></i>';
@@ -1791,7 +1823,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       else img = '+';
       var sv = s && s.server ? s.server : null, a1 = s && s.ampelHandy, a2 = sv && sv.ampel_showroom;
       var retry = s && s.state === 'fehler' && s.item && s.item.blob ? ' · <u>nochmal senden</u>' : '';
-      return '<button class="glass tile" type="button" data-id="' + id + '"><div class="im' + (taken ? '' : ' empty') + '">' + img + (m.nr ? '<span class="nr">' + m.nr + '</span>' : '') + '</div><b>' + esc(m.name) + (m.art === 'zusatz' && s && s.zusatz_art ? ' · ' + esc((ZUSATZ_ARTEN.filter(function (z) { return z[0] === s.zusatz_art; })[0] || [0, ''])[1]) : '') + '</b>' +
+      return '<button class="glass tile" type="button" data-id="' + id + '"><div class="im' + (taken ? '' : ' empty') + '">' + img + (m.nr ? '<span class="nr">' + m.nr + '</span>' : '') + '</div><b>' + esc(m.name) + (m.frei ? ' · freiwillig' : '') + (m.art === 'zusatz' && s && s.zusatz_art ? ' · ' + esc((ZUSATZ_ARTEN.filter(function (z) { return z[0] === s.zusatz_art; })[0] || [0, ''])[1]) : '') + '</b>' +
         '<span class="st"><span><i class="dot ' + ti.c + '"></i>' + esc(ti.t) + retry + '</span>' + amp(a1, 'Handy') + amp(a2, 'Showroom') + '</span></button>';
     }).join('');
     var next = PLAETZE.filter(function (p) { return !hasPhoto(p.key); })[0];
@@ -1804,7 +1836,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var v = S.vehicle; if (!v) return;
     var aus = PLAETZE.filter(function (p) { return p.art === 'aussen' && hasPhoto(p.key); }).length, inn = PLAETZE.filter(function (p) { return p.art === 'innen' && hasPhoto(p.key); }).length, zu = zusatzIds().length, pending = S.queue.length;
     $('eSub').textContent = pending ? pending + (pending === 1 ? ' Foto wird' : ' Fotos werden') + ' noch hochgeladen. Die App sendet im Hintergrund weiter.' : 'Die Bearbeitung läuft. Den Stand je Bild sehen Sie in der Galerie.';
-    $('eSum').innerHTML = '<div><span>Außenbilder</span><span>' + aus + ' von 6</span></div><div><span>Innenbilder</span><span>' + inn + ' von 4</span></div><div><span>Zusatzbilder</span><span>' + zu + '</span></div><div><span>Fahrzeug</span><span>' + esc(v.marke + ' ' + v.modell) + '</span></div>';
+    $('eSum').innerHTML = '<div><span>Außenbilder</span><span>' + aus + ' von 6</span></div><div><span>Innenbilder</span><span>' + inn + ' von 4</span></div><div><span>Seiten (freiwillig)</span><span>' + SEITEN.filter(function (s) { return hasPhoto(s.key); }).length + ' von 2</span></div><div><span>Zusatzbilder</span><span>' + zu + '</span></div><div><span>Fahrzeug</span><span>' + esc(v.marke + ' ' + v.modell) + '</span></div>';
   }
   function showEnd() { showPage('pEnd'); renderEnd(); }
   $('gGrid').addEventListener('click', function (ev) {
@@ -2008,6 +2040,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       note.className = 'note bad'; note.innerHTML = T('Dieser Link ist unvollständig. Bitte den Link neu öffnen, den du von AutoScales bekommen hast.', 'Dieser Link ist unvollständig. Bitte den Link neu öffnen, den Sie von AutoScales bekommen haben.') + ' <br><a href="#demo" onclick="setTimeout(function(){location.reload()},0)">Demo ohne Server ansehen</a>'; $('fGo').disabled = true;
     }
     initSettings();
+    if (S.cfg && S.cfg.ai === 'aus') $('aiTip').hidden = true;
     buildKar(); applyTheme();
     showStart();
     restoreQueue();
