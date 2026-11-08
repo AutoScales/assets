@@ -437,12 +437,12 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   // Pflicht: 6 außen + 4 innen (Cockpit, Tacho, Vordersitze, Rücksitzbank). Freiwillig: Seite links und rechts (SEITEN) und Kofferraum (INNEN_FREI).
   // Rücksitzbank: bei Coupé/Sport und Cabrio/Roadster nicht Pflicht (siehe RUECKBANK_COUPE). Schlüssel wie im Schema `plaetze` (titel = dreiviertel_vl).
   var PLAETZE = [
-    { key: 'titel', nr: 1, art: 'aussen', name: 'Dreiviertel vorn links', sub: 'Titelbild', hint: 'Schräg vor die linke Vorderecke, etwa 2 m Abstand. Front und linke Seite im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
-    { key: 'front', nr: 2, art: 'aussen', name: 'Front', hint: 'Genau vor das Auto, mittig, etwa 2 m vor der Stoßstange. Das ganze Auto mit Rand im Bild. Niemand im Auto.' },
-    { key: 'dreiviertel_vr', nr: 3, art: 'aussen', name: 'Dreiviertel vorn rechts', hint: 'Schräg vor die rechte Vorderecke, etwa 2 m Abstand. Front und rechte Seite im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
-    { key: 'dreiviertel_hr', nr: 4, art: 'aussen', name: 'Dreiviertel hinten rechts', hint: 'Schräg hinter die rechte Hinterecke, etwa 2 m Abstand. Heck und rechte Seite im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
-    { key: 'heck', nr: 5, art: 'aussen', name: 'Heck', hint: 'Genau hinter das Auto, mittig, etwa 2 m hinter der Stoßstange. Das ganze Auto mit Rand im Bild. Niemand im Auto.' },
-    { key: 'dreiviertel_hl', nr: 6, art: 'aussen', name: 'Dreiviertel hinten links', hint: 'Schräg hinter die linke Hinterecke, etwa 2 m Abstand. Heck und linke Seite im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'titel', nr: 1, art: 'aussen', name: 'Dreiviertel vorn links', sub: 'Titelbild', hint: 'Schräg vor die linke Vorderecke, etwa 2 m Abstand. Scheinwerfer und linke Seite im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'front', nr: 2, art: 'aussen', name: 'Front', hint: 'Genau vor das Auto, mittig, etwa 2 m vor der Stoßstange. Scheinwerfer im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'dreiviertel_vr', nr: 3, art: 'aussen', name: 'Dreiviertel vorn rechts', hint: 'Schräg vor die rechte Vorderecke, etwa 2 m Abstand. Scheinwerfer und rechte Seite im Bild (vorn, nicht das Heck), das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'dreiviertel_hr', nr: 4, art: 'aussen', name: 'Dreiviertel hinten rechts', hint: 'Schräg hinter die rechte Hinterecke, etwa 2 m Abstand. Rückleuchten und rechte Seite im Bild (hinten, nicht die Front), das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'heck', nr: 5, art: 'aussen', name: 'Heck', hint: 'Genau hinter das Auto, mittig, etwa 2 m hinter der Stoßstange. Rückleuchten im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'dreiviertel_hl', nr: 6, art: 'aussen', name: 'Dreiviertel hinten links', hint: 'Schräg hinter die linke Hinterecke, etwa 2 m Abstand. Rückleuchten und linke Seite im Bild (hinten, nicht die Front), das ganze Auto mit Rand. Niemand im Auto.' },
     { key: 'cockpit', nr: 7, art: 'innen', name: 'Cockpit', hint: 'Zündung an. Von der Rücksitzbank aus nach vorn: Lenkrad und Armaturenbrett im Bild.' },
     { key: 'tacho', nr: 8, art: 'innen', name: 'Tacho', hint: 'Zündung an. Kilometerstand gut lesbar.' },
     { key: 'vordersitze', nr: 9, art: 'innen', name: 'Vordersitze', hint: 'Fahrertür auf. Von außen durch die offene Tür beide Vordersitze im Bild.' },
@@ -454,8 +454,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   // Rücksitzbank bei Coupé/Sport und Cabrio/Roadster: 'frei' = freiwillig (Vorschlag Alfred, bei Giannis offen), 'weg' = gar nicht anbieten. Eine Zeile ändern genügt.
   var RUECKBANK_COUPE = 'frei';
   var SEITEN = [
-    { key: 'seite_l', name: 'Seite links', hint: 'Freiwillig. Seitlich links, Auto mittig, etwa 6 m von der Automitte. Vorderräder gerade. Das ganze Auto mit Rand im Bild. Niemand im Auto.' },
-    { key: 'seite_r', name: 'Seite rechts', hint: 'Freiwillig. Seitlich rechts, Auto mittig, etwa 6 m von der Automitte. Vorderräder gerade. Das ganze Auto mit Rand im Bild. Niemand im Auto.' }
+    { key: 'seite_l', name: 'Seite links', hint: 'Freiwillig. Seitlich links, Auto mittig, etwa 6 m von der Automitte (in engen Garagen mindestens etwa 4,5 m). Vorderräder gerade. Das ganze Auto mit Rand im Bild, links und rechts etwas Platz. Niemand im Auto.' },
+    { key: 'seite_r', name: 'Seite rechts', hint: 'Freiwillig. Seitlich rechts, Auto mittig, etwa 6 m von der Automitte (in engen Garagen mindestens etwa 4,5 m). Vorderräder gerade. Das ganze Auto mit Rand im Bild, links und rechts etwas Platz. Niemand im Auto.' }
   ];
   function ohneRueck() { var v = S.vehicle; return !!(v && (v.klasse === 'coupe' || v.cabrio)); }
   function rueckPflicht() { return !ohneRueck(); }
@@ -944,6 +944,10 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       var c = setup(cv, LAY.iw, LAY.ih), pose = camPose(m.key, kind, camH(), GEO.winkel, GEO.eckeM);
       var cam = makeCam(pose.P, frameF(LAY.iw), LAY.iw / 2, LAY.ih / 2, AMPEL.p0, [aimShift(m.key, kind, camH(), GEO.winkel, AMPEL.p0, LAY.iw, LAY.ih), 0, 0]);
       drawCar(c, cam, kind, { fill: false, outline: true, line: ($('vCam').getAttribute('data-fit') === 'gruen') ? '#5BD08A' : '#FFC77C', lw: Math.max(.6, LAY.ih / 390) });
+      if (/^seite/.test(m.key)) {   // Randlinien: bis hierher darf das Auto reichen (92 % der Bildbreite), mehr ist zu nah
+        c.save(); c.setLineDash([7, 9]); c.lineWidth = Math.max(1, LAY.ih / 300); c.strokeStyle = 'rgba(255,199,124,.5)';
+        [.04, .96].forEach(function (f) { c.beginPath(); c.moveTo(LAY.iw * f, LAY.ih * .14); c.lineTo(LAY.iw * f, LAY.ih * .86); c.stroke(); }); c.restore();
+      }
     } else if (m.art === 'innen') {
       var c2 = setup(cv, LAY.iw, LAY.ih), w = LAY.iw * .74, h = LAY.ih * .62, x = (LAY.iw - w) / 2, y = (LAY.ih - h) / 2 - LAY.ih * .02, r = 14;
       c2.lineWidth = 3; c2.setLineDash([12, 9]); c2.strokeStyle = '#FFC77C'; c2.fillStyle = 'rgba(0,0,0,.14)';
@@ -1030,7 +1034,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   var AI = { state: 'aus', det: null, err: null, loadMs: null, delegate: 'CPU', model: 'efficientdet_lite0_int8', timer: null, every: 250, lastTs: 0, fails: 0, slow: 0, tms: [], ema: null, cur: { status: 'aus' }, greenSince: 0, n: 0, since: 0,
     // Schwellen (VORSCHLAG): an 9 Außenfotos von Giannis' A6 (Freihand 08.11.) geeicht: bester Abgleich dort IoU 0,52 bis 0,82, der erkannte Rahmen ist im Mittel
     // etwa 0,9-mal so breit wie der gerechnete Rahmen der Schablone (K_SCALE). Nach der ersten Testfahrt mit den protokollierten Werten nachstellen.
-    IOU_GRUEN: 0.55, IOU_GELB: 0.40, K_SCALE: 0.90, SCALE_LO: 0.85, SCALE_HI: 1.20, DX_MAX: 0.15, DY_MAX: 0.20, GRUEN_MS: 500, SCORE_MIN: 0.30 };
+    IOU_GRUEN: 0.55, IOU_GELB: 0.40, K_SCALE: 0.90, K_SEITE: 0.94, FILL_WARN: 0.92, SCALE_LO: 0.85, SCALE_HI: 1.20, DX_MAX: 0.15, DY_MAX: 0.20, GRUEN_MS: 500, SCORE_MIN: 0.30 };
   function aiScript(src) { return new Promise(function (res, rej) { var s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = function () { rej(new Error('Skript nicht geladen')); }; document.head.appendChild(s); }); }
   // Läuft im Hintergrund ab „Fahrzeug anlegen“; der Sucher geht sofort, bis dahin nur die Schablone
   async function aiLoad() {
@@ -1072,19 +1076,22 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var e = AI.ema ? { x0: AI.ema.x0 + (best.x0 - AI.ema.x0) * .5, y0: AI.ema.y0 + (best.y0 - AI.ema.y0) * .5, x1: AI.ema.x1 + (best.x1 - AI.ema.x1) * .5, y1: AI.ema.y1 + (best.y1 - AI.ema.y1) * .5 } : { x0: best.x0, y0: best.y0, x1: best.x1, y1: best.y1 };
     AI.ema = e;
     var iou = iouOf(e, sb), sw = sb.x1 - sb.x0, sh = sb.y1 - sb.y0, scale = (e.x1 - e.x0) / sw, dx = ((e.x0 + e.x1) / 2 - (sb.x0 + sb.x1) / 2) / sw, dy = ((e.y0 + e.y1) / 2 - (sb.y0 + sb.y1) / 2) / sh;
-    var cut = e.x0 < 0.015 || e.x1 > 0.985 || e.y0 < 0.015 || e.y1 > 0.985, status, hint = '', scaleN = scale / AI.K_SCALE;
-    var ok = iou >= AI.IOU_GRUEN && scaleN >= AI.SCALE_LO && scaleN <= AI.SCALE_HI && Math.abs(dx) <= AI.DX_MAX && Math.abs(dy) <= AI.DY_MAX && !cut;
+    // Seite (Giannis 08.11.2026: 6 m Soll, Warnung): zwischen etwa 4,5 und 6 m ist es in Ordnung; zu nah heißt, der Rahmen des Autos füllt mindestens 92 % der Bildbreite (Autobuilder: 6 m = 68 %, 4,5 m = 88 bis 95 %, ab 4,3 m 97 %)
+    var seite = /^seite/.test(S.cur || ''), fill = e.x1 - e.x0;
+    var cut = e.x0 < 0.015 || e.x1 > 0.985 || e.y0 < 0.015 || e.y1 > 0.985, status, hint = '', scaleN = scale / (seite ? AI.K_SEITE : AI.K_SCALE);
+    var tooBig = seite ? fill >= AI.FILL_WARN : scaleN > AI.SCALE_HI;
+    var ok = (seite || iou >= AI.IOU_GRUEN) && scaleN >= AI.SCALE_LO && !tooBig && Math.abs(dx) <= AI.DX_MAX && Math.abs(dy) <= AI.DY_MAX && !cut;
     if (ok) { if (!AI.greenSince) AI.greenSince = now; status = (now - AI.greenSince >= AI.GRUEN_MS) ? 'gruen' : 'fast'; }
     else { AI.greenSince = 0; status = iou >= AI.IOU_GELB ? 'gelb' : 'rot'; }
     if (status !== 'gruen') {
       if (cut) hint = 'Auto wird angeschnitten: etwas zurück';
-      else if (scaleN > AI.SCALE_HI) hint = 'Etwas zurück';
+      else if (tooBig) hint = 'Etwas zurück';
       else if (scaleN < AI.SCALE_LO) hint = 'Etwas näher';
       else if (dx > AI.DX_MAX) hint = 'Handy etwas nach rechts schwenken';
       else if (dx < -AI.DX_MAX) hint = 'Handy etwas nach links schwenken';
       else if (status !== 'fast') hint = 'Fast, noch etwas ausrichten';
     }
-    AI.cur = { status: status, hint: hint, iou: iou, scale: scale, scaleN: scaleN, dx: dx, dy: dy, box: e, sch: sb, kat: best.kat, score: best.score, cut: cut, greenSince: AI.greenSince, n: AI.n };
+    AI.cur = { status: status, hint: hint, iou: iou, fill: fill, scale: scale, scaleN: scaleN, dx: dx, dy: dy, box: e, sch: sb, kat: best.kat, score: best.score, cut: cut, greenSince: AI.greenSince, n: AI.n };
     if (prev !== status) aiFitUi();
   }
   function aiStep() {
@@ -1148,9 +1155,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   // Messwert zum Zeitpunkt des Fotos für app_details (nur Zahlen)
   function aiSnap() {
     var c = AI.cur, r2 = function (x) { return x == null ? null : Math.round(x * 100) / 100; };
-    var base = { modell: AI.model, bibliothek: 'mediapipe-tasks-vision 1.2.2', delegate: AI.delegate, zustand: AI.state, geladen_ms: AI.loadMs, fehler: AI.err || null, schwellen: { gruen: AI.IOU_GRUEN, gelb: AI.IOU_GELB, k_scale: AI.K_SCALE, skala: [AI.SCALE_LO, AI.SCALE_HI], dx: AI.DX_MAX, dy: AI.DY_MAX, ms: AI.GRUEN_MS, score: AI.SCORE_MIN }, ms_je_bild: Math.round(aiAvg()), intervall_ms: AI.every, messungen: AI.n };
+    var base = { modell: AI.model, bibliothek: 'mediapipe-tasks-vision 1.2.2', delegate: AI.delegate, zustand: AI.state, geladen_ms: AI.loadMs, fehler: AI.err || null, schwellen: { gruen: AI.IOU_GRUEN, gelb: AI.IOU_GELB, k_scale: AI.K_SCALE, k_seite: AI.K_SEITE, fill_warn: AI.FILL_WARN, skala: [AI.SCALE_LO, AI.SCALE_HI], dx: AI.DX_MAX, dy: AI.DY_MAX, ms: AI.GRUEN_MS, score: AI.SCORE_MIN }, ms_je_bild: Math.round(aiAvg()), intervall_ms: AI.every, messungen: AI.n };
     if (AI.state !== 'bereit' || !c || c.iou == null) { base.stand = AI.state === 'bereit' ? (c && c.status) || 'aus' : 'aus'; return base; }
-    base.stand = c.status; base.iou = r2(c.iou); base.groesse = r2(c.scale); base.groesse_norm = r2(c.scaleN); base.mitte_x = r2(c.dx); base.mitte_y = r2(c.dy); base.angeschnitten = !!c.cut; base.klasse_erkannt = c.kat; base.score = r2(c.score);
+    base.stand = c.status; base.iou = r2(c.iou); base.fuellung = r2(c.fill); base.groesse = r2(c.scale); base.groesse_norm = r2(c.scaleN); base.mitte_x = r2(c.dx); base.mitte_y = r2(c.dy); base.angeschnitten = !!c.cut; base.klasse_erkannt = c.kat; base.score = r2(c.score);
     base.box = [r2(c.box.x0), r2(c.box.y0), r2(c.box.x1), r2(c.box.y1)]; base.schablone = [r2(c.sch.x0), r2(c.sch.y0), r2(c.sch.x1), r2(c.sch.y1)];
     base.gruen_seit_ms = c.greenSince ? Math.round(performance.now() - c.greenSince) : 0;
     return base;
@@ -1386,8 +1393,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var IN = { cockpit: [0, .75, -90], tacho: [-.5, .1, -90], vordersitze: [-(hb + 1.5), -.5, 0], ruecksitzbank: [-(hb + 1.5), .9, 0], kofferraum: [0, hl + 1.6, -90] };
     if (IN[key]) return { x: IN[key][0], y: IN[key][1], ang: IN[key][2], mass: null };
     if (key === 'front' || key === 'heck') { var d = hl + GEO.eckeM; return { x: 0, y: key === 'front' ? -d : d, mass: { x: 0, y: key === 'front' ? -hl : hl } }; }
-    if (key === 'seite' || key === 'seite_l') return { x: -GEO.seiteMitteM, y: 0, mass: null };
-    if (key === 'seite_r') return { x: GEO.seiteMitteM, y: 0, mass: null };
+    if (key === 'seite' || key === 'seite_l') return { x: -GEO.seiteMitteM, y: 0, mass: { x: 0, y: 0 }, txt: GEO.seiteMitteM };
+    if (key === 'seite_r') return { x: GEO.seiteMitteM, y: 0, mass: { x: 0, y: 0 }, txt: GEO.seiteMitteM };
     var sy = (key === 'titel' || key === 'dreiviertel_vr') ? -1 : 1, sx = (key === 'dreiviertel_vr' || key === 'dreiviertel_hr') ? 1 : -1;
     var cx = sx * hb, cy = sy * hl, lo = 1, hi = 12;
     for (var i = 0; i < 40; i++) { var m = (lo + hi) / 2; if (Math.hypot(sx * m * Math.sin(a) - cx, sy * m * Math.cos(a) - cy) < GEO.eckeM) lo = m; else hi = m; }
@@ -1396,7 +1403,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   }
   function diagSvg(key) {
     var g = diagGeom(key); if (!g) return '';
-    var k = 8.5, X = function (m) { return 50 + m * k; }, Y = function (m) { return 50 + m * k; };
+    var k = /^seite/.test(key) ? 6.2 : 8.5, X = function (m) { return 50 + m * k; }, Y = function (m) { return 50 + m * k; };
     var L = GEO.autoL * k, B = GEO.autoB * k, x0 = 50 - B / 2, y0 = 50 - L / 2;
     var px = X(g.x), py = Y(g.y), ang = g.ang != null ? g.ang : Math.atan2(50 - py, 50 - px) / RAD;
     var fy = Y(-(GEO.autoL / 2 - 0.9)), ry = Y(GEO.autoL / 2 - 1.1);
@@ -1406,14 +1413,19 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       '<path d="M' + (50 - B * 0.3).toFixed(1) + ' ' + (y0 + L * 0.22).toFixed(1) + ' L' + (50 + B * 0.3).toFixed(1) + ' ' + (y0 + L * 0.22).toFixed(1) + ' L' + (50 + B * 0.36).toFixed(1) + ' ' + (y0 + L * 0.34).toFixed(1) + ' L' + (50 - B * 0.36).toFixed(1) + ' ' + (y0 + L * 0.34).toFixed(1) + ' Z" style="fill:var(--t2);opacity:.6"/>' +
       '<path d="M' + (50 - 4.5) + ' ' + y0.toFixed(1) + ' L50 ' + (y0 - 6.5).toFixed(1) + ' L' + (50 + 4.5) + ' ' + y0.toFixed(1) + ' Z" fill="#FFC77C"/>';
     [fy, ry].forEach(function (wy) { [x0 - 1.4, x0 + B - 1.2].forEach(function (wx) { s += '<rect x="' + wx.toFixed(1) + '" y="' + (wy - 3.6).toFixed(1) + '" width="2.6" height="7.2" rx="1" fill="#111"/>'; }); });
+    // vorn oder hinten: helle Scheinwerfer vorn, rote Rückleuchten hinten, dazu VORN und HINTEN am Rand (auf der Seite ohne Standort)
+    [x0 + 2.4, x0 + B - 2.4].forEach(function (lx) { s += '<circle cx="' + lx.toFixed(1) + '" cy="' + (y0 + 2).toFixed(1) + '" r="1.6" fill="#FFF3C4"/><circle cx="' + lx.toFixed(1) + '" cy="' + (y0 + L - 2).toFixed(1) + '" r="1.6" fill="#E5484D"/>'; });
+    var lab = g.x < 0 ? ' x="96" text-anchor="end"' : ' x="4" text-anchor="start"';
+    s += '<text' + lab + ' y="11" font-family="Montserrat,sans-serif" font-weight="700" font-size="7.5" style="fill:var(--t2)">VORN</text><text' + lab + ' y="95" font-family="Montserrat,sans-serif" font-weight="700" font-size="7.5" style="fill:var(--t2)">HINTEN</text>';
     var cone = '<g transform="translate(' + px.toFixed(1) + ' ' + py.toFixed(1) + ') rotate(' + ang.toFixed(1) + ')"><path d="M4 -6 L17 0 L4 6 Z" fill="#FFC77C" opacity=".5"/><circle r="6" fill="#FFC77C" stroke="#0B0C10" stroke-width="1.5"/></g>';
     s += cone;
     if (g.mass) {
       var mx = X(g.mass.x), my = Y(g.mass.y), mx2 = (px + mx) / 2, my2 = (py + my) / 2, tx, ty, anc;
       if (key === 'front' || key === 'heck') { tx = px + 9; ty = my2 + 4.5; anc = 'start'; }
+      else if (/^seite/.test(key)) { tx = mx2; ty = my2 - 5; anc = 'middle'; }
       else { var dx = mx - px, dy = my - py, dl = Math.hypot(dx, dy) || 1, nx = -dy / dl, ny = dx / dl; if (nx * (px - 50) < 0) { nx = -nx; ny = -ny; } tx = mx2 + nx * 8; ty = my2 + ny * 8 + 4.5; anc = nx < 0 ? 'end' : 'start'; }
       s += '<line x1="' + px.toFixed(1) + '" y1="' + py.toFixed(1) + '" x2="' + mx.toFixed(1) + '" y2="' + my.toFixed(1) + '" style="stroke:var(--t)" stroke-width="1.6" stroke-dasharray="3 2.5"/>' +
-        '<text x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" text-anchor="' + anc + '" font-family="Montserrat,sans-serif" font-weight="700" font-size="13" style="fill:var(--t);stroke:var(--base);stroke-width:2.6px;paint-order:stroke">' + String(GEO.eckeM).replace('.', ',') + ' m</text>';
+        '<text x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" text-anchor="' + anc + '" font-family="Montserrat,sans-serif" font-weight="700" font-size="13" style="fill:var(--t);stroke:var(--base);stroke-width:2.6px;paint-order:stroke">' + String(g.txt != null ? g.txt : GEO.eckeM).replace('.', ',') + ' m</text>';
     }
     s += '</svg>';
     return s;
