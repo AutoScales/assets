@@ -215,6 +215,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .lvl .tick.a { left: calc(22% - 24px); } .lvl .tick.b { right: calc(22% - 24px); }
 #lvlMsg { position: absolute; z-index: 5; left: var(--ix); width: var(--iw); top: calc(var(--iy) + var(--ih) * .5 + 30px); text-align: center; pointer-events: none; }
 #lvlMsg span { display: inline-block; font: 700 12px/1.3 var(--font-body); padding: 6px 12px; border-radius: 999px; background: var(--as-gold); color: #0B0C10; }
+#noRueck { position: absolute; z-index: 6; left: calc(var(--ix) + var(--iw) - 8px); transform: translateX(-100%); bottom: calc(var(--fh) - var(--iy) - var(--ih) + 48px); font: 600 12px/1.2 var(--font-body); padding: 9px 12px; border-radius: var(--rs); cursor: pointer; }
 .lvlt { white-space: pre-line; position: absolute; z-index: 5; left: calc(var(--ix) + 8px); bottom: calc(var(--fh) - var(--iy) - var(--ih) + 48px); font: 600 11px/1 var(--font-data); padding: 7px 9px; border-radius: 6px; background: var(--chipbg); border: 1px solid var(--gb); color: var(--t); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
 .lvlt[data-ok="1"] { border-color: var(--ok); }
 .toast { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); background: var(--as-gold); color: #0B0C10; font-weight: 700; font-size: 14px; padding: 8px 14px; border-radius: 999px; pointer-events: none; z-index: 12; }
@@ -272,7 +273,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     </div>
     <label class="fld"><span class="lbl">Modell</span><input id="fModell" type="text" maxlength="80" autocomplete="off" autocapitalize="words" placeholder="z. B. X5 xDrive30d"></label>
     <div class="fld"><span class="lbl">Karosserie (bestimmt die Schablone)</span><div class="kar" id="karBox" role="group" aria-label="Karosserie"></div><p class="hs-tip">Cabrio: die Klasse des Grundmodells wählen und unten ankreuzen.</p></div>
-    <div class="fld"><label class="sw"><input type="checkbox" id="fCabrio"> Cabrio / Roadster</label><p class="hs-tip" id="rueckTip" hidden></p></div>
+    <div class="fld"><label class="sw"><input type="checkbox" id="fCabrio"> Cabrio / Roadster</label></div>
     <button class="btn big primary" id="fGo" type="submit">Fahrzeug anlegen und weiter</button>
     <p class="msg" id="fMsg" role="status" aria-live="polite"></p>
   </form>
@@ -354,6 +355,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       <div class="lvl" id="lvl" aria-hidden="true" data-s="off"><i class="tick a"></i><i class="tick b"></i><div class="h" id="lvlH"></div><div class="c"></div></div>
       <div id="lvlMsg" hidden><span id="lvlMsgT"></span></div>
       <div class="lvlt" id="lvlT" hidden>–</div>
+      <button class="cglass" id="noRueck" type="button" hidden>Kein Rücksitz (Zweisitzer)</button>
       <div class="rail L">
         <button class="round" id="camX" type="button" aria-label="Kamera schließen">×</button>
         <div class="mini" id="camDiag" aria-hidden="true"></div>
@@ -439,7 +441,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   }
   // Bildfolge seit 08.11.2026 (Giannis: „4x 3/4 je vorne L+R und hinten L+R (seiten dann optional), Front und Heck“): einmal ums Auto.
   // Pflicht: 6 außen + 4 innen (Cockpit, Tacho, Vordersitze, Rücksitzbank). Freiwillig: Seite Fahrerseite und Beifahrerseite (SEITEN) und Kofferraum (INNEN_FREI).
-  // Rücksitzbank: bei Coupé/Sport und Cabrio/Roadster nicht Pflicht (siehe RUECKBANK_COUPE). Schlüssel wie im Schema `plaetze` (titel = dreiviertel_vl).
+  // Rücksitzbank: bei allen Autos Pflicht; ein Zweisitzer meldet sich mit dem Knopf „Kein Rücksitz“ (dann 9 Bilder). Schlüssel wie im Schema `plaetze` (titel = dreiviertel_vl).
   var PLAETZE = [
     { key: 'titel', nr: 1, art: 'aussen', name: 'Dreiviertel vorn Fahrerseite', sub: 'Titelbild', hint: 'Schräg vor die vordere Ecke auf der Fahrerseite, etwa 2 m Abstand. Scheinwerfer und Fahrerseite im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
     { key: 'front', nr: 2, art: 'aussen', name: 'Front', hint: 'Genau vor das Auto, mittig, etwa 2 m vor der Stoßstange. Scheinwerfer im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
@@ -455,17 +457,16 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   var INNEN_FREI = [
     { key: 'kofferraum', name: 'Kofferraum', hint: 'Freiwillig. Kofferraum offen, die Ladefläche frei und gut sichtbar.' }
   ];
-  // Rücksitzbank bei Coupé/Sport und Cabrio/Roadster: 'frei' = freiwillig (Vorschlag Alfred, bei Giannis offen), 'weg' = gar nicht anbieten. Eine Zeile ändern genügt.
-  var RUECKBANK_COUPE = 'frei';
+  // Rücksitzbank: bei allen Autos Pflicht (Giannis 08.11.2026). Hat ein Auto keine (Zweisitzer), meldet der Händler das mit dem Knopf „Kein Rücksitz“; dann gelten 9 Bilder als vollständig.
   var SEITEN = [
     { key: 'seite_l', name: 'Fahrerseite', hint: 'Freiwillig. Seitlich auf der Fahrerseite, Auto mittig, etwa 6 m von der Automitte (in engen Garagen mindestens etwa 4,5 m). Vorderräder gerade. Das ganze Auto mit Rand im Bild, vorn und hinten je etwas Platz. Niemand im Auto.' },
     { key: 'seite_r', name: 'Beifahrerseite', hint: 'Freiwillig. Seitlich auf der Beifahrerseite, Auto mittig, etwa 6 m von der Automitte (in engen Garagen mindestens etwa 4,5 m). Vorderräder gerade. Das ganze Auto mit Rand im Bild, vorn und hinten je etwas Platz. Niemand im Auto.' }
   ];
-  function ohneRueck() { var v = S.vehicle; return !!(v && (v.klasse === 'coupe' || v.cabrio)); }
+  function ohneRueck() { return !!(S.vehicle && S.vehicle.keineRueck); }
   function rueckPflicht() { return !ohneRueck(); }
-  // Pflichtplätze dieses Fahrzeugs (10, bei Coupé/Cabrio 9) und die freiwilligen Innenplätze (Kofferraum; Rücksitzbank, wenn sie freiwillig ist)
+  // Pflichtplätze dieses Fahrzeugs (10, bei einem Zweisitzer ohne Rücksitzbank 9) und die freiwilligen Innenplätze (Kofferraum)
   function pflicht() { return PLAETZE.filter(function (p) { return p.key !== 'ruecksitzbank' || rueckPflicht(); }); }
-  function freiInnen() { var a = []; if (!rueckPflicht() && (RUECKBANK_COUPE === 'frei' || hasPhoto('ruecksitzbank'))) a.push('ruecksitzbank'); a.push('kofferraum'); return a; }
+  function freiInnen() { return ['kofferraum']; }
   var ZUSATZ_ARTEN = [['motorraum', 'Motorraum'], ['felge', 'Felge'], ['schaden', 'Schaden'], ['kofferraum', 'Kofferraum'], ['sonstiges', 'Sonstiges']];
 
   /* =====================================================================
@@ -679,13 +680,6 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       box.appendChild(b); drawSide(b.querySelector('canvas'), k, 72, 29, on ? (DIR === 'a' ? '#0B0C10' : '#FAFAFA') : (DIR === 'a' ? '#C4CAD4' : '#59626F'));
       b.onclick = function () { S.klasse = k; buildKar(); fmsg(''); };
     });
-    rueckTip();
-  }
-  // Hinweis unter dem Cabrio-Feld: Rücksitzbank bei Coupé/Sport und Cabrio/Roadster
-  function rueckTip() {
-    var el = $('rueckTip'), cab = $('fCabrio'); if (!el) return;
-    var off = S.klasse === 'coupe' || (cab && cab.checked);
-    el.hidden = !off; el.textContent = off ? (RUECKBANK_COUPE === 'frei' ? 'Bei Coupé und Cabrio ist die Rücksitzbank freiwillig.' : 'Bei Coupé und Cabrio entfällt die Rücksitzbank.') : '';
   }
 
   /* =====================================================================
@@ -740,6 +734,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     return {
       real: true,
       ping: function () { return rpc('app_ping', {}); },
+      markNoRear: function (id, on) { return rpc('fahrzeug_merkmal', { p_id: id, p_ohne_ruecksitzbank: !!on }); },
       createVehicle: function (v) { return rpc('fahrzeug_anlegen', { p_id: v.id, p_zugang: cfg.zugang, p_marke: v.marke, p_modell: v.modell, p_baujahr: v.baujahr, p_karosserie: v.karosserie || null, p_selbsttest: !!v.selbsttest }); },
       upload: async function (path, blob) {
         var r = await call(base + '/storage/v1/object/roh/' + path, { method: 'POST', headers: hdr({ 'Content-Type': 'image/jpeg', 'x-upsert': 'false', 'cache-control': 'max-age=3600' }), body: blob }, 90000);
@@ -761,6 +756,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     return {
       real: false,
       ping: async function () { await sleep(200); return { ok: true, schema: 1, zugang_gesetzt: true }; },
+      markNoRear: async function (id, on) { await sleep(120); return { id: id, ohne_ruecksitzbank: !!on }; },
       createVehicle: async function (v) { await sleep(300); vehicles[v.id] = true; return { id: v.id }; },
       upload: async function (path) { await sleep(500 + Math.random() * 700); if (!vehicles[path.split('/')[0]]) throw new ApiError(400, 'Demo: Ordner unbekannt', false); files[path] = true; return true; },
       report: async function (m) { await sleep(150); var q = { id: m.id, fahrzeug_id: m.fahrzeug_id, platz: m.platz, zusatz_nr: m.zusatz_nr || null, t: Date.now(), ampel_handy: m.ampel_handy || null }; photos = photos.filter(function (x) { return !(x.fahrzeug_id === q.fahrzeug_id && x.platz === q.platz && x.zusatz_nr === q.zusatz_nr); }); photos.push(q); return { id: m.id, version: 1, status: 'neu' }; },
@@ -807,8 +803,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (fi) return { id: id, key: fi.key, nr: null, art: 'innen', frei: true, name: fi.name, sub: null, hint: fi.hint, zusatz_nr: null };
     var p = PLAETZE.filter(function (x) { return x.key === id; })[0];
     if (!p) return null;
-    var fr = p.key === 'ruecksitzbank' && !rueckPflicht();
-    return { id: id, key: p.key, nr: fr ? null : p.nr, art: p.art, frei: fr || undefined, name: p.name, sub: p.sub, hint: (fr ? 'Freiwillig. ' : '') + p.hint + (p.key === 'titel' ? ' ' + hoeheHint() : ''), zusatz_nr: null };
+    return { id: id, key: p.key, nr: p.nr, art: p.art, name: p.name, sub: p.sub, hint: p.hint + (p.key === 'titel' ? ' ' + hoeheHint() : ''), zusatz_nr: null };
   }
   function slotState(id) {
     if (!S.slots[id]) { var m = slotMeta(id); S.slots[id] = { id: id, key: m.key, zusatz_nr: m.zusatz_nr, zusatz_art: null, thumb: null, fotoId: null, state: 'leer', err: null, server: null, ampelHandy: null }; }
@@ -1487,6 +1482,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     $('camNr').textContent = m.frei ? 'Freiwillig' : (m.nr ? m.nr + ' von ' + pflicht().length : 'Zusatzbild');
     $('camLbl').textContent = m.name + (m.sub ? ' (' + m.sub + ')' : '');
     $('camHint').textContent = m.hint;
+    $('noRueck').hidden = !(S.cur === 'ruecksitzbank' && !hasPhoto('ruecksitzbank'));
     $('camDiag').innerHTML = diagSvg(m.key);
     // Der Hinweis liegt nicht mehr über dem Bild: nur auf Tipp (Titel links), beim allerersten Bild kurz offen
     clearTimeout(chipT); hintOpen(!hasAnyPhoto());
@@ -1777,7 +1773,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       id: st.fotoId, fahrzeug_id: S.vehicle.id, platz: m.key, zusatz_nr: m.zusatz_nr, zusatz_art: m.art === 'zusatz' ? S.zusatzArt : null,
       ampel_handy: r.ampel, ampel_handy_gruende: r.gruende.join('; '), geraet: dev(), brennweite_kb: r.f35, neigung: r.snap ? +r.snap.p.toFixed(1) : null, rollen: r.snap ? +r.snap.r.toFixed(1) : null,
       drehung: r.drehung, breite: r.w, hoehe: r.h, bytes: r.blob.size,
-      app_details: { app: APP, quelle: r.quelle, selbstausloeser: false, ausloeser: { art: 'manuell', freigabe: r.quelle === 'kamera-app' ? 'kamera_app' : (r.how.forced ? (r.how.noSensor ? 'erzwungen_ohne_sensor' : 'erzwungen') : 'frei'), frei_nach_ms: r.how.waitMs || 0, nachstabil_ms: r.how.nach ? r.how.nach.ms : null, nachstabil_ruhig: r.how.nach ? r.how.nach.ruhig : null }, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, klasse: (S.vehicle && S.vehicle.klasse && KLASSE_NAME[S.vehicle.klasse]) || null, cabrio: !!(S.vehicle && S.vehicle.cabrio), ruecksitzbank: rueckPflicht() ? 'pflicht' : RUECKBANK_COUPE, design: 'v4', abgleich: r.fit || null, aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, folge: 'rundum-v3', winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v1: gelb ab ' + AMPEL.gelb.p + '/' + AMPEL.gelb.r + ', rot ab ' + AMPEL.rot.p + '/' + AMPEL.rot.r + ', Soll-Neigung ' + AMPEL.p0 } }
+      app_details: { app: APP, quelle: r.quelle, selbstausloeser: false, ausloeser: { art: 'manuell', freigabe: r.quelle === 'kamera-app' ? 'kamera_app' : (r.how.forced ? (r.how.noSensor ? 'erzwungen_ohne_sensor' : 'erzwungen') : 'frei'), frei_nach_ms: r.how.waitMs || 0, nachstabil_ms: r.how.nach ? r.how.nach.ms : null, nachstabil_ruhig: r.how.nach ? r.how.nach.ruhig : null }, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, klasse: (S.vehicle && S.vehicle.klasse && KLASSE_NAME[S.vehicle.klasse]) || null, cabrio: !!(S.vehicle && S.vehicle.cabrio), ruecksitzbank: rueckPflicht() ? 'pflicht' : 'keine', design: 'v4', abgleich: r.fit || null, aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, folge: 'rundum-v4', winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v1: gelb ab ' + AMPEL.gelb.p + '/' + AMPEL.gelb.r + ', rot ab ' + AMPEL.rot.p + '/' + AMPEL.rot.r + ', Soll-Neigung ' + AMPEL.p0 } }
     };
     var item = { slot: r.slot, id: st.fotoId, path: S.vehicle.id + '/' + m.key + '_' + st.fotoId + '.jpg', blob: r.blob, meta: meta, tries: 0, fileDone: false, state: 'wartet' };
     discardReview();
@@ -1785,6 +1781,10 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     toast('Gespeichert, wird hochgeladen');
     saveSession();
     S.idx++;
+    afterSlot();
+  };
+  // Weiter nach einem erledigten Platz (Foto angenommen oder „Kein Rücksitz“)
+  function afterSlot() {
     // freiwilliges Seitenbild aus dem Zwischenbildschirm: danach zurück dorthin
     if (S.mode === 'side') { var rs = S.resume; S.resume = null; if (rs) { S.seq = rs.seq; S.idx = rs.idx; S.mode = rs.mode; if (rs.where === 'ende') { betweenEnde(); return; } } if (rs && S.idx < S.seq.length) { betweenInnen(); return; } endSequence(); return; }
     // Übergang Außen → Innen
@@ -1792,7 +1792,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     // Übergang Innen → freiwillige Innenbilder (Kofferraum usw.)
     if (S.mode === 'seq' && S.idx >= S.seq.length && slotMeta(S.seq[S.idx - 1]).art === 'innen' && pflicht().every(function (p) { return hasPhoto(p.key); }) && freiInnen().some(function (k) { return !hasPhoto(k); })) { betweenEnde(); return; }
     nextShot();
-  };
+  }
 
   function startSide(id, where) {
     S.resume = { seq: S.seq.slice(), idx: S.idx, mode: S.mode, where: where || 'innen' };
@@ -1812,6 +1812,25 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     Array.prototype.forEach.call($('betBox').querySelectorAll('[data-side]'), function (b) { b.onclick = function () { startSide(b.getAttribute('data-side'), 'innen'); }; });
   }
   // nach dem letzten Pflicht-Innenbild: freiwillige Innenbilder anbieten (Kofferraum; Rücksitzbank bei Coupé/Cabrio), so wie die Seiten nach Außen
+  // Zweisitzer: Rückfrage, danach ist der Platz erledigt (9 von 9). Rückgängig: Kachel in der Galerie antippen.
+  $('noRueck').onclick = function () {
+    S.token++; S.phase = 'between';
+    $('betBox').innerHTML = '<h1>Kein Rücksitz?</h1><p>Dieses Auto hat keine Rücksitzbank?</p>' +
+      '<div class="btns"><button class="btn big primary" id="nrJa" type="button">Ja</button><button class="btn big" id="nrNein" type="button">Abbrechen</button></div>';
+    paneShow('vCam', false); paneShow('vRev', false); paneShow('vTurn', false); paneShow('vBet', true);
+    $('nrNein').onclick = function () { paneShow('vBet', false); runShot(); };
+    $('nrJa').onclick = function () {
+      if (S.vehicle) { S.vehicle.keineRueck = true; S.vehicle.flagTries = 0; saveSession(); }
+      syncFlag(); paneShow('vBet', false); toast('Gespeichert: kein Rücksitz'); S.idx++; afterSlot();
+    };
+  };
+  // Zweisitzer: das Merkmal je Fahrzeug an den Server melden (ohne Foto; so gelten 9 Bilder als vollständig). Bei Fehlern später nochmal, sonst steht es in app_details.
+  async function syncFlag() {
+    var v = S.vehicle; if (!v || !S.api || !S.api.markNoRear) return;
+    var want = !!v.keineRueck; if (!!v.keineRueckSent === want || (v.flagTries || 0) >= 8) return;
+    v.flagTries = (v.flagTries || 0) + 1;
+    try { await S.api.markNoRear(v.id, want); v.keineRueckSent = want; v.flagTries = 0; saveSession(); } catch (e) { /* später nochmal */ }
+  }
   function betweenEnde() {
     S.token++; S.phase = 'between';
     var ks = freiInnen(), names = ks.map(function (k) { return slotMeta(k).name; }).join(' und ');
@@ -1926,6 +1945,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function amp(a, label) { return a ? '<span class="amp" title="' + esc(label) + '"><i class="' + a + '"></i>' + esc(label) + ' ' + ({ gruen: 'grün', gelb: 'gelb', rot: 'rot' })[a] + '</span>' : ''; }
   function tileInfo(id) {
     var s = S.slots[id], m = slotMeta(id);
+    if (id === 'ruecksitzbank' && ohneRueck() && !hasPhoto(id)) return { t: 'kein Rücksitz', c: 'ok' };
     if (!s || (s.state === 'leer' && !s.server)) return { t: 'noch offen', c: '' };
     if (s.state === 'wartet' || s.state === 'sendet') return { t: 'wird hochgeladen', c: 'busy' };
     if (s.state === 'retry') return { t: 'wartet auf Netz', c: 'warn' };
@@ -1943,7 +1963,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var v = S.vehicle; if (!v) return;
     $('gTitle').textContent = v.marke + ' ' + v.modell;
     $('gChip').textContent = (KINDS[v.klasse] ? KINDS[v.klasse].n + ' · ' : '') + v.baujahr;
-    var PF = pflicht(), NP = PF.length, ids = PF.map(function (p) { return p.key; }).concat(SEITEN.map(function (s) { return s.key; }), hasPhoto('seite') ? ['seite'] : [], freiInnen(), zusatzIds()), done = PF.filter(function (p) { return hasPhoto(p.key); }).length, kind = klasseOf();
+    var PF = pflicht(), NP = PF.length, ids = PF.map(function (p) { return p.key; }).concat(ohneRueck() && !hasPhoto('ruecksitzbank') ? ['ruecksitzbank'] : [], SEITEN.map(function (s) { return s.key; }), hasPhoto('seite') ? ['seite'] : [], freiInnen(), zusatzIds()), done = PF.filter(function (p) { return hasPhoto(p.key); }).length, kind = klasseOf();
     var pending = S.queue.length;
     $('gSum').textContent = done + ' von ' + NP + ' Pflichtbildern aufgenommen' + (zusatzIds().length ? ', ' + zusatzIds().length + ' Zusatzbild' + (zusatzIds().length > 1 ? 'er' : '') : '') + (pending ? ' · ' + pending + (pending === 1 ? ' wird' : ' werden') + ' noch hochgeladen' : '');
     $('gProg').innerHTML = '<i style="width:' + Math.round(done * 100 / NP) + '%"></i>';
@@ -1968,12 +1988,16 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var v = S.vehicle; if (!v) return;
     var PF = pflicht(), aus = PF.filter(function (p) { return p.art === 'aussen' && hasPhoto(p.key); }).length, inn = PF.filter(function (p) { return p.art === 'innen' && hasPhoto(p.key); }).length, innN = PF.filter(function (p) { return p.art === 'innen'; }).length, fi = freiInnen(), fiN = fi.filter(function (k) { return hasPhoto(k); }).length, zu = zusatzIds().length, pending = S.queue.length;
     $('eSub').textContent = pending ? pending + (pending === 1 ? ' Foto wird' : ' Fotos werden') + ' noch hochgeladen. Die App sendet im Hintergrund weiter.' : 'Die Bearbeitung läuft. Den Stand je Bild sehen Sie in der Galerie.';
-    $('eSum').innerHTML = '<div><span>Außenbilder</span><span>' + aus + ' von 6</span></div><div><span>Innenbilder</span><span>' + inn + ' von ' + innN + '</span></div><div><span>Innen freiwillig</span><span>' + fiN + ' von ' + fi.length + '</span></div><div><span>Seiten (freiwillig)</span><span>' + SEITEN.filter(function (s) { return hasPhoto(s.key); }).length + ' von 2</span></div><div><span>Zusatzbilder</span><span>' + zu + '</span></div><div><span>Fahrzeug</span><span>' + esc(v.marke + ' ' + v.modell) + '</span></div>';
+    $('eSum').innerHTML = '<div><span>Außenbilder</span><span>' + aus + ' von 6</span></div><div><span>Innenbilder</span><span>' + inn + ' von ' + innN + '</span></div>' + (ohneRueck() ? '<div><span>Rücksitzbank</span><span>kein Rücksitz</span></div>' : '') + '<div><span>Innen freiwillig</span><span>' + fiN + ' von ' + fi.length + '</span></div><div><span>Seiten (freiwillig)</span><span>' + SEITEN.filter(function (s) { return hasPhoto(s.key); }).length + ' von 2</span></div><div><span>Zusatzbilder</span><span>' + zu + '</span></div><div><span>Fahrzeug</span><span>' + esc(v.marke + ' ' + v.modell) + '</span></div>';
   }
   function showEnd() { showPage('pEnd'); renderEnd(); }
   $('gGrid').addEventListener('click', function (ev) {
     var b = ev.target.closest('.tile'); if (!b) return; var id = b.getAttribute('data-id'), s = S.slots[id];
     if (s && s.state === 'fehler' && s.item && s.item.blob && /nochmal/.test(ev.target.textContent || '')) { var it = s.item; s.item = null; it.tries = 0; it.failed = false; idbPut(it); s.state = 'wartet'; S.queue.push(it); renderGallery(); kick(); return; }
+    if (id === 'ruecksitzbank' && ohneRueck() && !hasPhoto(id)) {   // Kachel „kein Rücksitz“ antippen = rückgängig
+      if (confirm('Doch eine Rücksitzbank aufnehmen? Sie zählt dann wieder als Pflichtbild.')) { S.vehicle.keineRueck = false; S.vehicle.flagTries = 0; saveSession(); syncFlag(); renderGallery(); }
+      return;
+    }
     var m = slotMeta(id), isNew = !hasPhoto(id);
     if (!isNew && !confirm('„' + m.name + '“ neu aufnehmen? Das neue Foto ersetzt das alte (das alte bleibt als frühere Version gespeichert).')) return;
     if (m.art === 'zusatz') S.zusatzArt = (s && s.zusatz_art) || 'sonstiges';
@@ -2008,6 +2032,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function schedulePoll(ms) { clearTimeout(S.pollTimer); if ($('pGallery').hidden || !S.vehicle) return; S.pollTimer = setTimeout(poll, ms); }
   async function poll() {
     if ($('pGallery').hidden || !S.vehicle) return;
+    syncFlag();
     try {
       var list = await S.api.status(S.vehicle.id);
       (list || []).forEach(function (r) {
@@ -2037,7 +2062,6 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var sl = {}; Object.keys(S.slots).forEach(function (k) { var s = S.slots[k]; if (s.state === 'hochgeladen') sl[k] = { zusatz_art: s.zusatz_art, ampelHandy: s.ampelHandy }; });
     store('fa_veh', { vehicle: S.vehicle, slots: sl });
   }
-  $('fCabrio').onchange = rueckTip;
   function resetVehicle() { S.vehicle = null; S.slots = {}; S.camChoice = null; S.klasse = null; store('fa_veh', null); clearTimeout(S.pollTimer); buildKar(); }
   $('resumeYes').onclick = function () {
     var rs = load('fa_veh'); if (!rs) return;
