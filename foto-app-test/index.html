@@ -7,7 +7,7 @@
 <meta name="referrer" content="no-referrer">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#EEF0F4" id="metaTheme">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://*.supabase.co; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; font-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://*.supabase.co; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; worker-src 'self' blob:; font-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="apple-mobile-web-app-title" content="Foto-App Test">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -182,7 +182,11 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .mini { width: 100%; max-width: 92px; aspect-ratio: 1; border-radius: var(--rs); overflow: hidden; border: 1px solid var(--gb); background: var(--glass); flex: none; }
 .mini svg { width: 100%; height: 100%; display: block; }
 .mini:empty { display: none; }
-.rtxt:empty { visibility: hidden; }
+.rtxt:empty { display: none; }
+.rgrp { display: grid; gap: 6px; width: 100%; justify-items: center; align-content: start; }
+.rtxt .dot { margin-right: 3px; }
+#vCam[data-fit="gruen"] .brk { border-color: var(--lvl-ok); }
+#detBox { position: absolute; z-index: 4; border: 2px dashed var(--lvl-ok); pointer-events: none; }
 .form .msg:empty { display: none; }
 .rtxt { font: 600 12px/1.3 var(--font-body); text-align: center; color: var(--t); background: var(--chipbg); border: 1px solid var(--gb); border-radius: var(--rs); padding: 7px 8px; width: 100%; max-width: 132px; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); overflow-wrap: anywhere; }
 .shut { width: 78px; height: 78px; position: relative; cursor: pointer; border: 0; background: transparent; padding: 0; flex: none; }
@@ -208,7 +212,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .lvl .tick.a { left: calc(22% - 24px); } .lvl .tick.b { right: calc(22% - 24px); }
 #lvlMsg { position: absolute; z-index: 5; left: var(--ix); width: var(--iw); top: calc(var(--iy) + var(--ih) * .5 + 30px); text-align: center; pointer-events: none; }
 #lvlMsg span { display: inline-block; font: 700 12px/1.3 var(--font-body); padding: 6px 12px; border-radius: 999px; background: var(--as-gold); color: #0B0C10; }
-.lvlt { position: absolute; z-index: 5; left: calc(var(--ix) + 8px); bottom: calc(var(--fh) - var(--iy) - var(--ih) + 48px); font: 600 11px/1 var(--font-data); padding: 7px 9px; border-radius: 6px; background: var(--chipbg); border: 1px solid var(--gb); color: var(--t); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.lvlt { white-space: pre-line; position: absolute; z-index: 5; left: calc(var(--ix) + 8px); bottom: calc(var(--fh) - var(--iy) - var(--ih) + 48px); font: 600 11px/1 var(--font-data); padding: 7px 9px; border-radius: 6px; background: var(--chipbg); border: 1px solid var(--gb); color: var(--t); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
 .lvlt[data-ok="1"] { border-color: var(--ok); }
 .toast { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); background: var(--as-gold); color: #0B0C10; font-weight: 700; font-size: 14px; padding: 8px 14px; border-radius: 999px; pointer-events: none; z-index: 12; }
 #revDbg { font: 500 11px/1.35 var(--font-data); color: var(--t2); overflow-wrap: anywhere; }
@@ -272,6 +276,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     <div><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="24" height="14" rx="3"/><circle cx="14" cy="14" r="4"/></svg><span>Handy <b>quer</b>, Kamera <b>1x</b>, ruhig halten. Die App löst selbst aus.</span></div>
     <div><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10V4h6M18 4h6v6M24 18v6h-6M10 24H4v-6"/></svg><span>Das <b>ganze Auto mit etwas Rand</b> in die Schablone</span></div>
   </div>
+  <p class="hs-tip" id="aiTip"><b>Auto-Erkennung:</b> Beim Anlegen lädt die App einmalig rund 20 MB im Hintergrund (der Browser merkt sich das). Danach prüft sie im Sucher auf dem Gerät, ob das Auto in der Schablone steht. Das Kamerabild bleibt auf dem Gerät. Ohne Erkennung bleibt die Schablone eine Orientierung.</p>
   <details class="more">
     <summary>Mehr Hinweise</summary>
     <ul class="hints">
@@ -336,9 +341,10 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 <div id="stage" hidden>
   <div id="vidBox"><video id="video" playsinline muted autoplay></video></div>
   <div id="ui">
-    <div class="pane" id="vCam" hidden>
+    <div class="pane" id="vCam" data-fit="aus" hidden>
       <canvas id="ovCv" aria-hidden="true"></canvas>
       <i class="brk tl"></i><i class="brk tr"></i><i class="brk bl"></i><i class="brk br"></i>
+      <div id="detBox" hidden aria-hidden="true"></div>
       <div class="lvl" id="lvl" aria-hidden="true" data-s="off"><i class="tick a"></i><i class="tick b"></i><div class="h" id="lvlH"></div><div class="c"></div></div>
       <div id="lvlMsg" hidden><span id="lvlMsgT"></span></div>
       <div class="lvlt" id="lvlT" hidden>–</div>
@@ -348,7 +354,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         <button class="railtitle" id="camChip" type="button" aria-expanded="false" aria-label="Hinweis zur Position ein- oder ausklappen"><span class="nr" id="camNr"></span><b id="camLbl"></b><span class="more">Hinweis ▾</span></button>
       </div>
       <div class="rail R">
-        <span class="rtxt" id="stillTxt">–</span>
+        <div class="rgrp"><span class="rtxt" id="fitTxt"></span><span class="rtxt" id="stillTxt">–</span></div>
         <button class="shut" id="shotBtn" type="button" aria-label="Jetzt auslösen" disabled><svg viewBox="0 0 78 78" aria-hidden="true"><circle class="bg" cx="39" cy="39" r="35" fill="none" stroke-width="4"/><circle class="arc" id="stillArc" cx="39" cy="39" r="35" fill="none" stroke-width="4" stroke-linecap="round"/></svg><span class="in" id="shotIn"></span></button>
         <span class="rtxt" id="stillSub">Löst von selbst aus</span>
       </div>
@@ -663,6 +669,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         if (p.has('debug')) cfg.debug = true;
         if (p.has('hs')) cfg.hs = true;                // Home-Bildschirm: Link-Teil bleibt in der Adresse, damit das Symbol ihn mitnimmt
         if (p.has('sim') && cfg.demo) cfg.sim = true;  // nur im Demo ohne Server: gezeichnete Kamera
+        if (cfg.demo && /^[\w.\/-]{1,80}$/.test(p.get('simimg') || '')) { cfg.sim = true; cfg.simImg = p.get('simimg'); }   // nur Test: Bild statt Zeichnung
         store('fa_cfg', cfg); if (!cfg.hs) { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* egal */ } } }
     }
     if (!cfg) cfg = load('fa_cfg');
@@ -899,7 +906,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (m.art === 'aussen' && kind) {
       var c = setup(cv, LAY.iw, LAY.ih), pose = camPose(m.key, kind, camH(), GEO.winkel, GEO.eckeM);
       var cam = makeCam(pose.P, frameF(LAY.iw), LAY.iw / 2, LAY.ih / 2, AMPEL.p0, [aimShift(m.key, kind, camH(), GEO.winkel, AMPEL.p0, LAY.iw, LAY.ih), 0, 0]);
-      drawCar(c, cam, kind, { fill: false, outline: true, line: '#FFC77C', lw: Math.max(.6, LAY.ih / 390) });
+      drawCar(c, cam, kind, { fill: false, outline: true, line: ($('vCam').getAttribute('data-fit') === 'gruen') ? '#5BD08A' : '#FFC77C', lw: Math.max(.6, LAY.ih / 390) });
     } else if (m.art === 'innen') {
       var c2 = setup(cv, LAY.iw, LAY.ih), w = LAY.iw * .74, h = LAY.ih * .62, x = (LAY.iw - w) / 2, y = (LAY.ih - h) / 2 - LAY.ih * .02, r = 14;
       c2.lineWidth = 3; c2.setLineDash([12, 9]); c2.strokeStyle = '#FFC77C'; c2.fillStyle = 'rgba(0,0,0,.14)';
@@ -960,11 +967,13 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function simSnap() { var t = performance.now() / 1000, p = AMPEL.p0 + Math.sin(t * .8) * 3.2 + Math.sin(t * 2.1) * .9, r = Math.sin(t * 1.1) * .45; return { age: 0, p: p, r: r, pMed: p, rMed: r, n: 9 }; }
   function simScene() {
     var cv = S.simCv; if (!cv) return;
+    if (S.simImgEl) { cv.width = 1280; cv.height = 960; cv.getContext('2d').drawImage(S.simImgEl, 0, 0, 1280, 960); return; }
     var m = slotMeta(S.cur), kind = klasseOf() || 'limousine';
     drawScene(cv, 640, 480, { kind: kind, key: m.art === 'aussen' ? m.key : 'titel', h: camH() + .04, ang: GEO.winkel + (m.art === 'aussen' ? 3 : 0), pitch: AMPEL.p0 + 2.5, bg: 'hof', fill: true });
   }
   async function openSim() {
     closeStream();
+    if (S.cfg.simImg && !S.simImgEl) { try { var im = new Image(); im.src = S.cfg.simImg; await new Promise(function (res, rej) { im.onload = res; im.onerror = rej; }); S.simImgEl = im; } catch (e) { S.simImgEl = null; } }
     var cv = document.createElement('canvas'); S.simCv = cv; simScene();
     var st = cv.captureStream(12); S.stream = st; S.track = st.getVideoTracks()[0];
     var v = $('video'); v.srcObject = st; try { await v.play(); } catch (e) { /* muted autoplay */ }
@@ -972,6 +981,141 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     clearInterval(S.simT); S.simT = setInterval(function () { if (!$('stage').hidden && S.stream) simScene(); }, 400);   // neue Bilder, damit der Strom Bildfläche liefert
     S.ic = { takePhoto: function () { return toBlob(S.simCv, .9); } };
     S.streamOpenedAt = performance.now(); S.shotsSinceOpen = 0;
+  }
+
+  /* =====================================================================
+     Auto-Erkennung im Sucher (Abgleich mit der Schablone). Läuft nur auf dem Gerät: MediaPipe Object Detector mit EfficientDet-Lite0 (COCO),
+     Bibliothek und Modell liegen selbst gehostet unter ai/ (kein Fremd-CDN, Lizenztexte dabei). Kein Kamerabild verlässt das Gerät, nur Zahlen gehen in app_details.
+     Stufe 1 (Entscheidung Giannis 08.11.2026): zeigen und protokollieren, der Selbstauslöser bleibt unverändert.
+     Rechnung: Rahmen des erkannten Autos gegen den gerechneten Rahmen der Schablone (Überdeckung IoU, Größe, Mitte); Schwellen sind Vorschlag und werden an echten Fotos eingestellt.
+     Rückfall: lädt oder läuft die Erkennung nicht, bleibt es bei der reinen Schablone als Orientierung.
+     ===================================================================== */
+  var AI = { state: 'aus', det: null, err: null, loadMs: null, delegate: 'CPU', model: 'efficientdet_lite0_int8', timer: null, every: 250, lastTs: 0, fails: 0, slow: 0, tms: [], ema: null, cur: { status: 'aus' }, greenSince: 0, n: 0, since: 0,
+    // Schwellen (VORSCHLAG): an 9 Außenfotos von Giannis' A6 (Freihand 08.11.) geeicht: bester Abgleich dort IoU 0,52 bis 0,82, der erkannte Rahmen ist im Mittel
+    // etwa 0,9-mal so breit wie der gerechnete Rahmen der Schablone (K_SCALE). Nach der ersten Testfahrt mit den protokollierten Werten nachstellen.
+    IOU_GRUEN: 0.55, IOU_GELB: 0.40, K_SCALE: 0.90, SCALE_LO: 0.85, SCALE_HI: 1.20, DX_MAX: 0.15, DY_MAX: 0.20, GRUEN_MS: 500, SCORE_MIN: 0.30 };
+  function aiScript(src) { return new Promise(function (res, rej) { var s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = function () { rej(new Error('Skript nicht geladen')); }; document.head.appendChild(s); }); }
+  // Läuft im Hintergrund ab „Fahrzeug anlegen“; der Sucher geht sofort, bis dahin nur die Schablone
+  async function aiLoad() {
+    if (AI.state !== 'aus') return;
+    if (!window.WebAssembly) { AI.state = 'fehler'; AI.err = 'kein WebAssembly'; aiFitUi(); return; }
+    AI.state = 'laedt'; aiFitUi();
+    var t0 = performance.now();
+    try {
+      await aiScript('ai/vision_bundle.js');
+      var fs = await window.Vision.FilesetResolver.forVisionTasks('ai/wasm');
+      // CPU-Pfad: zuverlässig und überall gleich; der GPU-Pfad lieferte in einer Prüfung unbrauchbare Boxen
+      AI.det = await window.Vision.ObjectDetector.createFromOptions(fs, { baseOptions: { modelAssetPath: 'ai/efficientdet_lite0.tflite', delegate: 'CPU' }, runningMode: 'VIDEO', scoreThreshold: AI.SCORE_MIN, maxResults: 6, categoryAllowlist: ['car', 'truck'] });
+      AI.state = 'bereit'; AI.loadMs = Math.round(performance.now() - t0);
+    } catch (e) { AI.state = 'fehler'; AI.err = errText(e).slice(0, 120); AI.det = null; }
+    aiFitUi();
+  }
+  // Rahmen der Schablone, normiert (0 bis 1 der Bildfläche), aus dem Kameramodell gerechnet
+  var schabCache = {};
+  function schabBox(key, kind) {
+    var ck = [key, kind, camH()].join('|'); if (schabCache[ck]) return schabCache[ck];
+    var w = 640, hh = 480, pose = camPose(key, kind, camH(), GEO.winkel, GEO.eckeM), cam = makeCam(pose.P, frameF(w), w / 2, hh / 2, AMPEL.p0, [aimShift(key, kind, camH(), GEO.winkel, AMPEL.p0, w, hh), 0, 0]);
+    var M = buildModel(kind), b = { x0: 1e9, x1: -1e9, y0: 1e9, y1: -1e9 };
+    M.faces.forEach(function (fc) { fc.poly.forEach(function (p) { var q = cam(p); if (q[2] < .2) return; b.x0 = Math.min(b.x0, q[0]); b.x1 = Math.max(b.x1, q[0]); b.y0 = Math.min(b.y0, q[1]); b.y1 = Math.max(b.y1, q[1]); }); });
+    M.wheels.forEach(function (wh) { var q = cam([wh.x, wh.y, 0]); if (q[2] > .2) b.y1 = Math.max(b.y1, q[1]); });
+    return (schabCache[ck] = { x0: b.x0 / w, x1: b.x1 / w, y0: b.y0 / hh, y1: b.y1 / hh });
+  }
+  function iouOf(a, b) {
+    var ix = Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0)), iy = Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0)), inter = ix * iy;
+    var ua = (a.x1 - a.x0) * (a.y1 - a.y0) + (b.x1 - b.x0) * (b.y1 - b.y0) - inter;
+    return ua > 0 ? inter / ua : 0;
+  }
+  function aiOuter() { var m = S.cur ? slotMeta(S.cur) : null; return (m && m.art === 'aussen' && klasseOf()) ? m : null; }
+  function aiAvg() { return AI.tms.length ? AI.tms.reduce(function (t, v) { return t + v; }, 0) / AI.tms.length : 0; }
+  // Auswertung eines Messwerts: glätten, vergleichen, Stand bestimmen
+  function aiUpdate(best, sb) {
+    var now = performance.now(), prev = AI.cur.status;
+    if (!best) { AI.ema = null; AI.greenSince = 0; AI.cur = { status: 'keins', n: AI.n }; return; }
+    var e = AI.ema ? { x0: AI.ema.x0 + (best.x0 - AI.ema.x0) * .5, y0: AI.ema.y0 + (best.y0 - AI.ema.y0) * .5, x1: AI.ema.x1 + (best.x1 - AI.ema.x1) * .5, y1: AI.ema.y1 + (best.y1 - AI.ema.y1) * .5 } : { x0: best.x0, y0: best.y0, x1: best.x1, y1: best.y1 };
+    AI.ema = e;
+    var iou = iouOf(e, sb), sw = sb.x1 - sb.x0, sh = sb.y1 - sb.y0, scale = (e.x1 - e.x0) / sw, dx = ((e.x0 + e.x1) / 2 - (sb.x0 + sb.x1) / 2) / sw, dy = ((e.y0 + e.y1) / 2 - (sb.y0 + sb.y1) / 2) / sh;
+    var cut = e.x0 < 0.015 || e.x1 > 0.985 || e.y0 < 0.015 || e.y1 > 0.985, status, hint = '', scaleN = scale / AI.K_SCALE;
+    var ok = iou >= AI.IOU_GRUEN && scaleN >= AI.SCALE_LO && scaleN <= AI.SCALE_HI && Math.abs(dx) <= AI.DX_MAX && Math.abs(dy) <= AI.DY_MAX && !cut;
+    if (ok) { if (!AI.greenSince) AI.greenSince = now; status = (now - AI.greenSince >= AI.GRUEN_MS) ? 'gruen' : 'fast'; }
+    else { AI.greenSince = 0; status = iou >= AI.IOU_GELB ? 'gelb' : 'rot'; }
+    if (status !== 'gruen') {
+      if (cut) hint = 'Auto wird angeschnitten: etwas zurück';
+      else if (scaleN > AI.SCALE_HI) hint = 'Etwas zurück';
+      else if (scaleN < AI.SCALE_LO) hint = 'Etwas näher';
+      else if (dx > AI.DX_MAX) hint = 'Handy etwas nach rechts schwenken';
+      else if (dx < -AI.DX_MAX) hint = 'Handy etwas nach links schwenken';
+      else if (status !== 'fast') hint = 'Fast, noch etwas ausrichten';
+    }
+    AI.cur = { status: status, hint: hint, iou: iou, scale: scale, scaleN: scaleN, dx: dx, dy: dy, box: e, sch: sb, kat: best.kat, score: best.score, cut: cut, greenSince: AI.greenSince, n: AI.n };
+    if (prev !== status) aiFitUi();
+  }
+  function aiStep() {
+    AI.timer = null;
+    if ($('stage').hidden) return;
+    var m = aiOuter();
+    if (AI.state === 'bereit' && m && !$('vCam').hidden && (S.phase === 'settle' || S.phase === 'still') && LAY.aligned && S.stream) {
+      var v = $('video');
+      if (v.readyState >= 2 && v.videoWidth) {
+        try {
+          var t0 = performance.now(), ts = Math.max(AI.lastTs + 1, Math.round(t0)); AI.lastTs = ts;
+          var res = AI.det.detectForVideo(v, ts), dt = performance.now() - t0, kind = klasseOf(), sb = schabBox(m.key, kind), best = null, W = v.videoWidth, H = v.videoHeight;
+          AI.tms.push(dt); if (AI.tms.length > 8) AI.tms.shift(); AI.fails = 0; AI.n++;
+          (res.detections || []).forEach(function (d) {
+            var b = d.boundingBox, c = d.categories && d.categories[0]; if (!c || c.score < AI.SCORE_MIN) return;
+            var bx = { x0: b.originX / W, y0: b.originY / H, x1: (b.originX + b.width) / W, y1: (b.originY + b.height) / H, score: c.score, kat: c.categoryName };
+            bx.iou = iouOf(bx, sb); if (!best || bx.iou > best.iou) best = bx;   // es zählt das Auto mit der größten Überdeckung
+          });
+          aiUpdate(best && best.iou > 0.05 ? best : null, sb);
+          // zu langsam: Intervall anpassen, bei dauerhaft zu langsam abschalten (Rückfall auf reine Schablone)
+          var avg = aiAvg(); AI.every = Math.max(250, Math.min(1500, Math.round(avg * 2)));
+          if (avg > 700) AI.slow++; else AI.slow = 0;
+          if (AI.slow >= 4) { AI.state = 'fehler'; AI.err = 'zu langsam (' + Math.round(avg) + ' ms je Bild)'; AI.cur = { status: 'aus' }; }
+        } catch (e) { AI.fails++; if (AI.fails >= 3) { AI.state = 'fehler'; AI.err = errText(e).slice(0, 120); AI.cur = { status: 'aus' }; } }
+        aiFitUi();
+      }
+    } else if (AI.cur.status !== 'aus' && !(AI.state === 'bereit' && m)) { AI.ema = null; AI.greenSince = 0; AI.cur = { status: 'aus' }; aiFitUi(); }
+    aiSchedule();
+  }
+  function aiSchedule() { if (AI.timer || $('stage').hidden) return; AI.timer = setTimeout(aiStep, AI.every); }
+  function aiStop() { clearTimeout(AI.timer); AI.timer = null; AI.ema = null; AI.greenSince = 0; if (AI.cur.status !== 'aus') AI.cur = { status: 'aus' }; }
+  // Anzeige: Chip in der rechten Leiste, Farbe der Schablone und Ecken, im Messwerte-Modus Rahmen des Autos
+  function aiFitUi() {
+    var chip = $('fitTxt'), m = aiOuter(), st = AI.cur.status, cam = $('vCam');
+    if (!chip) return;
+    var txt = '', dot = '', green = false;
+    if (!m) { txt = ''; }
+    else if (AI.state === 'laedt' || AI.state === 'aus') { txt = 'Erkennung lädt …'; dot = ''; }
+    else if (AI.state === 'fehler') { txt = 'Nur Orientierung'; dot = ''; }
+    else if (st === 'gruen') { txt = 'Auto passt'; dot = 'ok'; green = true; }
+    else if (st === 'fast') { txt = 'Gleich passt es'; dot = 'ok'; }
+    else if (st === 'gelb' || st === 'rot') { txt = AI.cur.hint || 'Auto ausrichten'; dot = st === 'rot' ? 'bad' : 'warn'; }
+    else if (st === 'keins') { txt = 'Auto wird gesucht …'; dot = ''; }
+    else { txt = 'Orientierung'; dot = ''; }
+    chip.innerHTML = txt ? (dot ? '<i class="dot ' + dot + '"></i> ' : '') + esc(txt) : '';
+    var was = cam.getAttribute('data-fit') === 'gruen';
+    cam.setAttribute('data-fit', green ? 'gruen' : 'aus');
+    if (was !== green) drawOverlay();
+    var box = $('detBox'); if (!box) return;
+    if (VAR.debug && m && AI.cur.box && (st !== 'aus')) {
+      var b = AI.cur.box; box.hidden = false;
+      box.style.left = (LAY.ix + b.x0 * LAY.iw) + 'px'; box.style.top = (LAY.iy + b.y0 * LAY.ih) + 'px'; box.style.width = ((b.x1 - b.x0) * LAY.iw) + 'px'; box.style.height = ((b.y1 - b.y0) * LAY.ih) + 'px';
+    } else box.hidden = true;
+  }
+  function aiDebugText() {
+    var c = AI.cur;
+    if (AI.state !== 'bereit') return 'Erkennung: ' + AI.state + (AI.err ? ' (' + AI.err + ')' : '');
+    if (c.iou == null) return 'Erkennung: ' + (c.status === 'keins' ? 'kein Auto' : '–') + ' · ' + Math.round(aiAvg()) + ' ms';
+    return 'Abgleich IoU ' + fmt(c.iou, 2) + ' · Größe ×' + fmt(c.scaleN, 2) + ' · Mitte ' + fmt(c.dx, 2, true) + ' · ' + c.status + ' · ' + Math.round(aiAvg()) + ' ms';
+  }
+  // Messwert zum Zeitpunkt des Fotos für app_details (nur Zahlen)
+  function aiSnap() {
+    var c = AI.cur, r2 = function (x) { return x == null ? null : Math.round(x * 100) / 100; };
+    var base = { modell: AI.model, bibliothek: 'mediapipe-tasks-vision 1.2.2', delegate: AI.delegate, zustand: AI.state, geladen_ms: AI.loadMs, fehler: AI.err || null, schwellen: { gruen: AI.IOU_GRUEN, gelb: AI.IOU_GELB, k_scale: AI.K_SCALE, skala: [AI.SCALE_LO, AI.SCALE_HI], dx: AI.DX_MAX, dy: AI.DY_MAX, ms: AI.GRUEN_MS, score: AI.SCORE_MIN }, ms_je_bild: Math.round(aiAvg()), intervall_ms: AI.every, messungen: AI.n };
+    if (AI.state !== 'bereit' || !c || c.iou == null) { base.stand = AI.state === 'bereit' ? (c && c.status) || 'aus' : 'aus'; return base; }
+    base.stand = c.status; base.iou = r2(c.iou); base.groesse = r2(c.scale); base.groesse_norm = r2(c.scaleN); base.mitte_x = r2(c.dx); base.mitte_y = r2(c.dy); base.angeschnitten = !!c.cut; base.klasse_erkannt = c.kat; base.score = r2(c.score);
+    base.box = [r2(c.box.x0), r2(c.box.y0), r2(c.box.x1), r2(c.box.y1)]; base.schablone = [r2(c.sch.x0), r2(c.sch.y0), r2(c.sch.x1), r2(c.sch.y1)];
+    base.gruen_seit_ms = c.greenSince ? Math.round(performance.now() - c.greenSince) : 0;
+    return base;
   }
 
   function updateLayout() {
@@ -1172,10 +1316,10 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     $('stage').hidden = false; document.body.style.overflow = 'hidden';
     paneShow('vCam', false); paneShow('vRev', false); paneShow('vBet', false); paneShow('vTurn', false);
     sensorsAttach(); updateLayout(); applyGeom();
-    keepAwake();
+    keepAwake(); aiLoad(); aiSchedule();
   }
   async function leaveStage() {
-    S.token++; S.phase = ''; closeStream(); sensorsDetach();
+    S.token++; S.phase = ''; closeStream(); sensorsDetach(); aiStop();
     $('stage').hidden = true; document.body.style.overflow = ''; releaseAwake();
     if (S.review && S.review.url) { URL.revokeObjectURL(S.review.url); } S.review = null;
   }
@@ -1241,7 +1385,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     // Der Hinweis liegt nicht mehr über dem Bild: nur auf Tipp (Titel links), beim allerersten Bild kurz offen
     clearTimeout(chipT); hintOpen(!hasAnyPhoto());
     if (!hasAnyPhoto()) chipT = setTimeout(function () { hintOpen(false); }, 6000);
-    renderStrip(); drawOverlay();
+    AI.ema = null; AI.greenSince = 0; AI.cur = { status: 'aus' }; $('vCam').setAttribute('data-fit', 'aus');
+    renderStrip(); drawOverlay(); aiFitUi();
     if (S.cfg && S.cfg.sim) simScene();
   }
 
@@ -1329,7 +1474,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         lv.setAttribute('data-s', st);
         if (st === 'ok') msg.hidden = true;
         else { $('lvlMsgT').textContent = (ar > AMPEL.gelb.r && ap <= AMPEL.gelb.p) ? 'Handy waagerecht halten' : (dp > 0 ? 'Handy mehr nach unten neigen' : 'Handy etwas aufrichten'); msg.hidden = false; }
-        if (VAR.debug) { tt.textContent = 'Neigung ' + fmt(s.p, 1, true) + '° (Ziel ' + fmt(AMPEL.p0, 0, true) + '°) · Rollen ' + fmt(s.r, 1, true) + '°'; tt.setAttribute('data-ok', st === 'ok' ? '1' : '0'); }
+        if (VAR.debug) { tt.textContent = 'Neigung ' + fmt(s.p, 1, true) + '° (Ziel ' + fmt(AMPEL.p0, 0, true) + '°) · Rollen ' + fmt(s.r, 1, true) + '°' + (aiOuter() ? '\n' + aiDebugText() : ''); tt.setAttribute('data-ok', st === 'ok' ? '1' : '0'); }
       }
     }
   }, 80);
@@ -1402,6 +1547,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   async function shoot(my, how) {
     var snap = snapshot(), cls = (gravClass() || (S.lastCls && performance.now() - S.lastCls.t < 3000 ? S.lastCls.cls : null)), t0 = performance.now(), blob;
     if (snap && snap.age > 800) snap = null;
+    var fit = aiOuter() ? aiSnap() : null;
     S.phase = 'shoot'; shotReady(false); say('Foto wird gemacht …');
     var live = null; try { live = smallOf($('video'), S.vw, S.vh); } catch (e) { /* ohne Vergleich weiter */ }
     try { blob = await withTimeout(S.ic.takePhoto(), 15000); }
@@ -1410,7 +1556,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     flash();
     var takeMs = Math.round(performance.now() - t0);
     say('Foto wird verkleinert …');
-    await processAndReview(my, blob, { snap: snap, cls: cls, how: how, takeMs: takeMs, quelle: 'kamera', live: live, video: S.vw + 'x' + S.vh });
+    await processAndReview(my, blob, { snap: snap, cls: cls, how: how, takeMs: takeMs, quelle: 'kamera', live: live, video: S.vw + 'x' + S.vh, fit: fit });
   }
   async function processAndReview(my, blob, o) {
     try {
@@ -1434,7 +1580,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       var f35 = exif.focal35 != null ? exif.focal35 : null, am = ampelHandy(o.snap, f35), amp = am.ampel, why = am.gruende.slice(), kurz = am.kurz.slice();
       if (res.h > res.w) { amp = 'rot'; why.push('Foto ist hochkant (Handy war nicht quer)'); kurz.push('Foto ist hochkant (Handy war nicht quer)'); }
       var r = { slot: S.cur, blob: res.blob, w: res.w, h: res.h, thumb: res.thumb, drehung: (rot + extra) % 360, hand: 0, f35: f35, exif: { orient: exif.orientation, focal: exif.focal, model: exif.model }, srcW: img.w, srcH: img.h,
-        snap: o.snap, cls: o.cls, ampel: amp, gruende: why, kurz: kurz, how: o.how || {}, takeMs: o.takeMs, quelle: o.quelle, note: note, url: null, fovP: fovP, video: o.video || null,
+        snap: o.snap, cls: o.cls, ampel: amp, gruende: why, kurz: kurz, fit: o.fit || null, how: o.how || {}, takeMs: o.takeMs, quelle: o.quelle, note: note, url: null, fovP: fovP, video: o.video || null,
         zeiten: { entschluesseln: tDec, gesamt: Math.round(performance.now() - T0), zeichnen: res.ms.zeichnen, kodieren: res.ms.kodieren, vorschau: res.ms.vorschau, glaettung: res.ms.glaettung } };
       showReview(r);
     } catch (e) {
@@ -1492,7 +1638,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       id: st.fotoId, fahrzeug_id: S.vehicle.id, platz: m.key, zusatz_nr: m.zusatz_nr, zusatz_art: m.art === 'zusatz' ? S.zusatzArt : null,
       ampel_handy: r.ampel, ampel_handy_gruende: r.gruende.join('; '), geraet: dev(), brennweite_kb: r.f35, neigung: r.snap ? +r.snap.p.toFixed(1) : null, rollen: r.snap ? +r.snap.r.toFixed(1) : null,
       drehung: r.drehung, breite: r.w, hoehe: r.h, bytes: r.blob.size,
-      app_details: { app: APP, quelle: r.quelle, selbstausloeser: !!r.how.auto, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, klasse: (S.vehicle && S.vehicle.klasse && KLASSE_NAME[S.vehicle.klasse]) || null, design: 'v4', aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v1: gelb ab ' + AMPEL.gelb.p + '/' + AMPEL.gelb.r + ', rot ab ' + AMPEL.rot.p + '/' + AMPEL.rot.r + ', Soll-Neigung ' + AMPEL.p0 } }
+      app_details: { app: APP, quelle: r.quelle, selbstausloeser: !!r.how.auto, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, klasse: (S.vehicle && S.vehicle.klasse && KLASSE_NAME[S.vehicle.klasse]) || null, design: 'v4', abgleich: r.fit || null, aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v1: gelb ab ' + AMPEL.gelb.p + '/' + AMPEL.gelb.r + ', rot ab ' + AMPEL.rot.p + '/' + AMPEL.rot.r + ', Soll-Neigung ' + AMPEL.p0 } }
     };
     var item = { slot: r.slot, id: st.fotoId, path: S.vehicle.id + '/' + m.key + '_' + st.fotoId + '.jpg', blob: r.blob, meta: meta, tries: 0, fileDone: false, state: 'wartet' };
     discardReview();
@@ -1758,6 +1904,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         fmsg(e.net ? 'Keine Verbindung zum Server. Bitte Netz prüfen und nochmal tippen.' : (e.status === 403 || e.status === 401 ? 'Zugang verweigert. Der Link ist ungültig oder abgelaufen.' : 'Der Server hat das Fahrzeug nicht angenommen: ' + e.message), true);
         $('fGo').disabled = false; return;
       }
+      aiLoad();   // Auto-Erkennung im Hintergrund laden, ab hier
       // 3) Kamera-Erlaubnis
       fmsg('Kamera … bitte „Erlauben“ tippen');
       try { if (!(S.cfg && S.cfg.sim)) await camPermission(); }

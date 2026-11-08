@@ -1,0 +1,20 @@
+Auto-Erkennung der Foto-App (Testfassung), selbst gehostet, läuft nur auf dem Gerät.
+
+Bestandteile
+- vision_bundle.js, wasm/vision_wasm_internal.js, wasm/vision_wasm_internal.wasm:
+  MediaPipe Tasks Vision (npm @mediapipe/tasks-vision 1.2.2), Google LLC, Lizenz Apache 2.0 (siehe LICENSE-Apache-2.0.txt).
+  Unverändert bis auf die entfernte Kommentarzeile "sourceMappingURL" im Bündel.
+- efficientdet_lite0.tflite: EfficientDet-Lite0 (int8), MediaPipe-Modellsammlung von Google, Lizenz Apache 2.0.
+  Quelle: https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/int8/latest/efficientdet_lite0.tflite
+  Trainiert auf COCO (Kategorien u. a. "car", "truck"); die App nutzt nur diese beiden.
+
+Prüfsummen (SHA-256, Anfang)
+- efficientdet_lite0.tflite  0720bf247bd76e6594ea28fa
+- wasm/vision_wasm_internal.wasm  f5bd25147ac89d506074293c
+- vision_bundle.js  a1c477094e3e02074064d9fa
+- wasm/vision_wasm_internal.js  f2b9c17131ea79716ec6bf07
+
+Datenschutz
+- Das Kamerabild bleibt auf dem Gerät; nur Zahlen (Rahmen, Überdeckung) gehen in die Metadaten der Fotos.
+- Die Bibliothek versucht, Nutzungsdaten an Google zu senden (odml.pa.googleapis.com). Die Sicherheitsregel der Seite (connect-src nur eigene Adresse und Supabase) blockiert das.
+  Diese Regel darf für die Erkennung nicht gelockert werden.
