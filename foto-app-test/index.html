@@ -5,211 +5,329 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
-<meta name="color-scheme" content="light">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#EEF0F4" id="metaTheme">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://*.supabase.co; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; font-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="apple-mobile-web-app-title" content="Foto-App Test">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
 <title>Foto-App Test</title>
-<link rel="icon" href="data:,">
+<link rel="icon" href="icon-180.png" type="image/png">
+<script>
+(function(){try{var d=document.documentElement,ua=navigator.userAgent;d.setAttribute('data-dev',/Android/.test(ua)?'android':'iphone');var m='auto';try{var o=JSON.parse(localStorage.getItem('fa_ui')||'null');if(o&&/^(hell|dunkel)$/.test(o.mode))m=o.mode;}catch(e){}var dark=m==='dunkel'||(m==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);d.setAttribute('data-dir',dark?'a':'b');}catch(e){}})();
+</script>
 <style>
 @font-face { font-family: 'Michroma'; src: url('fonts/michroma-latin-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
 @font-face { font-family: 'Montserrat'; src: url('fonts/montserrat-latin-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
 @font-face { font-family: 'Montserrat'; src: url('fonts/montserrat-latin-600.woff2') format('woff2'); font-weight: 600; font-display: swap; }
 @font-face { font-family: 'Montserrat'; src: url('fonts/montserrat-latin-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
-:root {
+/* Design nach Vorlage Version 4 (Glas, hell und dunkel nach Systemeinstellung). Farben und Schriften aus dem Markenkit.
+   Hell = Richtung B, Dunkel = Richtung A. Die Werte stehen als Token auf :root, data-dir="a|b" wird am Anfang und bei Systemwechsel gesetzt. */
+:root, :root[data-dir="b"] {
   --as-white: #FAFAFA; --as-black: #0B0C10; --as-grey: #9CA3AF; --as-gold: #FFC77C;
-  --muted: #55575E; --line: #DCDDE2; --card: #FFFFFF; --bad: #B3261E; --ok: #1E7B45;
+  --t: #0B0C10; --t2: #566070; --base: #EEF0F4; --glass: rgba(255,255,255,.60); --glass2: rgba(255,255,255,.82); --gb: rgba(255,255,255,.92);
+  --gsh: 0 10px 30px rgba(11,12,16,.12), inset 0 1px 0 rgba(255,255,255,.95); --prim: #0B0C10; --prim-t: #FAFAFA; --acc: #E6A950;
+  --blob1: rgba(255,199,124,.55); --blob2: rgba(130,150,185,.32); --ok: #1E7B45; --warn: #8A5A00; --bad: #B3261E; --chipbg: rgba(255,255,255,.80);
+  --car: #59626F; --car2: #C4CAD4; --lvl-ok: #3FA66B; --line: rgba(11,12,16,.14); --logo-l: block; --logo-d: none;
   --font-display: 'Michroma', 'Montserrat', system-ui, sans-serif;
   --font-body: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-data: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --r: 22px; --rs: 16px; color-scheme: light;
 }
+:root[data-dir="a"] {
+  --t: #FAFAFA; --t2: #AEB4BF; --base: #0B0C10; --glass: rgba(255,255,255,.09); --glass2: rgba(255,255,255,.16); --gb: rgba(255,255,255,.20);
+  --gsh: 0 10px 34px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.22); --prim: #FFC77C; --prim-t: #0B0C10; --acc: #FFC77C;
+  --blob1: rgba(255,199,124,.28); --blob2: rgba(120,140,170,.30); --ok: #5BD08A; --warn: #FFC77C; --bad: #FF8A80; --chipbg: rgba(11,12,16,.62);
+  --car: #C4CAD4; --car2: #3A404B; --lvl-ok: #5BD08A; --line: rgba(255,255,255,.16); --logo-l: none; --logo-d: block; color-scheme: dark;
+}
+:root[data-dev="android"] { --r: 16px; --rs: 12px; }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; background: var(--base); }
 html, body { touch-action: manipulation; }
-body { margin: 0; background: var(--as-white); color: var(--as-black); font: 400 16px/1.5 var(--font-body);
-  padding: 20px max(16px, env(safe-area-inset-right)) 40px max(16px, env(safe-area-inset-left)); }
+body { margin: 0; background: var(--base); color: var(--t); font: 400 16px/1.5 var(--font-body); min-height: 100vh;
+  padding: max(20px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(40px, calc(env(safe-area-inset-bottom) + 24px)) max(16px, env(safe-area-inset-left)); }
+body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(420px 380px at 100% 0%, var(--blob1), transparent 70%), radial-gradient(480px 440px at 0% 88%, var(--blob2), transparent 70%), var(--base); }
 h1, h2, p, ul { margin: 0; }
 button, input, select { font: inherit; color: inherit; }
 [hidden] { display: none !important; }
-:focus-visible { outline: 3px solid var(--as-black); outline-offset: 2px; }
-.page { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
-.brand { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
-.brand img { width: 190px; height: 70px; object-fit: cover; object-position: 50% 47%; margin-left: -4px; }
-.eyebrow { font: 600 11px/1.2 var(--font-body); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-h1 { font: 400 clamp(20px, 6.2vw, 26px)/1.2 var(--font-display); text-wrap: balance; }
-h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-.sep { display: flex; align-items: center; gap: 10px; color: var(--as-gold); }
-.sep::before, .sep::after { content: ""; height: 1px; flex: 1; background: var(--as-gold); }
-.sep i { width: 7px; height: 7px; background: var(--as-gold); transform: rotate(45deg); }
-.note { border-left: 3px solid var(--as-gold); padding: 8px 0 8px 12px; font-size: 14px; color: var(--muted); }
-.note b { color: var(--as-black); }
-.note.bad { border-color: var(--bad); color: var(--bad); font-weight: 600; }
-.field-l { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 13px; }
-.field { min-height: 48px; padding: 0 12px; background: var(--card); border: 1px solid var(--line); border-radius: 4px; width: 100%; font-size: 17px; }
-.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.btn { min-height: 48px; padding: 0 18px; border: 1px solid var(--as-black); background: transparent; border-radius: 4px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; text-align: center; }
-.btn.primary { background: var(--as-gold); border-color: var(--as-gold); color: var(--as-black); }
-.btn.dark { background: var(--as-black); border-color: var(--as-black); color: var(--as-gold); }
-.btn.big { min-height: 60px; width: 100%; font-size: 18px; border-radius: 6px; }
+:focus-visible { outline: 3px solid var(--acc); outline-offset: 2px; }
+.page { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.brand { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.logo img { width: 150px; height: 56px; object-fit: cover; object-position: 50% 47%; margin-left: -4px; display: none; }
+.logo img.l { display: var(--logo-l); } .logo img.d { display: var(--logo-d); }
+.lbl { font: 600 11px/1 var(--font-body); letter-spacing: .12em; text-transform: uppercase; color: var(--t2); }
+h1 { font: 400 clamp(20px, 6vw, 25px)/1.25 var(--font-display); text-wrap: balance; }
+h2 { font: 700 13px/1.3 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--t2); }
+.sub { color: var(--t2); font-size: 15px; line-height: 1.5; }
+.glass { background: var(--glass); border: 1px solid var(--gb); box-shadow: var(--gsh); -webkit-backdrop-filter: blur(22px) saturate(1.7); backdrop-filter: blur(22px) saturate(1.7); border-radius: var(--r); }
+.cglass { background: var(--chipbg); border: 1px solid var(--gb); box-shadow: var(--gsh); -webkit-backdrop-filter: blur(18px) saturate(1.5); backdrop-filter: blur(18px) saturate(1.5); border-radius: var(--r); color: var(--t); }
+.chip { font: 600 12px/1.25 var(--font-body); padding: 7px 10px; border-radius: 999px; background: var(--chipbg); border: 1px solid var(--gb); color: var(--t); display: inline-flex; align-items: center; gap: 6px; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--t2); flex: none; }
+.dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.bad { background: var(--bad); } .dot.go, .dot.busy { background: var(--acc); }
+.btn { font: 700 16px/1.2 var(--font-body); min-height: 54px; padding: 0 22px; border-radius: var(--r); border: 1px solid var(--gb); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-align: center;
+  color: var(--t); background: var(--glass2); -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6); box-shadow: var(--gsh); }
+.btn.primary { background: var(--prim); color: var(--prim-t); border-color: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.btn.big { min-height: 58px; width: 100%; font-size: 17px; }
+.btn:active { transform: scale(.98); }
 .btn[disabled] { opacity: .4; cursor: not-allowed; }
-.link { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; padding: 10px 0; font-size: 14px; text-align: left; }
-.msg { font-size: 14px; color: var(--muted); min-height: 1.2em; }
+.link { background: none; border: 0; color: var(--t2); text-decoration: underline; cursor: pointer; padding: 10px 0; font-size: 14px; text-align: left; }
+.msg { font-size: 14px; color: var(--t2); min-height: 1.2em; }
 .msg.bad { color: var(--bad); font-weight: 600; }
-.hints { padding-left: 1.1em; display: grid; gap: 6px; font-size: 15px; }
-.priv { font-size: 13px; color: var(--muted); }
-.srv { font: 500 12px/1.4 var(--font-data); color: var(--muted); overflow-wrap: anywhere; }
+.note { border-left: 3px solid var(--acc); padding: 8px 0 8px 12px; font-size: 14px; color: var(--t2); }
+.note b { color: var(--t); }
+.note.bad { border-color: var(--bad); color: var(--bad); font-weight: 600; }
+.priv { font-size: 13px; color: var(--t2); }
+.srv { font: 500 12px/1.4 var(--font-data); color: var(--t2); overflow-wrap: anywhere; }
+.actions { display: grid; gap: 10px; }
 
-/* Galerie */
-.prog { display: flex; gap: 4px; }
-.prog i { flex: 1; height: 6px; background: var(--line); border-radius: 2px; }
-.prog i.on { background: var(--as-gold); }
+/* Start */
+.form { padding: 16px; display: grid; gap: 12px; }
+.fld { display: grid; gap: 6px; }
+.fld input { font: 500 17px/1 var(--font-body); min-height: 50px; padding: 0 14px; border-radius: var(--rs); border: 1px solid var(--gb); background: var(--glass2); color: var(--t); width: 100%; min-width: 0; outline: none; }
+.fld input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 35%, transparent); }
+.two { display: grid; grid-template-columns: 1fr 112px; gap: 10px; }
+.kar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.kar button { font: 600 10.5px/1 var(--font-body); border: 1px solid var(--gb); background: var(--glass); color: var(--t); border-radius: var(--rs); padding: 8px 2px 9px; display: grid; gap: 5px; justify-items: center; cursor: pointer; min-width: 0; }
+.kar button canvas { width: 60px; height: 24px; max-width: 100%; }
+.kar button[aria-pressed="true"] { background: var(--prim); color: var(--prim-t); border-color: transparent; }
+.how { padding: 14px 16px; display: grid; gap: 11px; }
+.how div { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: center; font-size: 14px; line-height: 1.4; }
+.how svg { width: 28px; height: 28px; }
+details.more { font-size: 14px; color: var(--t2); }
+details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
+.hints { padding-left: 1.1em; display: grid; gap: 6px; font-size: 14px; margin-top: 6px; }
+.set { padding: 14px 16px; display: grid; gap: 12px; }
+.set .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 14px; }
+.mseg { display: inline-flex; padding: 3px; gap: 2px; border-radius: 999px; background: var(--glass); border: 1px solid var(--gb); }
+.mseg button { font: 700 12px/1 var(--font-body); min-height: 34px; padding: 0 14px; border-radius: 999px; border: 0; background: transparent; color: var(--t); cursor: pointer; }
+.mseg button[aria-pressed="true"] { background: var(--prim); color: var(--prim-t); }
+.sw { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; }
+.sw input { width: 20px; height: 20px; accent-color: var(--acc); }
+.hs-tip { font-size: 13px; color: var(--t2); }
+
+/* Galerie, Abschluss */
+.ghead { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+.prog { height: 8px; border-radius: 4px; background: var(--glass2); overflow: hidden; border: 1px solid var(--gb); }
+.prog i { display: block; height: 100%; background: var(--acc); transition: width .3s; }
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 @media (min-width: 520px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.tile { background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 0; text-align: left; cursor: pointer; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
-.tile .ph { aspect-ratio: 4 / 3; background: #ECEDF0; display: grid; place-items: center; font: 400 26px/1 var(--font-display); color: var(--as-grey); }
-.tile .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.tile .cap { padding: 8px 10px 0; font-size: 13px; font-weight: 600; line-height: 1.3; }
-.tile .st { padding: 4px 10px 10px; font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
-.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; border: 2px solid var(--muted); vertical-align: baseline; }
-.dot.busy { border-color: var(--as-black); background: linear-gradient(90deg, var(--as-gold) 50%, transparent 50%); }
-.dot.ok { background: var(--as-gold); border-color: var(--as-black); }
-.dot.bad { background: var(--bad); border-color: var(--bad); }
-.dot.warn { border-color: var(--as-black); background: var(--as-white); }
+.tile { padding: 8px; display: grid; gap: 7px; cursor: pointer; text-align: left; font: inherit; color: var(--t); align-content: start; min-width: 0; }
+.tile .im { position: relative; border-radius: calc(var(--rs) - 4px); overflow: hidden; aspect-ratio: 4 / 3; background: var(--glass2); display: grid; place-items: center; }
+.tile .im.empty { background: rgba(128,128,128,.14); border: 1.5px dashed var(--t2); }
+.tile .im img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tile .im svg { width: 46%; height: 46%; opacity: .8; }
+.tile .nr { position: absolute; left: 6px; top: 6px; font: 700 11px/1 var(--font-body); padding: 4px 7px; border-radius: 999px; background: var(--chipbg); border: 1px solid var(--gb); }
+.tile b { font: 600 13px/1.25 var(--font-body); }
+.tile .st { font: 600 11px/1.3 var(--font-body); display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; color: var(--t2); }
 .amp { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; }
-.amp i { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(0,0,0,.35); }
-.amp .gruen { background: #3FA66B; } .amp .gelb { background: var(--as-gold); } .amp .rot { background: var(--bad); }
-.actions { display: grid; gap: 10px; }
+.amp i { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(0,0,0,.3); }
+.amp .gruen { background: var(--lvl-ok); } .amp .gelb { background: var(--as-gold); } .amp .rot { background: var(--bad); }
+.cta { position: sticky; bottom: max(10px, env(safe-area-inset-bottom)); z-index: 5; padding: 10px; display: grid; gap: 8px; }
+.ring { width: 112px; height: 112px; margin: 14px auto 2px; border-radius: 50%; display: grid; place-items: center; border: 3px solid var(--acc); background: var(--glass); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); box-shadow: var(--gsh); }
+.ring svg { width: 54px; height: 54px; }
+.sum { padding: 6px 16px; display: grid; text-align: left; }
+.sum div { display: flex; justify-content: space-between; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--gb); font-size: 14px; }
+.sum div:last-child { border: 0; }
+.sum span:last-child { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+.endc { text-align: center; display: grid; gap: 8px; }
 
 /* Selbsttest */
 .chk { display: grid; grid-template-columns: 28px 1fr; gap: 4px 8px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
 .chk .ic { font: 700 15px/1.4 var(--font-data); }
-.chk .ic.ok { color: var(--ok); } .chk .ic.bad { color: var(--bad); } .chk .ic.run { color: var(--muted); }
-.chk small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.chk .ic.ok { color: var(--ok); } .chk .ic.bad { color: var(--bad); } .chk .ic.run { color: var(--t2); }
+.chk small { color: var(--t2); font-size: 12px; overflow-wrap: anywhere; }
 
-/* Kamera-Bühne (Vollbild) */
-#stage { position: fixed; inset: 0; z-index: 30; background: #000; overflow: hidden; color: #FAFAFA; user-select: none; -webkit-user-select: none; touch-action: none; }
-#vidBox { position: fixed; background: #000; }
-#vidBox video { width: 100%; height: 100%; object-fit: contain; background: #000; display: block; }
+/* Kamera-Bühne (Vollbild). Rahmen #ui und Bildfläche werden in JS gerechnet (--fw, --fh, --ix, --iy, --iw, --ih). */
+#stage { position: fixed; inset: 0; z-index: 30; background: var(--base); overflow: hidden; color: var(--t); user-select: none; -webkit-user-select: none; touch-action: none; }
+#stage::before { content: ""; position: absolute; inset: 0; background: radial-gradient(360px 300px at 100% 0%, var(--blob1), transparent 70%), radial-gradient(380px 320px at 0% 100%, var(--blob2), transparent 70%); }
+#vidBox { position: fixed; background: transparent; overflow: hidden; }
+#vidBox video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: contain; background: #000; display: block; }
 #ui { position: fixed; }
 .pane { position: absolute; inset: 0; }
-.flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; transition: opacity .25s; }
+.flash { position: absolute; left: var(--ix, 0); top: var(--iy, 0); width: var(--iw, 100%); height: var(--ih, 100%); background: #fff; opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 9; }
 .flash.on { opacity: .85; transition: none; }
+#ovCv { position: absolute; left: var(--ix); top: var(--iy); width: var(--iw); height: var(--ih); pointer-events: none; z-index: 1; }
+.brk { position: absolute; z-index: 3; width: 22px; height: 22px; border: 3px solid #FFC77C; pointer-events: none; filter: drop-shadow(0 0 1px rgba(0,0,0,.6)); }
+.brk.tl { left: var(--ix); top: var(--iy); border-right: 0; border-bottom: 0; }
+.brk.tr { left: calc(var(--ix) + var(--iw) - 22px); top: var(--iy); border-left: 0; border-bottom: 0; }
+.brk.bl { left: var(--ix); top: calc(var(--iy) + var(--ih) - 22px); border-right: 0; border-top: 0; }
+.brk.br { left: calc(var(--ix) + var(--iw) - 22px); top: calc(var(--iy) + var(--ih) - 22px); border-left: 0; border-top: 0; }
 
-#vTurn { background: var(--as-white); color: var(--as-black); display: grid; place-content: center; text-align: center; gap: 14px; padding: 24px; z-index: 6; }
-#vTurn.over { background: rgba(250,250,250,.96); }
-#vTurn h1 { font-size: clamp(22px, 7vw, 34px); }
-#vTurn p { max-width: 34ch; margin: 0 auto; font-size: 17px; color: var(--muted); }
-.phone { width: 54px; height: 96px; margin: 0 auto; border: 4px solid var(--as-black); border-radius: 10px; position: relative; animation: turn 2.4s ease-in-out infinite; }
-.phone::after { content: ""; position: absolute; left: 50%; top: 6px; width: 16px; height: 3px; margin-left: -8px; background: var(--as-black); border-radius: 2px; }
-@keyframes turn { 0%, 15% { transform: rotate(0); } 55%, 100% { transform: rotate(-90deg); } }
-@media (prefers-reduced-motion: reduce) { .phone { animation: none; transform: rotate(-90deg); } }
+/* Phone-Drehen, Zwischenseiten */
+#vTurn, #vBet { display: grid; place-items: center; padding: 18px; z-index: 7; }
+#vTurn { z-index: 6; }
+#vTurn.over, #vBet.over { background: color-mix(in srgb, var(--base) 90%, transparent); }
+#vTurn:not(.over) { background: var(--base); }
+#vBet { background: color-mix(in srgb, var(--base) 90%, transparent); }
+.card { width: min(100%, 480px); padding: 22px 24px; display: grid; gap: 12px; justify-items: center; text-align: center; max-height: 100%; overflow: auto; }
+.card h1 { font-size: clamp(18px, 5vw, 26px); }
+.card p { color: var(--t2); font-size: 15px; max-width: 40ch; }
+.card .btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; width: 100%; }
+.card .btns .btn { min-width: 180px; flex: 1; }
+.card .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.card .chips button { min-height: 44px; padding: 0 14px; border: 1px solid var(--gb); background: var(--glass2); border-radius: 999px; font-weight: 600; cursor: pointer; }
+.rot { width: 96px; height: 96px; position: relative; }
+.rot .ph { position: absolute; left: 50%; top: 50%; width: 44px; height: 80px; margin: -40px 0 0 -22px; border: 3px solid var(--t); border-radius: 10px; animation: turn 3s ease-in-out infinite; }
+.rot .ph::before { content: ""; position: absolute; top: 5px; left: 50%; width: 14px; height: 3px; margin-left: -7px; border-radius: 2px; background: var(--t); opacity: .6; }
+.rot .ph::after { content: ""; position: absolute; width: 12px; height: 12px; border-radius: 50%; border: 3px solid var(--acc); right: 5px; bottom: 5px; }
+@keyframes turn { 0%, 20% { transform: rotate(0); } 55%, 85% { transform: rotate(-90deg); } 100% { transform: rotate(0); } }
+@media (prefers-reduced-motion: reduce) { .rot .ph { animation: none; transform: rotate(-90deg); } }
 
+/* Sucher */
 #vCam { z-index: 2; }
-.hud-top { position: absolute; left: 14px; right: 14px; top: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-.chipbox { max-width: 66%; background: rgba(11,12,16,.72); padding: 8px 12px; border-radius: 4px; }
-.chipbox b { display: block; font: 700 15px/1.3 var(--font-body); }
-.chipbox b ~ span { display: block; font-size: 13px; line-height: 1.35; color: #E5E7EB; margin-top: 2px; }
-.chipbox #revDbg { font: 500 11px/1.35 var(--font-data); color: var(--as-gold); }
-.chiprow { display: flex; gap: 10px; align-items: center; }
-#camDiag:empty { display: none; }
-#camDiag svg { display: block; width: 84px; height: 84px; }
-.chipbox .amp.l { display: inline-flex; vertical-align: middle; margin-left: 6px; background: rgba(250,250,250,.16); }
-.chipbox .amp i { width: 11px; height: 11px; }
-.xbtn { min-width: 44px; min-height: 44px; border-radius: 50%; border: 0; background: rgba(11,12,16,.72); color: #FAFAFA; font-size: 22px; line-height: 1; cursor: pointer; }
-.lvl { position: absolute; inset: 0; pointer-events: none; }
-.lvl-h { position: absolute; left: 18%; right: 18%; top: 50%; height: 2px; margin-top: -1px; background: var(--as-gold); box-shadow: 0 0 0 1px rgba(0,0,0,.45); transform: translateY(var(--ty, 0px)) rotate(var(--rot, 0deg)); }
-.lvl-c { position: absolute; left: 50%; top: 50%; width: 24px; height: 24px; margin: -12px 0 0 -12px; border: 2px solid #FAFAFA; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0,0,0,.45); }
-.lvl-t { position: absolute; left: 14px; bottom: 74px; font: 600 12px/1 var(--font-data); background: rgba(11,12,16,.72); padding: 6px 8px; border-radius: 3px; }
-.lvl-t[data-ok="1"] { background: var(--as-gold); color: var(--as-black); }
-.mid { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; pointer-events: none; }
-.mid .big { display: inline-block; font: 700 clamp(18px, 4.6vw, 26px)/1.3 var(--font-body); background: rgba(11,12,16,.72); padding: 10px 18px; border-radius: 4px; max-width: 80%; }
-.hud-bot { position: absolute; left: 14px; right: 14px; bottom: 12px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
-.dots { display: flex; gap: 5px; align-items: center; padding: 8px 10px; background: rgba(11,12,16,.72); border-radius: 4px; }
-.dots i { width: 9px; height: 9px; border-radius: 50%; border: 2px solid #9CA3AF; }
-.dots i.done { background: var(--as-gold); border-color: var(--as-gold); }
-.dots i.cur { border-color: #FAFAFA; background: #FAFAFA; }
-.dots i.gap { width: 6px; border: 0; background: transparent; }
-.stillwrap { flex: 1; display: grid; gap: 6px; max-width: 280px; }
-.stillbar { height: 6px; background: rgba(255,255,255,.28); border-radius: 3px; overflow: hidden; }
-.stillbar i { display: block; height: 100%; width: 0; background: var(--as-gold); }
-.stillwrap span { font-size: 13px; background: rgba(11,12,16,.72); padding: 4px 8px; border-radius: 3px; justify-self: start; }
-.shot { width: 72px; height: 72px; border-radius: 50%; border: 4px solid #FAFAFA; background: var(--as-gold); color: var(--as-black); font: 700 13px/1.1 var(--font-body); cursor: pointer; }
-.toast { position: absolute; left: 50%; top: 64px; transform: translateX(-50%); background: var(--as-gold); color: var(--as-black); font-weight: 700; font-size: 14px; padding: 8px 14px; border-radius: 4px; pointer-events: none; z-index: 8; }
+.rail { position: absolute; top: 0; bottom: 0; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 8px; padding-top: 12px; padding-bottom: 12px; }
+.rail.L { left: 0; width: var(--ix); padding-left: calc(var(--sl, 0px) + 8px); padding-right: 8px; }
+.rail.R { right: 0; width: calc(var(--fw) - var(--ix) - var(--iw)); padding-right: calc(var(--sr, 0px) + 8px); padding-left: 8px; }
+.round { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--gb); background: var(--glass2); color: var(--t); cursor: pointer; font: 700 20px/1 var(--font-body); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: var(--gsh); flex: none; }
+.mini { width: 100%; max-width: 92px; aspect-ratio: 1; border-radius: var(--rs); overflow: hidden; border: 1px solid var(--gb); background: var(--glass); flex: none; }
+.mini svg { width: 100%; height: 100%; display: block; }
+.mini:empty { display: none; }
+.rtxt:empty { visibility: hidden; }
+.form .msg:empty { display: none; }
+.rtxt { font: 600 12px/1.3 var(--font-body); text-align: center; color: var(--t); background: var(--chipbg); border: 1px solid var(--gb); border-radius: var(--rs); padding: 7px 8px; width: 100%; max-width: 132px; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); overflow-wrap: anywhere; }
+.shut { width: 78px; height: 78px; position: relative; cursor: pointer; border: 0; background: transparent; padding: 0; flex: none; }
+.shut svg { width: 100%; height: 100%; display: block; transform: rotate(-90deg); }
+.shut svg .bg { stroke: var(--gb); }
+.shut svg .arc { stroke: var(--acc); stroke-dasharray: 220; stroke-dashoffset: 220; }
+.shut .in { position: absolute; inset: 13px; border-radius: 50%; background: var(--t); opacity: .94; box-shadow: 0 2px 10px rgba(0,0,0,.3); display: grid; place-items: center; font: 700 12px/1 var(--font-body); color: var(--base); }
+.shut.ready .in { background: var(--as-gold); color: #0B0C10; opacity: 1; }
+.shut:disabled { cursor: default; }
+.topwrap { position: absolute; z-index: 5; left: var(--ix); width: var(--iw); top: calc(var(--iy) + 10px); display: flex; justify-content: center; pointer-events: none; padding: 0 10px; }
+.topchip { pointer-events: auto; max-width: 100%; padding: 8px 14px; text-align: center; cursor: pointer; display: grid; gap: 4px; font: inherit; border-radius: var(--r); }
+.topchip .tc-main { display: flex; gap: 8px; align-items: center; justify-content: center; }
+.topchip b { font: 700 13px/1.25 var(--font-body); }
+.topchip .tc-arrow { font-style: normal; font-size: 11px; opacity: .7; transition: transform .2s; }
+.topchip[aria-expanded="true"] .tc-arrow { transform: rotate(180deg); }
+.topchip .tc-hint { display: none; font: 500 12px/1.4 var(--font-body); color: var(--t2); text-align: left; max-width: 46ch; }
+.topchip[aria-expanded="true"] .tc-hint { display: block; }
+.mid { position: absolute; left: var(--ix); width: var(--iw); top: 50%; transform: translateY(-50%); text-align: center; pointer-events: none; z-index: 6; }
+.mid .big { display: inline-block; font: 700 clamp(15px, 3.6vw, 22px)/1.3 var(--font-body); background: var(--chipbg); border: 1px solid var(--gb); color: var(--t); padding: 10px 18px; border-radius: var(--r); max-width: 90%; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.lvl { position: absolute; z-index: 3; left: var(--ix); top: var(--iy); width: var(--iw); height: var(--ih); pointer-events: none; --lc: var(--lvl-ok); }
+.lvl[data-s="warn"] { --lc: #FFC77C; } .lvl[data-s="bad"] { --lc: #FF6B5E; } .lvl[data-s="off"] { --lc: #9CA3AF; }
+.lvl .h { position: absolute; left: 22%; right: 22%; top: 50%; height: 3px; margin-top: -1.5px; border-radius: 2px; background: var(--lc); box-shadow: 0 0 0 1px rgba(0,0,0,.45); transform: translateY(var(--ty, 0px)) rotate(var(--rot, 0deg)); transition: background .15s; }
+.lvl .c { position: absolute; left: 50%; top: 50%; width: 28px; height: 28px; margin: -14px 0 0 -14px; border: 2px solid var(--lc); border-radius: 50%; box-shadow: 0 0 0 1px rgba(0,0,0,.45); transition: border-color .15s; }
+.lvl .tick { position: absolute; top: 50%; width: 16px; height: 2px; margin-top: -1px; background: var(--lc); opacity: .9; box-shadow: 0 0 0 1px rgba(0,0,0,.35); }
+.lvl .tick.a { left: calc(22% - 24px); } .lvl .tick.b { right: calc(22% - 24px); }
+#lvlMsg { position: absolute; z-index: 5; left: var(--ix); width: var(--iw); top: calc(var(--iy) + var(--ih) * .5 + 30px); text-align: center; pointer-events: none; }
+#lvlMsg span { display: inline-block; font: 700 12px/1.3 var(--font-body); padding: 6px 12px; border-radius: 999px; background: var(--as-gold); color: #0B0C10; }
+.lvlt { position: absolute; z-index: 5; left: calc(var(--ix) + 8px); bottom: calc(var(--fh) - var(--iy) - var(--ih) + 58px); font: 600 11px/1 var(--font-data); padding: 7px 9px; border-radius: 6px; background: var(--chipbg); border: 1px solid var(--gb); color: var(--t); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.lvlt[data-ok="1"] { border-color: var(--ok); }
+.toast { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); background: var(--as-gold); color: #0B0C10; font-weight: 700; font-size: 14px; padding: 8px 14px; border-radius: 999px; pointer-events: none; z-index: 12; }
+#revDbg { font: 500 11px/1.35 var(--font-data); color: var(--t2); overflow-wrap: anywhere; }
 
-#vRev { background: #000; z-index: 4; }
-#vRev img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
-.rev-top { position: absolute; left: 14px; right: 14px; top: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
-.rev-top .chipbox { max-width: 78%; }
-.rev-bot { position: absolute; left: 14px; right: 14px; bottom: 12px; display: flex; gap: 12px; align-items: center; justify-content: space-between; }
-.rev-bot .btn { min-height: 56px; font-size: 17px; }
-.rev-bot .btn.neu { background: rgba(11,12,16,.8); color: #FAFAFA; border-color: #FAFAFA; min-width: 110px; }
-.rev-bot .btn.passt { background: var(--as-gold); border-color: var(--as-gold); color: var(--as-black); min-width: 170px; flex: 1; max-width: 300px; }
-.rev-bot .btn.rot { background: rgba(11,12,16,.8); color: #FAFAFA; border-color: #FAFAFA; min-width: 56px; padding: 0 12px; }
-.amp.l { background: rgba(11,12,16,.72); padding: 3px 8px; border-radius: 3px; color: #FAFAFA; font-size: 12px; }
+/* Kleine Galerie im Sucher */
+.gal { display: flex; gap: 4px; }
+.gal.gu { position: absolute; z-index: 5; left: var(--ix); width: var(--iw); bottom: calc(var(--fh) - var(--iy) - var(--ih)); height: 50px; padding: 7px 10px; justify-content: center; border-radius: var(--r) var(--r) 0 0; border-bottom: 0; }
+.gt { position: relative; flex: 1 1 0; min-width: 0; max-width: 46px; height: 100%; border-radius: 6px; overflow: hidden; border: 1px solid var(--gb); background: var(--glass2); padding: 0; cursor: pointer; color: var(--t); display: grid; place-items: center; }
+.gt img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gt.empty { border: 1.5px dashed var(--t2); background: rgba(128,128,128,.14); }
+.gt.cur { box-shadow: 0 0 0 2px var(--acc); border-color: transparent; }
+.gt svg { width: 62%; height: 62%; opacity: .8; }
+.gt .ic { display: grid; place-items: center; width: 100%; height: 100%; background: var(--glass2); }
+.bd { position: absolute; right: 2px; bottom: 2px; width: 13px; height: 13px; border-radius: 50%; display: grid; place-items: center; font: 700 9px/1 var(--font-body); color: #fff; border: 1px solid rgba(255,255,255,.75); background: #0B0C10; }
+.bd.sent { background: #1E7B45; } .bd.work { background: #FFC77C; animation: pu 1.4s ease-in-out infinite; } .bd.bad { background: #B3261E; } .bd.warn { background: #C98A00; }
+.bd.send { background: #0B0C10; } .bd.send::after { content: ""; width: 6px; height: 6px; border-radius: 50%; border: 1.6px solid #FFC77C; border-right-color: transparent; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } } @keyframes pu { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .bd.work, .bd.send::after { animation: none; } }
 
-#vBet { background: var(--as-white); color: var(--as-black); display: grid; place-content: center; gap: 14px; padding: 24px; text-align: center; z-index: 7; }
-#vBet h1 { font-size: clamp(20px, 6vw, 30px); }
-#vBet p { max-width: 40ch; margin: 0 auto; color: var(--muted); }
-#vBet .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-#vBet .chips button { min-height: 44px; padding: 0 14px; border: 1px solid var(--as-black); background: var(--card); border-radius: 999px; font-weight: 600; cursor: pointer; }
-#vBet .btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-#vBet .btn { min-width: 200px; }
+/* Vorschau nach dem Foto */
+#vRev { background: var(--base); z-index: 4; }
+.rv-photo { position: absolute; left: var(--sl, 0px); top: 0; width: var(--rw); height: var(--fh); background: #000; }
+.rv-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.rv-cap { position: absolute; z-index: 3; left: calc(var(--sl, 0px) + 10px); top: 10px; }
+.rv-panel { position: absolute; z-index: 3; left: calc(var(--sl, 0px) + var(--rw) + 10px); right: calc(var(--sr, 0px) + 10px); top: 10px; bottom: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; overflow: auto; }
+.rv-panel h2 { font: 400 15px/1.3 var(--font-display); letter-spacing: .01em; text-transform: none; color: var(--t); }
+.checks { display: flex; flex-wrap: wrap; gap: 5px; }
+.checks .chip { backdrop-filter: none; -webkit-backdrop-filter: none; font-size: 11.5px; }
+.ex { display: grid; gap: 4px; align-content: start; flex: none; }
+#vRev.dbg .ex canvas { height: clamp(60px, calc(var(--fh) - 270px), 150px); }
+.ex canvas { height: clamp(70px, calc(var(--fh) - 210px), 150px); aspect-ratio: 4 / 3; max-width: 100%; border-radius: var(--rs); border: 1px solid var(--gb); display: block; }
+.rv-btns { display: grid; grid-template-columns: 1fr 52px 1.3fr; gap: 8px; margin-top: auto; padding-top: 4px; }
+.rv-btns .btn { min-height: 48px; font-size: 15px; padding: 0 10px; }
+.rv-btns.two { grid-template-columns: 1fr 1.3fr; }
+.rv-btns .btn[hidden] { display: none; }
 </style>
 </head>
 <body>
 
 <!-- Seite 1: Start (hochkant) -->
 <main class="page" id="pStart">
-  <header class="brand"><img src="logo.png" alt="AutoScales"><span class="eyebrow">Foto-App · Testfassung</span></header>
-  <h1>Neues Fahrzeug fotografieren</h1>
+  <header class="brand"><span class="logo"><img class="l" src="logo.png" alt="AutoScales"><img class="d" src="logo-dunkel.png" alt="AutoScales"></span><span class="chip"><i class="dot go"></i>Testfassung</span></header>
+  <div><h1>Neues Fahrzeug</h1><p class="sub" style="margin-top:6px">Zehn Fotos, ein Fahrzeug. Die App führt Sie durch jede Position.</p></div>
   <div class="note" id="modeNote"></div>
   <div id="resumeBox" class="note" hidden>
     <p id="resumeTxt"></p>
     <div class="actions" style="margin-top:10px"><button class="btn primary" id="resumeYes" type="button">Weitermachen</button><button class="btn" id="resumeNo" type="button">Neues Fahrzeug</button></div>
   </div>
-  <form id="fForm" class="page" style="gap:14px" autocomplete="off" novalidate>
-    <label class="field-l">Marke<input class="field" id="fMarke" type="text" maxlength="60" autocomplete="off" autocapitalize="words" placeholder="z. B. BMW"></label>
-    <label class="field-l">Modell<input class="field" id="fModell" type="text" maxlength="80" autocomplete="off" autocapitalize="words" placeholder="z. B. X5 xDrive30d"></label>
-    <div class="row2">
-      <label class="field-l">Baujahr<input class="field" id="fBaujahr" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="2021"></label>
-      <label class="field-l">Karosserie (freiwillig)
-        <select class="field" id="fKar"><option value="">–</option><option value="limousine">Limousine</option><option value="kombi">Kombi</option><option value="suv">SUV</option><option value="coupe">Coupé</option><option value="cabrio">Cabrio</option><option value="van">Van</option></select>
-      </label>
+  <form id="fForm" class="glass form" autocomplete="off" novalidate>
+    <div class="two">
+      <label class="fld"><span class="lbl">Marke</span><input id="fMarke" type="text" maxlength="60" autocomplete="off" autocapitalize="words" placeholder="z. B. BMW"></label>
+      <label class="fld"><span class="lbl">Baujahr</span><input id="fBaujahr" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="2021"></label>
     </div>
+    <label class="fld"><span class="lbl">Modell</span><input id="fModell" type="text" maxlength="80" autocomplete="off" autocapitalize="words" placeholder="z. B. X5 xDrive30d"></label>
+    <div class="fld"><span class="lbl">Karosserie (bestimmt die Schablone)</span><div class="kar" id="karBox" role="group" aria-label="Karosserie"></div></div>
     <button class="btn big primary" id="fGo" type="submit">Fahrzeug anlegen und weiter</button>
     <p class="msg" id="fMsg" role="status" aria-live="polite"></p>
   </form>
-  <div class="sep" aria-hidden="true"><i></i></div>
-  <ul class="hints">
-    <li><b>6 Außenbilder</b> in fester Reihenfolge, dann <b>4 Innenbilder</b>. Zusatzbilder sind freiwillig.</li>
-    <li>Handy <b>quer</b> halten, Kamera <b>1x</b>, ruhig und gerade. Die App löst selbst aus.</li>
-    <li data-du="Das <b>ganze Auto mit etwas Rand</b> ins Bild. Dafür das Handy leicht nach unten neigen (ca. 10°); die Wasserwaage zeigt es." data-sie="Das <b>ganze Auto mit etwas Rand</b> ins Bild. Dafür das Handy leicht nach unten neigen (ca. 10°); die Wasserwaage zeigt es.">Das <b>ganze Auto mit etwas Rand</b> ins Bild. Dafür das Handy leicht nach unten neigen (ca. 10°); die Wasserwaage zeigt es.</li>
-    <li data-du="Du siehst jedes Foto und tippst <b>Passt</b> oder <b>Neu</b>. Erst bei „Passt“ geht es hoch." data-sie="Sie sehen jedes Foto und tippen auf <b>Passt</b> oder <b>Neu</b>. Erst bei „Passt“ wird hochgeladen.">Du siehst jedes Foto und tippst <b>Passt</b> oder <b>Neu</b>. Erst bei „Passt“ geht es hoch.</li>
-    <li id="hHint"></li>
-  </ul>
-  <p class="priv"><b>Testfassung:</b> bitte nur Testfotos, keine Kundenfahrzeuge mit Personen oder Papieren. Die App schickt Fotos nur an den eingetragenen Test-Server der AutoScales GmbH i.G. (EU, Irland). Auf dem Handy bleibt nichts gespeichert.</p>
+  <div class="glass how">
+    <div><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="22" height="10" rx="2.5"/><path d="M8 14h.01"/></svg><span><b>6 Außenbilder</b> in fester Reihenfolge, dann <b>4 innen</b></span></div>
+    <div><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="24" height="14" rx="3"/><circle cx="14" cy="14" r="4"/></svg><span>Handy <b>quer</b>, Kamera <b>1x</b>, ruhig halten. Die App löst selbst aus.</span></div>
+    <div><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10V4h6M18 4h6v6M24 18v6h-6M10 24H4v-6"/></svg><span>Das <b>ganze Auto mit etwas Rand</b> in die Schablone</span></div>
+  </div>
+  <details class="more">
+    <summary>Mehr Hinweise</summary>
+    <ul class="hints">
+      <li data-du="Handy leicht nach unten neigen (ca. 10°); die Wasserwaage zeigt es." data-sie="Handy leicht nach unten neigen (ca. 10°); die Wasserwaage zeigt es.">Handy leicht nach unten neigen (ca. 10°); die Wasserwaage zeigt es.</li>
+      <li data-du="Du siehst jedes Foto und tippst <b>Passt</b> oder <b>Neu</b>. Erst bei „Passt“ geht es hoch." data-sie="Sie sehen jedes Foto und tippen auf <b>Passt</b> oder <b>Neu</b>. Erst bei „Passt“ wird hochgeladen.">Du siehst jedes Foto und tippst <b>Passt</b> oder <b>Neu</b>. Erst bei „Passt“ geht es hoch.</li>
+      <li id="hHint"></li>
+      <li>Zusatzbilder sind freiwillig. Die Karosserie bestimmt nur die Schablone im Sucher; sie ist eine Orientierung, kein Abgleich.</li>
+    </ul>
+  </details>
+  <div class="glass set" id="setBox">
+    <div class="row"><span class="lbl">Darstellung</span><span class="mseg" id="segDir" role="group" aria-label="Darstellung"><button type="button" data-m="auto">Auto</button><button type="button" data-m="hell">Hell</button><button type="button" data-m="dunkel">Dunkel</button></span></div>
+    <div class="row"><label class="sw"><input type="checkbox" id="chkMess"> Messwerte anzeigen (für den Testplan)</label></div>
+    <p class="hs-tip" id="hsTip" hidden></p>
+  </div>
+  <p class="priv"><b>Testfassung:</b> bitte nur Testfotos, keine Kundenfahrzeuge mit Personen oder Papieren. Die App schickt Fotos nur an den eingetragenen Test-Server der AutoScales GmbH i.G. (EU, Irland). Auf dem Handy bleiben nur Fotos, die noch nicht hochgeladen sind, bis sie gesendet wurden.</p>
   <p class="srv" id="srvInfo"></p>
   <button class="link" id="btnSelftest" type="button">Selbsttest der Verbindung</button>
 </main>
 
 <!-- Seite 2: Galerie -->
 <main class="page" id="pGallery" hidden>
-  <header class="brand"><img src="logo.png" alt="AutoScales"><span class="eyebrow">Foto-App · Testfassung</span></header>
-  <h1 id="gTitle">Fahrzeug</h1>
-  <p id="gSum" class="msg"></p>
+  <header class="brand"><span class="logo"><img class="l" src="logo.png" alt="AutoScales"><img class="d" src="logo-dunkel.png" alt="AutoScales"></span><span class="chip" id="gChip"></span></header>
+  <div><span class="lbl">Fahrzeug</span><h1 id="gTitle" style="margin-top:6px;font-size:clamp(18px,5vw,22px)">Fahrzeug</h1></div>
+  <p id="gSum" class="msg" style="color:var(--t);font-weight:600"></p>
   <div class="prog" id="gProg" aria-hidden="true"></div>
   <div class="grid" id="gGrid"></div>
   <div class="note" id="gNote">Die Außenbilder werden bei AutoScales in den Showroom gesetzt, das dauert einige Sekunden bis Minuten. Innenbilder bleiben Original. Diese Seite aktualisiert sich selbst.</div>
+  <div class="glass cta" id="gCta"><button class="btn big primary" id="gNext" type="button">Weiter fotografieren</button></div>
   <div class="actions">
-    <button class="btn big primary" id="gNext" type="button">Weiter fotografieren</button>
     <button class="btn" id="gZusatz" type="button">Zusatzbild aufnehmen</button>
     <button class="btn" id="gNew" type="button">Fertig, neues Fahrzeug</button>
   </div>
   <p class="msg" id="gMsg" role="status" aria-live="polite"></p>
 </main>
 
-<!-- Seite 3: Selbsttest -->
+<!-- Seite 3: Abschluss -->
+<main class="page" id="pEnd" hidden>
+  <header class="brand"><span class="logo"><img class="l" src="logo.png" alt="AutoScales"><img class="d" src="logo-dunkel.png" alt="AutoScales"></span><span class="chip"><i class="dot go"></i>Testfassung</span></header>
+  <div class="ring" aria-hidden="true"><svg viewBox="0 0 54 54" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 28l10 10L42 16"/></svg></div>
+  <div class="endc"><h1>Alle 10 Bilder sind aufgenommen</h1><p class="sub" id="eSub"></p></div>
+  <div class="glass sum" id="eSum"></div>
+  <div class="actions">
+    <button class="btn big primary" id="eNew" type="button">Nächstes Fahrzeug</button>
+    <button class="btn big" id="eGal" type="button">Galerie ansehen</button>
+  </div>
+</main>
+
+<!-- Seite 4: Selbsttest -->
 <main class="page" id="pTest" hidden>
-  <header class="brand"><img src="logo.png" alt="AutoScales"><span class="eyebrow">Foto-App · Selbsttest</span></header>
+  <header class="brand"><span class="logo"><img class="l" src="logo.png" alt="AutoScales"><img class="d" src="logo-dunkel.png" alt="AutoScales"></span><span class="chip"><i class="dot go"></i>Selbsttest</span></header>
   <h1>Selbsttest der Verbindung</h1>
   <p class="msg" id="tSum">Prüft Zugang, Ablegen, Melden und dass Lesen und Löschen gesperrt sind. Legt ein Probefahrzeug mit einem Mini-Bild an (wird nicht verarbeitet).</p>
   <div id="tList"></div>
@@ -226,35 +344,49 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
   <div id="vidBox"><video id="video" playsinline muted autoplay></video></div>
   <div id="ui">
     <div class="pane" id="vCam" hidden>
-      <div class="lvl" aria-hidden="true"><div class="lvl-h" id="lvlH"></div><div class="lvl-c"></div></div>
-      <div class="lvl-t" id="lvlT">–</div>
-      <div class="hud-top">
-        <div class="chipbox"><div class="chiprow"><span id="camDiag" aria-hidden="true"></span><div><b id="camLbl"></b><span id="camHint"></span></div></div></div>
-        <button class="xbtn" id="camX" type="button" aria-label="Kamera schließen">×</button>
+      <canvas id="ovCv" aria-hidden="true"></canvas>
+      <i class="brk tl"></i><i class="brk tr"></i><i class="brk bl"></i><i class="brk br"></i>
+      <div class="lvl" id="lvl" aria-hidden="true" data-s="off"><i class="tick a"></i><i class="tick b"></i><div class="h" id="lvlH"></div><div class="c"></div></div>
+      <div id="lvlMsg" hidden><span id="lvlMsgT"></span></div>
+      <div class="lvlt" id="lvlT" hidden>–</div>
+      <div class="rail L">
+        <button class="round" id="camX" type="button" aria-label="Kamera schließen">×</button>
+        <div class="mini" id="camDiag" aria-hidden="true"></div>
+        <span></span>
       </div>
+      <div class="rail R">
+        <span class="rtxt" id="stillTxt">–</span>
+        <button class="shut" id="shotBtn" type="button" aria-label="Jetzt auslösen" disabled><svg viewBox="0 0 78 78" aria-hidden="true"><circle class="bg" cx="39" cy="39" r="35" fill="none" stroke-width="4"/><circle class="arc" id="stillArc" cx="39" cy="39" r="35" fill="none" stroke-width="4" stroke-linecap="round"/></svg><span class="in" id="shotIn"></span></button>
+        <span class="rtxt" id="stillSub">Löst von selbst aus</span>
+      </div>
+      <div class="topwrap"><button class="cglass topchip" id="camChip" type="button" aria-expanded="false" aria-label="Hinweis zur Position ein- oder ausklappen"><span class="tc-main"><b id="camLbl"></b><i class="tc-arrow">▾</i></span><span class="tc-hint" id="camHint"></span></button></div>
       <div class="mid"><span class="big" id="camBig" hidden></span></div>
-      <div class="hud-bot">
-        <div class="dots" id="camDots" aria-hidden="true"></div>
-        <div class="stillwrap"><div class="stillbar"><i id="stillFill"></i></div><span id="stillTxt">–</span></div>
-        <button class="shot" id="shotBtn" type="button" hidden>Jetzt</button>
-      </div>
-      <label class="btn big primary" id="capLabel" hidden style="position:absolute;left:20%;right:20%;top:40%;width:auto">Kamera-App öffnen<input type="file" id="capIn" accept="image/*" capture="environment" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;font-size:0"></label>
+      <div class="gal gu cglass" id="camGal"></div>
+      <label class="btn big primary" id="capLabel" hidden style="position:absolute;left:30%;right:30%;top:40%;width:auto">Kamera-App öffnen<input type="file" id="capIn" accept="image/*" capture="environment" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;font-size:0"></label>
     </div>
     <div class="pane" id="vRev" hidden>
-      <img id="revImg" alt="Vorschau des Fotos">
-      <div class="rev-top"><div class="chipbox"><b id="revLbl"></b><span id="revInfo"></span><span id="revDbg" hidden></span></div></div>
-      <div class="rev-bot">
-        <button class="btn neu" id="revNeu" type="button">Neu</button>
-        <button class="btn rot" id="revRot" type="button" aria-label="Foto um eine Vierteldrehung drehen" title="Foto steht schief? Drehen">↻</button>
-        <button class="btn passt" id="revOk" type="button">Passt</button>
+      <div class="rv-photo"><img id="revImg" alt="Vorschau des Fotos"></div>
+      <div class="chip rv-cap"><i class="dot go"></i><span id="revLbl"></span></div>
+      <div class="glass rv-panel">
+        <h2 id="revTitle">Passt das Foto?</h2>
+        <div class="checks" id="revInfo"></div>
+        <span id="revDbg" hidden></span>
+        <div class="ex" id="exBox"><span class="lbl">So soll es aussehen</span><canvas id="exCv"></canvas></div>
+        <div class="rv-btns" id="revBtns">
+          <button class="btn" id="revNeu" type="button">Neu</button>
+          <button class="btn" id="revRot" type="button" aria-label="Foto um eine Vierteldrehung drehen" title="Foto steht schief? Drehen">↻</button>
+          <button class="btn primary" id="revOk" type="button">Passt</button>
+        </div>
       </div>
     </div>
-    <div class="pane" id="vBet" hidden><div id="betBox"></div></div>
+    <div class="pane" id="vBet" hidden><div class="glass card" id="betBox"></div></div>
     <div class="pane" id="vTurn" hidden>
-      <div class="phone" aria-hidden="true"></div>
-      <h1 data-du="Dreh dein Handy quer" data-sie="Drehen Sie Ihr Handy quer">Dreh dein Handy quer</h1>
-      <p id="turnTxt">Die Kamera startet, sobald dein Handy quer liegt.</p>
-      <div id="turnBtnBox" hidden><button class="btn dark" id="turnGo" type="button">Trotzdem weiter</button></div>
+      <div class="glass card">
+        <div class="rot" aria-hidden="true"><div class="ph"></div></div>
+        <h1 data-du="Dreh dein Handy quer" data-sie="Drehen Sie Ihr Handy quer">Dreh dein Handy quer</h1>
+        <p id="turnTxt">Die Kamera startet, sobald dein Handy quer liegt.</p>
+        <div id="turnBtnBox" hidden><button class="btn" id="turnGo" type="button">Trotzdem weiter</button></div>
+      </div>
     </div>
     <div class="toast" id="toast" hidden></div>
     <div class="flash" id="flash"></div>
@@ -268,7 +400,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-1';
+  var APP = 'foto-app-test-2';
   var RAD = Math.PI / 180;
   var CFG = {
     LONG_EDGE: 2560, QUALITY: 0.85,
@@ -290,7 +422,8 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
   // winkel: Dreiviertel, Richtung Kamera zur Fahrzeugmitte gegen die Längsachse (heute 21 bis 23°, V2 hatte 28°).
   // eckeM: Abstand zur nächsten Ecke bzw. Stoßstange (heute 1,9 bis 2,2 m; V2: 5,0 m zur Mitte = 2,4 m zur Ecke, 4,5 m bei Front/Heck = 2,0 m).
   // seiteMitteM: Seite wurde heute nicht gemessen, nur V2 (5,0 m zur Mitte); dafür nennen die Hinweistexte keine Zahl.
-  var GEO = { stand: 'freihand-2026-11-08', winkel: 22, eckeM: 2.0, seiteMitteM: 5.0, autoL: 4.9, autoB: 1.9 };
+  // Seite: 6,0 m zur Fahrzeugmitte seit dem Design-Stand (Vorgabe Autobuilder, A6 füllt dort 73 %); am echten Auto noch nicht geprüft.
+  var GEO = { stand: 'freihand-2026-11-08+seite6', winkel: 22, eckeM: 2.0, seiteMitteM: 6.0, autoL: 4.9, autoB: 1.9 };
   function T(du, sie) { return VAR.anrede === 'du' ? du : sie; }
   function hoeheHint() {
     if (VAR.hoehe === 'brust') return 'Handy auf Brusthöhe (ca. 1,5 m).';
@@ -333,6 +466,195 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
   function load(k) { try { return JSON.parse(sessionStorage.getItem(k) || 'null'); } catch (e) { return null; } }
 
   /* =====================================================================
+     Darstellung: Hell und Dunkel nach Systemeinstellung (Schalter Auto, Hell, Dunkel), Messwerte-Schalter
+     ===================================================================== */
+  var UI = { mode: 'auto', mess: false };
+  try { var uiSaved = JSON.parse(localStorage.getItem('fa_ui') || 'null'); if (uiSaved) { if (/^(auto|hell|dunkel)$/.test(uiSaved.mode)) UI.mode = uiSaved.mode; UI.mess = !!uiSaved.mess; } } catch (e) { /* ohne Speicher weiter */ }
+  function saveUI() { try { localStorage.setItem('fa_ui', JSON.stringify(UI)); } catch (e) { /* egal */ } }
+  var DIR = document.documentElement.getAttribute('data-dir') === 'a' ? 'a' : 'b';
+  var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  function applyTheme() {
+    var dark = UI.mode === 'dunkel' || (UI.mode === 'auto' && !!(mq && mq.matches)), d = dark ? 'a' : 'b', changed = d !== DIR;
+    DIR = d; document.documentElement.setAttribute('data-dir', d);
+    var mt = document.getElementById('metaTheme'); if (mt) mt.setAttribute('content', dark ? '#0B0C10' : '#EEF0F4');
+    Array.prototype.forEach.call(document.querySelectorAll('#segDir button'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-m') === UI.mode ? 'true' : 'false'); });
+    if (changed && typeof buildKar === 'function') { buildKar(); renderGalleryIfShown(); }
+  }
+  if (mq) { var onMq = function () { if (UI.mode === 'auto') applyTheme(); }; if (mq.addEventListener) mq.addEventListener('change', onMq); else if (mq.addListener) mq.addListener(onMq); }
+
+  /* =====================================================================
+     Fahrzeug-Zeichnung (aus der Designvorlage Version 4): einfache Körper nach Klassen-Maßen, Schablone im Sucher, Beispielbilder, Kacheln
+     Maße: Mediane je Klasse aus fahrzeugklassen.json des Autobuilders (08.11.2026). Cabrio: Maße der Klasse Kompakt (Autobuilder). Van: keine Daten, Platzhalter.
+     Die Zeichnung ist eine Orientierung, kein Abgleich mit dem Kamerabild.
+     ===================================================================== */
+  var KINDS = {
+    kleinwagen: { n: 'Kleinwagen', L: 3.938, W: 1.736, gc: .13, rw: .31, wb: 2.518, fo: .80, zNose: .55, zHood: .82, zTail: .90, xWS: 1.07, xRS: -1.82, cab: { rf: .2, rr: -1.35, H: 1.422, w: .85, rear: [-1.82, .90] } },
+    kompakt: { n: 'Kompakt', L: 4.305, W: 1.802, gc: .14, rw: .325, wb: 2.639, fo: .88, zNose: .60, zHood: .88, zTail: .95, xWS: 1.15, xRS: -1.95, cab: { rf: .3, rr: -1.5, H: 1.483, w: .84, rear: [-1.95, .95] } },
+    limousine: { n: 'Limousine', L: 4.949, W: 1.88, gc: .15, rw: .35, wb: 2.925, fo: .91, zNose: .62, zHood: .93, zTail: .98, xWS: 1.33, xRS: -1.42, cab: { rf: .45, rr: -.95, H: 1.457, w: .84, rear: [-1.42, .98] } },
+    kombi: { n: 'Kombi', L: 4.949, W: 1.88, gc: .15, rw: .35, wb: 2.925, fo: .91, zNose: .62, zHood: .93, zTail: 1.0, xWS: 1.33, xRS: -2.35, cab: { rf: .45, rr: -1.95, H: 1.46, w: .84, rear: [-2.35, 1.0] } },
+    suv: { n: 'SUV', L: 4.696, W: 1.891, gc: .22, rw: .37, wb: 2.842, fo: .89, zNose: .85, zHood: 1.08, zTail: 1.12, xWS: 1.22, xRS: -2.2, cab: { rf: .35, rr: -1.75, H: 1.66, w: .86, rear: [-2.2, 1.12] } },
+    coupe: { n: 'Coupé', L: 4.495, W: 1.888, gc: .12, rw: .35, wb: 2.536, fo: .95, zNose: .55, zHood: .82, zTail: .90, xWS: 1.05, xRS: -1.55, cab: { rf: -.05, rr: -.75, H: 1.305, w: .82, rear: [-1.55, .90] } },
+    cabrio: { n: 'Cabrio', L: 4.305, W: 1.802, gc: .14, rw: .325, wb: 2.639, fo: .88, zNose: .60, zHood: .88, zTail: .92, xWS: 1.15, xRS: -2.0, cab: { rf: .62, rr: .52, H: 1.38, w: .84, rear: [.52, .88], thin: true } },
+    van: { n: 'Van', L: 5.00, W: 1.95, gc: .22, rw: .36, wb: 3.00, fo: .95, zNose: .75, zHood: 1.0, zTail: 1.0, xWS: 1.6, xRS: -2.5, cab: { rf: .85, rr: -2.45, H: 1.95, w: .94, rear: [-2.5, 1.0] } }
+  };
+  var ORDER = ['kleinwagen', 'kompakt', 'limousine', 'kombi', 'suv', 'coupe', 'cabrio', 'van'];
+  // Der Server kennt nur diese Werte (check-Regel im Schema); Kleinwagen und Kompakt gehen als null, die Klasse steht in app_details.
+  var DBKAR = { limousine: 'limousine', kombi: 'kombi', suv: 'suv', coupe: 'coupe', cabrio: 'cabrio', van: 'van' };
+  var modelCache = {};
+  function sub3(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
+  function dot3(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+  function buildModel(kind) {
+    if (modelCache[kind]) return modelCache[kind];
+    var K = KINDS[kind], hl = K.L / 2, C = K.cab;
+    var body = [[-hl + .15, K.gc, .9], [hl - .15, K.gc, .9], [hl, K.gc + .22, .96], [hl, K.zNose, .96], [K.xWS, K.zHood, 1], [K.xRS, K.zTail, 1], [-hl, K.zTail - .04, .97], [-hl, K.gc + .25, .94]];
+    if (kind === 'kombi' || kind === 'suv' || kind === 'kompakt' || kind === 'kleinwagen') body[5] = [-hl + .12, K.zTail, 1];
+    if (kind === 'van') { body[4] = [K.xWS, K.zHood, 1]; body[5] = [-hl + .05, K.zTail, 1]; }
+    if (kind === 'cabrio') body[5] = [-hl + .55, K.zTail, 1];
+    var cab;
+    if (C.thin) { var dx = (C.H - K.zHood) * 1.5; cab = [[K.xWS, K.zHood, C.w], [K.xWS - dx, C.H, C.w - .02], [K.xWS - dx - .06, C.H, C.w - .02], [K.xWS - .06, K.zHood, C.w]]; }
+    else if (kind === 'van') cab = [[K.xWS, K.zHood, C.w], [K.xWS - .7, C.H, C.w], [-hl + .08, C.H, C.w], [-hl + .02, K.zTail, C.w]];
+    else cab = [[K.xWS, K.zHood, C.w], [C.rf, C.H, C.w - .07], [C.rr, C.H - .02, C.w - .07], [C.rear[0], C.rear[1], C.w]];
+    var faces = [];
+    function prism(prof, role) {
+      var n = prof.length, cx = 0, cy = 0, cz = 0, i, verts = [];
+      prof.forEach(function (p) { verts.push([p[0], p[2] * K.W / 2, p[1]], [p[0], -p[2] * K.W / 2, p[1]]); });
+      verts.forEach(function (v) { cx += v[0]; cy += v[1]; cz += v[2]; }); cx /= verts.length; cy /= verts.length; cz /= verts.length;
+      function add(poly, kind2) {
+        var c = [0, 0, 0], nrm = [0, 0, 0], j;
+        poly.forEach(function (p) { c[0] += p[0]; c[1] += p[1]; c[2] += p[2]; }); c = c.map(function (x) { return x / poly.length; });
+        for (j = 0; j < poly.length; j++) { var a = poly[j], b = poly[(j + 1) % poly.length]; nrm[0] += (a[1] - b[1]) * (a[2] + b[2]); nrm[1] += (a[2] - b[2]) * (a[0] + b[0]); nrm[2] += (a[0] - b[0]) * (a[1] + b[1]); }
+        var l = Math.hypot(nrm[0], nrm[1], nrm[2]) || 1; nrm = nrm.map(function (x) { return x / l; });
+        if (dot3(nrm, sub3(c, [cx, cy, cz])) < 0) nrm = nrm.map(function (x) { return -x; });
+        faces.push({ poly: poly, c: c, n: nrm, role: role, kind: kind2 });
+      }
+      add(prof.map(function (p) { return [p[0], p[2] * K.W / 2, p[1]]; }), 'side');
+      add(prof.map(function (p) { return [p[0], -p[2] * K.W / 2, p[1]]; }).reverse(), 'side');
+      for (i = 0; i < n; i++) { var a = prof[i], b = prof[(i + 1) % n]; add([[a[0], a[2] * K.W / 2, a[1]], [b[0], b[2] * K.W / 2, b[1]], [b[0], -b[2] * K.W / 2, b[1]], [a[0], -a[2] * K.W / 2, a[1]]], 'strip'); }
+    }
+    prism(body, 'body'); prism(cab, 'cabin');
+    var xf = hl - K.fo, xr = xf - K.wb, hw = K.W / 2;
+    var wheels = [[xf, hw], [xf, -hw], [xr, hw], [xr, -hw]].map(function (w) { return { x: w[0], y: w[1] > 0 ? w[1] - .01 : w[1] + .01, r: K.rw, s: w[1] > 0 ? 1 : -1 }; });
+    return (modelCache[kind] = { K: K, faces: faces, wheels: wheels });
+  }
+  // Kamerahöhe aus der Link-Wahl: Räume 1,20 / 1,35 / 1,50 m (Autobuilder)
+  function camH() { return VAR.hoehe === 'brust' ? 1.5 : VAR.hoehe === '1m' ? 1.2 : 1.35; }
+  function klasseOf() { return S.vehicle && S.vehicle.klasse && KINDS[S.vehicle.klasse] ? S.vehicle.klasse : null; }
+  function camPose(key, kind, h, ang, eck) {
+    var K = KINDS[kind], hl = K.L / 2, hw = K.W / 2, a = ang * RAD;
+    if (key === 'front') return { P: [hl + eck, 0, h], d: hl + eck, ang: 0 };
+    if (key === 'heck') return { P: [-(hl + eck), 0, h], d: hl + eck, ang: 0 };
+    if (key === 'seite') return { P: [0, GEO.seiteMitteM, h], d: GEO.seiteMitteM, ang: 90 };
+    var fx = key === 'dreiviertel_hl' ? -1 : 1, fy = key === 'dreiviertel_vr' ? -1 : 1, cx = fx * hl, cy = fy * hw, lo = 3.5, hi = 14, i;
+    for (i = 0; i < 40; i++) { var m = (lo + hi) / 2, d = Math.hypot(fx * m * Math.cos(a) - cx, fy * m * Math.sin(a) - cy); if (d < eck) lo = m; else hi = m; }
+    var dd = (lo + hi) / 2;
+    return { P: [fx * dd * Math.cos(a), fy * dd * Math.sin(a), h], d: dd, ang: ang };
+  }
+  // Pinhole-Kamera: f aus 26 mm (Kleinbild) und Bildbreite; Blick auf Zielpunkt T (Höhe 0) mit Neigung pitchDeg
+  function makeCam(P, f, cx0, cy0, pitchDeg, T) {
+    T = T || [0, 0, 0]; var dh = [T[0] - P[0], T[1] - P[1]], l = Math.hypot(dh[0], dh[1]); dh = [dh[0] / l, dh[1] / l];
+    var p = pitchDeg * RAD, fw = [dh[0] * Math.cos(p), dh[1] * Math.cos(p), Math.sin(p)], rt = [dh[1], -dh[0], 0];
+    var up = [rt[1] * fw[2], -rt[0] * fw[2], rt[0] * fw[1] - rt[1] * fw[0]];
+    var fn = function (X) { var v = sub3(X, P), z = dot3(v, fw); return [cx0 + f * dot3(v, rt) / z, cy0 - f * dot3(v, up) / z, z]; };
+    fn.vh = cy0 - f * Math.tan(-p); fn.P = P;
+    return fn;
+  }
+  function frameF(w) { return (w / 2) * 26 / 17.3; }
+  // Der Händler richtet die Kamera so aus, dass das ganze Auto mittig im Bild steht: Zielpunkt auf der Längsachse, bis links und rechts gleich viel Rand bleibt.
+  var aimCache = {};
+  function aimShift(key, kind, h, ang, pitch, w, hh) {
+    var ck = [key, kind, h, ang, pitch, Math.round(w)].join('|'); if (aimCache[ck] != null) return aimCache[ck];
+    var f = frameF(w), pose = camPose(key, kind, h, ang, GEO.eckeM), M = buildModel(kind), hl = M.K.L / 2, best = 0, bg = 1e9, s;
+    for (s = -hl; s <= hl + 1e-9; s += hl / 12) {
+      var cam = makeCam(pose.P, f, w / 2, hh / 2, pitch, [s, 0, 0]), x0 = 1e9, x1 = -1e9;
+      M.faces.forEach(function (fc) { fc.poly.forEach(function (p) { var q = cam(p); if (q[0] < x0) x0 = q[0]; if (q[0] > x1) x1 = q[0]; }); });
+      var g = Math.abs(x0 - (w - x1)); if (g < bg) { bg = g; best = s; }
+    }
+    return (aimCache[ck] = best);
+  }
+  function setup(cv, w, hh) { var r = Math.min(3, Math.max(2, (window.devicePixelRatio || 1) * 1.5)); cv.width = Math.round(w * r); cv.height = Math.round(hh * r); var c = cv.getContext('2d'); c.setTransform(r, 0, 0, r, 0, 0); return c; }
+  function mix(c1, c2, t) { return 'rgb(' + [0, 1, 2].map(function (i) { return Math.round(c1[i] + (c2[i] - c1[i]) * t); }).join(',') + ')'; }
+  function poly(c, pts) { c.beginPath(); pts.forEach(function (p, i) { if (i) c.lineTo(p[0], p[1]); else c.moveTo(p[0], p[1]); }); c.closePath(); }
+  function ringPts(cam, cx, cy, cz, r, n, plane) { var out = [], i; for (i = 0; i < n; i++) { var t = i / n * 6.2832; out.push(cam(plane === 'y' ? [cx + r * Math.cos(t), cy, cz + r * Math.sin(t)] : [cx + r * Math.cos(t), cy + r * Math.sin(t), cz])); } return out; }
+  function bgHof(c, w, hh, cam) {
+    var vh = Math.max(40, Math.min(hh - 40, cam.vh)), g = c.createLinearGradient(0, 0, 0, vh);
+    g.addColorStop(0, '#9FB0C6'); g.addColorStop(.7, '#D3DCE7'); g.addColorStop(1, '#E6EBF1'); c.fillStyle = g; c.fillRect(0, 0, w, vh);
+    var bh = 46 * hh / 390, g2 = c.createLinearGradient(0, vh - bh, 0, vh); g2.addColorStop(0, '#8E99A8'); g2.addColorStop(1, '#6F7A89'); c.fillStyle = g2;
+    var i; for (i = 0; i < 9; i++) { var bw = (70 + (i * 37) % 60) * hh / 390, bx = i * (w / 8.2) - 30 * hh / 390, bhh = (18 + (i * 53) % 28) * hh / 390; c.fillRect(bx, vh - bhh - 4, bw, bhh + 4); }
+    var g3 = c.createLinearGradient(0, vh, 0, hh); g3.addColorStop(0, '#6A7079'); g3.addColorStop(1, '#3F434A'); c.fillStyle = g3; c.fillRect(0, vh, w, hh - vh);
+    c.strokeStyle = 'rgba(255,255,255,.16)'; c.lineWidth = 1.2;
+    for (i = -8; i <= 8; i++) { var a = cam([-12, i * 1.25, 0]), b = cam([12, i * 1.25, 0]); if (a[2] > .3 && b[2] > .3) { c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke(); } }
+    c.strokeStyle = 'rgba(255,255,255,.34)'; c.setLineDash([10, 8]);
+    [-4.2, 4.2].forEach(function (yy) { var a = cam([-12, yy, 0]), b = cam([12, yy, 0]); if (a[2] > .3 && b[2] > .3) { c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke(); } });
+    c.setLineDash([]);
+  }
+  function drawCar(c, cam, kind, o) {
+    var M = buildModel(kind), K = M.K, light = [-.35, .45, .82], bc = o.col || [196, 202, 212], dk = [40, 46, 56], vis = [];
+    var sh = [[-K.L / 2 - .25, -K.W / 2 - .2, 0], [K.L / 2 + .25, -K.W / 2 - .2, 0], [K.L / 2 + .25, K.W / 2 + .2, 0], [-K.L / 2 - .25, K.W / 2 + .2, 0]].map(cam);
+    if (o.fill) { c.save(); try { c.filter = 'blur(7px)'; } catch (e) { /* ohne */ } poly(c, sh); c.fillStyle = 'rgba(0,0,0,.34)'; c.fill(); c.restore(); }
+    var allPolys = [];
+    M.faces.forEach(function (f) { var pr = f.poly.map(cam), ok = pr.every(function (p) { return p[2] > .2; }); if (!ok) return; allPolys.push(pr); var toCam = sub3(cam.P, f.c); if (dot3(f.n, toCam) > 0) vis.push({ f: f, pr: pr, d: Math.hypot(toCam[0], toCam[1], toCam[2]) - (f.role === 'cabin' ? .9 : 0) }); });
+    var wl = M.wheels.map(function (w) { var near = (w.s * cam.P[1] > -.2 && Math.abs(cam.P[1]) > .3) || Math.abs(cam.P[1]) <= .3; return { w: w, near: near, pts: ringPts(cam, w.x, w.y, w.r, w.r, 28, 'y'), rim: ringPts(cam, w.x, w.y + w.s * .02, w.r, w.r * .58, 22, 'y'), arch: ringPts(cam, w.x, w.y - w.s * .01, w.r, w.r * 1.12, 28, 'y') }; });
+    if (o.fill) {
+      wl.filter(function (x) { return !x.near; }).forEach(function (x) { poly(c, x.pts); c.fillStyle = '#15171B'; c.fill(); });
+      vis.sort(function (a, b) { return b.d - a.d; });
+      vis.forEach(function (v) {
+        var f = v.f, lam = Math.max(0, dot3(f.n, light)), glass = f.role === 'cabin' && (f.kind === 'side' || f.n[2] < .75), col;
+        if (glass) col = mix([22, 30, 40], [96, 118, 140], .25 + .55 * lam); else col = mix(dk, bc, .42 + .58 * lam);
+        poly(c, v.pr); c.fillStyle = col; c.fill(); c.lineWidth = .6; c.strokeStyle = 'rgba(0,0,0,.25)'; c.stroke();
+      });
+      wl.filter(function (x) { return x.near; }).forEach(function (x) { poly(c, x.arch); c.fillStyle = '#0E1013'; c.fill(); poly(c, x.pts); c.fillStyle = '#1C1F24'; c.fill(); poly(c, x.rim); c.fillStyle = '#B9BEC7'; c.fill(); });
+    }
+    if (o.outline) {
+      var lk = o.lw || 1, passes = [{ col: 'rgba(0,0,0,.5)', lw: 10 * lk }, { col: o.line || '#FFC77C', lw: 5 * lk }];
+      passes.forEach(function (ps) {
+        allPolys.forEach(function (pp) { poly(c, pp); c.fillStyle = ps.col; c.strokeStyle = ps.col; c.lineWidth = ps.lw; c.lineJoin = 'round'; c.fill(); c.stroke(); });
+        c.globalCompositeOperation = 'destination-out'; allPolys.forEach(function (pp) { poly(c, pp); c.fillStyle = '#000'; c.fill(); }); c.globalCompositeOperation = 'source-over';
+      });
+      c.save(); c.strokeStyle = 'rgba(255,199,124,.62)'; c.lineWidth = 1.8 * lk; c.lineJoin = 'round';
+      vis.forEach(function (v) { if (v.f.role === 'cabin') { poly(c, v.pr); c.stroke(); } });
+      wl.filter(function (x) { return x.near; }).forEach(function (x) { poly(c, x.pts); c.stroke(); });
+      c.restore();
+    }
+  }
+  // Szene w x hh (Bildfläche, Breite = Bildbreite): Auto, wie der Händler es ausrichtet
+  function drawScene(cv, w, hh, o) {
+    var c = setup(cv, w, hh), kind = o.kind, pose = camPose(o.key, kind, o.h, o.ang, GEO.eckeM), cam = makeCam(pose.P, frameF(w), w / 2, hh / 2, o.pitch, [aimShift(o.key, kind, o.h, o.ang, o.pitch, w, hh), 0, 0]);
+    c.clearRect(0, 0, w, hh);
+    if (o.bg === 'hof') bgHof(c, w, hh, cam);
+    drawCar(c, cam, kind, o);
+  }
+  function drawSide(cv, kind, w, hh, col) {
+    var c = setup(cv, w, hh), M = buildModel(kind), K = M.K, k = (w - 6) / (K.L + .2), x0 = w / 2, base = hh - 3 - K.rw * k * .1;
+    function P(x, z) { return [x0 + x * k, base - z * k]; }
+    M.faces.forEach(function (f) { if (f.kind !== 'side' || f.poly[0][1] < 0) return; poly(c, f.poly.map(function (p) { return P(p[0], p[2]); })); c.fillStyle = f.role === 'cabin' ? 'rgba(120,140,165,.9)' : col; c.fill(); });
+    M.wheels.filter(function (w2) { return w2.s > 0; }).forEach(function (w2) { var q = P(w2.x, w2.r); c.beginPath(); c.arc(q[0], q[1], w2.r * k, 0, 6.2832); c.fillStyle = '#15171B'; c.fill(); c.beginPath(); c.arc(q[0], q[1], w2.r * k * .55, 0, 6.2832); c.fillStyle = '#B9BEC7'; c.fill(); });
+  }
+  var thCache = {};
+  // Umriss der Schablone als kleines Bild (leere Plätze in Galerie und Kachelleiste)
+  function thumbUrl(key, kind, line) {
+    kind = kind || 'limousine';
+    var ck = [key, kind, camH(), line ? 'l' : 'f'].join('|'); if (thCache[ck]) return thCache[ck];
+    var cv = document.createElement('canvas');
+    drawScene(cv, 92, 69, { kind: kind, key: key, h: camH(), ang: GEO.winkel, pitch: AMPEL.p0, bg: line ? null : 'hof', fill: !line, outline: !!line, lw: .34 });
+    return (thCache[ck] = cv.toDataURL(line ? 'image/png' : 'image/jpeg', .85));
+  }
+  var ICO = {
+    cockpit: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="24" cy="26" r="15"/><circle cx="24" cy="26" r="4.5"/><path d="M9.5 24h10M28.5 24h10M24 30.5V41"/></svg>',
+    tacho: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 33a17 17 0 1 1 34 0"/><path d="M24 33l8-11"/><path d="M11 33h3M34 33h3M24 17v3"/></svg>',
+    vordersitze: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 38V16a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v22M27 38V16a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v22"/><path d="M7 38h16M25 38h16"/></svg>',
+    kofferraum: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 40V22l6-9h24l6 9v18z"/><path d="M6 22h36M12 13l-5 9M36 13l5 9"/></svg>'
+  };
+  // Karosserie-Auswahl auf der Startseite
+  function buildKar() {
+    var box = document.getElementById('karBox'); if (!box) return; box.innerHTML = '';
+    ORDER.forEach(function (k) {
+      var b = document.createElement('button'), on = S.klasse === k; b.type = 'button'; b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.innerHTML = '<canvas></canvas><span>' + KINDS[k].n + '</span>';
+      box.appendChild(b); drawSide(b.querySelector('canvas'), k, 60, 24, on ? (DIR === 'a' ? '#0B0C10' : '#FAFAFA') : (DIR === 'a' ? '#C4CAD4' : '#59626F'));
+      b.onclick = function () { S.klasse = k; buildKar(); fmsg(''); };
+    });
+  }
+
+  /* =====================================================================
      Konfiguration aus dem Link (Teil nach #), nichts davon liegt im Quelltext
      ===================================================================== */
   function readCfg() {
@@ -345,7 +667,9 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
         if (p.get('a') === 'du' || p.get('a') === 'sie') cfg.a = p.get('a');
         if (p.get('h') === '1m' || p.get('h') === 'brust' || p.get('h') === 'bereich') cfg.h = p.get('h');
         if (p.has('debug')) cfg.debug = true;
-        store('fa_cfg', cfg); try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* egal */ } }
+        if (p.has('hs')) cfg.hs = true;                // Home-Bildschirm: Link-Teil bleibt in der Adresse, damit das Symbol ihn mitnimmt
+        if (p.has('sim') && cfg.demo) cfg.sim = true;  // nur im Demo ohne Server: gezeichnete Kamera
+        store('fa_cfg', cfg); if (!cfg.hs) { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* egal */ } } }
     }
     if (!cfg) cfg = load('fa_cfg');
     if (cfg && !cfg.demo && !/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(cfg.url || '')) cfg = { bad: 'Die Server-Adresse im Link ist nicht erlaubt.' };
@@ -435,7 +759,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     streamOpenedAt: 0, shotsSinceOpen: 0,
     textRot: 0, lastCls: null, wake: null,
     queue: [], uploading: false, pollTimer: null,
-    review: null, zusatzArt: null, fallbackInput: false, smooth: 'high', warmed: false, restoredFailed: []
+    review: null, zusatzArt: null, fallbackInput: false, smooth: 'high', warmed: false, restoredFailed: [], klasse: null, viewId: null, simCv: null
   };
 
   function slotMeta(id) {
@@ -539,12 +863,120 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     if (!rot) el.style.cssText = 'left:0;top:0;width:' + W + 'px;height:' + H + 'px;transform:none';
     else el.style.cssText = 'left:50%;top:50%;width:' + H + 'px;height:' + W + 'px;transform:translate(-50%,-50%) rotate(' + rot + 'deg)';
   }
+  /* Bildfläche im Sucher: Das Kamerabild liegt mittig im sichtbaren Bereich (4:3 oder wie geliefert), links und rechts bleibt je eine Leiste für Bedienung.
+     Gemessen wird gegen den echten sichtbaren Bereich des Browsers (innerWidth/innerHeight), nicht gegen den Bildschirm; die Sicherheitsränder (Kamera-Insel, Home-Balken) kommen aus env(safe-area-inset-*). */
+  var LAY = { fw: 800, fh: 360, ix: 160, iy: 0, iw: 480, ih: 360, aligned: true, sl: 0, sr: 0, rw: 480 };
+  var probeEl = null;
+  function safeInsets() {
+    try {
+      if (!probeEl) { probeEl = document.createElement('div'); probeEl.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)'; document.body.appendChild(probeEl); }
+      var cs = getComputedStyle(probeEl);
+      return { t: parseFloat(cs.paddingTop) || 0, r: parseFloat(cs.paddingRight) || 0, b: parseFloat(cs.paddingBottom) || 0, l: parseFloat(cs.paddingLeft) || 0 };
+    } catch (e) { return { t: 0, r: 0, b: 0, l: 0 }; }
+  }
+  function computeLayout() {
+    var W = window.innerWidth, H = window.innerHeight, rot = S.textRot !== 0, fw = rot ? H : W, fh = rot ? W : H;
+    var vrot = (S.textRot !== 0 && S.vw >= S.vh) ? S.textRot : 0, asp = (S.vw > 1 && S.vh > 1) ? S.vw / S.vh : 4 / 3;
+    var RMIN = 116, w = Math.min(Math.max(160, fw - 2 * RMIN), fh * asp), h = w / asp;
+    if (h > fh) { h = fh; w = h * asp; }
+    var si = rot ? { t: 0, r: 0, b: 0, l: 0 } : safeInsets();
+    var rw = Math.min(Math.round(fh * 4 / 3), Math.max(200, fw - 250 - si.l - si.r));
+    LAY = { fw: fw, fh: fh, ix: Math.round((fw - w) / 2), iy: Math.round((fh - h) / 2), iw: Math.round(w), ih: Math.round(h), aligned: vrot === S.textRot, sl: si.l, sr: si.r, rw: rw };
+    var u = $('ui').style;
+    ['fw', 'fh', 'ix', 'iy', 'iw', 'ih', 'sl', 'sr', 'rw'].forEach(function (k) { u.setProperty('--' + k, LAY[k] + 'px'); });
+  }
   function applyGeom() {
     geom($('ui'), S.textRot);
     // Sucherbild: liefert der Browser hochkant-Bilder (mit dem Handy verbunden), dreht sich das Bild mit dem Handy und passt ohne Drehung.
     // Liefert er quer-Bilder bei gesperrtem Bildschirm, muss das Bild wie der Text gedreht werden.
     geom($('vidBox'), (S.textRot !== 0 && S.vw >= S.vh) ? S.textRot : 0);
+    computeLayout();
+    var vd = $('video').style;
+    if (LAY.aligned) { vd.left = LAY.ix + 'px'; vd.top = LAY.iy + 'px'; vd.width = LAY.iw + 'px'; vd.height = LAY.ih + 'px'; }
+    else { vd.left = '0'; vd.top = '0'; vd.width = '100%'; vd.height = '100%'; }
+    drawOverlay();
   }
+  // Schablone (Umriss des Autos, wie es im Bild stehen soll) über dem Kamerabild; Innenplätze: gestrichelter Rahmen. Nur zur Orientierung.
+  function drawOverlay() {
+    var cv = $('ovCv'); if (!cv) return;
+    var m = S.cur ? slotMeta(S.cur) : null, kind = klasseOf();
+    cv.width = 1; cv.height = 1;
+    if (!m || !LAY.aligned || LAY.iw < 100 || LAY.iw / LAY.ih < 1.1 || S.vw < S.vh) return;
+    if (m.art === 'aussen' && kind) {
+      var c = setup(cv, LAY.iw, LAY.ih), pose = camPose(m.key, kind, camH(), GEO.winkel, GEO.eckeM);
+      var cam = makeCam(pose.P, frameF(LAY.iw), LAY.iw / 2, LAY.ih / 2, AMPEL.p0, [aimShift(m.key, kind, camH(), GEO.winkel, AMPEL.p0, LAY.iw, LAY.ih), 0, 0]);
+      drawCar(c, cam, kind, { fill: false, outline: true, line: '#FFC77C', lw: Math.max(.6, LAY.ih / 390) });
+    } else if (m.art === 'innen') {
+      var c2 = setup(cv, LAY.iw, LAY.ih), w = LAY.iw * .74, h = LAY.ih * .62, x = (LAY.iw - w) / 2, y = (LAY.ih - h) / 2 - LAY.ih * .02, r = 14;
+      c2.lineWidth = 3; c2.setLineDash([12, 9]); c2.strokeStyle = '#FFC77C'; c2.fillStyle = 'rgba(0,0,0,.14)';
+      c2.beginPath(); c2.moveTo(x + r, y); c2.arcTo(x + w, y, x + w, y + h, r); c2.arcTo(x + w, y + h, x, y + h, r); c2.arcTo(x, y + h, x, y, r); c2.arcTo(x, y, x + w, y, r); c2.closePath(); c2.fill(); c2.stroke();
+    }
+  }
+
+  /* Kleine Galerie im Sucher: die 10 Pflichtplätze, aufgenommene mit Bild und Stand, leere mit Umriss der Schablone. Antippen: Foto ansehen oder zum Platz springen. */
+  function badgeOf(id) {
+    var s = S.slots[id]; if (!s) return ['work', ''];
+    if (s.state === 'wartet' || s.state === 'sendet') return ['send', ''];
+    if (s.state === 'retry') return ['warn', '!'];
+    if (s.state === 'fehler') return ['bad', '!'];
+    var sv = s.server && s.server.status;
+    if (sv === 'fertig') return ['sent', '✓'];
+    if (sv === 'fehler') return ['bad', '!'];
+    return ['work', ''];
+  }
+  function renderStrip() {
+    var g = $('camGal'); if (!g || $('stage').hidden) return;
+    var kind = klasseOf(), h = '';
+    PLAETZE.forEach(function (p) {
+      var taken = hasPhoto(p.key), s = S.slots[p.key], inner = '';
+      if (taken && s && s.thumb) inner = '<img alt="" src="' + s.thumb + '">';
+      else if (p.art === 'innen') inner = '<span class="' + (taken ? 'ic' : '') + '">' + (ICO[p.key] || '') + '</span>';
+      else inner = '<img alt="" src="' + thumbUrl(p.key, kind, true) + '">';
+      var bd = taken ? badgeOf(p.key) : null;
+      h += '<button type="button" class="gt' + (taken ? '' : ' empty') + (p.key === S.cur ? ' cur' : '') + '" data-id="' + p.key + '" aria-label="' + esc(p.nr + ' ' + p.name + ': ' + tileInfo(p.key).t) + '">' + inner + (bd ? '<i class="bd ' + bd[0] + '">' + bd[1] + '</i>' : '') + '</button>';
+    });
+    g.innerHTML = h;
+  }
+  function jumpTo(id) {
+    var rest = PLAETZE.map(function (p) { return p.key; }).filter(function (k) { return k !== id && !hasPhoto(k); });
+    S.seq = [id].concat(rest); S.idx = 0; S.mode = 'seq'; discardReview(); nextShot();
+  }
+  function viewPhoto(id) {
+    var s = S.slots[id], m = slotMeta(id), ti = tileInfo(id); if (!s || !s.thumb) return;
+    S.token++; S.phase = 'view'; S.viewId = id; say('');
+    $('revImg').src = s.thumb; $('revLbl').textContent = (m.nr ? m.nr + ' von 10 · ' : '') + m.name; $('revTitle').textContent = 'Foto ansehen';
+    $('revInfo').innerHTML = '<span class="chip"><i class="dot ' + (ti.c || '') + '"></i>' + esc(ti.t) + '</span>' + amp(s.ampelHandy, 'Handy') + amp(s.server && s.server.ampel_showroom, 'Showroom');
+    $('revDbg').hidden = true; $('exBox').hidden = true; $('revRot').hidden = true; $('revBtns').classList.add('two');
+    $('revNeu').textContent = 'Zurück'; $('revOk').textContent = 'Neu aufnehmen'; $('revOk').disabled = false;
+    paneShow('vCam', false); paneShow('vTurn', false); paneShow('vRev', true);
+  }
+  $('camGal').addEventListener('click', function (ev) {
+    var b = ev.target.closest('.gt'); if (!b) return; var id = b.getAttribute('data-id');
+    if (id === S.cur && !hasPhoto(id)) return;
+    if (hasPhoto(id)) viewPhoto(id); else jumpTo(id);
+  });
+  var chipT = null;
+  $('camChip').onclick = function () { clearTimeout(chipT); var on = $('camChip').getAttribute('aria-expanded') !== 'true'; $('camChip').setAttribute('aria-expanded', on ? 'true' : 'false'); };
+  function setStill(p) { $('stillArc').style.strokeDashoffset = (220 * (1 - Math.max(0, Math.min(100, p)) / 100)).toFixed(1); }
+  function shotReady(on) { var b = $('shotBtn'); b.disabled = !on; b.classList.toggle('ready', !!on); $('shotIn').textContent = on ? 'Jetzt' : ''; $('stillSub').textContent = on ? 'Oder jetzt tippen' : 'Löst von selbst aus'; }
+
+  /* Simulation (nur Demo mit &sim im Link): gezeichnete Kamera und erfundene Sensorwerte, damit man die Oberfläche am Computer durchklicken kann. Keine Kamera, kein Server. */
+  function simSnap() { var t = performance.now() / 1000, p = AMPEL.p0 + Math.sin(t * .8) * 3.2 + Math.sin(t * 2.1) * .9, r = Math.sin(t * 1.1) * .45; return { age: 0, p: p, r: r, pMed: p, rMed: r, n: 9 }; }
+  function simScene() {
+    var cv = S.simCv; if (!cv) return;
+    var m = slotMeta(S.cur), kind = klasseOf() || 'limousine';
+    drawScene(cv, 640, 480, { kind: kind, key: m.art === 'aussen' ? m.key : 'titel', h: camH() + .04, ang: GEO.winkel + (m.art === 'aussen' ? 3 : 0), pitch: AMPEL.p0 + 2.5, bg: 'hof', fill: true });
+  }
+  async function openSim() {
+    closeStream();
+    var cv = document.createElement('canvas'); S.simCv = cv; simScene();
+    var st = cv.captureStream(12); S.stream = st; S.track = st.getVideoTracks()[0];
+    var v = $('video'); v.srcObject = st; try { await v.play(); } catch (e) { /* muted autoplay */ }
+    S.vw = cv.width; S.vh = cv.height; S.camNote = 'Simulation'; applyGeom();
+    S.ic = { takePhoto: function () { return toBlob(S.simCv, .9); } };
+    S.streamOpenedAt = performance.now(); S.shotsSinceOpen = 0;
+  }
+
   function updateLayout() {
     var g = gravClass();
     if (g) S.lastCls = { cls: g, t: performance.now() };
@@ -764,17 +1196,8 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     runShot();
   }
   function endSequence() {
-    leaveStage().then(function () { showGallery(); });
-  }
-  function dotsHtml() {
-    var h = '';
-    var order = PLAETZE.map(function (p) { return p.key; });
-    order.forEach(function (k, i) {
-      if (i === 6) h += '<i class="gap"></i>';
-      var c = k === S.cur ? 'cur' : (hasPhoto(k) ? 'done' : '');
-      h += '<i class="' + c + '"></i>';
-    });
-    return h;
+    var wasSeq = S.mode === 'seq';
+    leaveStage().then(function () { if (wasSeq && PLAETZE.every(function (p) { return hasPhoto(p.key); })) showEnd(); else showGallery(); });
   }
   // Skizze von oben: Auto (Front oben), Standort des Händlers, Blickrichtung, Maßlinie zur nächsten Ecke bzw. Stoßstange.
   // Maßstab und Standorte werden aus GEO gerechnet (Winkel zur Längsachse, Abstand zur Ecke), nicht von Hand gesetzt. Seite: ohne Maßlinie (nicht gemessen).
@@ -795,9 +1218,9 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     var px = X(g.x), py = Y(g.y), ang = Math.atan2(50 - py, 50 - px) / RAD;
     var fy = Y(-(GEO.autoL / 2 - 0.9)), ry = Y(GEO.autoL / 2 - 1.1);
     var s = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
-      '<rect x="0" y="0" width="100" height="100" rx="10" fill="rgba(250,250,250,.10)"/>' +
-      '<rect x="' + x0.toFixed(1) + '" y="' + y0.toFixed(1) + '" width="' + B.toFixed(1) + '" height="' + L.toFixed(1) + '" rx="6" fill="#D1D5DB"/>' +
-      '<path d="M' + (50 - B * 0.3).toFixed(1) + ' ' + (y0 + L * 0.22).toFixed(1) + ' L' + (50 + B * 0.3).toFixed(1) + ' ' + (y0 + L * 0.22).toFixed(1) + ' L' + (50 + B * 0.36).toFixed(1) + ' ' + (y0 + L * 0.34).toFixed(1) + ' L' + (50 - B * 0.36).toFixed(1) + ' ' + (y0 + L * 0.34).toFixed(1) + ' Z" fill="#6B7280"/>' +
+      '<rect x="0" y="0" width="100" height="100" rx="10" style="fill:var(--glass)"/>' +
+      '<rect x="' + x0.toFixed(1) + '" y="' + y0.toFixed(1) + '" width="' + B.toFixed(1) + '" height="' + L.toFixed(1) + '" rx="6" style="fill:var(--car)"/>' +
+      '<path d="M' + (50 - B * 0.3).toFixed(1) + ' ' + (y0 + L * 0.22).toFixed(1) + ' L' + (50 + B * 0.3).toFixed(1) + ' ' + (y0 + L * 0.22).toFixed(1) + ' L' + (50 + B * 0.36).toFixed(1) + ' ' + (y0 + L * 0.34).toFixed(1) + ' L' + (50 - B * 0.36).toFixed(1) + ' ' + (y0 + L * 0.34).toFixed(1) + ' Z" style="fill:var(--t2);opacity:.6"/>' +
       '<path d="M' + (50 - 4.5) + ' ' + y0.toFixed(1) + ' L50 ' + (y0 - 6.5).toFixed(1) + ' L' + (50 + 4.5) + ' ' + y0.toFixed(1) + ' Z" fill="#FFC77C"/>';
     [fy, ry].forEach(function (wy) { [x0 - 1.4, x0 + B - 1.2].forEach(function (wx) { s += '<rect x="' + wx.toFixed(1) + '" y="' + (wy - 3.6).toFixed(1) + '" width="2.6" height="7.2" rx="1" fill="#111"/>'; }); });
     var cone = '<g transform="translate(' + px.toFixed(1) + ' ' + py.toFixed(1) + ') rotate(' + ang.toFixed(1) + ')"><path d="M4 -6 L17 0 L4 6 Z" fill="#FFC77C" opacity=".5"/><circle r="6" fill="#FFC77C" stroke="#0B0C10" stroke-width="1.5"/></g>';
@@ -806,8 +1229,8 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
       var mx = X(g.mass.x), my = Y(g.mass.y), mx2 = (px + mx) / 2, my2 = (py + my) / 2, tx, ty, anc;
       if (key === 'front' || key === 'heck') { tx = px + 9; ty = my2 + 4.5; anc = 'start'; }
       else { var dx = mx - px, dy = my - py, dl = Math.hypot(dx, dy) || 1, nx = -dy / dl, ny = dx / dl; if (nx * (px - 50) < 0) { nx = -nx; ny = -ny; } tx = mx2 + nx * 8; ty = my2 + ny * 8 + 4.5; anc = nx < 0 ? 'end' : 'start'; }
-      s += '<line x1="' + px.toFixed(1) + '" y1="' + py.toFixed(1) + '" x2="' + mx.toFixed(1) + '" y2="' + my.toFixed(1) + '" stroke="#FAFAFA" stroke-width="1.6" stroke-dasharray="3 2.5"/>' +
-        '<text x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" text-anchor="' + anc + '" font-family="Montserrat,sans-serif" font-weight="700" font-size="13" fill="#FAFAFA">' + String(GEO.eckeM).replace('.', ',') + ' m</text>';
+      s += '<line x1="' + px.toFixed(1) + '" y1="' + py.toFixed(1) + '" x2="' + mx.toFixed(1) + '" y2="' + my.toFixed(1) + '" style="stroke:var(--t)" stroke-width="1.6" stroke-dasharray="3 2.5"/>' +
+        '<text x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" text-anchor="' + anc + '" font-family="Montserrat,sans-serif" font-weight="700" font-size="13" style="fill:var(--t);stroke:var(--base);stroke-width:2.6px;paint-order:stroke">' + String(GEO.eckeM).replace('.', ',') + ' m</text>';
     }
     s += '</svg>';
     return s;
@@ -817,7 +1240,11 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     $('camLbl').textContent = nr + m.name + (m.sub ? ' (' + m.sub + ')' : '');
     $('camHint').textContent = m.hint;
     $('camDiag').innerHTML = diagSvg(m.key);
-    $('camDots').innerHTML = dotsHtml();
+    // Hinweis nur eine Zeile (Titel); beim allerersten Bild kurz aufgeklappt, sonst per Tipp
+    clearTimeout(chipT); $('camChip').setAttribute('aria-expanded', hasAnyPhoto() ? 'false' : 'true');
+    if (!hasAnyPhoto()) chipT = setTimeout(function () { $('camChip').setAttribute('aria-expanded', 'false'); }, 7000);
+    renderStrip(); drawOverlay();
+    if (S.cfg && S.cfg.sim) simScene();
   }
 
   async function runShot() {
@@ -829,12 +1256,15 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
       // 1) Querhaltung abwarten (Schwerkraft), erst dann startet die Kamera
       await waitLandscape(my);
       // 2) Kamera
-      paneShow('vCam', true); setLabels(); $('shotBtn').hidden = true; $('stillTxt').textContent = ''; $('stillFill').style.width = '0';
+      paneShow('vCam', true); setLabels(); shotReady(false); $('stillTxt').textContent = ''; setStill(0);
       if (!S.stream || !S.track || S.track.readyState !== 'live') {
         say('Kamera startet …');
-        if (!S.devs) await discover();
-        await chooseCamera(); chk(my);
-        await openStream(S.camChoice || null); chk(my);
+        if (S.cfg && S.cfg.sim) { await openSim(); chk(my); }
+        else {
+          if (!S.devs) await discover();
+          await chooseCamera(); chk(my);
+          await openStream(S.camChoice || null); chk(my);
+        }
         if (!S.ic) { closeStream(); S.fallbackInput = true; await fallbackShot(my); return; }
       }
       // 3) Einschwingzeit nach dem Kamerastart
@@ -846,16 +1276,16 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
       var maxMs = S.shotsSinceOpen === 0 && !hasAnyPhoto() ? CFG.FALLBACK_FIRST_MS : CFG.FALLBACK_NEXT_MS, ctl = { manual: false };
       $('shotBtn').onclick = function () { ctl.manual = true; };
       function tick(stillFor, fresh) {
-        $('stillFill').style.width = Math.min(100, stillFor / CFG.STILL_MS * 100) + '%';
+        setStill(stillFor / CFG.STILL_MS * 100);
         $('stillTxt').textContent = !fresh ? 'Warte auf Sensorwerte …' : (stillFor > 0 ? T('Halte still …', 'Halten Sie still …') : 'Handy ruhig und gerade halten');
       }
       var res = await waitStill(my, maxMs, tick, ctl);
       if (!res.ok && !res.noSensor && !res.manual) {
-        $('shotBtn').hidden = false;
+        shotReady(true);
         res = await waitStill(my, 1e9, function (a, f) { tick(a, f); if (a === 0 && f) $('stillTxt').textContent = T('Halte still oder tippe „Jetzt“', 'Halten Sie still oder tippen Sie auf „Jetzt“'); }, ctl);
       }
       var auto = !!res.ok;
-      $('shotBtn').hidden = true; $('stillFill').style.width = '100%';
+      shotReady(false); setStill(100);
       chk(my);
       await shoot(my, { auto: auto, noSensor: !!res.noSensor, waitMs: res.ms || 0 });
     } catch (e) {
@@ -890,12 +1320,18 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
       paneShow('vTurn', upright); if (upright) { $('vTurn').classList.add('over'); $('turnBtnBox').hidden = true; $('turnTxt').textContent = T('Das Foto wird gemacht, sobald dein Handy wieder quer liegt.', 'Das Foto wird gemacht, sobald Ihr Handy wieder quer liegt.'); }
     }
     if (!$('vCam').hidden && S.phase !== 'turn') {
-      var s = snapshot(), t = $('lvlT'), h = $('vCam').clientHeight || 300;
-      if (!s || s.age > 300) { t.textContent = 'Sensor liefert gerade nichts'; t.setAttribute('data-ok', '0'); }
+      var s = (S.cfg && S.cfg.sim) ? simSnap() : snapshot(), lv = $('lvl'), tt = $('lvlT'), hh = LAY.ih || 300, msg = $('lvlMsg');
+      tt.hidden = !VAR.debug;
+      if (!s || s.age > 300) { lv.setAttribute('data-s', 'off'); msg.hidden = true; if (VAR.debug) { tt.textContent = 'Sensor liefert gerade nichts'; tt.setAttribute('data-ok', '0'); } }
       else {
-        $('lvlH').style.setProperty('--ty', Math.max(-0.4 * h, Math.min(0.4 * h, (s.p - AMPEL.p0) * (h / 52))).toFixed(1) + 'px');
+        var dp = s.p - AMPEL.p0, ap = Math.abs(dp), ar = Math.abs(s.r);
+        var st = (ap <= AMPEL.gelb.p && ar <= AMPEL.gelb.r) ? 'ok' : (ap <= AMPEL.rot.p && ar <= AMPEL.rot.r) ? 'warn' : 'bad';
+        $('lvlH').style.setProperty('--ty', Math.max(-0.4 * hh, Math.min(0.4 * hh, dp * (hh / 52))).toFixed(1) + 'px');
         $('lvlH').style.setProperty('--rot', s.r.toFixed(2) + 'deg');
-        t.textContent = 'Neigung ' + fmt(s.p, 1, true) + '° (Ziel ' + fmt(AMPEL.p0, 0, true) + '°) · Rollen ' + fmt(s.r, 1, true) + '°'; t.setAttribute('data-ok', Math.abs(s.p - AMPEL.p0) <= AMPEL.gelb.p && Math.abs(s.r) <= AMPEL.gelb.r ? '1' : '0');
+        lv.setAttribute('data-s', st);
+        if (st === 'ok') msg.hidden = true;
+        else { $('lvlMsgT').textContent = (ar > AMPEL.gelb.r && ap <= AMPEL.gelb.p) ? 'Handy waagerecht halten' : (dp > 0 ? 'Handy mehr nach unten neigen' : 'Handy etwas aufrichten'); msg.hidden = false; }
+        if (VAR.debug) { tt.textContent = 'Neigung ' + fmt(s.p, 1, true) + '° (Ziel ' + fmt(AMPEL.p0, 0, true) + '°) · Rollen ' + fmt(s.r, 1, true) + '°'; tt.setAttribute('data-ok', st === 'ok' ? '1' : '0'); }
       }
     }
   }, 80);
@@ -951,24 +1387,24 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     } catch (e) { /* egal */ }
   }
   function ampelHandy(snap, f35) {
-    var lvl = 0, why = [], sensor = !!(snap && snap.p != null);
+    var lvl = 0, why = [], kurz = [], sensor = !!(snap && snap.p != null);
     if (sensor) {
       var ap = Math.abs(snap.p - AMPEL.p0), ar = Math.abs(snap.r);
-      if (ap > AMPEL.rot.p || ar > AMPEL.rot.r) { lvl = 2; why.push('Handy schief: Neigung ' + fmt(snap.p, 1) + '° (Ziel ' + fmt(AMPEL.p0, 0) + '°), Rollen ' + fmt(snap.r, 1) + '°'); }
-      else if (ap > AMPEL.gelb.p || ar > AMPEL.gelb.r) { lvl = 1; why.push('Handy leicht schief: Neigung ' + fmt(snap.p, 1) + '° (Ziel ' + fmt(AMPEL.p0, 0) + '°), Rollen ' + fmt(snap.r, 1) + '°'); }
+      if (ap > AMPEL.rot.p || ar > AMPEL.rot.r) { lvl = 2; kurz.push('Handy war schief'); why.push('Handy schief: Neigung ' + fmt(snap.p, 1) + '° (Ziel ' + fmt(AMPEL.p0, 0) + '°), Rollen ' + fmt(snap.r, 1) + '°'); }
+      else if (ap > AMPEL.gelb.p || ar > AMPEL.gelb.r) { lvl = 1; kurz.push('Handy war leicht schief'); why.push('Handy leicht schief: Neigung ' + fmt(snap.p, 1) + '° (Ziel ' + fmt(AMPEL.p0, 0) + '°), Rollen ' + fmt(snap.r, 1) + '°'); }
     }
     if (f35 != null) {
-      if (f35 < 20 || f35 > 40) { lvl = 2; why.push('Kamera ist nicht 1x (' + fmt(f35, 0) + ' mm)'); }
-      else if (f35 < 22 || f35 > 30) { lvl = Math.max(lvl, 1); why.push('Kamera weicht von 1x ab (' + fmt(f35, 0) + ' mm)'); }
+      if (f35 < 20 || f35 > 40) { lvl = 2; kurz.push('Kamera war nicht 1x'); why.push('Kamera ist nicht 1x (' + fmt(f35, 0) + ' mm)'); }
+      else if (f35 < 22 || f35 > 30) { lvl = Math.max(lvl, 1); kurz.push('Kamera weicht von 1x ab'); why.push('Kamera weicht von 1x ab (' + fmt(f35, 0) + ' mm)'); }
     }
     var amp = (!sensor && lvl === 0) ? null : ['gruen', 'gelb', 'rot'][lvl];
     if (!sensor) why.push('kein Sensorwert');
-    return { ampel: amp, gruende: why };
+    return { ampel: amp, gruende: why, kurz: kurz };
   }
   async function shoot(my, how) {
     var snap = snapshot(), cls = (gravClass() || (S.lastCls && performance.now() - S.lastCls.t < 3000 ? S.lastCls.cls : null)), t0 = performance.now(), blob;
     if (snap && snap.age > 800) snap = null;
-    S.phase = 'shoot'; $('shotBtn').hidden = true; say('Foto wird gemacht …');
+    S.phase = 'shoot'; shotReady(false); say('Foto wird gemacht …');
     var live = null; try { live = smallOf($('video'), S.vw, S.vh); } catch (e) { /* ohne Vergleich weiter */ }
     try { blob = await withTimeout(S.ic.takePhoto(), 15000); }
     catch (e) { if (my !== S.token) throw CANCEL; problem('Das Foto konnte nicht gemacht werden', errText(e), true); return; }
@@ -997,10 +1433,10 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
         fovP = (async function () { await sleep(30); try { var pm = smallOf(img.el, img.w, img.h); if (extra) pm = extra === 90 ? rotSmall(pm, true) : rotSmall(pm, false); var fr = fovFit(o.live, pm); URL.revokeObjectURL(img.url); return fr ? { faktor: +fr.f.toFixed(3), passung: +fr.r.toFixed(2) } : null; } catch (e) { URL.revokeObjectURL(img.url); return null; } })();
       } else URL.revokeObjectURL(img.url);
       chk(my);
-      var f35 = exif.focal35 != null ? exif.focal35 : null, am = ampelHandy(o.snap, f35), amp = am.ampel, why = am.gruende.slice();
-      if (res.h > res.w) { amp = 'rot'; why.push('Foto ist hochkant (Handy war nicht quer)'); }
+      var f35 = exif.focal35 != null ? exif.focal35 : null, am = ampelHandy(o.snap, f35), amp = am.ampel, why = am.gruende.slice(), kurz = am.kurz.slice();
+      if (res.h > res.w) { amp = 'rot'; why.push('Foto ist hochkant (Handy war nicht quer)'); kurz.push('Foto ist hochkant (Handy war nicht quer)'); }
       var r = { slot: S.cur, blob: res.blob, w: res.w, h: res.h, thumb: res.thumb, drehung: (rot + extra) % 360, hand: 0, f35: f35, exif: { orient: exif.orientation, focal: exif.focal, model: exif.model }, srcW: img.w, srcH: img.h,
-        snap: o.snap, cls: o.cls, ampel: amp, gruende: why, how: o.how || {}, takeMs: o.takeMs, quelle: o.quelle, note: note, url: null, fovP: fovP, video: o.video || null,
+        snap: o.snap, cls: o.cls, ampel: amp, gruende: why, kurz: kurz, how: o.how || {}, takeMs: o.takeMs, quelle: o.quelle, note: note, url: null, fovP: fovP, video: o.video || null,
         zeiten: { entschluesseln: tDec, gesamt: Math.round(performance.now() - T0), zeichnen: res.ms.zeichnen, kodieren: res.ms.kodieren, vorschau: res.ms.vorschau, glaettung: res.ms.glaettung } };
       showReview(r);
     } catch (e) {
@@ -1020,8 +1456,14 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     $('revImg').src = r.url;
     var m = slotMeta(r.slot);
     $('revLbl').textContent = (m.nr ? m.nr + ' von 10 · ' : '') + m.name;
-    $('revInfo').innerHTML = esc(r.gruende.length ? r.gruende.join(' · ') : 'Lage in Ordnung') + (r.ampel ? ' ' + ampHtml(r.ampel) : '');
-    var dbg = $('revDbg'); dbg.hidden = !VAR.debug;
+    $('revTitle').textContent = 'Passt das Foto?';
+    var list = VAR.debug ? r.gruende : (r.kurz || []);
+    $('revInfo').innerHTML = list.length ? list.map(function (g) { return '<span class="chip"><i class="dot ' + (r.ampel === 'rot' ? 'bad' : 'warn') + '"></i>' + esc(g) + '</span>'; }).join('') : '<span class="chip"><i class="dot ok"></i>Lage in Ordnung</span>';
+    // Beispielbild: so soll es aussehen (nur Außenplätze, gezeichnet nach der Klasse)
+    var kind = klasseOf(); $('exBox').hidden = !(m.art === 'aussen' && kind);
+    if (!$('exBox').hidden) drawScene($('exCv'), 188, 141, { kind: kind, key: m.key, h: camH(), ang: GEO.winkel, pitch: AMPEL.p0, bg: 'hof', fill: true });
+    $('revRot').hidden = false; $('revBtns').classList.remove('two'); $('revNeu').textContent = 'Neu'; $('revOk').textContent = 'Passt';
+    var dbg = $('revDbg'); dbg.hidden = !VAR.debug; $('vRev').classList.toggle('dbg', !!VAR.debug);
     if (VAR.debug) {
       var dtxt = function (f) { return 'Haltung ' + (r.cls || '–') + ' · Bild ' + r.srcW + '×' + r.srcH + ' (EXIF ' + (r.exif.orient || '–') + ') → gedreht ' + r.drehung + '° → ' + r.w + '×' + r.h + ' · ' + (f ? 'Sichtfeld ×' + fmt(f.faktor, 2) + ' (Passung ' + fmt(f.passung, 2) + ')' : 'Sichtfeld …') + ' · ' + (r.zeiten ? r.zeiten.gesamt : '–') + ' ms'; };
       dbg.textContent = dtxt(null);
@@ -1030,7 +1472,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     paneShow('vCam', false); paneShow('vTurn', false); paneShow('vRev', true); say('');
     $('revOk').disabled = false;
   }
-  $('revNeu').onclick = function () { discardReview(); runShot(); };
+  $('revNeu').onclick = function () { if (S.phase === 'view') { paneShow('vRev', false); runShot(); return; } discardReview(); runShot(); };
   $('revRot').onclick = async function () {
     var r = S.review; if (!r) return; $('revRot').disabled = true;
     try {
@@ -1041,6 +1483,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
   };
   function discardReview() { var r = S.review; if (r && r.url) URL.revokeObjectURL(r.url); S.review = null; }
   $('revOk').onclick = async function () {
+    if (S.phase === 'view') { var vid = S.viewId; paneShow('vRev', false); S.seq = [vid]; S.idx = 0; S.mode = 'single'; nextShot(); return; }
     var r = S.review; if (!r) return; $('revOk').disabled = true;
     var fov = null; if (r.fovP) { try { fov = await Promise.race([r.fovP, sleep(1500).then(function () { return null; })]); } catch (e) { fov = null; } }
     if (S.review !== r) return;
@@ -1051,7 +1494,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
       id: st.fotoId, fahrzeug_id: S.vehicle.id, platz: m.key, zusatz_nr: m.zusatz_nr, zusatz_art: m.art === 'zusatz' ? S.zusatzArt : null,
       ampel_handy: r.ampel, ampel_handy_gruende: r.gruende.join('; '), geraet: dev(), brennweite_kb: r.f35, neigung: r.snap ? +r.snap.p.toFixed(1) : null, rollen: r.snap ? +r.snap.r.toFixed(1) : null,
       drehung: r.drehung, breite: r.w, hoehe: r.h, bytes: r.blob.size,
-      app_details: { app: APP, quelle: r.quelle, selbstausloeser: !!r.how.auto, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v1: gelb ab ' + AMPEL.gelb.p + '/' + AMPEL.gelb.r + ', rot ab ' + AMPEL.rot.p + '/' + AMPEL.rot.r + ', Soll-Neigung ' + AMPEL.p0 } }
+      app_details: { app: APP, quelle: r.quelle, selbstausloeser: !!r.how.auto, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, klasse: (S.vehicle && S.vehicle.klasse) || null, design: 'v4', aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v1: gelb ab ' + AMPEL.gelb.p + '/' + AMPEL.gelb.r + ', rot ab ' + AMPEL.rot.p + '/' + AMPEL.rot.r + ', Soll-Neigung ' + AMPEL.p0 } }
     };
     var item = { slot: r.slot, id: st.fotoId, path: S.vehicle.id + '/' + m.key + '_' + st.fotoId + '.jpg', blob: r.blob, meta: meta, tries: 0, fileDone: false, state: 'wartet' };
     discardReview();
@@ -1067,9 +1510,10 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
   function betweenInnen() {
     S.token++; S.phase = 'between';
     var m = slotMeta(S.seq[S.idx]);
-    $('betBox').innerHTML = '<h1>Außen fertig</h1><p>' + T('Jetzt der Innenraum. Mach die Fahrertür auf und schalte die Zündung ein. Als Erstes: ', 'Jetzt der Innenraum. Öffnen Sie die Fahrertür und schalten Sie die Zündung ein. Als Erstes: ') + esc(m.name) + '.</p><div class="btns"><button class="btn big primary" id="betGo" type="button">Weiter</button></div>';
+    $('betBox').innerHTML = '<h1>Außen fertig</h1><p>' + T('Jetzt der Innenraum. Mach die Fahrertür auf und schalte die Zündung ein. Als Erstes: ', 'Jetzt der Innenraum. Öffnen Sie die Fahrertür und schalten Sie die Zündung ein. Als Erstes: ') + esc(m.name) + '.</p><div class="btns"><button class="btn big primary" id="betGo" type="button">Weiter</button><button class="btn big" id="betGal" type="button">Innenraum später</button></div>';
     paneShow('vCam', false); paneShow('vRev', false); paneShow('vTurn', false); paneShow('vBet', true);
     $('betGo').onclick = function () { paneShow('vBet', false); nextShot(); };
+    $('betGal').onclick = function () { paneShow('vBet', false); endSequence(); };
   }
   function problem(title, text, retry) {
     S.token++; S.phase = 'problem';
@@ -1185,27 +1629,40 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     if (sv === 'fehler') return { t: (s.server.fehler_grund || 'Bearbeitung fehlgeschlagen'), c: 'bad' };
     return { t: 'hochgeladen', c: 'busy' };
   }
-  function showPage(id) { ['pStart', 'pGallery', 'pTest'].forEach(function (p) { $(p).hidden = p !== id; }); window.scrollTo(0, 0); }
-  function renderGalleryIfShown() { if (!$('pGallery').hidden) renderGallery(); }
+  function showPage(id) { ['pStart', 'pGallery', 'pEnd', 'pTest'].forEach(function (p) { $(p).hidden = p !== id; }); window.scrollTo(0, 0); }
+  function renderGalleryIfShown() { if (!$('pGallery').hidden) renderGallery(); if (!$('pEnd').hidden) renderEnd(); if (!$('stage').hidden) renderStrip(); }
   function renderGallery() {
     var v = S.vehicle; if (!v) return;
-    $('gTitle').textContent = v.marke + ' ' + v.modell + ' (' + v.baujahr + ')';
-    var ids = PLAETZE.map(function (p) { return p.key; }).concat(zusatzIds()), done = PLAETZE.filter(function (p) { return hasPhoto(p.key); }).length;
+    $('gTitle').textContent = v.marke + ' ' + v.modell;
+    $('gChip').textContent = (KINDS[v.klasse] ? KINDS[v.klasse].n + ' · ' : '') + v.baujahr;
+    var ids = PLAETZE.map(function (p) { return p.key; }).concat(zusatzIds()), done = PLAETZE.filter(function (p) { return hasPhoto(p.key); }).length, kind = klasseOf();
     var pending = S.queue.length;
     $('gSum').textContent = done + ' von 10 Pflichtbildern aufgenommen' + (zusatzIds().length ? ', ' + zusatzIds().length + ' Zusatzbild' + (zusatzIds().length > 1 ? 'er' : '') : '') + (pending ? ' · ' + pending + (pending === 1 ? ' wird' : ' werden') + ' noch hochgeladen' : '');
-    $('gProg').innerHTML = PLAETZE.map(function (p) { return '<i class="' + (hasPhoto(p.key) ? 'on' : '') + '"></i>'; }).join('');
+    $('gProg').innerHTML = '<i style="width:' + (done * 10) + '%"></i>';
     $('gGrid').innerHTML = ids.map(function (id) {
-      var s = S.slots[id], m = slotMeta(id), ti = tileInfo(id), ph = s && s.thumb ? '<img alt="" src="' + s.thumb + '">' : (m.nr || '+');
+      var s = S.slots[id], m = slotMeta(id), ti = tileInfo(id), taken = hasPhoto(id), img;
+      if (s && s.thumb) img = '<img alt="" src="' + s.thumb + '">';
+      else if (m.art === 'innen') img = ICO[m.key] || '';
+      else if (m.art === 'aussen') img = '<img alt="" src="' + thumbUrl(m.key, kind, true) + '">';
+      else img = '+';
       var sv = s && s.server ? s.server : null, a1 = s && s.ampelHandy, a2 = sv && sv.ampel_showroom;
       var retry = s && s.state === 'fehler' && s.item && s.item.blob ? ' · <u>nochmal senden</u>' : '';
-      return '<button class="tile" type="button" data-id="' + id + '"><div class="ph">' + ph + '</div><div class="cap">' + (m.nr ? m.nr + ' · ' : '') + esc(m.name) + (m.art === 'zusatz' && s && s.zusatz_art ? ' · ' + esc((ZUSATZ_ARTEN.filter(function (z) { return z[0] === s.zusatz_art; })[0] || [0, ''])[1]) : '') + '</div>' +
-        '<div class="st"><span><i class="dot ' + ti.c + '"></i>' + esc(ti.t) + retry + '</span>' + amp(a1, 'Handy') + amp(a2, 'Showroom') + '</div></button>';
+      return '<button class="glass tile" type="button" data-id="' + id + '"><div class="im' + (taken ? '' : ' empty') + '">' + img + (m.nr ? '<span class="nr">' + m.nr + '</span>' : '') + '</div><b>' + esc(m.name) + (m.art === 'zusatz' && s && s.zusatz_art ? ' · ' + esc((ZUSATZ_ARTEN.filter(function (z) { return z[0] === s.zusatz_art; })[0] || [0, ''])[1]) : '') + '</b>' +
+        '<span class="st"><span><i class="dot ' + ti.c + '"></i>' + esc(ti.t) + retry + '</span>' + amp(a1, 'Handy') + amp(a2, 'Showroom') + '</span></button>';
     }).join('');
     var next = PLAETZE.filter(function (p) { return !hasPhoto(p.key); })[0];
-    $('gNext').hidden = !next; $('gNext').textContent = next ? 'Weiter: ' + next.name : '';
+    $('gCta').hidden = !next; $('gNext').hidden = !next; $('gNext').textContent = next ? 'Weiter: ' + next.name : '';
     $('gZusatz').hidden = done < 10 || zusatzIds().length >= CFG.ZUSATZ_MAX;
     $('gZusatz').textContent = 'Zusatzbild aufnehmen (' + zusatzIds().length + ' von ' + CFG.ZUSATZ_MAX + ')';
   }
+  // Abschluss nach dem zehnten Pflichtbild
+  function renderEnd() {
+    var v = S.vehicle; if (!v) return;
+    var aus = PLAETZE.filter(function (p) { return p.art === 'aussen' && hasPhoto(p.key); }).length, inn = PLAETZE.filter(function (p) { return p.art === 'innen' && hasPhoto(p.key); }).length, zu = zusatzIds().length, pending = S.queue.length;
+    $('eSub').textContent = pending ? pending + (pending === 1 ? ' Foto wird' : ' Fotos werden') + ' noch hochgeladen. Die App sendet im Hintergrund weiter.' : 'Die Bearbeitung läuft. Den Stand je Bild sehen Sie in der Galerie.';
+    $('eSum').innerHTML = '<div><span>Außenbilder</span><span>' + aus + ' von 6</span></div><div><span>Innenbilder</span><span>' + inn + ' von 4</span></div><div><span>Zusatzbilder</span><span>' + zu + '</span></div><div><span>Fahrzeug</span><span>' + esc(v.marke + ' ' + v.modell) + '</span></div>';
+  }
+  function showEnd() { showPage('pEnd'); renderEnd(); }
   $('gGrid').addEventListener('click', function (ev) {
     var b = ev.target.closest('.tile'); if (!b) return; var id = b.getAttribute('data-id'), s = S.slots[id];
     if (s && s.state === 'fehler' && s.item && s.item.blob && /nochmal/.test(ev.target.textContent || '')) { var it = s.item; s.item = null; it.tries = 0; it.failed = false; idbPut(it); s.state = 'wartet'; S.queue.push(it); renderGallery(); kick(); return; }
@@ -1227,10 +1684,13 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     $('betBox').querySelectorAll('.chips button').forEach(function (b) { b.onclick = function () { S.zusatzArt = b.getAttribute('data-a'); paneShow('vBet', false); S.seq = ['zusatz' + n]; S.idx = 0; S.mode = 'single'; nextShot(); }; });
     $('zBack').onclick = function () { leaveStage().then(showGallery); };
   };
-  $('gNew').onclick = function () {
+  function newVehicle() {
     if (S.queue.length && !IDB.ok && !confirm('Es werden noch Fotos hochgeladen. Trotzdem beenden? Nicht hochgeladene Fotos gehen verloren.')) return;
     resetVehicle(); showStart();
-  };
+  }
+  $('gNew').onclick = newVehicle;
+  $('eNew').onclick = newVehicle;
+  $('eGal').onclick = function () { showGallery(); };
   function showGallery() { showPage('pGallery'); renderGallery(); schedulePoll(200); }
 
   function allFinal() {
@@ -1269,7 +1729,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     var sl = {}; Object.keys(S.slots).forEach(function (k) { var s = S.slots[k]; if (s.state === 'hochgeladen') sl[k] = { zusatz_art: s.zusatz_art, ampelHandy: s.ampelHandy }; });
     store('fa_veh', { vehicle: S.vehicle, slots: sl });
   }
-  function resetVehicle() { S.vehicle = null; S.slots = {}; S.camChoice = null; store('fa_veh', null); clearTimeout(S.pollTimer); }
+  function resetVehicle() { S.vehicle = null; S.slots = {}; S.camChoice = null; S.klasse = null; store('fa_veh', null); clearTimeout(S.pollTimer); buildKar(); }
   $('resumeYes').onclick = function () {
     var rs = load('fa_veh'); if (!rs) return;
     S.vehicle = rs.vehicle; S.slots = {};
@@ -1282,9 +1742,10 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
   function fmsg(t, bad) { $('fMsg').textContent = t || ''; $('fMsg').className = 'msg' + (bad ? ' bad' : ''); }
   $('fForm').addEventListener('submit', async function (ev) {
     ev.preventDefault();
-    var marke = $('fMarke').value.trim(), modell = $('fModell').value.trim(), bj = parseInt($('fBaujahr').value, 10), kar = $('fKar').value;
+    var marke = $('fMarke').value.trim(), modell = $('fModell').value.trim(), bj = parseInt($('fBaujahr').value, 10);
     if (!marke || !modell) { fmsg('Bitte Marke und Modell eintragen.', true); return; }
     if (!(bj >= 1980 && bj <= 2035)) { fmsg('Bitte das Baujahr vierstellig eintragen, z. B. 2021.', true); return; }
+    if (!S.klasse) { fmsg('Bitte die Karosserie wählen, damit die Schablone im Sucher passt.', true); return; }
     if (!S.cfg || S.cfg.bad || (!S.cfg.demo && !S.api)) { fmsg(T('Dieser Link ist unvollständig. Bitte den Link neu öffnen, den du von AutoScales bekommen hast.', 'Dieser Link ist unvollständig. Bitte den Link neu öffnen, den Sie von AutoScales bekommen haben.'), true); return; }
     $('fGo').disabled = true;
     try {
@@ -1293,7 +1754,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
       var perm = await sensorsPermission();
       // 2) Fahrzeug anlegen
       fmsg('Fahrzeug wird angelegt …');
-      var v = { id: uuid(), marke: marke, modell: modell, baujahr: bj, karosserie: kar || null };
+      var v = { id: uuid(), marke: marke, modell: modell, baujahr: bj, karosserie: DBKAR[S.klasse] || null, klasse: S.klasse };
       try { await S.api.createVehicle(v); }
       catch (e) {
         fmsg(e.net ? 'Keine Verbindung zum Server. Bitte Netz prüfen und nochmal tippen.' : (e.status === 403 || e.status === 401 ? 'Zugang verweigert. Der Link ist ungültig oder abgelaufen.' : 'Der Server hat das Fahrzeug nicht angenommen: ' + e.message), true);
@@ -1301,7 +1762,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
       }
       // 3) Kamera-Erlaubnis
       fmsg('Kamera … bitte „Erlauben“ tippen');
-      try { await camPermission(); }
+      try { if (!(S.cfg && S.cfg.sim)) await camPermission(); }
       catch (e) {
         fmsg((e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) ? T('Die Kamera wurde nicht erlaubt. Erlaube sie in den Einstellungen des Browsers für diese Seite und lade die Seite neu.', 'Die Kamera wurde nicht erlaubt. Erlauben Sie sie in den Einstellungen des Browsers für diese Seite und laden Sie die Seite neu.') : 'Die Kamera startet auf diesem Handy nicht. (' + errText(e) + ')', true);
         $('fGo').disabled = false; return;
@@ -1386,7 +1847,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
      ===================================================================== */
   function init() {
     S.cfg = readCfg();
-    VAR.anrede = (S.cfg && S.cfg.a) || 'sie'; VAR.hoehe = (S.cfg && S.cfg.h) || 'bereich'; VAR.debug = !!(S.cfg && (S.cfg.debug || S.cfg.demo));
+    VAR.anrede = (S.cfg && S.cfg.a) || 'sie'; VAR.hoehe = (S.cfg && S.cfg.h) || 'bereich'; VAR.debug = !!(S.cfg && (S.cfg.debug || S.cfg.demo)) || UI.mess;
     Array.prototype.forEach.call(document.querySelectorAll('[data-du]'), function (el) { el.innerHTML = VAR.anrede === 'du' ? el.getAttribute('data-du') : el.getAttribute('data-sie'); });
     $('hHint').innerHTML = '<b>Kamerahöhe:</b> ' + esc(hoeheHint());
     var note = $('modeNote'), info = $('srvInfo');
@@ -1401,8 +1862,23 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     } else {
       note.className = 'note bad'; note.innerHTML = T('Dieser Link ist unvollständig. Bitte den Link neu öffnen, den du von AutoScales bekommen hast.', 'Dieser Link ist unvollständig. Bitte den Link neu öffnen, den Sie von AutoScales bekommen haben.') + ' <br><a href="#demo" onclick="setTimeout(function(){location.reload()},0)">Demo ohne Server ansehen</a>'; $('fGo').disabled = true;
     }
+    initSettings();
+    buildKar(); applyTheme();
     showStart();
     restoreQueue();
+  }
+  function initSettings() {
+    Array.prototype.forEach.call($('segDir').children, function (b) { b.onclick = function () { UI.mode = b.getAttribute('data-m'); saveUI(); applyTheme(); }; });
+    $('chkMess').checked = !!VAR.debug;
+    $('chkMess').onchange = function () { VAR.debug = this.checked; UI.mess = this.checked; saveUI(); };
+    var standalone = (navigator.standalone === true) || !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches), tip = $('hsTip');
+    if (!standalone && S.cfg && !S.cfg.bad) {
+      var ios = /iPhone|iPad/.test(navigator.userAgent), and = /Android/.test(navigator.userAgent);
+      if (ios || and) {
+        tip.hidden = false;
+        tip.innerHTML = '<b>Ohne Browserleisten arbeiten:</b> ' + (S.cfg.hs ? (ios ? 'Teilen-Symbol tippen, „Zum Home-Bildschirm“ wählen und die App von dort öffnen.' : 'Browser-Menü öffnen, „Zum Startbildschirm hinzufügen“ wählen und die App von dort öffnen.') : 'Den Link in link-bauen.html mit der Option „Für Home-Bildschirm“ neu bauen, öffnen und dann zum Home-Bildschirm hinzufügen.');
+      }
+    }
   }
   window.addEventListener('hashchange', function () { if (/(^#|&)(u=|demo)/.test(location.hash)) location.reload(); });
   init();
