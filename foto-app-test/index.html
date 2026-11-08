@@ -111,7 +111,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
 .chipbox #revDbg { font: 500 11px/1.35 var(--font-data); color: var(--as-gold); }
 .chiprow { display: flex; gap: 10px; align-items: center; }
 #camDiag:empty { display: none; }
-#camDiag svg { display: block; width: 64px; height: 64px; }
+#camDiag svg { display: block; width: 84px; height: 84px; }
 .chipbox .amp.l { display: inline-flex; vertical-align: middle; margin-left: 6px; background: rgba(250,250,250,.16); }
 .chipbox .amp i { width: 11px; height: 11px; }
 .xbtn { min-width: 44px; min-height: 44px; border-radius: 50%; border: 0; background: rgba(11,12,16,.72); color: #FAFAFA; font-size: 22px; line-height: 1; cursor: pointer; }
@@ -182,6 +182,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
   <ul class="hints">
     <li><b>6 Außenbilder</b> in fester Reihenfolge, dann <b>4 Innenbilder</b>. Zusatzbilder sind freiwillig.</li>
     <li>Handy <b>quer</b> halten, Kamera <b>1x</b>, ruhig und gerade. Die App löst selbst aus.</li>
+    <li data-du="Das <b>ganze Auto mit etwas Rand</b> ins Bild. Dafür das Handy leicht nach unten neigen (ca. 10°); die Wasserwaage zeigt es." data-sie="Das <b>ganze Auto mit etwas Rand</b> ins Bild. Dafür das Handy leicht nach unten neigen (ca. 10°); die Wasserwaage zeigt es.">Das <b>ganze Auto mit etwas Rand</b> ins Bild. Dafür das Handy leicht nach unten neigen (ca. 10°); die Wasserwaage zeigt es.</li>
     <li data-du="Du siehst jedes Foto und tippst <b>Passt</b> oder <b>Neu</b>. Erst bei „Passt“ geht es hoch." data-sie="Sie sehen jedes Foto und tippen auf <b>Passt</b> oder <b>Neu</b>. Erst bei „Passt“ wird hochgeladen.">Du siehst jedes Foto und tippst <b>Passt</b> oder <b>Neu</b>. Erst bei „Passt“ geht es hoch.</li>
     <li id="hHint"></li>
   </ul>
@@ -279,18 +280,30 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
   };
   // Umschaltbare Vorgaben. VORSCHLAG, OFFEN (nicht von Giannis entschieden, Stand 08.11.2026):
   // Anrede „Sie“, Kamerahöhe ca. 1 m (Unterkante Frontscheibe), Ampel-Grenzen unverändert bis nach dem Händlertest.
-  // Umschalten im Link: &a=du|sie, &h=1m|brust, &debug (Messwerte in der Ansicht). Die Wahl landet in app_details.variante.
-  var VAR = { anrede: 'sie', hoehe: '1m', debug: false };
-  var AMPEL = { gelb: { p: 2, r: 1 }, rot: { p: 5, r: 2.5 } };
+  // Umschalten im Link: &a=du|sie, &h=bereich|1m|brust, &debug (Messwerte in der Ansicht). Die Wahl landet in app_details.variante.
+  var VAR = { anrede: 'sie', hoehe: 'bereich', debug: false };
+  // Neigung wird als Abweichung von der Ziel-Neigung p0 bewertet. Vorzeichen wie in der Anzeige: negativ = Kamera schaut nach unten, 0 = Handy senkrecht.
+  // VORSCHLAG, OFFEN (08.11.2026): Giannis' Freihand-Fotos sind laut Autobuilder (kameralage.py) 6,7 bis 13,6° nach unten geneigt (4 belastbare Fotos, Mittel 10,4°;
+  // Brust 11,7°, 1 Foto), Rollen −0,8 bis +1,2°. Mit p0 = −10° und gelb ab ±6°, rot ab ±12° bleiben alle diese Fotos grün. Bisherige Werte: p0 0, gelb 2/1, rot 5/2,5.
+  var AMPEL = { gelb: { p: 6, r: 1 }, rot: { p: 12, r: 2.5 }, p0: -10 };
+  // Vorgaben aus Giannis' Freihand-Fotos vom 08.11.2026 (Messung Autobuilder, Audi A6, Tiefgarage). VORSCHLAG, OFFEN, bis Giannis die Werte bestätigt.
+  // winkel: Dreiviertel, Richtung Kamera zur Fahrzeugmitte gegen die Längsachse (heute 21 bis 23°, V2 hatte 28°).
+  // eckeM: Abstand zur nächsten Ecke bzw. Stoßstange (heute 1,9 bis 2,2 m; V2: 5,0 m zur Mitte = 2,4 m zur Ecke, 4,5 m bei Front/Heck = 2,0 m).
+  // seiteMitteM: Seite wurde heute nicht gemessen, nur V2 (5,0 m zur Mitte); dafür nennen die Hinweistexte keine Zahl.
+  var GEO = { stand: 'freihand-2026-11-08', winkel: 22, eckeM: 2.0, seiteMitteM: 5.0, autoL: 4.9, autoB: 1.9 };
   function T(du, sie) { return VAR.anrede === 'du' ? du : sie; }
-  function hoeheHint() { return VAR.hoehe === 'brust' ? 'Handy auf Brusthöhe (ca. 1,3 bis 1,5 m).' : 'Handy auf Höhe der Frontscheiben-Unterkante (ca. 1 m).'; }
+  function hoeheHint() {
+    if (VAR.hoehe === 'brust') return 'Handy auf Brusthöhe (ca. 1,5 m).';
+    if (VAR.hoehe === '1m') return 'Handy vor dem Bauch (ca. 1,2 m).';
+    return 'Handy auf Bauch- bis Brusthöhe (ca. 1,2 bis 1,5 m).';
+  }
   var PLAETZE = [
-    { key: 'titel', nr: 1, art: 'aussen', name: 'Dreiviertel vorn links', sub: 'Titelbild', hint: 'Schräg vor die linke Vorderecke. Front und linke Seite im Bild.' },
-    { key: 'front', nr: 2, art: 'aussen', name: 'Front', hint: 'Genau vor das Auto, mittig. Das ganze Auto im Bild.' },
-    { key: 'seite', nr: 3, art: 'aussen', name: 'Seite links', hint: 'Seitlich links, Auto mittig. Vorderräder gerade.' },
-    { key: 'dreiviertel_hl', nr: 4, art: 'aussen', name: 'Dreiviertel hinten links', hint: 'Schräg hinter die linke Hinterecke. Heck und linke Seite im Bild.' },
-    { key: 'heck', nr: 5, art: 'aussen', name: 'Heck', hint: 'Genau hinter das Auto, mittig. Das ganze Auto im Bild.' },
-    { key: 'dreiviertel_vr', nr: 6, art: 'aussen', name: 'Dreiviertel vorn rechts', hint: 'Schräg vor die rechte Vorderecke. Front und rechte Seite im Bild.' },
+    { key: 'titel', nr: 1, art: 'aussen', name: 'Dreiviertel vorn links', sub: 'Titelbild', hint: 'Schräg vor die linke Vorderecke, etwa 2 m Abstand. Front und linke Seite im Bild, das ganze Auto mit Rand.' },
+    { key: 'front', nr: 2, art: 'aussen', name: 'Front', hint: 'Genau vor das Auto, mittig, etwa 2 m vor der Stoßstange. Das ganze Auto mit Rand im Bild.' },
+    { key: 'seite', nr: 3, art: 'aussen', name: 'Seite links', hint: 'Seitlich links, Auto mittig. Vorderräder gerade. Das ganze Auto mit Rand im Bild.' },
+    { key: 'dreiviertel_hl', nr: 4, art: 'aussen', name: 'Dreiviertel hinten links', hint: 'Schräg hinter die linke Hinterecke, etwa 2 m Abstand. Heck und linke Seite im Bild, das ganze Auto mit Rand.' },
+    { key: 'heck', nr: 5, art: 'aussen', name: 'Heck', hint: 'Genau hinter das Auto, mittig, etwa 2 m hinter der Stoßstange. Das ganze Auto mit Rand im Bild.' },
+    { key: 'dreiviertel_vr', nr: 6, art: 'aussen', name: 'Dreiviertel vorn rechts', hint: 'Schräg vor die rechte Vorderecke, etwa 2 m Abstand. Front und rechte Seite im Bild, das ganze Auto mit Rand.' },
     { key: 'cockpit', nr: 7, art: 'innen', name: 'Cockpit', hint: 'Fahrertür auf. Durch die Tür auf Lenkrad und Armaturenbrett.' },
     { key: 'tacho', nr: 8, art: 'innen', name: 'Tacho', hint: 'Zündung an. Kilometerstand gut lesbar.' },
     { key: 'vordersitze', nr: 9, art: 'innen', name: 'Vordersitze', hint: 'Beide Vordersitze im Bild.' },
@@ -330,7 +343,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
       else if (p.get('u') && p.get('k') && p.get('z')) cfg = { url: p.get('u').trim().replace(/\/+$/, ''), key: p.get('k').trim(), zugang: p.get('z') };
       if (cfg) {
         if (p.get('a') === 'du' || p.get('a') === 'sie') cfg.a = p.get('a');
-        if (p.get('h') === '1m' || p.get('h') === 'brust') cfg.h = p.get('h');
+        if (p.get('h') === '1m' || p.get('h') === 'brust' || p.get('h') === 'bereich') cfg.h = p.get('h');
         if (p.has('debug')) cfg.debug = true;
         store('fa_cfg', cfg); try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* egal */ } }
     }
@@ -763,19 +776,41 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
     });
     return h;
   }
-  // Skizze von oben: Auto (Front oben), Standort des Händlers und Blickrichtung. Winkel und Abstände nach Spezifikation V2 (28°, 5 m; Front und Heck 4,5 m).
+  // Skizze von oben: Auto (Front oben), Standort des Händlers, Blickrichtung, Maßlinie zur nächsten Ecke bzw. Stoßstange.
+  // Maßstab und Standorte werden aus GEO gerechnet (Winkel zur Längsachse, Abstand zur Ecke), nicht von Hand gesetzt. Seite: ohne Maßlinie (nicht gemessen).
+  function diagGeom(key) {
+    var L = GEO.autoL, B = GEO.autoB, hl = L / 2, hb = B / 2, a = GEO.winkel * RAD;
+    if (key === 'front' || key === 'heck') { var d = hl + GEO.eckeM; return { x: 0, y: key === 'front' ? -d : d, mass: { x: 0, y: key === 'front' ? -hl : hl } }; }
+    if (key === 'seite') return { x: -GEO.seiteMitteM, y: 0, mass: null };
+    var sy = (key === 'titel' || key === 'dreiviertel_vr') ? -1 : 1, sx = key === 'dreiviertel_vr' ? 1 : -1;
+    var cx = sx * hb, cy = sy * hl, lo = 1, hi = 12;
+    for (var i = 0; i < 40; i++) { var m = (lo + hi) / 2; if (Math.hypot(sx * m * Math.sin(a) - cx, sy * m * Math.cos(a) - cy) < GEO.eckeM) lo = m; else hi = m; }
+    var dd = (lo + hi) / 2;
+    return { x: sx * dd * Math.sin(a), y: sy * dd * Math.cos(a), mass: { x: cx, y: cy } };
+  }
   function diagSvg(key) {
-    var pos = { titel: [32, 16], front: [50, 16], seite: [12, 50], dreiviertel_hl: [32, 84], heck: [50, 84], dreiviertel_vr: [68, 16] }[key];
-    if (!pos) return '';
-    var ang = Math.atan2(50 - pos[1], 50 - pos[0]) / RAD;
-    return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+    var g = diagGeom(key); if (!g) return '';
+    var k = 8.5, X = function (m) { return 50 + m * k; }, Y = function (m) { return 50 + m * k; };
+    var L = GEO.autoL * k, B = GEO.autoB * k, x0 = 50 - B / 2, y0 = 50 - L / 2;
+    var px = X(g.x), py = Y(g.y), ang = Math.atan2(50 - py, 50 - px) / RAD;
+    var fy = Y(-(GEO.autoL / 2 - 0.9)), ry = Y(GEO.autoL / 2 - 1.1);
+    var s = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
       '<rect x="0" y="0" width="100" height="100" rx="10" fill="rgba(250,250,250,.10)"/>' +
-      '<rect x="40" y="26" width="20" height="48" rx="7" fill="#D1D5DB"/>' +
-      '<path d="M43 37 L57 37 L55.5 45 L44.5 45 Z" fill="#6B7280"/>' +
-      '<path d="M45 26 L50 18 L55 26 Z" fill="#FFC77C"/>' +
-      '<rect x="37" y="31" width="3" height="10" rx="1" fill="#111"/><rect x="60" y="31" width="3" height="10" rx="1" fill="#111"/>' +
-      '<rect x="37" y="59" width="3" height="10" rx="1" fill="#111"/><rect x="60" y="59" width="3" height="10" rx="1" fill="#111"/>' +
-      '<g transform="translate(' + pos[0] + ' ' + pos[1] + ') rotate(' + ang.toFixed(1) + ')"><path d="M4 -7 L24 0 L4 7 Z" fill="#FFC77C" opacity=".55"/><circle r="6" fill="#FFC77C" stroke="#0B0C10" stroke-width="1.5"/></g></svg>';
+      '<rect x="' + x0.toFixed(1) + '" y="' + y0.toFixed(1) + '" width="' + B.toFixed(1) + '" height="' + L.toFixed(1) + '" rx="6" fill="#D1D5DB"/>' +
+      '<path d="M' + (50 - B * 0.3).toFixed(1) + ' ' + (y0 + L * 0.22).toFixed(1) + ' L' + (50 + B * 0.3).toFixed(1) + ' ' + (y0 + L * 0.22).toFixed(1) + ' L' + (50 + B * 0.36).toFixed(1) + ' ' + (y0 + L * 0.34).toFixed(1) + ' L' + (50 - B * 0.36).toFixed(1) + ' ' + (y0 + L * 0.34).toFixed(1) + ' Z" fill="#6B7280"/>' +
+      '<path d="M' + (50 - 4.5) + ' ' + y0.toFixed(1) + ' L50 ' + (y0 - 6.5).toFixed(1) + ' L' + (50 + 4.5) + ' ' + y0.toFixed(1) + ' Z" fill="#FFC77C"/>';
+    [fy, ry].forEach(function (wy) { [x0 - 1.4, x0 + B - 1.2].forEach(function (wx) { s += '<rect x="' + wx.toFixed(1) + '" y="' + (wy - 3.6).toFixed(1) + '" width="2.6" height="7.2" rx="1" fill="#111"/>'; }); });
+    var cone = '<g transform="translate(' + px.toFixed(1) + ' ' + py.toFixed(1) + ') rotate(' + ang.toFixed(1) + ')"><path d="M4 -6 L17 0 L4 6 Z" fill="#FFC77C" opacity=".5"/><circle r="6" fill="#FFC77C" stroke="#0B0C10" stroke-width="1.5"/></g>';
+    s += cone;
+    if (g.mass) {
+      var mx = X(g.mass.x), my = Y(g.mass.y), mx2 = (px + mx) / 2, my2 = (py + my) / 2, tx, ty, anc;
+      if (key === 'front' || key === 'heck') { tx = px + 9; ty = my2 + 4.5; anc = 'start'; }
+      else { var dx = mx - px, dy = my - py, dl = Math.hypot(dx, dy) || 1, nx = -dy / dl, ny = dx / dl; if (nx * (px - 50) < 0) { nx = -nx; ny = -ny; } tx = mx2 + nx * 8; ty = my2 + ny * 8 + 4.5; anc = nx < 0 ? 'end' : 'start'; }
+      s += '<line x1="' + px.toFixed(1) + '" y1="' + py.toFixed(1) + '" x2="' + mx.toFixed(1) + '" y2="' + my.toFixed(1) + '" stroke="#FAFAFA" stroke-width="1.6" stroke-dasharray="3 2.5"/>' +
+        '<text x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" text-anchor="' + anc + '" font-family="Montserrat,sans-serif" font-weight="700" font-size="13" fill="#FAFAFA">' + String(GEO.eckeM).replace('.', ',') + ' m</text>';
+    }
+    s += '</svg>';
+    return s;
   }
   function setLabels() {
     var m = slotMeta(S.cur), nr = m.nr ? m.nr + ' von 10 · ' : '';
@@ -858,9 +893,9 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
       var s = snapshot(), t = $('lvlT'), h = $('vCam').clientHeight || 300;
       if (!s || s.age > 300) { t.textContent = 'Sensor liefert gerade nichts'; t.setAttribute('data-ok', '0'); }
       else {
-        $('lvlH').style.setProperty('--ty', Math.max(-0.4 * h, Math.min(0.4 * h, s.p * (h / 52))).toFixed(1) + 'px');
+        $('lvlH').style.setProperty('--ty', Math.max(-0.4 * h, Math.min(0.4 * h, (s.p - AMPEL.p0) * (h / 52))).toFixed(1) + 'px');
         $('lvlH').style.setProperty('--rot', s.r.toFixed(2) + 'deg');
-        t.textContent = 'Neigung ' + fmt(s.p, 1, true) + '° · Rollen ' + fmt(s.r, 1, true) + '°'; t.setAttribute('data-ok', Math.abs(s.p) <= AMPEL.gelb.p && Math.abs(s.r) <= AMPEL.gelb.r ? '1' : '0');
+        t.textContent = 'Neigung ' + fmt(s.p, 1, true) + '° (Ziel ' + fmt(AMPEL.p0, 0, true) + '°) · Rollen ' + fmt(s.r, 1, true) + '°'; t.setAttribute('data-ok', Math.abs(s.p - AMPEL.p0) <= AMPEL.gelb.p && Math.abs(s.r) <= AMPEL.gelb.r ? '1' : '0');
       }
     }
   }, 80);
@@ -918,9 +953,9 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
   function ampelHandy(snap, f35) {
     var lvl = 0, why = [], sensor = !!(snap && snap.p != null);
     if (sensor) {
-      var ap = Math.abs(snap.p), ar = Math.abs(snap.r);
-      if (ap > AMPEL.rot.p || ar > AMPEL.rot.r) { lvl = 2; why.push('Handy schief: Neigung ' + fmt(snap.p, 1) + '°, Rollen ' + fmt(snap.r, 1) + '°'); }
-      else if (ap > AMPEL.gelb.p || ar > AMPEL.gelb.r) { lvl = 1; why.push('Handy leicht schief: Neigung ' + fmt(snap.p, 1) + '°, Rollen ' + fmt(snap.r, 1) + '°'); }
+      var ap = Math.abs(snap.p - AMPEL.p0), ar = Math.abs(snap.r);
+      if (ap > AMPEL.rot.p || ar > AMPEL.rot.r) { lvl = 2; why.push('Handy schief: Neigung ' + fmt(snap.p, 1) + '° (Ziel ' + fmt(AMPEL.p0, 0) + '°), Rollen ' + fmt(snap.r, 1) + '°'); }
+      else if (ap > AMPEL.gelb.p || ar > AMPEL.gelb.r) { lvl = 1; why.push('Handy leicht schief: Neigung ' + fmt(snap.p, 1) + '° (Ziel ' + fmt(AMPEL.p0, 0) + '°), Rollen ' + fmt(snap.r, 1) + '°'); }
     }
     if (f35 != null) {
       if (f35 < 20 || f35 > 40) { lvl = 2; why.push('Kamera ist nicht 1x (' + fmt(f35, 0) + ' mm)'); }
@@ -1016,7 +1051,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
       id: st.fotoId, fahrzeug_id: S.vehicle.id, platz: m.key, zusatz_nr: m.zusatz_nr, zusatz_art: m.art === 'zusatz' ? S.zusatzArt : null,
       ampel_handy: r.ampel, ampel_handy_gruende: r.gruende.join('; '), geraet: dev(), brennweite_kb: r.f35, neigung: r.snap ? +r.snap.p.toFixed(1) : null, rollen: r.snap ? +r.snap.r.toFixed(1) : null,
       drehung: r.drehung, breite: r.w, hoehe: r.h, bytes: r.blob.size,
-      app_details: { app: APP, quelle: r.quelle, selbstausloeser: !!r.how.auto, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, ampel: 'v1: gelb ab ' + AMPEL.gelb.p + '/' + AMPEL.gelb.r + ', rot ab ' + AMPEL.rot.p + '/' + AMPEL.rot.r } }
+      app_details: { app: APP, quelle: r.quelle, selbstausloeser: !!r.how.auto, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v1: gelb ab ' + AMPEL.gelb.p + '/' + AMPEL.gelb.r + ', rot ab ' + AMPEL.rot.p + '/' + AMPEL.rot.r + ', Soll-Neigung ' + AMPEL.p0 } }
     };
     var item = { slot: r.slot, id: st.fotoId, path: S.vehicle.id + '/' + m.key + '_' + st.fotoId + '.jpg', blob: r.blob, meta: meta, tries: 0, fileDone: false, state: 'wartet' };
     discardReview();
@@ -1351,7 +1386,7 @@ h2 { font: 700 14px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
      ===================================================================== */
   function init() {
     S.cfg = readCfg();
-    VAR.anrede = (S.cfg && S.cfg.a) || 'sie'; VAR.hoehe = (S.cfg && S.cfg.h) || '1m'; VAR.debug = !!(S.cfg && (S.cfg.debug || S.cfg.demo));
+    VAR.anrede = (S.cfg && S.cfg.a) || 'sie'; VAR.hoehe = (S.cfg && S.cfg.h) || 'bereich'; VAR.debug = !!(S.cfg && (S.cfg.debug || S.cfg.demo));
     Array.prototype.forEach.call(document.querySelectorAll('[data-du]'), function (el) { el.innerHTML = VAR.anrede === 'du' ? el.getAttribute('data-du') : el.getAttribute('data-sie'); });
     $('hHint').innerHTML = '<b>Kamerahöhe:</b> ' + esc(hoeheHint());
     var note = $('modeNote'), info = $('srvInfo');
