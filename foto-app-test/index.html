@@ -90,9 +90,9 @@ h2 { font: 700 13px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
 .fld input { font: 500 17px/1 var(--font-body); min-height: 50px; padding: 0 14px; border-radius: var(--rs); border: 1px solid var(--gb); background: var(--glass2); color: var(--t); width: 100%; min-width: 0; outline: none; }
 .fld input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 35%, transparent); }
 .two { display: grid; grid-template-columns: 1fr 112px; gap: 10px; }
-.kar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-.kar button { font: 600 10.5px/1 var(--font-body); border: 1px solid var(--gb); background: var(--glass); color: var(--t); border-radius: var(--rs); padding: 8px 2px 9px; display: grid; gap: 5px; justify-items: center; cursor: pointer; min-width: 0; }
-.kar button canvas { width: 72px; height: 29px; max-width: 100%; }
+.kar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 6px; }
+.kar button { font: 600 10.5px/1 var(--font-body); border: 1px solid var(--gb); background: var(--glass); color: var(--t); border-radius: var(--rs); padding: 6px 4px 7px; display: grid; gap: 5px; justify-items: center; cursor: pointer; min-width: 0; }
+.kar button svg.ico { width: 60px; height: 30px; max-width: 100%; display: block; overflow: visible; }
 .kar button[aria-pressed="true"] { background: var(--prim); color: var(--prim-t); border-color: transparent; }
 .how { padding: 14px 16px; display: grid; gap: 11px; }
 .how div { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: center; font-size: 14px; line-height: 1.4; }
@@ -272,8 +272,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       <label class="fld"><span class="lbl">Baujahr</span><input id="fBaujahr" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="2021"></label>
     </div>
     <label class="fld"><span class="lbl">Modell</span><input id="fModell" type="text" maxlength="80" autocomplete="off" autocapitalize="words" placeholder="z. B. X5 xDrive30d"></label>
-    <div class="fld"><span class="lbl">Karosserie (bestimmt die Schablone)</span><div class="kar" id="karBox" role="group" aria-label="Karosserie"></div><p class="hs-tip">Cabrio: die Klasse des Grundmodells wählen und unten ankreuzen.</p></div>
-    <div class="fld"><label class="sw"><input type="checkbox" id="fCabrio"> Cabrio / Roadster</label></div>
+    <div class="fld"><span class="lbl">Karosserie (bestimmt die Schablone)</span><div class="kar" id="karBox" role="group" aria-label="Karosserie"></div></div>
     <button class="btn big primary" id="fGo" type="submit">Fahrzeug anlegen und weiter</button>
     <p class="msg" id="fMsg" role="status" aria-live="polite"></p>
   </form>
@@ -322,7 +321,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 <main class="page" id="pEnd" hidden>
   <header class="brand"><span class="logo"><img class="l" src="logo.png" alt="AutoScales"><img class="d" src="logo-dunkel.png" alt="AutoScales"></span><span class="chip"><i class="dot go"></i>Testfassung</span></header>
   <div class="ring" aria-hidden="true"><svg viewBox="0 0 54 54" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 28l10 10L42 16"/></svg></div>
-  <div class="endc"><h1>Alle 10 Bilder sind aufgenommen</h1><p class="sub" id="eSub"></p></div>
+  <div class="endc"><h1 id="eH1">Alle 10 Bilder sind aufgenommen</h1><p class="sub" id="eSub"></p></div>
   <div class="glass sum" id="eSum"></div>
   <div class="actions">
     <button class="btn big primary" id="eNew" type="button">Nächstes Fahrzeug</button>
@@ -508,7 +507,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 
   /* =====================================================================
      Fahrzeug-Zeichnung (aus der Designvorlage Version 4): einfache Körper nach Klassen-Maßen, Schablone im Sucher, Beispielbilder, Kacheln
-     Maße: Mediane je Klasse aus fahrzeugklassen.json des Autobuilders (08.11.2026). Cabrio: Maße der Klasse Kompakt (Autobuilder). Van: keine Daten, Platzhalter.
+     Maße: Mediane je Klasse aus fahrzeugklassen.json des Autobuilders (08.11.2026, Commit 0589d31); Cabrio/Roadster: Median aus 6 Modellen (Radradius und Überhang geschätzt).
      Die Zeichnung ist eine Orientierung, kein Abgleich mit dem Kamerabild.
      ===================================================================== */
   var KINDS = {
@@ -518,14 +517,13 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     kombi: { n: 'Kombi', L: 4.949, W: 1.88, gc: .15, rw: .35, wb: 2.925, fo: .91, zNose: .62, zHood: .93, zTail: 1.0, xWS: 1.33, xRS: -2.35, cab: { rf: .45, rr: -1.95, H: 1.46, w: .84, rear: [-2.35, 1.0] } },
     suv: { n: 'SUV', L: 4.696, W: 1.891, gc: .22, rw: .37, wb: 2.842, fo: .89, zNose: .85, zHood: 1.08, zTail: 1.12, xWS: 1.22, xRS: -2.2, cab: { rf: .35, rr: -1.75, H: 1.66, w: .86, rear: [-2.2, 1.12] } },
     coupe: { n: 'Coupé/Sport', L: 4.495, W: 1.888, gc: .12, rw: .35, wb: 2.536, fo: .95, zNose: .55, zHood: .82, zTail: .90, xWS: 1.05, xRS: -1.55, cab: { rf: -.05, rr: -.75, H: 1.305, w: .82, rear: [-1.55, .90] } },
-    cabrio: { n: 'Cabrio', L: 4.305, W: 1.802, gc: .14, rw: .325, wb: 2.639, fo: .88, zNose: .60, zHood: .88, zTail: .92, xWS: 1.15, xRS: -2.0, cab: { rf: .62, rr: .52, H: 1.38, w: .84, rear: [.52, .88], thin: true } },
-    van: { n: 'Van', L: 5.00, W: 1.95, gc: .22, rw: .36, wb: 3.00, fo: .95, zNose: .75, zHood: 1.0, zTail: 1.0, xWS: 1.6, xRS: -2.5, cab: { rf: .85, rr: -2.45, H: 1.95, w: .94, rear: [-2.5, 1.0] } }
+    cabrio: { n: 'Cabrio/Roadster', L: 4.351, W: 1.839, gc: .14, rw: .33, wb: 2.473, fo: .94, zNose: .60, zHood: .88, zTail: .92, xWS: 1.05, xRS: -2.0, cab: { rf: .62, rr: .52, H: 1.30, w: .84, rear: [.52, .88], thin: true } }
   };
-  var ORDER = ['kleinwagen', 'kompakt', 'limousine', 'suv', 'coupe', 'van'];   // Klassen des Autobuilders (Giannis 08.11.2026); Kombi und Cabrio gibt es nur noch als Zeichnung für alte Sitzungen
-  // Der Server kennt nur diese Werte (check-Regel im Schema); Kleinwagen und Kompakt gehen als null, die Klasse steht in app_details.
-  var DBKAR = { suv: 'suv', coupe: 'coupe', van: 'van' };
+  var ORDER = ['kleinwagen', 'kompakt', 'limousine', 'suv', 'coupe', 'cabrio'];   // Klassen (Giannis 08.11.2026): Van entfällt, Cabrio/Roadster ist eine eigene Klasse; Kombi gibt es nur noch als Zeichnung für alte Sitzungen
+  // Der Server kennt nur diese Werte (check-Regel im Schema, 'cabrio' ist erlaubt); Kleinwagen und Kompakt gehen als null, die Klasse steht in app_details.klasse.
+  var DBKAR = { suv: 'suv', coupe: 'coupe', cabrio: 'cabrio' };
   // Klassenname in app_details (für den Autobuilder); Kleinwagen, Kompakt und Limousine/Kombi haben im Schema keinen eigenen Wert
-  var KLASSE_NAME = { kleinwagen: 'kleinwagen', kompakt: 'kompakt', limousine: 'limousine_kombi', kombi: 'limousine_kombi', suv: 'suv', coupe: 'coupe_sport', cabrio: 'kompakt', van: 'van' };
+  var KLASSE_NAME = { kleinwagen: 'kleinwagen', kompakt: 'kompakt', limousine: 'limousine_kombi', kombi: 'limousine_kombi', suv: 'suv', coupe: 'coupe_sport', cabrio: 'cabrio', van: 'van' };   // van nur für alte Fahrzeuge
   var modelCache = {};
   function sub3(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
   function dot3(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
@@ -534,11 +532,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var K = KINDS[kind], hl = K.L / 2, C = K.cab;
     var body = [[-hl + .15, K.gc, .9], [hl - .15, K.gc, .9], [hl, K.gc + .22, .96], [hl, K.zNose, .96], [K.xWS, K.zHood, 1], [K.xRS, K.zTail, 1], [-hl, K.zTail - .04, .97], [-hl, K.gc + .25, .94]];
     if (kind === 'kombi' || kind === 'suv' || kind === 'kompakt' || kind === 'kleinwagen') body[5] = [-hl + .12, K.zTail, 1];
-    if (kind === 'van') { body[4] = [K.xWS, K.zHood, 1]; body[5] = [-hl + .05, K.zTail, 1]; }
     if (kind === 'cabrio') body[5] = [-hl + .55, K.zTail, 1];
     var cab;
     if (C.thin) { var dx = (C.H - K.zHood) * 1.5; cab = [[K.xWS, K.zHood, C.w], [K.xWS - dx, C.H, C.w - .02], [K.xWS - dx - .06, C.H, C.w - .02], [K.xWS - .06, K.zHood, C.w]]; }
-    else if (kind === 'van') cab = [[K.xWS, K.zHood, C.w], [K.xWS - .7, C.H, C.w], [-hl + .08, C.H, C.w], [-hl + .02, K.zTail, C.w]];
     else cab = [[K.xWS, K.zHood, C.w], [C.rf, C.H, C.w - .07], [C.rr, C.H - .02, C.w - .07], [C.rear[0], C.rear[1], C.w]];
     var faces = [];
     function prism(prof, role) {
@@ -564,7 +560,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   }
   // Kamerahöhe aus der Link-Wahl: Räume 1,20 / 1,35 / 1,50 m (Autobuilder)
   function camH() { return VAR.hoehe === 'brust' ? 1.5 : VAR.hoehe === '1m' ? 1.2 : 1.35; }
-  function klasseOf() { return S.vehicle && S.vehicle.klasse && KINDS[S.vehicle.klasse] ? S.vehicle.klasse : null; }
+  function klasseOf() { var k = S.vehicle && S.vehicle.klasse; if (k === 'van') k = 'suv'; return k && KINDS[k] ? k : null; }
   function camPose(key, kind, h, ang, eck) {
     var K = KINDS[kind], hl = K.L / 2, hw = K.W / 2, a = ang * RAD;
     if (key === 'front') return { P: [hl + eck, 0, h], d: hl + eck, ang: 0 };
@@ -614,6 +610,48 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     [-4.2, 4.2].forEach(function (yy) { var a = cam([-12, yy, 0]), b = cam([12, yy, 0]); if (a[2] > .3 && b[2] > .3) { c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke(); } });
     c.setLineDash([]);
   }
+  function hull2(pts) {
+    pts = pts.slice().sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
+    var cr = function (o, a, b) { return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]); }, lo = [], up = [], i;
+    for (i = 0; i < pts.length; i++) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], pts[i]) <= 0) lo.pop(); lo.push(pts[i]); }
+    for (i = pts.length - 1; i >= 0; i--) { while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], pts[i]) <= 0) up.pop(); up.push(pts[i]); }
+    up.pop(); lo.pop(); return lo.concat(up);
+  }
+  function spoly(c, pts, r) {   // Vieleck mit weich abgerundeten Ecken
+    var n = pts.length, i; c.beginPath();
+    for (i = 0; i < n; i++) {
+      var p0 = pts[(i + n - 1) % n], p1 = pts[i], p2 = pts[(i + 1) % n], d1 = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) || 1, d2 = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) || 1, rr = Math.min(r, d1 / 2.2, d2 / 2.2);
+      var a = [p1[0] + (p0[0] - p1[0]) * rr / d1, p1[1] + (p0[1] - p1[1]) * rr / d1], b = [p1[0] + (p2[0] - p1[0]) * rr / d2, p1[1] + (p2[1] - p1[1]) * rr / d2];
+      if (i) c.lineTo(a[0], a[1]); else c.moveTo(a[0], a[1]);
+      c.quadraticCurveTo(p1[0], p1[1], b[0], b[1]);
+    }
+    c.closePath();
+  }
+  /* Weiche Silhouette (Schablone A, Giannis 08.11.2026 „A, Silhouette“): Karosserie, Kabine und Räder als abgerundete Hüllen, Dachlinie und Radläufe bleiben sichtbar.
+     Vorn oder hinten: Scheinwerfer (flache, breite Streifen) sind nur zu sehen, wenn die Kamera vor dem Auto steht, Rückleuchten (kürzer und höher) nur von hinten.
+     Die Erkennung rechnet weiter mit dem Rahmen dahinter (schabBox); nur die Anzeige ist weich. */
+  function softOutline(c, cam, M, K, vis, wl, bounds, o) {
+    var lk = o.lw || 1, col = o.line || '#FFC77C', bb = { x0: bounds.x0, x1: bounds.x1, y0: bounds.y0, y1: bounds.y1 };
+    wl.forEach(function (x) { x.pts.forEach(function (p) { bb.x0 = Math.min(bb.x0, p[0]); bb.x1 = Math.max(bb.x1, p[0]); bb.y0 = Math.min(bb.y0, p[1]); bb.y1 = Math.max(bb.y1, p[1]); }); });
+    var bh = bb.y1 - bb.y0, pb = [], pc = [], shapes = [];
+    c.save(); c.lineJoin = 'round'; c.lineCap = 'round';
+    M.faces.forEach(function (f) { f.poly.forEach(function (p) { var q = cam(p); if (q[2] < .2) return; (f.role === 'cabin' ? pc : pb).push([q[0], q[1]]); }); });
+    if (pb.length > 2) shapes.push([hull2(pb), .3 * bh]); if (pc.length > 2) shapes.push([hull2(pc), .22 * bh]);
+    wl.forEach(function (x) { shapes.push([x.pts.map(function (p) { return [p[0], p[1]]; }), 2]); });
+    [{ col: 'rgba(0,0,0,.45)', lw: 8 * lk }, { col: col, lw: 4.4 * lk }].forEach(function (ps) {
+      shapes.forEach(function (s) { spoly(c, s[0], s[1]); c.fillStyle = ps.col; c.strokeStyle = ps.col; c.lineWidth = ps.lw; c.fill(); c.stroke(); });
+      c.globalCompositeOperation = 'destination-out'; shapes.forEach(function (s) { spoly(c, s[0], s[1]); c.fillStyle = '#000'; c.fill(); }); c.globalCompositeOperation = 'source-over';
+    });
+    c.strokeStyle = 'rgba(255,199,124,.55)'; c.lineWidth = 1.6 * lk;
+    vis.forEach(function (x) { if (x.f.role === 'cabin') { spoly(c, x.pr, .04 * bh); c.stroke(); } });
+    wl.filter(function (x) { return x.near; }).forEach(function (x) { poly(c, x.pts); c.stroke(); });
+    // Lichter: vorn Scheinwerfer, hinten Rückleuchten (nur wenn die Kamera auf dieser Seite des Autos steht)
+    var hl = K.L / 2, hw = K.W / 2, lights = [];
+    if (cam.P[0] > hl) [-1, 1].forEach(function (s) { lights.push({ pts: [[hl, s * hw * .76, K.zNose - .05], [hl, s * hw * .50, K.zNose - .05], [hl, s * hw * .50, K.zNose - .12], [hl, s * hw * .76, K.zNose - .12]], r: 3 * lk }); });
+    if (cam.P[0] < -hl) [-1, 1].forEach(function (s) { lights.push({ pts: [[-hl, s * hw * .86, K.zTail - .08], [-hl, s * hw * .70, K.zTail - .08], [-hl, s * hw * .70, K.zTail - .22], [-hl, s * hw * .86, K.zTail - .22]], r: 2.2 * lk }); });
+    lights.forEach(function (L) { var pr = L.pts.map(cam); if (!pr.every(function (p) { return p[2] > .2; })) return; spoly(c, pr, L.r); c.fillStyle = col; c.strokeStyle = 'rgba(0,0,0,.45)'; c.lineWidth = 2.4 * lk; c.stroke(); c.fill(); });
+    c.restore();
+  }
   function drawCar(c, cam, kind, o) {
     var M = buildModel(kind), K = M.K, light = [-.35, .45, .82], bc = o.col || [196, 202, 212], dk = [40, 46, 56], vis = [];
     var sh = [[-K.L / 2 - .25, -K.W / 2 - .2, 0], [K.L / 2 + .25, -K.W / 2 - .2, 0], [K.L / 2 + .25, K.W / 2 + .2, 0], [-K.L / 2 - .25, K.W / 2 + .2, 0]].map(cam);
@@ -632,15 +670,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       wl.filter(function (x) { return x.near; }).forEach(function (x) { poly(c, x.arch); c.fillStyle = '#0E1013'; c.fill(); poly(c, x.pts); c.fillStyle = '#1C1F24'; c.fill(); poly(c, x.rim); c.fillStyle = '#B9BEC7'; c.fill(); });
     }
     if (o.outline) {
-      var lk = o.lw || 1, passes = [{ col: 'rgba(0,0,0,.5)', lw: 10 * lk }, { col: o.line || '#FFC77C', lw: 5 * lk }];
-      passes.forEach(function (ps) {
-        allPolys.forEach(function (pp) { poly(c, pp); c.fillStyle = ps.col; c.strokeStyle = ps.col; c.lineWidth = ps.lw; c.lineJoin = 'round'; c.fill(); c.stroke(); });
-        c.globalCompositeOperation = 'destination-out'; allPolys.forEach(function (pp) { poly(c, pp); c.fillStyle = '#000'; c.fill(); }); c.globalCompositeOperation = 'source-over';
-      });
-      c.save(); c.strokeStyle = 'rgba(255,199,124,.62)'; c.lineWidth = 1.8 * lk; c.lineJoin = 'round';
-      vis.forEach(function (v) { if (v.f.role === 'cabin') { poly(c, v.pr); c.stroke(); } });
-      wl.filter(function (x) { return x.near; }).forEach(function (x) { poly(c, x.pts); c.stroke(); });
-      c.restore();
+      var bounds = { x0: 1e9, x1: -1e9, y0: 1e9, y1: -1e9 };
+      allPolys.forEach(function (pp) { pp.forEach(function (p) { bounds.x0 = Math.min(bounds.x0, p[0]); bounds.x1 = Math.max(bounds.x1, p[0]); bounds.y0 = Math.min(bounds.y0, p[1]); bounds.y1 = Math.max(bounds.y1, p[1]); }); });
+      softOutline(c, cam, M, K, vis, wl, bounds, o);
     }
   }
   // Szene w x hh (Bildfläche, Breite = Bildbreite): Auto, wie der Händler es ausrichtet
@@ -650,11 +682,20 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (o.bg === 'hof') bgHof(c, w, hh, cam);
     drawCar(c, cam, kind, o);
   }
-  function drawSide(cv, kind, w, hh, col) {
-    var c = setup(cv, w, hh), M = buildModel(kind), K = M.K, k = (w - 6) / (K.L + .2), x0 = w / 2, base = hh - 3 - K.rw * k * .1;
-    function P(x, z) { return [x0 + x * k, base - z * k]; }
-    M.faces.forEach(function (f) { if (f.kind !== 'side' || f.poly[0][1] < 0) return; poly(c, f.poly.map(function (p) { return P(p[0], p[2]); })); c.fillStyle = f.role === 'cabin' ? 'rgba(120,140,165,.9)' : col; c.fill(); });
-    M.wheels.filter(function (w2) { return w2.s > 0; }).forEach(function (w2) { var q = P(w2.x, w2.r); c.beginPath(); c.arc(q[0], q[1], w2.r * k, 0, 6.2832); c.fillStyle = '#15171B'; c.fill(); c.beginPath(); c.arc(q[0], q[1], w2.r * k * .55, 0, 6.2832); c.fillStyle = '#B9BEC7'; c.fill(); });
+  /* Symbole der Klassen-Kacheln: weiche Linienbilder (gleiche Strichstärke, runde Enden, Radläufe); die Farbe folgt dem Text, also in Hell und Dunkel (Giannis 08.11.2026) */
+  var ICON_BODY = {
+    kleinwagen: { top: 'M9 21.5 V17 C9 15 10 14 12 13.6 L16.2 9.6 C17.2 8.7 18.2 8.3 19.6 8.3 H33 C35 8.3 36.6 9 37.8 10.2 L41.4 13.6 C45 14 49 14.6 51.6 15.6 C54 16.5 55 18 55 20 V21.5', xr: 17.3, xf: 46.7, ra: 4.9, wr: 3.2, glass: 'M17.6 12.8 L20 10.6 C20.6 10.1 21.2 10 22 10 H32.2 C33.2 10 34 10.4 34.8 11.1 L36.8 12.8 Z' },
+    kompakt: { top: 'M7 21.5 V17.4 C7 15.6 8 14.6 9.8 14.2 L14.2 10.4 C15.4 9.4 16.6 9 18.2 9 H34.2 C36 9 37.6 9.6 38.8 10.6 L43 14 C47 14.3 52 15 54.4 16 C56.2 16.8 57 18.2 57 20 V21.5', xr: 15.2, xf: 48.7, ra: 4.9, wr: 3.2, glass: 'M16.2 13.2 L18.6 11 C19.2 10.5 19.8 10.4 20.6 10.4 H32.4 C33.6 10.4 34.6 10.9 35.4 11.7 L38 13.2 Z' },
+    limousine: { top: 'M5 21.5 V17.6 C5 16 6 15.2 8 15 L14.6 14.4 C16 14.3 17 13.8 18 12.8 L21.4 9.8 C22.4 8.9 23.6 8.6 25 8.6 H34.6 C36.4 8.6 38 9.2 39.2 10.2 L43.6 13.8 C47 14 52 14.6 55 15.6 C57.4 16.4 59 18 59 20 V21.5', xr: 15.5, xf: 50.5, ra: 4.9, wr: 3.2, glass: 'M19 13.4 L21.9 10.7 C22.5 10.2 23.1 10.1 23.9 10.1 H34 C35.2 10.1 36.2 10.6 37 11.4 L39.8 13.4 Z' },
+    suv: { top: 'M6 21.5 V15.6 C6 14.2 6.8 13.4 8.2 13.2 L11 12.8 C12 12.6 12.6 12 13 11.2 L14.4 8.6 C14.9 7.6 15.8 7.2 17 7.2 H36 C37.6 7.2 38.8 7.8 39.8 8.8 L44 13 C48 13.2 52 13.8 54.4 14.8 C56.8 15.8 58 17.4 58 19.4 V21.5', xr: 14.8, xf: 49.2, ra: 5.3, wr: 3.6, glass: 'M16.4 12.4 L17.4 9.7 C17.6 9.1 18.2 8.9 18.8 8.9 H35.2 C36.2 8.9 37 9.3 37.7 10 L40.6 12.4 Z' },
+    coupe: { top: 'M5 21.5 V18.4 C5 17.2 5.8 16.6 7 16.4 L15 15.4 C18 14.2 21 11.8 25 11 C28 10.4 31 10.4 33.4 10.6 C36 10.8 38 11.6 40 12.8 L43.4 14.4 C48 14.8 53 15.8 56 17 C58 17.8 59 19 59 20.2 V21.5', xr: 15.5, xf: 50.5, ra: 4.9, wr: 3.2, glass: 'M22.2 14.4 C23.6 12.9 25.3 12.3 27.4 12.2 H31.4 C33.4 12.2 35.2 12.7 37.2 13.8 L39.8 14.4 Z' },
+    cabrio: { top: 'M5 21.5 V18 C5 16.8 5.8 16 7 15.8 L15.6 14.8 C19 14.4 24 14.4 27 14.6 L31.2 11.4 C31.8 10.9 32.4 10.7 33.2 10.8 L35 11.1 L37.4 14.6 C42 14.7 49 15.4 54.6 16.8 C57.6 17.6 59 18.8 59 20.2 V21.5', xr: 15.5, xf: 50.5, ra: 4.9, wr: 3.2, glass: '' }
+  };
+  function carIcon(k) {
+    var d = ICON_BODY[k]; if (!d) return '';
+    var path = d.top + ' H' + (d.xf + d.ra) + ' A' + d.ra + ' ' + d.ra + ' 0 0 0 ' + (d.xf - d.ra) + ' 21.5 H' + (d.xr + d.ra) + ' A' + d.ra + ' ' + d.ra + ' 0 0 0 ' + (d.xr - d.ra) + ' 21.5 Z';
+    return '<svg class="ico" viewBox="0 0 64 30" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + path + '"/>' + (d.glass ? '<path d="' + d.glass + '" stroke-width="1.5" opacity=".7"/>' : '') +
+      '<circle cx="' + d.xr + '" cy="21.5" r="' + d.wr + '"/><circle cx="' + d.xf + '" cy="21.5" r="' + d.wr + '"/><circle cx="' + d.xr + '" cy="21.5" r=".9" fill="currentColor" stroke="none"/><circle cx="' + d.xf + '" cy="21.5" r=".9" fill="currentColor" stroke="none"/></svg>';
   }
   var thCache = {};
   // Umriss der Schablone als kleines Bild (leere Plätze in Galerie und Kachelleiste)
@@ -676,8 +717,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function buildKar() {
     var box = document.getElementById('karBox'); if (!box) return; box.innerHTML = '';
     ORDER.forEach(function (k) {
-      var b = document.createElement('button'), on = S.klasse === k; b.type = 'button'; b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.innerHTML = '<canvas></canvas><span>' + KINDS[k].n + '</span>';
-      box.appendChild(b); drawSide(b.querySelector('canvas'), k, 72, 29, on ? (DIR === 'a' ? '#0B0C10' : '#FAFAFA') : (DIR === 'a' ? '#C4CAD4' : '#59626F'));
+      var b = document.createElement('button'), on = S.klasse === k; b.type = 'button'; b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.innerHTML = carIcon(k) + '<span>' + KINDS[k].n + '</span>';
+      box.appendChild(b);
       b.onclick = function () { S.klasse = k; buildKar(); fmsg(''); };
     });
   }
@@ -1773,7 +1814,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       id: st.fotoId, fahrzeug_id: S.vehicle.id, platz: m.key, zusatz_nr: m.zusatz_nr, zusatz_art: m.art === 'zusatz' ? S.zusatzArt : null,
       ampel_handy: r.ampel, ampel_handy_gruende: r.gruende.join('; '), geraet: dev(), brennweite_kb: r.f35, neigung: r.snap ? +r.snap.p.toFixed(1) : null, rollen: r.snap ? +r.snap.r.toFixed(1) : null,
       drehung: r.drehung, breite: r.w, hoehe: r.h, bytes: r.blob.size,
-      app_details: { app: APP, quelle: r.quelle, selbstausloeser: false, ausloeser: { art: 'manuell', freigabe: r.quelle === 'kamera-app' ? 'kamera_app' : (r.how.forced ? (r.how.noSensor ? 'erzwungen_ohne_sensor' : 'erzwungen') : 'frei'), frei_nach_ms: r.how.waitMs || 0, nachstabil_ms: r.how.nach ? r.how.nach.ms : null, nachstabil_ruhig: r.how.nach ? r.how.nach.ruhig : null }, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, klasse: (S.vehicle && S.vehicle.klasse && KLASSE_NAME[S.vehicle.klasse]) || null, cabrio: !!(S.vehicle && S.vehicle.cabrio), ruecksitzbank: rueckPflicht() ? 'pflicht' : 'keine', design: 'v4', abgleich: r.fit || null, aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, folge: 'rundum-v4', winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v1: gelb ab ' + AMPEL.gelb.p + '/' + AMPEL.gelb.r + ', rot ab ' + AMPEL.rot.p + '/' + AMPEL.rot.r + ', Soll-Neigung ' + AMPEL.p0 } }
+      app_details: { app: APP, quelle: r.quelle, selbstausloeser: false, ausloeser: { art: 'manuell', freigabe: r.quelle === 'kamera-app' ? 'kamera_app' : (r.how.forced ? (r.how.noSensor ? 'erzwungen_ohne_sensor' : 'erzwungen') : 'frei'), frei_nach_ms: r.how.waitMs || 0, nachstabil_ms: r.how.nach ? r.how.nach.ms : null, nachstabil_ruhig: r.how.nach ? r.how.nach.ruhig : null }, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, klasse: (S.vehicle && S.vehicle.klasse && KLASSE_NAME[S.vehicle.klasse]) || null, cabrio: klasseOf() === 'cabrio', schablone: 'weich-a', ruecksitzbank: rueckPflicht() ? 'pflicht' : 'keine', design: 'v4', abgleich: r.fit || null, aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, folge: 'rundum-v4', winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v1: gelb ab ' + AMPEL.gelb.p + '/' + AMPEL.gelb.r + ', rot ab ' + AMPEL.rot.p + '/' + AMPEL.rot.r + ', Soll-Neigung ' + AMPEL.p0 } }
     };
     var item = { slot: r.slot, id: st.fotoId, path: S.vehicle.id + '/' + m.key + '_' + st.fotoId + '.jpg', blob: r.blob, meta: meta, tries: 0, fileDone: false, state: 'wartet' };
     discardReview();
@@ -1811,9 +1852,10 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     $('betGal').onclick = function () { paneShow('vBet', false); endSequence(); };
     Array.prototype.forEach.call($('betBox').querySelectorAll('[data-side]'), function (b) { b.onclick = function () { startSide(b.getAttribute('data-side'), 'innen'); }; });
   }
-  // nach dem letzten Pflicht-Innenbild: freiwillige Innenbilder anbieten (Kofferraum; Rücksitzbank bei Coupé/Cabrio), so wie die Seiten nach Außen
+  // nach dem letzten Pflicht-Innenbild: freiwillige Innenbilder anbieten (Kofferraum), so wie die Seiten nach Außen
   // Zweisitzer: Rückfrage, danach ist der Platz erledigt (9 von 9). Rückgängig: Kachel in der Galerie antippen.
   $('noRueck').onclick = function () {
+    if (!$('noRueck').offsetParent) return;   // nur wenn der Knopf wirklich zu sehen ist (Kamera-Ansicht)
     S.token++; S.phase = 'between';
     $('betBox').innerHTML = '<h1>Kein Rücksitz?</h1><p>Dieses Auto hat keine Rücksitzbank?</p>' +
       '<div class="btns"><button class="btn big primary" id="nrJa" type="button">Ja</button><button class="btn big" id="nrNein" type="button">Abbrechen</button></div>';
@@ -1987,6 +2029,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function renderEnd() {
     var v = S.vehicle; if (!v) return;
     var PF = pflicht(), aus = PF.filter(function (p) { return p.art === 'aussen' && hasPhoto(p.key); }).length, inn = PF.filter(function (p) { return p.art === 'innen' && hasPhoto(p.key); }).length, innN = PF.filter(function (p) { return p.art === 'innen'; }).length, fi = freiInnen(), fiN = fi.filter(function (k) { return hasPhoto(k); }).length, zu = zusatzIds().length, pending = S.queue.length;
+    $('eH1').textContent = 'Alle ' + PF.length + ' Bilder sind aufgenommen';   // 9 bei einem Zweisitzer ohne Rücksitzbank
     $('eSub').textContent = pending ? pending + (pending === 1 ? ' Foto wird' : ' Fotos werden') + ' noch hochgeladen. Die App sendet im Hintergrund weiter.' : 'Die Bearbeitung läuft. Den Stand je Bild sehen Sie in der Galerie.';
     $('eSum').innerHTML = '<div><span>Außenbilder</span><span>' + aus + ' von 6</span></div><div><span>Innenbilder</span><span>' + inn + ' von ' + innN + '</span></div>' + (ohneRueck() ? '<div><span>Rücksitzbank</span><span>kein Rücksitz</span></div>' : '') + '<div><span>Innen freiwillig</span><span>' + fiN + ' von ' + fi.length + '</span></div><div><span>Seiten (freiwillig)</span><span>' + SEITEN.filter(function (s) { return hasPhoto(s.key); }).length + ' von 2</span></div><div><span>Zusatzbilder</span><span>' + zu + '</span></div><div><span>Fahrzeug</span><span>' + esc(v.marke + ' ' + v.modell) + '</span></div>';
   }
@@ -2087,7 +2130,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       var perm = await sensorsPermission();
       // 2) Fahrzeug anlegen
       fmsg('Fahrzeug wird angelegt …');
-      var v = { id: uuid(), marke: marke, modell: modell, baujahr: bj, karosserie: DBKAR[S.klasse] || null, klasse: S.klasse, cabrio: !!$('fCabrio').checked };
+      var v = { id: uuid(), marke: marke, modell: modell, baujahr: bj, karosserie: DBKAR[S.klasse] || null, klasse: S.klasse };
       try { await S.api.createVehicle(v); }
       catch (e) {
         fmsg(e.net ? 'Keine Verbindung zum Server. Bitte Netz prüfen und nochmal tippen.' : (e.status === 403 || e.status === 401 ? 'Zugang verweigert. Der Link ist ungültig oder abgelaufen.' : 'Der Server hat das Fahrzeug nicht angenommen: ' + e.message), true);
