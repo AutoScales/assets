@@ -123,6 +123,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .tile .im svg { width: 46%; height: 46%; opacity: .8; }
 .tile .nr { position: absolute; left: 6px; top: 6px; font: 700 11px/1 var(--font-body); padding: 4px 7px; border-radius: 999px; background: var(--chipbg); border: 1px solid var(--gb); }
 .tile b { font: 600 13px/1.25 var(--font-body); }
+.tile .gr { font: 500 11px/1.35 var(--font-body); color: var(--t2); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; }
 .tile .st { font: 600 11px/1.3 var(--font-body); display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; color: var(--t2); }
 .amp { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; }
 .amp i { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(0,0,0,.3); }
@@ -770,6 +771,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         if (p.get('ai') === 'aus') cfg.ai = 'aus';   // Auto-Erkennung abschalten (falls sie am Handy stört)
         if (p.has('hs')) cfg.hs = true;                // Home-Bildschirm: Link-Teil bleibt in der Adresse, damit das Symbol ihn mitnimmt
         if (p.has('sim') && cfg.demo) cfg.sim = true;  // nur im Demo ohne Server: gezeichnete Kamera
+        if (p.has('ohneshow') && cfg.demo) cfg.ohneShow = true;   // nur im Demo: Außenbilder „geprüft, ohne Showroom“ (Status geprueft)
         if (cfg.demo && /^(gruen|rot|gelb|fern|nein|winkel|schief|mitte)$/.test(p.get('simz') || '')) { cfg.sim = true; cfg.simz = p.get('simz'); }
         if (cfg.demo && /^[\w.\/-]{1,80}$/.test(p.get('simimg') || '')) { cfg.sim = true; cfg.simImg = p.get('simimg'); }   // nur Test: Bild statt Zeichnung
         store('fa_cfg', cfg); if (!cfg.hs) { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* egal */ } } }
@@ -840,6 +842,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
           var st = age < 3 ? 'neu' : age < (art === 'show' ? 9 : 4) ? 'in_arbeit' : 'fertig', amp = null, grund = null, fg = null;
           if (st === 'fertig') {
             if (p.platz === 'dreiviertel_hl') { st = 'fehler'; fg = 'Kein Kennzeichen erkannt (Demo)'; amp = 'rot'; grund = fg; }
+            else if (art === 'show' && S.cfg && S.cfg.ohneShow) { st = 'geprueft'; amp = p.platz === 'dreiviertel_vr' ? 'rot' : (p.platz === 'front' || p.platz === 'seite') ? 'gelb' : 'gruen'; grund = amp === 'rot' ? 'Falsche Ansicht, hinten statt vorn (Demo)' : amp === 'gelb' ? 'Auto leicht angeschnitten (Demo); Kamera etwas zu tief (Demo)' : null; }
             else if (art === 'show') { amp = p.platz === 'seite' ? 'gelb' : 'gruen'; grund = amp === 'gelb' ? 'Auto leicht angeschnitten (Demo)' : null; }
           }
           return { platz: p.platz, zusatz_nr: p.zusatz_nr, version: 1, status: st, ampel_handy: p.ampel_handy, ampel_showroom: amp, ampel_showroom_gruende: grund, fehler_grund: fg };
@@ -1234,6 +1237,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (s.state === 'retry') return ['warn', '!'];
     if (s.state === 'fehler') return ['bad', '!'];
     var sv = s.server && s.server.status;
+    if (sv === ST_OHNE) return s.server.ampel_showroom === 'rot' ? ['bad', '!'] : s.server.ampel_showroom === 'gelb' ? ['warn', '!'] : ['sent', '✓'];
     if (sv === 'fertig') return ['sent', '✓'];
     if (sv === 'fehler') return ['bad', '!'];
     return ['work', ''];
@@ -1259,7 +1263,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var s = S.slots[id], m = slotMeta(id), ti = tileInfo(id); if (!s || !s.thumb) return;
     S.token++; S.phase = 'view'; S.viewId = id; say('');
     $('revImg').src = s.thumb; $('revLbl').textContent = (m.nr ? m.nr + ' von ' + pflicht().length + ' · ' : '') + m.name; $('revTitle').textContent = 'Foto ansehen';
-    $('revInfo').innerHTML = '<span class="chip"><i class="dot ' + (ti.c || '') + '"></i>' + esc(ti.t) + '</span>' + amp(s.ampelHandy, 'Handy') + amp(s.server && s.server.ampel_showroom, 'Showroom');
+    $('revInfo').innerHTML = '<span class="chip"><i class="dot ' + (ti.c || '') + '"></i>' + esc(ti.t) + '</span>' + amp(s.ampelHandy, 'Handy') + ampSrv(s.server) + gruendeChips(s.server);
     $('revDbg').hidden = true; $('exBox').hidden = true; $('revRot').hidden = true; $('revBtns').classList.add('two');
     $('revNeu').textContent = 'Zurück'; $('revOk').textContent = 'Neu aufnehmen'; $('revOk').disabled = false;
     paneShow('vCam', false); paneShow('vTurn', false); paneShow('vRev', true);
@@ -2190,6 +2194,14 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   /* =====================================================================
      Galerie
      ===================================================================== */
+  /* Status „geprueft“ = geprüft, ohne Showroom (Autobuilder 09.11.2026, Giannis 08:10 „Ja, übernehmen“): der Arbeiter prüft nur das Rohfoto und schreibt Ampel und Gründe,
+     aber kein Showroom-Bild. Endzustand wie „fertig“ (kein Warten, kein Poll). Die Ampel heißt dann „Prüfung“. Braucht die SQL supabase_erweiterung_status_geprueft_2026-11-09.sql. */
+  var ST_OHNE = 'geprueft';
+  function srvEnde(sv) { return !!sv && (sv.status === 'fertig' || sv.status === 'fehler' || sv.status === ST_OHNE); }
+  function ampSrv(sv) { return sv ? amp(sv.ampel_showroom, sv.status === ST_OHNE ? 'Prüfung' : 'Showroom') : ''; }
+  function gruendeOf(sv) { return sv && sv.status === ST_OHNE ? String(sv.ampel_showroom_gruende || '').split(/\s*;\s*/).filter(Boolean) : []; }
+  function gruendeTile(sv) { var g = gruendeOf(sv); return g.length ? '<span class="gr">' + g.map(function (x) { return '• ' + esc(x); }).join('<br>') + '</span>' : ''; }
+  function gruendeChips(sv) { return gruendeOf(sv).map(function (x) { return '<span class="chip"><i class="dot ' + (sv.ampel_showroom === 'rot' ? 'bad' : 'warn') + '"></i>' + esc(x) + '</span>'; }).join(''); }
   function amp(a, label) { return a ? '<span class="amp" title="' + esc(label) + '"><i class="' + a + '"></i>' + esc(label) + ' ' + ({ gruen: 'grün', gelb: 'gelb', rot: 'rot' })[a] + '</span>' : ''; }
   function tileInfo(id) {
     var s = S.slots[id], m = slotMeta(id);
@@ -2201,6 +2213,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var sv = s.server && s.server.status;
     if (sv === 'neu') return { t: 'hochgeladen, wartet', c: 'busy' };
     if (sv === 'in_arbeit') return { t: 'wird bearbeitet', c: 'busy' };
+    if (sv === ST_OHNE) { var ao = s.server.ampel_showroom; return { t: 'geprüft, ohne Showroom', c: ao === 'rot' ? 'bad' : ao === 'gelb' ? 'warn' : 'ok' }; }
     if (sv === 'fertig') return { t: 'fertig', c: 'ok' };
     if (sv === 'fehler') return { t: (s.server.fehler_grund || 'Bearbeitung fehlgeschlagen'), c: 'bad' };
     return { t: 'hochgeladen', c: 'busy' };
@@ -2215,6 +2228,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var pending = S.queue.length;
     $('gSum').textContent = done + ' von ' + NP + ' Pflichtbildern aufgenommen' + (zusatzIds().length ? ', ' + zusatzIds().length + ' Zusatzbild' + (zusatzIds().length > 1 ? 'er' : '') : '') + (pending ? ' · ' + pending + (pending === 1 ? ' wird' : ' werden') + ' noch hochgeladen' : '');
     $('gProg').innerHTML = '<i style="width:' + Math.round(done * 100 / NP) + '%"></i>';
+    var nG = $('gNote'); if (nG) { if (!S.noteStd) S.noteStd = nG.textContent; var anyOhne = ids.some(function (k) { return S.slots[k] && S.slots[k].server && S.slots[k].server.status === ST_OHNE; }); var nt = anyOhne ? 'Einige Außenbilder wurden nur geprüft: Die Ampel zeigt das Ergebnis am Originalfoto, ein Showroom-Bild entsteht dabei nicht. Innenbilder bleiben Original. Diese Seite aktualisiert sich selbst.' : S.noteStd; if (nG.textContent !== nt) nG.textContent = nt; }
     $('gGrid').innerHTML = ids.map(function (id) {
       var s = S.slots[id], m = slotMeta(id), ti = tileInfo(id), taken = hasPhoto(id), img;
       if (s && s.thumb) img = '<img alt="" src="' + s.thumb + '">';
@@ -2224,7 +2238,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       var sv = s && s.server ? s.server : null, a1 = s && s.ampelHandy, a2 = sv && sv.ampel_showroom;
       var retry = s && s.state === 'fehler' && s.item && s.item.blob ? ' · <u>nochmal senden</u>' : '';
       return '<button class="glass tile" type="button" data-id="' + id + '"><div class="im' + (taken ? '' : ' empty') + '">' + img + (m.nr ? '<span class="nr">' + m.nr + '</span>' : '') + '</div><b>' + esc(m.name) + (m.frei ? ' · freiwillig' : '') + (m.art === 'zusatz' && s && s.zusatz_art ? ' · ' + esc((ZUSATZ_ARTEN.filter(function (z) { return z[0] === s.zusatz_art; })[0] || [0, ''])[1]) : '') + '</b>' +
-        '<span class="st"><span><i class="dot ' + ti.c + '"></i>' + esc(ti.t) + retry + '</span>' + amp(a1, 'Handy') + amp(a2, 'Showroom') + '</span></button>';
+        '<span class="st"><span><i class="dot ' + ti.c + '"></i>' + esc(ti.t) + retry + '</span>' + amp(a1, 'Handy') + ampSrv(sv) + '</span>' + gruendeTile(sv) + '</button>';
     }).join('');
     var next = PF.filter(function (p) { return !hasPhoto(p.key); })[0];
     $('gCta').hidden = !next; $('gNext').hidden = !next; $('gNext').textContent = next ? 'Weiter: ' + next.name : '';
@@ -2276,7 +2290,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 
   function allFinal() {
     var ids = Object.keys(S.slots).filter(function (k) { return hasPhoto(k); });
-    return ids.length > 0 && ids.every(function (k) { var s = S.slots[k]; return s.server && (s.server.status === 'fertig' || s.server.status === 'fehler') && s.state !== 'sendet' && s.state !== 'wartet' && s.state !== 'retry'; });
+    return ids.length > 0 && ids.every(function (k) { var s = S.slots[k]; return srvEnde(s.server) && s.state !== 'sendet' && s.state !== 'wartet' && s.state !== 'retry'; });
   }
   function schedulePoll(ms) { clearTimeout(S.pollTimer); if ($('pGallery').hidden || !S.vehicle) return; S.pollTimer = setTimeout(poll, ms); }
   async function poll() {
