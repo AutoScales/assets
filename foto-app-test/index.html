@@ -194,7 +194,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .mini svg { width: 100%; height: 100%; display: block; }
 .mini:empty { display: none; }
 .rtxt:empty { display: none; }
-.rgrp { display: grid; gap: 6px; width: 100%; justify-items: center; align-content: start; }
+.rgrp { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; width: 100%; justify-items: center; align-content: start; }   /* Spalte nie breiter als die Leiste: sonst ragen die Stand-Felder bei schmaler Leiste über den Bildschirmrand */
 .rtxt .dot { margin-right: 3px; }
 #vCam[data-fit="gruen"] .brk { border-color: var(--lvl-ok); }
 #detBox { position: absolute; z-index: 4; border: 2px dashed var(--lvl-ok); pointer-events: none; }
@@ -413,7 +413,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-2';
+  var APP = 'foto-app-test-3';
   var RAD = Math.PI / 180;
   /* =====================================================================
      ZAHLEN DER FÜHRUNG (Giannis 08.11.2026 21:32: die Optik ist final, danach werden nur noch Zahlen nachgestellt, und zwar hier).
@@ -964,11 +964,13 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     return 'unklar';
   }
   function isLandCls(c) { return c !== null && /^quer/.test(c); }
-  // Fenster breit oder fast quadratisch (aufgeklapptes faltbares Gerät, Tablet); ein Handy hochkant liegt bei etwa 0,5
-  function fensterBreit() { return window.innerWidth >= window.innerHeight * 0.8; }
-  // Kamerabild steht schon quer, obwohl die Schwerkraft „hochkant“ meldet: bei Geräten, deren Bildschirm in der Grundhaltung breit ist. Gilt nur bei breitem Fenster, nie beim Handy hochkant.
-  function bildQuer() { return !!S.stream && S.textRot === 0 && fensterBreit() && S.vw > 1 && S.vw >= S.vh * 1.2; }
-  function holdLandscape() { var c = gravClass(); if (c === null) return landscapeNow(); if (isLandCls(c)) return true; return (c === 'hoch' || c === 'hoch kopfüber') && bildQuer(); }
+  // Bildschirm in Handy-Form (lange Seite mindestens 1,7-mal die kurze; alle heutigen Handys, auch der Außenbildschirm faltbarer Geräte)?
+  // Gemessen am Bildschirm, nicht am Fenster und nicht am Gerätenamen (ein iPad gibt sich oft als Mac aus). Unbekannt gilt als Handy.
+  function handyForm() { var a = Math.max(screen.width || 0, screen.height || 0), b = Math.min(screen.width || 0, screen.height || 0); return !(a > 0 && b > 0) || a / b >= 1.7; }
+  function fensterQuer() { return window.innerWidth >= window.innerHeight * 1.1; }
+  // Quer gehalten? Handy: nach der Schwerkraft, wie bisher. Breiter Bildschirm (aufgeklapptes faltbares Gerät, iPad, Tablet): nach der Form des Fensters,
+  // weil der Lagesensor dort je nach Gerät eine andere Grundhaltung meldet; flach auf dem Tisch oder unklar zählt nicht.
+  function holdLandscape() { var c = gravClass(); if (handyForm()) return c === null ? landscapeNow() : isLandCls(c); return fensterQuer() && c !== 'flach' && c !== 'unklar'; }
   // Freigabe des Auslösers (Giannis 08.11.2026): kein Selbstauslöser mehr, der Nutzer löst immer selbst aus.
   // Frei (grün), wenn alle Punkte passen (Abstand, Mitte, Winkel, ruhig; siehe fuehrung()), zusammen FUEHRUNG.zeiten.ruhig lang.
   // Kein Festhängen: nach FUEHRUNG.zeiten.notloesung (ohne Sensor ohneSensor) gibt die App trotzdem frei; das Foto gilt dann als „nicht geprüft“ (app_details.fuehrung).
@@ -1470,15 +1472,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     return base;
   }
 
-  // Muss die Oberfläche gedreht werden? Verglichen wird die Haltung laut Schwerkraft mit der Drehung, die das System dem Bildschirm schon gegeben hat
-  // (screen.orientation.angle), nicht der Typ „landscape/portrait“: Auf faltbaren Geräten und Tablets ist der Bildschirm auch dann höher als breit
-  // (oder umgekehrt), wenn das System ihn schon passend zur Haltung gedreht hat. Ohne Winkel vom System gilt wie bisher die Form des Fensters.
-  function uiRot(g) {
-    var hat = (screen.orientation && typeof screen.orientation.angle === 'number') || typeof window.orientation === 'number';
-    if (!hat) return landscapeNow() ? 0 : (/Kopf links/.test(g) ? 90 : -90);
-    var d = ((/Kopf links/.test(g) ? 90 : 270) - screenAngle() + 360) % 360;
-    return d === 90 ? 90 : d === 270 ? -90 : 0;
-  }
+  // Muss die App ihre Oberfläche selbst drehen? Nur beim Handy mit Drehsperre (quer gehalten, Bildschirm bleibt hochkant): wie bisher.
+  // Geräte mit breitem Bildschirm (aufgeklapptes faltbares Gerät, iPad, Tablet) dreht das System selbst; dort dreht die App nie.
+  function uiRot(g) { if (!handyForm()) return 0; return landscapeNow() ? 0 : (/Kopf links/.test(g) ? 90 : -90); }
   function updateLayout() {
     var g = gravClass();
     if (g) S.lastCls = { cls: g, t: performance.now() };
@@ -1670,7 +1666,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function chk(my) { if (my !== S.token) throw CANCEL; }
   async function sleepC(my, ms) { var t0 = performance.now(); while (performance.now() - t0 < ms) { chk(my); await sleep(Math.min(100, ms)); } }
   function paneShow(id, on) { $(id).hidden = !on; }
-  function say(t) { if (!$('stage').hidden) { var b = $('camBig'); if (t) { b.textContent = t; b.hidden = false; } else b.hidden = true; } }
+  function say(t) { if (!$('stage').hidden) { var b = $('camBig'); if (t) { b.textContent = t; b.hidden = false; } else b.hidden = true; $('camHint').style.visibility = t ? 'hidden' : ''; } }
   function toast(t, ms) { var el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(function () { el.hidden = true; }, ms || 1800); }
 
   function enterStage() {
@@ -1811,7 +1807,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       var c = gravClass(), land = holdLandscape(), now = performance.now();
       if (land) { if (!okSince) okSince = now; if (now - okSince >= 400) break; } else okSince = 0;
       if (S.turnMan) break;
-      if (c !== null && !land && fensterBreit() && now - t0 > 4000) { $('turnTxt').textContent = T('Dreh das Gerät um eine Vierteldrehung, bis das Kamerabild quer steht. Steht es schon richtig, tippe auf „Trotzdem weiter“.', 'Drehen Sie das Gerät um eine Vierteldrehung, bis das Kamerabild quer steht. Steht es schon richtig, tippen Sie auf „Trotzdem weiter“.'); $('turnBtnBox').hidden = false; }
+      if (c !== null && !land && !handyForm() && now - t0 > 4000) { $('turnTxt').textContent = T('Dreh das Gerät, bis der Bildschirm quer steht. Steht er schon quer, tippe auf „Trotzdem weiter“.', 'Drehen Sie das Gerät, bis der Bildschirm quer steht. Steht er schon quer, tippen Sie auf „Trotzdem weiter“.'); $('turnBtnBox').hidden = false; }
       if (c === null && now - t0 > 6000) { $('turnTxt').textContent = T('Dein Handy meldet die Lage nicht. Dreh es quer und tippe dann auf „Trotzdem weiter“.', 'Ihr Handy meldet die Lage nicht. Drehen Sie es quer und tippen Sie dann auf „Trotzdem weiter“.'); $('turnBtnBox').hidden = false; }
       await sleep(100);
     }
@@ -1823,7 +1819,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if ($('stage').hidden) return;
     updateLayout();
     if (S.phase === 'settle' || S.phase === 'still') {
-      var c = gravClass(), upright = (c === 'hoch' || c === 'hoch kopfüber') && !bildQuer();
+      var c = gravClass(), upright = handyForm() ? (c === 'hoch' || c === 'hoch kopfüber') : !holdLandscape();
       paneShow('vTurn', upright); if (upright) { $('vTurn').classList.add('over'); $('turnBtnBox').hidden = true; $('turnTxt').textContent = T('Das Foto wird gemacht, sobald dein Handy wieder quer liegt.', 'Das Foto wird gemacht, sobald Ihr Handy wieder quer liegt.'); }
     }
     if (!$('vCam').hidden && S.phase !== 'turn') {
@@ -2047,7 +2043,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         nicht_geprueft_grund: (function () { if (r.quelle !== 'kamera') return 'kamera_app'; if (!(r.how && r.how.g)) return 'ohne_fuehrung'; return r.how.forced ? ((r.how.grund || []).join(',') || 'notloesung') : ''; })(),
         fuehrung: (function () { var g = (r.how && r.how.g) || {}, r2 = function (x) { return x == null ? null : Math.round(x * 100) / 100; }, ok = r.quelle === 'kamera' && !!(r.how && r.how.g) && !r.how.forced;
           return { stand: FUEHRUNG.stand, geprueft: ok, grund: ok ? [] : (r.quelle === 'kamera' ? ((r.how && r.how.grund) || []) : ['kamera_app']), umfang: g.det === 'erkannt' ? 'voll' : 'winkel', erkannt: g.det || null, zone: g.zone || null, abstand_m: r2(g.abst), soll_m: r2(g.soll), mitte: r2(g.dx), neigung: r2(g.p), rollen: r2(g.r), hoehe_m: camH() }; })(),
-        ruecksitzbank: rueckPflicht() ? 'pflicht' : 'keine', design: 'v4', abgleich: r.fit || null, aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), fenster: window.innerWidth + 'x' + window.innerHeight, form: LAY.form || null, buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, folge: 'rundum-v4', winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v3 ' + FUEHRUNG.stand + ': Neigung grün ±' + FUEHRUNG.neigungTol.gruen + ' gelb ±' + FUEHRUNG.neigungTol.gelb + ', Rollen grün ±' + FUEHRUNG.rollen.aussen.gruen + ' gelb ±' + FUEHRUNG.rollen.aussen.gelb + ', Ziel-Neigung je Platz' } }
+        ruecksitzbank: rueckPflicht() ? 'pflicht' : 'keine', design: 'v4', abgleich: r.fit || null, aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), fenster: window.innerWidth + 'x' + window.innerHeight, schirm: screen.width + 'x' + screen.height, form: LAY.form || null, buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, folge: 'rundum-v4', winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v3 ' + FUEHRUNG.stand + ': Neigung grün ±' + FUEHRUNG.neigungTol.gruen + ' gelb ±' + FUEHRUNG.neigungTol.gelb + ', Rollen grün ±' + FUEHRUNG.rollen.aussen.gruen + ' gelb ±' + FUEHRUNG.rollen.aussen.gelb + ', Ziel-Neigung je Platz' } }
     };
     var item = { slot: r.slot, id: st.fotoId, path: S.vehicle.id + '/' + m.key + '_' + st.fotoId + '.jpg', blob: r.blob, meta: meta, tries: 0, fileDone: false, state: 'wartet' };
     discardReview();
