@@ -413,7 +413,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-3';
+  var APP = 'foto-app-test-4';
   var RAD = Math.PI / 180;
   /* =====================================================================
      ZAHLEN DER FÜHRUNG (Giannis 08.11.2026 21:32: die Optik ist final, danach werden nur noch Zahlen nachgestellt, und zwar hier).
@@ -931,6 +931,12 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (!DO) return 'fehlt';
     if (typeof DO.requestPermission === 'function') { try { return await DO.requestPermission(); } catch (e) { return 'Fehler'; } }
     return 'granted';
+  }
+  // Nach dem Neuladen der Seite liefert das iPhone erst wieder Sensorwerte, wenn die Erlaubnis in diesem Seitenaufruf aus einem Tipp heraus angefragt wurde (es fragt nur beim ersten Mal sichtbar).
+  // Deshalb fragt jeder Tipp, der die Kamera öffnet, die Erlaubnis nach, solange sie in diesem Seitenaufruf noch nicht erteilt ist.
+  function sensorsNachholen() {
+    if (S.sensorPerm === 'granted') return Promise.resolve();
+    return sensorsPermission().then(function (p) { S.sensorPerm = p; if (p === 'granted' && sensorsOn) { sensorsDetach(); sensorsAttach(); } });
   }
   function snapshot() {
     var now = performance.now(), last = samples[samples.length - 1];
@@ -2280,18 +2286,19 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       if (confirm('Doch eine Rücksitzbank aufnehmen? Sie zählt dann wieder als Pflichtbild.')) { S.vehicle.keineRueck = false; S.vehicle.flagTries = 0; saveSession(); syncFlag(); renderGallery(); }
       return;
     }
-    var m = slotMeta(id), isNew = !hasPhoto(id);
+    var m = slotMeta(id), isNew = !hasPhoto(id), sp = sensorsNachholen();   // vor der Rückfrage, noch direkt im Tipp
     if (!isNew && !confirm('„' + m.name + '“ neu aufnehmen? Das neue Foto ersetzt das alte (das alte bleibt als frühere Version gespeichert).')) return;
     if (m.art === 'zusatz') S.zusatzArt = (s && s.zusatz_art) || 'sonstiges';
-    startSequence([id], 'single');
+    sp.then(function () { startSequence([id], 'single'); });
   });
   $('gNext').onclick = function () {
     var rest = pflicht().filter(function (p) { return !hasPhoto(p.key); }).map(function (p) { return p.key; });
-    startSequence(rest, 'seq');
+    sensorsNachholen().then(function () { startSequence(rest, 'seq'); });
   };
   $('gZusatz').onclick = function () {
     var n = 1; while (S.slots['zusatz' + n] && S.slots['zusatz' + n].state !== 'leer') n++;
     if (n > CFG.ZUSATZ_MAX) return;
+    sensorsNachholen();   // läuft neben der Auswahl der Art; hängt den Sensor danach neu an
     enterStage(); S.token++; S.phase = 'between';
     $('betBox').innerHTML = '<h1>Zusatzbild ' + n + ' von ' + CFG.ZUSATZ_MAX + '</h1><p>Was zeigt das Foto?</p><div class="chips">' + ZUSATZ_ARTEN.map(function (z) { return '<button type="button" data-a="' + z[0] + '">' + z[1] + '</button>'; }).join('') + '</div><div class="btns"><button class="btn" id="zBack" type="button">Abbrechen</button></div>';
     paneShow('vBet', true);
@@ -2347,6 +2354,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function resetVehicle() { S.vehicle = null; S.slots = {}; S.camChoice = null; S.klasse = null; store('fa_veh', null); clearTimeout(S.pollTimer); buildKar(); }
   $('resumeYes').onclick = function () {
     var rs = load('fa_veh'); if (!rs) return;
+    sensorsNachholen();   // Erlaubnis für den Bewegungssensor schon hier nachholen (nach dem Neuladen nötig)
     S.vehicle = rs.vehicle; S.slots = {};
     Object.keys(rs.slots || {}).forEach(function (k) { var s = slotState(k); s.state = 'hochgeladen'; s.zusatz_art = rs.slots[k].zusatz_art; s.ampelHandy = rs.slots[k].ampelHandy; });
     markRestored();
