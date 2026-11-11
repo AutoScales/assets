@@ -413,7 +413,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-4';
+  var APP = 'foto-app-test-5';
   var RAD = Math.PI / 180;
   /* =====================================================================
      ZAHLEN DER FÜHRUNG (Giannis 08.11.2026 21:32: die Optik ist final, danach werden nur noch Zahlen nachgestellt, und zwar hier).
@@ -1002,28 +1002,36 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     }
     if (!ctl.released) setStill(prog);
   }
+  // ctl.at (app_details.ausloeser.frei_nach_ms) = Zeitpunkt der LETZTEN Freigabe: über 10 s heißt, Grün ging danach noch einmal mindestens 0,4 s weg und die Notlösung gab neu frei.
+  // Auslöse-Protokoll ctl.log (nur Zahlen, ändert nichts am Ablauf): erstes Grün, wie oft Grün wieder wegging, wie oft die Notlösung freigab, Zeit bis zum Tipp und je Grund die Zeit ohne Grün.
   async function gateLoop(my, maxMs, ctl) {
-    var t0 = performance.now(), okSince = 0, badSince = 0;
+    var t0 = performance.now(), okSince = 0, badSince = 0, last = t0;
+    var L = ctl.log = { erstes_gruen_ms: null, verluste: 0, notloesungen: 0, tipp_nach_ms: null, blockiert_ms: {} };
     while (!ctl.tapped) {
       chk(my);
       var now = performance.now(), el = now - t0, g = gateState();
       ctl.g = g.R;
+      if (!g.good) (g.noSensor ? ['kein_sensor'] : g.R.warte ? ['sensor_wartet'] : g.R.grund.length ? g.R.grund : ['unbekannt']).forEach(function (k) { L.blockiert_ms[k] = (L.blockiert_ms[k] || 0) + (now - last); });
+      last = now;
       if (g.good) {
         badSince = 0; if (!okSince) okSince = now;
         if (now - okSince >= CFG.STILL_MS) {
+          if (L.erstes_gruen_ms == null) L.erstes_gruen_ms = Math.round(el);
           if (!ctl.released) { ctl.released = true; ctl.at = Math.round(el); haptic(18); sndKlick(); }
           else if (ctl.forced) { ctl.forced = false; ctl.noSensor = false; ctl.grund = []; haptic(18); sndKlick(); }   // Notlösung war frei, jetzt passt alles: wieder grün
         }
       } else {
         okSince = 0;
-        if (ctl.released && !ctl.forced) { if (!badSince) badSince = now; if (now - badSince > 400) { ctl.released = false; badSince = 0; } }
+        if (ctl.released && !ctl.forced) { if (!badSince) badSince = now; if (now - badSince > 400) { ctl.released = false; badSince = 0; L.verluste++; } }
       }
       // Notlösung (Giannis 08.11.2026): wird es nicht grün, darf der Händler nach FUEHRUNG.zeiten trotzdem auslösen; das Foto gilt dann als „nicht geprüft“
-      if (!ctl.released && (g.noSensor ? el >= FUEHRUNG.zeiten.ohneSensor : el >= maxMs)) { ctl.released = true; ctl.forced = true; ctl.noSensor = !!g.noSensor; ctl.at = Math.round(el); ctl.grund = g.R.grund.slice(); haptic(18); }
+      if (!ctl.released && (g.noSensor ? el >= FUEHRUNG.zeiten.ohneSensor : el >= maxMs)) { ctl.released = true; ctl.forced = true; ctl.noSensor = !!g.noSensor; ctl.at = Math.round(el); ctl.grund = g.R.grund.slice(); L.notloesungen++; haptic(18); }
       ctl.reason = g.good ? '' : (g.why || 'Noch nicht frei');
       gateUi(ctl, okSince ? (now - okSince) / CFG.STILL_MS * 100 : 0);
       await sleep(80);
     }
+    L.tipp_nach_ms = Math.round(performance.now() - t0);
+    Object.keys(L.blockiert_ms).forEach(function (k) { L.blockiert_ms[k] = Math.round(L.blockiert_ms[k]); });
   }
   function haptic(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* egal */ } }
   // Der Tipp bewegt das Handy: erst wenn es wieder ruhig ist (kurzes Fenster), wird das Foto gemacht, höchstens NACH_MAX_MS
@@ -1795,7 +1803,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       shotReady(false); $('shotBtn').disabled = true; setStill(100); $('stillTxt').textContent = T('Halte still …', 'Halten Sie still …'); $('stillSub').textContent = '';
       var nach = await afterTap(my);
       chk(my);
-      await shoot(my, { auto: false, noSensor: ctl.noSensor, forced: ctl.forced, waitMs: ctl.at || 0, nach: nach, g: ctl.g || null, grund: ctl.grund || [] });
+      await shoot(my, { auto: false, noSensor: ctl.noSensor, forced: ctl.forced, waitMs: ctl.at || 0, nach: nach, g: ctl.g || null, grund: ctl.grund || [], verlauf: ctl.log || null });
     } catch (e) {
       if (e === CANCEL) return;
       problem('Die Kamera hat nicht geklappt', errText(e), true);
@@ -2044,7 +2052,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       id: st.fotoId, fahrzeug_id: S.vehicle.id, platz: m.key, zusatz_nr: m.zusatz_nr, zusatz_art: m.art === 'zusatz' ? S.zusatzArt : null,
       ampel_handy: r.ampel, ampel_handy_gruende: r.gruende.join('; '), geraet: dev(), brennweite_kb: r.f35, neigung: r.snap ? +r.snap.p.toFixed(1) : null, rollen: r.snap ? +r.snap.r.toFixed(1) : null,
       drehung: r.drehung, breite: r.w, hoehe: r.h, bytes: r.blob.size,
-      app_details: { app: APP, quelle: r.quelle, selbstausloeser: false, ausloeser: { art: 'manuell', freigabe: r.quelle === 'kamera-app' ? 'kamera_app' : (r.how.forced ? (r.how.noSensor ? 'erzwungen_ohne_sensor' : 'erzwungen') : 'frei'), frei_nach_ms: r.how.waitMs || 0, nachstabil_ms: r.how.nach ? r.how.nach.ms : null, nachstabil_ruhig: r.how.nach ? r.how.nach.ruhig : null }, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, klasse: (S.vehicle && S.vehicle.klasse && KLASSE_NAME[S.vehicle.klasse]) || null, cabrio: klasseOf() === 'cabrio', schablone: 'rahmen-c', ziel_neigung: (function () { var m = S.cur ? slotMeta(S.cur) : null; return m && m.art === 'aussen' ? zielP(m.key) : null; })(),
+      app_details: { app: APP, quelle: r.quelle, selbstausloeser: false, ausloeser: { art: 'manuell', freigabe: r.quelle === 'kamera-app' ? 'kamera_app' : (r.how.forced ? (r.how.noSensor ? 'erzwungen_ohne_sensor' : 'erzwungen') : 'frei'), frei_nach_ms: r.how.waitMs || 0, nachstabil_ms: r.how.nach ? r.how.nach.ms : null, nachstabil_ruhig: r.how.nach ? r.how.nach.ruhig : null, verlauf: r.how.verlauf || null }, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, klasse: (S.vehicle && S.vehicle.klasse && KLASSE_NAME[S.vehicle.klasse]) || null, cabrio: klasseOf() === 'cabrio', schablone: 'rahmen-c', ziel_neigung: (function () { var m = S.cur ? slotMeta(S.cur) : null; return m && m.art === 'aussen' ? zielP(m.key) : null; })(),
         nicht_geprueft: (function () { return !(r.quelle === 'kamera' && !!(r.how && r.how.g) && !r.how.forced); })(),
         nicht_geprueft_grund: (function () { if (r.quelle !== 'kamera') return 'kamera_app'; if (!(r.how && r.how.g)) return 'ohne_fuehrung'; return r.how.forced ? ((r.how.grund || []).join(',') || 'notloesung') : ''; })(),
         fuehrung: (function () { var g = (r.how && r.how.g) || {}, r2 = function (x) { return x == null ? null : Math.round(x * 100) / 100; }, ok = r.quelle === 'kamera' && !!(r.how && r.how.g) && !r.how.forced;
