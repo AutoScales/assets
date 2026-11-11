@@ -779,6 +779,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         if (p.has('ohneshow') && cfg.demo) cfg.ohneShow = true;   // nur im Demo: Außenbilder „geprüft, ohne Showroom“ (Status geprueft)
         if (cfg.demo && /^(gruen|rot|gelb|fern|nein|winkel|schief|mitte)$/.test(p.get('simz') || '')) { cfg.sim = true; cfg.simz = p.get('simz'); }
         if (cfg.demo && /^[\w.\/-]{1,80}$/.test(p.get('simimg') || '')) { cfg.sim = true; cfg.simImg = p.get('simimg'); }   // nur Test: Bild statt Zeichnung
+        if (cfg.demo && cfg.sim && /^[012]\.\d{1,2}$/.test(p.get('simh') || '')) cfg.simh = Math.max(0.8, Math.min(2, parseFloat(p.get('simh'))));   // nur Test: echte Höhe der Demo-Kamera (m); die App rechnet weiter mit camH()
+        if (cfg.demo && cfg.sim && /^-?\d\.\d{1,2}$/.test(p.get('simd') || '')) cfg.simd = Math.max(-2, Math.min(3, parseFloat(p.get('simd'))));     // nur Test: Demo-Kamera so viele Meter näher (−) oder weiter weg (+)
         store('fa_cfg', cfg); if (!cfg.hs) { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* egal */ } } }
     }
     if (!cfg) cfg = load('fa_cfg');
@@ -1313,15 +1315,17 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   // Zustände der Demo-Kamera zum Prüfen der Führung (Link: #demo&sim&simz=gruen|rot|gelb|fern|nein|winkel|schief|mitte); ohne simz: gruen
   //   d = Kamera so viele Meter näher (−) oder weiter weg (+), p = Neigung daneben (Grad), r = Rollen (Grad), x = seitlich versetzt (Meter am Auto), nodet = keine Erkennung
   var SIMZ = { gruen: {}, rot: { d: -0.9 }, gelb: { d: 0.4 }, fern: { d: 1.2 }, nein: { nodet: 1 }, winkel: { p: 4 }, schief: { r: 3 }, mitte: { x: 0.5 } };
-  function simPre() { return SIMZ[(S.cfg && S.cfg.simz) || 'gruen'] || {}; }
+  function simPre() { var z = SIMZ[(S.cfg && S.cfg.simz) || 'gruen'] || {}, d = S.cfg && S.cfg.simd; return d ? Object.assign({}, z, { d: (z.d || 0) + d }) : z; }
+  function simH() { return (S.cfg && S.cfg.simh) || camH(); }   // echte Höhe der Demo-Kamera: ohne &simh die Höhe, mit der die App rechnet
   function simSnap() {
     var t = performance.now() / 1000, pre = simPre(), mm = S.cur ? slotMeta(S.cur) : null, z = mm ? zielP(mm.key) : null;
     var p = (z != null ? z : -14) + (pre.p || 0) + Math.sin(t * 2.3) * .12, r = (pre.r || 0) + Math.sin(t * 1.7) * .08;
     return { age: 0, p: p, r: r, pMed: p, rMed: r, n: 9 };
   }
   // Rahmen des Autos im Bild (normiert) aus dem Kameramodell: Neigung p, Abstand dOff (m), seitlicher Versatz dx (m)
-  function modelBox(key, kind, p, dOff, dx) {
-    var w = 640, hh = 480, pose = camPose(key, kind, camH(), GEO.winkel, GEO.eckeM, dOff), cam = makeCam(pose.P, frameF(w), w / 2, hh / 2, p, [aimShift(key, kind, camH(), GEO.winkel, p, w, hh) + (dx || 0), 0, 0]);
+  function modelBox(key, kind, p, dOff, dx, h) {
+    h = h || camH();
+    var w = 640, hh = 480, pose = camPose(key, kind, h, GEO.winkel, GEO.eckeM, dOff), cam = makeCam(pose.P, frameF(w), w / 2, hh / 2, p, [aimShift(key, kind, h, GEO.winkel, p, w, hh) + (dx || 0), 0, 0]);
     var M = buildModel(kind), b = { x0: 1e9, x1: -1e9, y0: 1e9, y1: -1e9 };
     M.faces.forEach(function (fc) { fc.poly.forEach(function (q0) { var q = cam(q0); if (q[2] < .2) return; b.x0 = Math.min(b.x0, q[0]); b.x1 = Math.max(b.x1, q[0]); b.y0 = Math.min(b.y0, q[1]); b.y1 = Math.max(b.y1, q[1]); }); });
     M.wheels.forEach(function (wh) { var q = cam([wh.x, wh.y, 0]); if (q[2] > .2) b.y1 = Math.max(b.y1, q[1]); });
@@ -1330,14 +1334,14 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function simDet(W, H) {
     var pre = simPre(), m = S.cur ? slotMeta(S.cur) : null, kind = klasseOf();
     if (pre.nodet || !m || m.art !== 'aussen' || !kind) return { detections: [] };
-    var b = modelBox(m.key, kind, simSnap().p, pre.d || 0, pre.x || 0);
+    var b = modelBox(m.key, kind, simSnap().p, pre.d || 0, pre.x || 0, simH());
     return { detections: [{ boundingBox: { originX: b.x0 * W, originY: b.y0 * H, width: (b.x1 - b.x0) * W, height: (b.y1 - b.y0) * H }, categories: [{ score: .9, categoryName: 'car' }] }] };
   }
   function simScene() {
     var cv = S.simCv; if (!cv) return;
     if (S.simImgEl) { cv.width = 1280; cv.height = 960; cv.getContext('2d').drawImage(S.simImgEl, 0, 0, 1280, 960); return; }
     var m = slotMeta(S.cur), kind = klasseOf() || 'limousine', pre = simPre(), sn = simSnap();
-    drawScene(cv, 640, 480, { kind: kind, key: m.art === 'aussen' ? m.key : 'titel', h: camH(), ang: GEO.winkel, pitch: sn.p, dOff: pre.d || 0, dx: pre.x || 0, roll: sn.r, bg: 'hof', fill: true });
+    drawScene(cv, 640, 480, { kind: kind, key: m.art === 'aussen' ? m.key : 'titel', h: simH(), ang: GEO.winkel, pitch: sn.p, dOff: pre.d || 0, dx: pre.x || 0, roll: sn.r, bg: 'hof', fill: true });
   }
   async function openSim() {
     closeStream();
