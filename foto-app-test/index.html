@@ -2379,7 +2379,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     ev.preventDefault();
     var marke = $('fMarke').value.trim(), modell = $('fModell').value.trim(), bj = parseInt($('fBaujahr').value, 10);
     if (!marke || !modell) { fmsg('Bitte Marke und Modell eintragen.', true); return; }
-    if (!(bj >= 1980 && bj <= 2035)) { fmsg('Bitte das Baujahr vierstellig eintragen, z. B. 2021.', true); return; }
+    if (!(bj >= 1900 && bj <= 2050)) { fmsg('Bitte das Baujahr vierstellig eintragen, z. B. 2021 (möglich sind 1900 bis 2050).', true); return; }   // Spanne: Giannis 11.11.2026 („die spanne muss sein 1900-2050“, Oldtimer); die Datenbank braucht dieselbe Spanne
     if (!S.klasse) { fmsg('Bitte die Karosserie wählen, damit die Schablone im Sucher passt.', true); return; }
     if (!S.cfg || S.cfg.bad || (!S.cfg.demo && !S.api)) { fmsg(T('Dieser Link ist unvollständig. Bitte den Link neu öffnen, den du von AutoScales bekommen hast.', 'Dieser Link ist unvollständig. Bitte den Link neu öffnen, den Sie von AutoScales bekommen haben.'), true); return; }
     $('fGo').disabled = true;
