@@ -781,6 +781,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         if (cfg.demo && /^[\w.\/-]{1,80}$/.test(p.get('simimg') || '')) { cfg.sim = true; cfg.simImg = p.get('simimg'); }   // nur Test: Bild statt Zeichnung
         if (cfg.demo && cfg.sim && /^[012]\.\d{1,2}$/.test(p.get('simh') || '')) cfg.simh = Math.max(0.8, Math.min(2, parseFloat(p.get('simh'))));   // nur Test: echte Höhe der Demo-Kamera (m); die App rechnet weiter mit camH()
         if (cfg.demo && cfg.sim && /^-?\d\.\d{1,2}$/.test(p.get('simd') || '')) cfg.simd = Math.max(-2, Math.min(3, parseFloat(p.get('simd'))));     // nur Test: Demo-Kamera so viele Meter näher (−) oder weiter weg (+)
+        if (cfg.demo && cfg.sim && /^0\.\d{1,2}$/.test(p.get('simu') || '')) cfg.simu = Math.min(0.3, parseFloat(p.get('simu')));   // nur Test: die Erkennung der Demo sieht den unteren Teil des Autos nicht (Unterkante um diesen Anteil der Bildhöhe zu hoch, Score 0,36); Muster Foto 18:10 am 11.11.2026
         store('fa_cfg', cfg); if (!cfg.hs) { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* egal */ } } }
     }
     if (!cfg) cfg = load('fa_cfg');
@@ -1341,7 +1342,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var pre = simPre(), m = S.cur ? slotMeta(S.cur) : null, kind = klasseOf();
     if (pre.nodet || !m || m.art !== 'aussen' || !kind) return { detections: [] };
     var b = modelBox(m.key, kind, simSnap().p, pre.d || 0, pre.x || 0, simH());
-    return { detections: [{ boundingBox: { originX: b.x0 * W, originY: b.y0 * H, width: (b.x1 - b.x0) * W, height: (b.y1 - b.y0) * H }, categories: [{ score: .9, categoryName: 'car' }] }] };
+    var u = (S.cfg && S.cfg.simu) || 0;
+    return { detections: [{ boundingBox: { originX: b.x0 * W, originY: b.y0 * H, width: (b.x1 - b.x0) * W, height: (b.y1 - u - b.y0) * H }, categories: [{ score: u ? .36 : .9, categoryName: 'car' }] }] };
   }
   function simScene() {
     var cv = S.simCv; if (!cv) return;
