@@ -1075,9 +1075,15 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var si = rot ? { t: 0, r: 0, b: 0, l: 0 } : safeInsets();
     // Form „hoch“: Fenster höher oder kaum breiter als das Kamerabild (aufgeklapptes faltbares Gerät, Tablet). Dann liegt das Bild oben über die ganze Breite
     // und die Bedienung in einem Band darunter (mindestens BAND hoch), statt in zwei schmalen Leisten links und rechts.
-    var BAND = 168, hoch = fw / fh < 1.5, RMIN = 116, w, h, ix, iy;
-    if (hoch) { w = fw; h = w / asp; var maxH = fh - si.t - si.b - BAND; if (h > maxH) { h = maxH; w = h * asp; } ix = Math.round((fw - w) / 2); iy = Math.round(si.t); }
-    else { w = Math.min(Math.max(160, fw - 2 * RMIN), fh * asp); h = w / asp; if (h > fh) { h = fh; w = h * asp; } ix = Math.round((fw - w) / 2); iy = Math.round((fh - h) / 2); }
+    // Welche Form gilt, entscheidet seit 11.11.2026 die Größe des Sucherbilds (vorher die feste Grenze Breite : Höhe 1,5): Es gewinnt die Form mit dem größeren Bild.
+    // Die bisherige Form bleibt, solange die andere nicht deutlich (8 %) größer ist. So kippt der Sucher nicht, wenn nur die Leiste des Browsers ein- oder ausklappt
+    // (iPhone Duo, Außenbildschirm: Fenster 594 × 359 und 594 × 397; Giannis 11.11.2026: „Ja, sah anders aus“).
+    var BAND = 168, RMIN = 116, w, h, ix, iy;
+    var wH = fw, hH = wH / asp, maxH = fh - si.t - si.b - BAND; if (hH > maxH) { hH = maxH; wH = hH * asp; }
+    var wB = Math.min(Math.max(160, fw - 2 * RMIN), fh * asp), hB = wB / asp; if (hB > fh) { hB = fh; wB = hB * asp; }
+    var vor = LAY && LAY.form, hoch = vor === 'hoch' ? wH * 1.08 >= wB : vor === 'breit' ? wH > wB * 1.08 : wH > wB;
+    if (hoch) { w = wH; h = hH; ix = Math.round((fw - w) / 2); iy = Math.round(si.t); }
+    else { w = wB; h = hB; ix = Math.round((fw - w) / 2); iy = Math.round((fh - h) / 2); }
     var rw = Math.min(Math.round(fh * 4 / 3), Math.max(200, fw - 250 - si.l - si.r));
     LAY = { fw: fw, fh: fh, ix: ix, iy: iy, iw: Math.round(w), ih: Math.round(h), aligned: vrot === S.textRot, sl: si.l, sr: si.r, rw: rw, form: hoch ? 'hoch' : 'breit' };
     $('ui').setAttribute('data-form', LAY.form);
