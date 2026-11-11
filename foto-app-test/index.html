@@ -413,7 +413,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-5';
+  var APP = 'foto-app-test-6';
   var RAD = Math.PI / 180;
   /* =====================================================================
      ZAHLEN DER FÜHRUNG (Giannis 08.11.2026 21:32: die Optik ist final, danach werden nur noch Zahlen nachgestellt, und zwar hier).
@@ -1356,7 +1356,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (S.cfg.simImg && !S.simImgEl) { try { var im = new Image(); im.src = S.cfg.simImg; await new Promise(function (res, rej) { im.onload = res; im.onerror = rej; }); S.simImgEl = im; } catch (e) { S.simImgEl = null; } }
     var cv = document.createElement('canvas'); S.simCv = cv; simScene();
     var st = cv.captureStream(12); S.stream = st; S.track = st.getVideoTracks()[0];
-    var v = $('video'); v.srcObject = st; try { await v.play(); } catch (e) { /* muted autoplay */ }
+    var v = $('video'); v.srcObject = st;
+    var anst = setInterval(simScene, 100);   // WebKit (Safari): play() auf einem Canvas-Strom wird erst fertig, wenn nach dem Start ein neues Bild kommt; deshalb schon vorher weiterzeichnen
+    try { await v.play(); } catch (e) { /* muted autoplay */ } finally { clearInterval(anst); }
     S.vw = cv.width; S.vh = cv.height; S.camNote = 'Simulation'; applyGeom();
     clearInterval(S.simT); S.simT = setInterval(function () { if (!$('stage').hidden && S.stream) simScene(); }, 400);   // neue Bilder, damit der Strom Bildfläche liefert
     S.ic = { takePhoto: function () { return toBlob(S.simCv, .9); } };
@@ -1930,8 +1932,10 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (!sensor) why.push('kein Sensorwert');
     return { ampel: amp, gruende: why, kurz: kurz };
   }
+  function aufnZaehler() { var k = ((S.vehicle && S.vehicle.id) || '') + '|' + (S.cur || ''), A = S.aufn || (S.aufn = {}); return A[k] || (A[k] = { n: 0, v: 0 }); }
   async function shoot(my, how) {
     var snap = snapshot(), cls = (gravClass() || (S.lastCls && performance.now() - S.lastCls.t < 3000 ? S.lastCls.cls : null)), t0 = performance.now(), blob;
+    var auf = aufnZaehler(), aufn = { zeit: Date.now(), nr: ++auf.n, verworfen: auf.v };   // Aufnahme-Protokoll: wann ausgelöst, die wievielte Aufnahme an diesem Platz, wie viele davor mit „Neu“ verworfen
     if (snap && snap.age > 800) snap = null;
     var fit = aiOuter() ? aiSnap() : null;
     S.phase = 'shoot'; shotReady(false); say('Foto wird gemacht …');
@@ -1942,7 +1946,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     flash();
     var takeMs = Math.round(performance.now() - t0);
     say('Foto wird verkleinert …');
-    await processAndReview(my, blob, { snap: snap, cls: cls, how: how, takeMs: takeMs, quelle: 'kamera', live: live, video: S.vw + 'x' + S.vh, fit: fit });
+    await processAndReview(my, blob, { snap: snap, cls: cls, how: how, takeMs: takeMs, quelle: 'kamera', live: live, video: S.vw + 'x' + S.vh, fit: fit, aufn: aufn });
   }
   async function processAndReview(my, blob, o) {
     try {
@@ -1965,7 +1969,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       chk(my);
       var f35 = exif.focal35 != null ? exif.focal35 : null, am = ampelHandy(o.snap, f35, S.cur), amp = am.ampel, why = am.gruende.slice(), kurz = am.kurz.slice();
       if (res.h > res.w) { amp = 'rot'; why.push('Foto ist hochkant (Handy war nicht quer)'); kurz.push('Foto ist hochkant (Handy war nicht quer)'); }
-      var r = { slot: S.cur, blob: res.blob, w: res.w, h: res.h, thumb: res.thumb, drehung: (rot + extra) % 360, hand: 0, f35: f35, exif: { orient: exif.orientation, focal: exif.focal, model: exif.model }, srcW: img.w, srcH: img.h,
+      var r = { aufn: o.aufn || null, slot: S.cur, blob: res.blob, w: res.w, h: res.h, thumb: res.thumb, drehung: (rot + extra) % 360, hand: 0, f35: f35, exif: { orient: exif.orientation, focal: exif.focal, model: exif.model }, srcW: img.w, srcH: img.h,
         snap: o.snap, cls: o.cls, ampel: amp, gruende: why, kurz: kurz, fit: o.fit || null, how: o.how || {}, takeMs: o.takeMs, quelle: o.quelle, note: note, url: null, fovP: fovP, video: o.video || null,
         zeiten: { entschluesseln: tDec, gesamt: Math.round(performance.now() - T0), zeichnen: res.ms.zeichnen, kodieren: res.ms.kodieren, vorschau: res.ms.vorschau, glaettung: res.ms.glaettung } };
       showReview(r);
@@ -2042,7 +2046,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     paneShow('vCam', false); paneShow('vTurn', false); paneShow('vRev', true); say(''); drawExample();
     $('revOk').disabled = false;
   }
-  $('revNeu').onclick = function () { if (S.phase === 'view') { paneShow('vRev', false); runShot(); return; } discardReview(); runShot(); };
+  $('revNeu').onclick = function () { if (S.phase === 'view') { paneShow('vRev', false); runShot(); return; } if (S.review) aufnZaehler().v++; discardReview(); runShot(); };
   $('revRot').onclick = async function () {
     var r = S.review; if (!r) return; $('revRot').disabled = true;
     try {
@@ -2058,7 +2062,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var fov = null; if (r.fovP) { try { fov = await Promise.race([r.fovP, sleep(1500).then(function () { return null; })]); } catch (e) { fov = null; } }
     if (S.review !== r) return;
     var st = slotState(r.slot), m = slotMeta(r.slot);
-    st.thumb = r.thumb; st.state = 'wartet'; st.err = null; st.fotoId = uuid(); st.ampelHandy = r.ampel; st.server = null;
+    st.thumb = r.thumb; st.state = 'wartet'; st.err = null; st.fotoId = uuid(); st.ampelHandy = r.ampel; st.server = null; aufnZaehler().v = 0;
     if (m.art === 'zusatz') st.zusatz_art = S.zusatzArt;
     var meta = {
       id: st.fotoId, fahrzeug_id: S.vehicle.id, platz: m.key, zusatz_nr: m.zusatz_nr, zusatz_art: m.art === 'zusatz' ? S.zusatzArt : null,
@@ -2069,7 +2073,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         nicht_geprueft_grund: (function () { if (r.quelle !== 'kamera') return 'kamera_app'; if (!(r.how && r.how.g)) return 'ohne_fuehrung'; return r.how.forced ? ((r.how.grund || []).join(',') || 'notloesung') : ''; })(),
         fuehrung: (function () { var g = (r.how && r.how.g) || {}, r2 = function (x) { return x == null ? null : Math.round(x * 100) / 100; }, ok = r.quelle === 'kamera' && !!(r.how && r.how.g) && !r.how.forced;
           return { stand: FUEHRUNG.stand, geprueft: ok, grund: ok ? [] : (r.quelle === 'kamera' ? ((r.how && r.how.grund) || []) : ['kamera_app']), umfang: g.det === 'erkannt' ? 'voll' : 'winkel', erkannt: g.det || null, zone: g.zone || null, abstand_m: r2(g.abst), soll_m: r2(g.soll), mitte: r2(g.dx), neigung: r2(g.p), rollen: r2(g.r), hoehe_m: camH() }; })(),
-        ruecksitzbank: rueckPflicht() ? 'pflicht' : 'keine', design: 'v4', abgleich: r.fit || null, aufnahme_ms: r.takeMs, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), fenster: window.innerWidth + 'x' + window.innerHeight, schirm: screen.width + 'x' + screen.height, form: LAY.form || null, buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, folge: 'rundum-v4', winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v3 ' + FUEHRUNG.stand + ': Neigung grün ±' + FUEHRUNG.neigungTol.gruen + ' gelb ±' + FUEHRUNG.neigungTol.gelb + ', Rollen grün ±' + FUEHRUNG.rollen.aussen.gruen + ' gelb ±' + FUEHRUNG.rollen.aussen.gelb + ', Ziel-Neigung je Platz' } }
+        ruecksitzbank: rueckPflicht() ? 'pflicht' : 'keine', design: 'v4', abgleich: r.fit || null, aufnahme_ms: r.takeMs, aufnahme: r.aufn ? { zeit: new Date(r.aufn.zeit).toISOString(), nr: r.aufn.nr, verworfen: r.aufn.verworfen } : undefined, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), fenster: window.innerWidth + 'x' + window.innerHeight, schirm: screen.width + 'x' + screen.height, form: LAY.form || null, buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, folge: 'rundum-v4', winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v3 ' + FUEHRUNG.stand + ': Neigung grün ±' + FUEHRUNG.neigungTol.gruen + ' gelb ±' + FUEHRUNG.neigungTol.gelb + ', Rollen grün ±' + FUEHRUNG.rollen.aussen.gruen + ' gelb ±' + FUEHRUNG.rollen.aussen.gelb + ', Ziel-Neigung je Platz' } }
     };
     var item = { slot: r.slot, id: st.fotoId, path: S.vehicle.id + '/' + m.key + '_' + st.fotoId + '.jpg', blob: r.blob, meta: meta, tries: 0, fileDone: false, state: 'wartet' };
     discardReview();
