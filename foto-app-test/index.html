@@ -424,7 +424,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     stand: 'v9-autobuilder-18118d7',
     // RAHMEN (nur mit &ab=r): Das erkannte Auto soll den Rahmen der Schablone füllen. klein/gross = Breite des Autos geteilt durch Breite des Rahmens; hoch = wie weit die Oberkante des Autos von der Oberkante des Rahmens abweichen darf (Anteil der Bildhöhe, etwa 3° Blickwinkel). Vorschlag Fable, 12.11.2026.
     // mitte: waagerecht von der Kamera zur Automitte in der Rahmen-Führung = mittlerer Kamerastand des G2-Raums (Autobuilder 12.11.2026: Blick 14° nach unten, Abstand 5,41 m, Höhe 1,35 m)
-    rahmen: { klein: 0.90, gross: 1.12, hoch: 0.05, mitte: 5.41, rand: 0.03 },   // rand: so nah darf der Kasten an den oberen und unteren Bildrand kommen
+    rahmen: { klein: 0.90, gross: 1.12, hoch: 0.05, mitte: 5.41, rand: 0.03, winkel: 35 },   // rand: so nah darf der Kasten an den oberen und unteren Bildrand kommen; winkel: schräg 35° neben der Längsachse (Front 38 %, Flanke 62 % der Breite; bei 22° wirkt das Auto fast frontal). Festlegung fable-studio-2 12.11.2026, Giannis: „Das muss Fable vorgeben“
+    // Licht (nur im Rahmen-Modus, nur Hinweise): gleiche Messung wie der Arbeiter (arbeiter.py: licht_an, umgebung_hell). rot: Anteil rot leuchtender Fläche im Rahmen des Autos, ab dem „Licht an“ gilt (echte Fotos mit Rücklicht an: 28 bis 39 % im mittleren Bildfeld, ohne höchstens 2 %; deshalb keine Obergrenze); lackVorn: so viel Rot in einer Ansicht von vorn heißt roter Lack, dann kein Hinweis (Schätzung, an echten roten Autos noch nicht geprüft); bezug und dunkel: Umgebung dunkler als bezug / dunkel heißt „zu dunkel“
+    licht: { rot: 0.05, lackVorn: 0.15, bezug: 0.19, dunkel: 1.6, plaetze: ['heck', 'dreiviertel_hl', 'dreiviertel_hr'], vorn: ['titel', 'front', 'dreiviertel_vr'] },
     // Quelle: Autobuilder, werkzeuge/arbeiter/fuehrung.json (Commit 18118d7, 08.11.2026 abends). (S) = Schätzung, bleibt Vorschlag. Nur die Zahlen hier stellt man nach, die Optik bleibt.
     // Maßstab des Autobuilders: Grün = bis 7,5 cm Höhenfehler im Showroom (ohnehin unvermeidbar), Gelb = bis 15 cm (Grenze 1,05 bis 1,65 m), Rot = mehr.
 
@@ -782,7 +784,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         if (p.has('hs')) cfg.hs = true;                // Home-Bildschirm: Link-Teil bleibt in der Adresse, damit das Symbol ihn mitnimmt
         if (p.has('sim') && cfg.demo) cfg.sim = true;  // nur im Demo ohne Server: gezeichnete Kamera
         if (p.has('ohneshow') && cfg.demo) cfg.ohneShow = true;   // nur im Demo: Außenbilder „geprüft, ohne Showroom“ (Status geprueft)
-        if (cfg.demo && /^(gruen|rot|gelb|fern|nein|winkel|schief|mitte)$/.test(p.get('simz') || '')) { cfg.sim = true; cfg.simz = p.get('simz'); }
+        if (cfg.demo && /^(gruen|rot|gelb|fern|nein|winkel|schief|mitte|licht|dunkel|lackrot)$/.test(p.get('simz') || '')) { cfg.sim = true; cfg.simz = p.get('simz'); }
         if (cfg.demo && /^[\w.\/-]{1,80}$/.test(p.get('simimg') || '')) { cfg.sim = true; cfg.simImg = p.get('simimg'); }   // nur Test: Bild statt Zeichnung
         if (cfg.demo && cfg.sim && /^[012]\.\d{1,2}$/.test(p.get('simh') || '')) cfg.simh = Math.max(0.8, Math.min(2, parseFloat(p.get('simh'))));   // nur Test: echte Höhe der Demo-Kamera (m); die App rechnet weiter mit camH()
         if (cfg.demo && cfg.sim && /^-?\d\.\d{1,2}$/.test(p.get('simd') || '')) cfg.simd = Math.max(-2, Math.min(3, parseFloat(p.get('simd'))));     // nur Test: Demo-Kamera so viele Meter näher (−) oder weiter weg (+)
@@ -1200,7 +1202,14 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     R.wlvl = wi.lvl; R.mlvl = mi.lvl;
     var calm = true; if (!sim) { var sh = shake(700); calm = !!(sh && sh.n >= 4 && sh.p <= CFG.STILL_P && sh.r <= CFG.STILL_R); }
     ru = calm ? { lvl: 0 } : { lvl: 1, hint: 'Ruhig halten', grund: 'unruhig' };
-    [ab, mi, wi, ru].forEach(function (x) { if (x.lvl) { R.lvl = Math.max(R.lvl, x.lvl); R.grund.push(x.grund); if (!R.hint) R.hint = x.hint; } });
+    var li = { lvl: 0 };
+    if (VAR.abstand === 'r' && aussen) {   // LICHT: nur Hinweise; „zu dunkel“ geht vor „Auto in den Kasten stellen“, sonst kommen die Hinweise zum Standpunkt zuerst
+      var LI = FUEHRUNG.licht, lf = LICHT.t && now - LICHT.t < AI.every * 2 + 600, lr = lf ? LICHT.rot : null, lh = lf ? LICHT.hell : null;
+      R.licht = { rot: lr, hell: lh, lack: lackRot() }; R.winkelSoll = camPose(m.key, kind, h, GEO.winkel, GEO.eckeM).ang;
+      if (lh != null && lh * LI.dunkel <= LI.bezug) li = { lvl: 1, hint: 'Zu dunkel. Bitte mehr Licht', grund: 'zu_dunkel' };
+      else if (lr != null && LI.plaetze.indexOf(m.key) >= 0 && lr > LI.rot && !R.licht.lack) li = { lvl: 1, hint: 'Bitte Licht am Auto ausschalten', grund: 'licht_an' };
+    }
+    ((li.grund === 'zu_dunkel' && ab.grund === 'kein_auto') ? [li, ab, mi, wi, ru] : [ab, mi, wi, li, ru]).forEach(function (x) { if (x.lvl) { R.lvl = Math.max(R.lvl, x.lvl); R.grund.push(x.grund); if (!R.hint) R.hint = x.hint; } });
     R.alle = !R.grund.length;
     return R;
   }
@@ -1361,7 +1370,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   /* Simulation (nur Demo mit &sim im Link): gezeichnete Kamera und erfundene Sensorwerte, damit man die Oberfläche am Computer durchklicken kann. Keine Kamera, kein Server. */
   // Zustände der Demo-Kamera zum Prüfen der Führung (Link: #demo&sim&simz=gruen|rot|gelb|fern|nein|winkel|schief|mitte); ohne simz: gruen
   //   d = Kamera so viele Meter näher (−) oder weiter weg (+), p = Neigung daneben (Grad), r = Rollen (Grad), x = seitlich versetzt (Meter am Auto), nodet = keine Erkennung
-  var SIMZ = { gruen: {}, rot: { d: -0.9 }, gelb: { d: 0.4 }, fern: { d: 1.2 }, nein: { nodet: 1 }, winkel: { p: 4 }, schief: { r: 3 }, mitte: { x: 0.5 } };
+  var SIMZ = { gruen: {}, rot: { d: -0.9 }, gelb: { d: 0.4 }, fern: { d: 1.2 }, nein: { nodet: 1 }, winkel: { p: 4 }, schief: { r: 3 }, mitte: { x: 0.5 }, licht: { licht: 1 }, dunkel: { dunkel: 1 }, lackrot: { lack: 1 } };
   function simPre() { var z = SIMZ[(S.cfg && S.cfg.simz) || 'gruen'] || {}, d = S.cfg && S.cfg.simd; return d ? Object.assign({}, z, { d: (z.d || 0) + d }) : z; }
   function simH() { return (S.cfg && S.cfg.simh) || camH(); }   // echte Höhe der Demo-Kamera: ohne &simh die Höhe, mit der die App rechnet
   function simSnap() {
@@ -1390,6 +1399,11 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (S.simImgEl) { cv.width = 1280; cv.height = 960; cv.getContext('2d').drawImage(S.simImgEl, 0, 0, 1280, 960); return; }
     var m = slotMeta(S.cur), kind = klasseOf() || 'limousine', pre = simPre(), sn = simSnap();
     drawScene(cv, 640, 480, { kind: kind, key: m.art === 'aussen' ? m.key : 'titel', h: simH(), ang: GEO.winkel, pitch: sn.p, dOff: pre.d || 0, dx: pre.x || 0, roll: sn.r, bg: 'hof', fill: true });
+    if (pre.licht || pre.dunkel || pre.lack) {   // LICHT (Demo): leuchtende Rückleuchten (nur in den Ansichten von hinten), roter Lack (rundum) bzw. dunkle Halle, nur gezeichnet
+      var x2 = cv.getContext('2d');
+      if (m.art === 'aussen' && (pre.lack || (pre.licht && FUEHRUNG.licht.plaetze.indexOf(m.key) >= 0))) { var bb = modelBox(m.key, kind, sn.p, pre.d || 0, pre.x || 0, simH()), bw2 = (bb.x1 - bb.x0) * 640, bh2 = (bb.y1 - bb.y0) * 480, cyL = (bb.y0 + .45 * (bb.y1 - bb.y0)) * 480; x2.fillStyle = 'rgb(255,36,28)'; [.2, .8].forEach(function (q) { x2.beginPath(); x2.ellipse(bb.x0 * 640 + q * bw2, cyL, .13 * bw2, .2 * bh2, 0, 0, 2 * Math.PI); x2.fill(); }); }
+      if (pre.dunkel) { x2.fillStyle = 'rgba(0,0,0,.88)'; x2.fillRect(0, 0, cv.width, cv.height); }
+    }
   }
   async function openSim() {
     closeStream();
@@ -1476,6 +1490,31 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     AI.cur = { status: status, hint: hint, iou: iou, fill: fill, scale: scale, scaleN: scaleN, dx: dx, dy: dy, box: e, sch: sb, kat: best.kat, score: best.score, cut: cut, greenSince: AI.greenSince, n: AI.n, t: now };
     if (prev !== status) aiFitUi();
   }
+  // LICHT-ANFANG (Rahmen-Modus): „Licht am Auto an“ und „zu dunkel“. Gemessen wie im Arbeiter (arbeiter.py: licht_an, umgebung_hell), damit Sucher und Auszug dasselbe sagen.
+  // rot: Anteil der Bildpunkte im Rahmen des Autos mit Farbton Rot (±20°), Sättigung ab 0,45, Helligkeit ab 0,35. hell: Median der Helligkeit (linear) um das Auto, ohne die hellsten 3 %; ohne erkanntes Auto das ganze Bild.
+  var LICHT = { cv: null, rot: null, hell: null, t: 0, lack: new WeakMap(), lin: null };
+  function lichtMessen(v, bx, key) {
+    try {
+      var w = 160, h = 120, cv = LICHT.cv || (LICHT.cv = document.createElement('canvas')), i, px, py; if (cv.width !== w) { cv.width = w; cv.height = h; }
+      if (!LICHT.lin) { LICHT.lin = new Float32Array(256); for (i = 0; i < 256; i++) { var q = i / 255; LICHT.lin[i] = q <= .04045 ? q / 12.92 : Math.pow((q + .055) / 1.055, 2.4); } }
+      var x = cv.getContext('2d', { willReadFrequently: true }); x.drawImage(v, 0, 0, w, h);
+      var d = x.getImageData(0, 0, w, h).data, LN = LICHT.lin, x0 = 0, y0 = 0, x1 = 0, y1 = 0, X0 = 0, Y0 = 0, X1 = w, Y1 = h, nb = 0, nr = 0, L = new Float32Array(w * h), nl = 0;
+      if (bx) {
+        x0 = Math.max(0, Math.floor(bx.x0 * w)); y0 = Math.max(0, Math.floor(bx.y0 * h)); x1 = Math.min(w, Math.ceil(bx.x1 * w)); y1 = Math.min(h, Math.ceil(bx.y1 * h));
+        var bw = x1 - x0, bh = y1 - y0; X0 = Math.max(0, Math.floor(x0 - .25 * bw)); X1 = Math.min(w, Math.ceil(x1 + .25 * bw)); Y0 = Math.max(0, Math.floor(y0 - .25 * bh)); Y1 = Math.min(h, Math.ceil(y1 + .25 * bh));
+      }
+      for (py = Y0; py < Y1; py++) for (px = X0; px < X1; px++) {
+        i = (py * w + px) * 4; var r = d[i], g = d[i + 1], b = d[i + 2];
+        if (bx && px >= x0 && px < x1 && py >= y0 && py < y1) { nb++; var mx = Math.max(r, g, b), c = mx - Math.min(r, g, b); if (mx === r && mx >= 90 && c >= .45 * mx && Math.abs(g - b) * 3 <= c) nr++; }
+        else L[nl++] = .2126 * LN[r] + .7152 * LN[g] + .0722 * LN[b];
+      }
+      var Ls = L.subarray(0, nl); Ls.sort();
+      LICHT.rot = bx && nb ? nr / nb : null; LICHT.hell = nl >= 100 ? Ls[Math.floor(nl * .97 / 2)] : null; LICHT.t = performance.now();
+      if (LICHT.rot != null && S.vehicle && FUEHRUNG.licht.vorn.indexOf(key) >= 0) LICHT.lack.set(S.vehicle, Math.max(LICHT.lack.get(S.vehicle) || 0, LICHT.rot));   // roter Lack: von vorn sind keine Rückleuchten im Bild
+    } catch (e) { LICHT.rot = null; LICHT.hell = null; LICHT.t = 0; }
+  }
+  function lackRot() { var v = S.vehicle ? LICHT.lack.get(S.vehicle) : null; return v != null && v >= FUEHRUNG.licht.lackVorn; }
+  // LICHT-ENDE
   function aiStep() {
     AI.timer = null;
     if ($('stage').hidden) return;
@@ -1493,6 +1532,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
             bx.area = (bx.x1 - bx.x0) * (bx.y1 - bx.y0) * c.score; if (!best || bx.area > best.area) best = bx;   // es zählt das größte (nächste) Auto, egal wo es im Bild steht
           });
           aiUpdate(best, sb);
+          if (VAR.abstand === 'r') lichtMessen(v, best, m.key);   // LICHT: je Erkennungsschritt einmal messen
           // zu langsam: Intervall anpassen, bei dauerhaft zu langsam abschalten (Rückfall auf reine Schablone)
           var avg = aiAvg(); AI.every = Math.max(FUEHRUNG.zeiten.erkennung, Math.min(1500, Math.round(avg * 3)));   // höchstens etwa ein Drittel der Zeit rechnen, damit es am iPhone flüssig bleibt
           if (avg > 700) AI.slow++; else AI.slow = 0;
@@ -1901,7 +1941,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       aiFitUi(); drawOverlay();
       if (VAR.debug) {
         var zt = zielP(S.cur ? (slotMeta(S.cur) || {}).key : null);
-        tt.textContent = R.sensor ? 'Neigung ' + fmt(R.p, 1, true) + '° (Ziel ' + (zt != null ? fmt(zt, 0, true) + '°' : 'frei') + ') · Rollen ' + fmt(R.r, 1, true) + '°' + (R.aussen ? (VAR.abstand === 'r' ? '\nKasten: Breite ' + (R.rahmen && R.rahmen.g != null ? fmt(R.rahmen.g, 2) : '–') + ' · oben ' + (R.rahmen && R.rahmen.dy != null ? fmt(R.rahmen.dy, 2, true) : '–') : '\nAbstand ' + (R.abst != null ? fmt(R.abst, 2) : '–') + ' m (Soll ' + fmt(R.soll, 2) + ', ' + fmt(R.zonen.gruenLo, 1) + ' bis ' + fmt(R.zonen.gruenHi, 1) + ')') + ' · Mitte ' + (R.dx != null ? fmt(R.dx, 2, true) : '–') + '\n' + aiDebugText() : '') : 'Sensor liefert gerade nichts';
+        tt.textContent = R.sensor ? 'Neigung ' + fmt(R.p, 1, true) + '° (Ziel ' + (zt != null ? fmt(zt, 0, true) + '°' : 'frei') + ') · Rollen ' + fmt(R.r, 1, true) + '°' + (R.aussen ? (VAR.abstand === 'r' ? '\nKasten: Breite ' + (R.rahmen && R.rahmen.g != null ? fmt(R.rahmen.g, 2) : '–') + ' · oben ' + (R.rahmen && R.rahmen.dy != null ? fmt(R.rahmen.dy, 2, true) : '–') + '\nLicht: rot ' + (R.licht && R.licht.rot != null ? fmt(100 * R.licht.rot, 0) + ' %' : '–') + ' · Umgebung ' + (R.licht && R.licht.hell != null ? fmt(R.licht.hell, 2) : '–') : '\nAbstand ' + (R.abst != null ? fmt(R.abst, 2) : '–') + ' m (Soll ' + fmt(R.soll, 2) + ', ' + fmt(R.zonen.gruenLo, 1) + ' bis ' + fmt(R.zonen.gruenHi, 1) + ')') + ' · Mitte ' + (R.dx != null ? fmt(R.dx, 2, true) : '–') + '\n' + aiDebugText() : '') : 'Sensor liefert gerade nichts';
         tt.setAttribute('data-ok', R.alle ? '1' : '0');
       }
     }
@@ -2112,7 +2152,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         nicht_geprueft: (function () { return !(r.quelle === 'kamera' && !!(r.how && r.how.g) && !r.how.forced); })(),
         nicht_geprueft_grund: (function () { if (r.quelle !== 'kamera') return 'kamera_app'; if (!(r.how && r.how.g)) return 'ohne_fuehrung'; return r.how.forced ? ((r.how.grund || []).join(',') || 'notloesung') : ''; })(),
         fuehrung: (function () { var g = (r.how && r.how.g) || {}, r2 = function (x) { return x == null ? null : Math.round(x * 100) / 100; }, ok = r.quelle === 'kamera' && !!(r.how && r.how.g) && !r.how.forced;
-          return { stand: FUEHRUNG.stand, geprueft: ok, grund: ok ? [] : (r.quelle === 'kamera' ? ((r.how && r.how.grund) || []) : ['kamera_app']), umfang: g.det === 'erkannt' ? 'voll' : 'winkel', erkannt: g.det || null, zone: g.zone || null, abstand_m: r2(g.abst), soll_m: r2(g.soll), mitte: r2(g.dx), neigung: r2(g.p), rollen: r2(g.r), hoehe_m: camH(), abstand_art: VAR.abstand === 'r' ? 'rahmen' : 'boden', rahmen: g.rahmen ? { fuellung: r2(g.rahmen.g), oben: r2(g.rahmen.dy) } : undefined }; })(),
+          return { stand: FUEHRUNG.stand, geprueft: ok, grund: ok ? [] : (r.quelle === 'kamera' ? ((r.how && r.how.grund) || []) : ['kamera_app']), umfang: g.det === 'erkannt' ? 'voll' : 'winkel', erkannt: g.det || null, zone: g.zone || null, abstand_m: r2(g.abst), soll_m: r2(g.soll), mitte: r2(g.dx), neigung: r2(g.p), rollen: r2(g.r), hoehe_m: camH(), abstand_art: VAR.abstand === 'r' ? 'rahmen' : 'boden', rahmen: g.rahmen ? { fuellung: r2(g.rahmen.g), oben: r2(g.rahmen.dy) } : undefined, winkel_soll: g.winkelSoll != null ? g.winkelSoll : undefined, licht: g.licht ? { rot: g.licht.rot == null ? null : Math.round(g.licht.rot * 1000) / 1000, hell: g.licht.hell == null ? null : Math.round(g.licht.hell * 1000) / 1000, lack_rot: !!g.licht.lack } : undefined }; })(),
         ruecksitzbank: rueckPflicht() ? 'pflicht' : 'keine', design: 'v4', abgleich: r.fit || null, aufnahme_ms: r.takeMs, aufnahme: r.aufn ? { zeit: new Date(r.aufn.zeit).toISOString(), nr: r.aufn.nr, verworfen: r.aufn.verworfen } : undefined, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), fenster: window.innerWidth + 'x' + window.innerHeight, schirm: screen.width + 'x' + screen.height, form: LAY.form || null, buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, folge: 'rundum-v4', winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v3 ' + FUEHRUNG.stand + ': Neigung grün ±' + FUEHRUNG.neigungTol.gruen + ' gelb ±' + FUEHRUNG.neigungTol.gelb + ', Rollen grün ±' + FUEHRUNG.rollen.aussen.gruen + ' gelb ±' + FUEHRUNG.rollen.aussen.gelb + ', Ziel-Neigung je Platz' } }
     };
     var item = { slot: r.slot, id: st.fotoId, path: S.vehicle.id + '/' + m.key + '_' + st.fotoId + '.jpg', blob: r.blob, meta: meta, tries: 0, fileDone: false, state: 'wartet' };
@@ -2535,7 +2575,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
      ===================================================================== */
   function init() {
     S.cfg = readCfg();
-    VAR.anrede = (S.cfg && S.cfg.a) || 'sie'; VAR.hoehe = (S.cfg && S.cfg.h) || 'bereich'; VAR.abstand = (S.cfg && S.cfg.ab) || null; if (VAR.abstand === 'r') { GEO.mitteM = FUEHRUNG.rahmen.mitte; GEO.seiteMitteM = FUEHRUNG.rahmen.mitte; } VAR.debug = !!(S.cfg && (S.cfg.debug || S.cfg.demo)) || UI.mess;
+    VAR.anrede = (S.cfg && S.cfg.a) || 'sie'; VAR.hoehe = (S.cfg && S.cfg.h) || 'bereich'; VAR.abstand = (S.cfg && S.cfg.ab) || null; if (VAR.abstand === 'r') { GEO.mitteM = FUEHRUNG.rahmen.mitte; GEO.seiteMitteM = FUEHRUNG.rahmen.mitte; GEO.winkel = FUEHRUNG.rahmen.winkel; } VAR.debug = !!(S.cfg && (S.cfg.debug || S.cfg.demo)) || UI.mess;
     Array.prototype.forEach.call(document.querySelectorAll('[data-du]'), function (el) { el.innerHTML = VAR.anrede === 'du' ? el.getAttribute('data-du') : el.getAttribute('data-sie'); });
     $('hHint').innerHTML = '<b>Kamerahöhe:</b> ' + esc(hoeheHint());
     var note = $('modeNote'), info = $('srvInfo');
