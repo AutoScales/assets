@@ -425,8 +425,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     // RAHMEN (nur mit &ab=r): Das erkannte Auto soll den Rahmen der Schablone füllen. klein/gross = Breite des Autos geteilt durch Breite des Rahmens; hoch = wie weit die Oberkante des Autos von der Oberkante des Rahmens abweichen darf (Anteil der Bildhöhe, etwa 3° Blickwinkel). Vorschlag Fable, 12.11.2026.
     // mitte: waagerecht von der Kamera zur Automitte in der Rahmen-Führung = mittlerer Kamerastand des G2-Raums (Autobuilder 12.11.2026: Blick 14° nach unten, Abstand 5,41 m, Höhe 1,35 m)
     rahmen: { klein: 0.90, gross: 1.12, hoch: 0.05, mitte: 5.41, rand: 0.03, winkel: 35 },   // rand: so nah darf der Kasten an den oberen und unteren Bildrand kommen; winkel: schräg 35° neben der Längsachse (Front 38 %, Flanke 62 % der Breite; bei 22° wirkt das Auto fast frontal). Festlegung fable-studio-2 12.11.2026, Giannis: „Das muss Fable vorgeben“
-    // Licht (nur im Rahmen-Modus, nur Hinweise): gleiche Messung wie der Arbeiter (arbeiter.py: licht_an, umgebung_hell). rot: Anteil rot leuchtender Fläche im Rahmen des Autos, ab dem „Licht an“ gilt (echte Fotos mit Rücklicht an: 28 bis 39 % im mittleren Bildfeld, ohne höchstens 2 %; deshalb keine Obergrenze); lackVorn: so viel Rot in einer Ansicht von vorn heißt roter Lack, dann kein Hinweis (Schätzung, an echten roten Autos noch nicht geprüft); bezug und dunkel: Umgebung dunkler als bezug / dunkel heißt „zu dunkel“
-    licht: { rot: 0.05, lackVorn: 0.15, bezug: 0.19, dunkel: 1.6, plaetze: ['heck', 'dreiviertel_hl', 'dreiviertel_hr'], vorn: ['titel', 'front', 'dreiviertel_vr'] },
+    // Licht (nur im Rahmen-Modus, nur Hinweise): gleiche Messung wie der Arbeiter (arbeiter.py: licht_an, umgebung_hell). rot: Anteil rot leuchtender Fläche im Rahmen des Autos, ab dem „Licht an“ gilt (echte Fotos mit Rücklicht an: 28 bis 39 % im mittleren Bildfeld, ohne höchstens 2 %; deshalb keine Obergrenze); lackVorn: so viel Rot in einer Ansicht von vorn heißt roter Lack, dann kein Hinweis (Schätzung, an echten roten Autos noch nicht geprüft); bezug und dunkel: Umgebung dunkler als bezug / dunkel heißt „zu dunkel“, aber nur, wenn auch das ganze Bild dunkel ist (Mittel höchstens bildMax). Grund: An 19 Außenfotos bei Tageslicht lag die Umgebung einmal unter der Grenze (dunkler Boden, heller Himmel), das Bildmittel aber bei 0,17 bis 0,33; in der dunklen Garage bei 0,15 bis 0,16. bildMax ist eine Schätzung aus wenigen Fotos
+    licht: { rot: 0.05, lackVorn: 0.15, bezug: 0.19, dunkel: 1.6, bildMax: 0.17, plaetze: ['heck', 'dreiviertel_hl', 'dreiviertel_hr'], vorn: ['titel', 'front', 'dreiviertel_vr'] },
     // Quelle: Autobuilder, werkzeuge/arbeiter/fuehrung.json (Commit 18118d7, 08.11.2026 abends). (S) = Schätzung, bleibt Vorschlag. Nur die Zahlen hier stellt man nach, die Optik bleibt.
     // Maßstab des Autobuilders: Grün = bis 7,5 cm Höhenfehler im Showroom (ohnehin unvermeidbar), Gelb = bis 15 cm (Grenze 1,05 bis 1,65 m), Rot = mehr.
 
@@ -1204,9 +1204,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     ru = calm ? { lvl: 0 } : { lvl: 1, hint: 'Ruhig halten', grund: 'unruhig' };
     var li = { lvl: 0 };
     if (VAR.abstand === 'r' && aussen) {   // LICHT: nur Hinweise; „zu dunkel“ geht vor „Auto in den Kasten stellen“, sonst kommen die Hinweise zum Standpunkt zuerst
-      var LI = FUEHRUNG.licht, lf = LICHT.t && now - LICHT.t < AI.every * 2 + 600, lr = lf ? LICHT.rot : null, lh = lf ? LICHT.hell : null;
-      R.licht = { rot: lr, hell: lh, lack: lackRot() }; R.winkelSoll = camPose(m.key, kind, h, GEO.winkel, GEO.eckeM).ang;
-      if (lh != null && lh * LI.dunkel <= LI.bezug) li = { lvl: 1, hint: 'Zu dunkel. Bitte mehr Licht', grund: 'zu_dunkel' };
+      var LI = FUEHRUNG.licht, lf = LICHT.t && now - LICHT.t < AI.every * 2 + 600, lr = lf ? LICHT.rot : null, lh = lf ? LICHT.hell : null, lb = lf ? LICHT.bild : null;
+      R.licht = { rot: lr, hell: lh, bild: lb, lack: lackRot() }; R.winkelSoll = camPose(m.key, kind, h, GEO.winkel, GEO.eckeM).ang;
+      if (lh != null && lb != null && lh * LI.dunkel <= LI.bezug && lb <= LI.bildMax) li = { lvl: 1, hint: 'Zu dunkel. Bitte mehr Licht', grund: 'zu_dunkel' };
       else if (lr != null && LI.plaetze.indexOf(m.key) >= 0 && lr > LI.rot && !R.licht.lack) li = { lvl: 1, hint: 'Bitte Licht am Auto ausschalten', grund: 'licht_an' };
     }
     ((li.grund === 'zu_dunkel' && ab.grund === 'kein_auto') ? [li, ab, mi, wi, ru] : [ab, mi, wi, li, ru]).forEach(function (x) { if (x.lvl) { R.lvl = Math.max(R.lvl, x.lvl); R.grund.push(x.grund); if (!R.hint) R.hint = x.hint; } });
@@ -1492,7 +1492,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   }
   // LICHT-ANFANG (Rahmen-Modus): „Licht am Auto an“ und „zu dunkel“. Gemessen wie im Arbeiter (arbeiter.py: licht_an, umgebung_hell), damit Sucher und Auszug dasselbe sagen.
   // rot: Anteil der Bildpunkte im Rahmen des Autos mit Farbton Rot (±20°), Sättigung ab 0,45, Helligkeit ab 0,35. hell: Median der Helligkeit (linear) um das Auto, ohne die hellsten 3 %; ohne erkanntes Auto das ganze Bild.
-  var LICHT = { cv: null, rot: null, hell: null, t: 0, lack: new WeakMap(), lin: null };
+  var LICHT = { cv: null, rot: null, hell: null, bild: null, t: 0, lack: new WeakMap(), lin: null };
   function lichtMessen(v, bx, key) {
     try {
       var w = 160, h = 120, cv = LICHT.cv || (LICHT.cv = document.createElement('canvas')), i, px, py; if (cv.width !== w) { cv.width = w; cv.height = h; }
@@ -1508,10 +1508,11 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         if (bx && px >= x0 && px < x1 && py >= y0 && py < y1) { nb++; var mx = Math.max(r, g, b), c = mx - Math.min(r, g, b); if (mx === r && mx >= 90 && c >= .45 * mx && Math.abs(g - b) * 3 <= c) nr++; }
         else L[nl++] = .2126 * LN[r] + .7152 * LN[g] + .0722 * LN[b];
       }
+      var sb = 0, ns = 0; for (i = 0; i < d.length; i += 8) { sb += .2126 * LN[d[i]] + .7152 * LN[d[i + 1]] + .0722 * LN[d[i + 2]]; ns++; } LICHT.bild = ns ? sb / ns : null;   // Mittel des ganzen Bilds (jeder zweite Bildpunkt)
       var Ls = L.subarray(0, nl); Ls.sort();
       LICHT.rot = bx && nb ? nr / nb : null; LICHT.hell = nl >= 100 ? Ls[Math.floor(nl * .97 / 2)] : null; LICHT.t = performance.now();
       if (LICHT.rot != null && S.vehicle && FUEHRUNG.licht.vorn.indexOf(key) >= 0) LICHT.lack.set(S.vehicle, Math.max(LICHT.lack.get(S.vehicle) || 0, LICHT.rot));   // roter Lack: von vorn sind keine Rückleuchten im Bild
-    } catch (e) { LICHT.rot = null; LICHT.hell = null; LICHT.t = 0; }
+    } catch (e) { LICHT.rot = null; LICHT.hell = null; LICHT.bild = null; LICHT.t = 0; }
   }
   function lackRot() { var v = S.vehicle ? LICHT.lack.get(S.vehicle) : null; return v != null && v >= FUEHRUNG.licht.lackVorn; }
   // LICHT-ENDE
@@ -1941,7 +1942,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       aiFitUi(); drawOverlay();
       if (VAR.debug) {
         var zt = zielP(S.cur ? (slotMeta(S.cur) || {}).key : null);
-        tt.textContent = R.sensor ? 'Neigung ' + fmt(R.p, 1, true) + '° (Ziel ' + (zt != null ? fmt(zt, 0, true) + '°' : 'frei') + ') · Rollen ' + fmt(R.r, 1, true) + '°' + (R.aussen ? (VAR.abstand === 'r' ? '\nKasten: Breite ' + (R.rahmen && R.rahmen.g != null ? fmt(R.rahmen.g, 2) : '–') + ' · oben ' + (R.rahmen && R.rahmen.dy != null ? fmt(R.rahmen.dy, 2, true) : '–') + '\nLicht: rot ' + (R.licht && R.licht.rot != null ? fmt(100 * R.licht.rot, 0) + ' %' : '–') + ' · Umgebung ' + (R.licht && R.licht.hell != null ? fmt(R.licht.hell, 2) : '–') : '\nAbstand ' + (R.abst != null ? fmt(R.abst, 2) : '–') + ' m (Soll ' + fmt(R.soll, 2) + ', ' + fmt(R.zonen.gruenLo, 1) + ' bis ' + fmt(R.zonen.gruenHi, 1) + ')') + ' · Mitte ' + (R.dx != null ? fmt(R.dx, 2, true) : '–') + '\n' + aiDebugText() : '') : 'Sensor liefert gerade nichts';
+        tt.textContent = R.sensor ? 'Neigung ' + fmt(R.p, 1, true) + '° (Ziel ' + (zt != null ? fmt(zt, 0, true) + '°' : 'frei') + ') · Rollen ' + fmt(R.r, 1, true) + '°' + (R.aussen ? (VAR.abstand === 'r' ? '\nKasten: Breite ' + (R.rahmen && R.rahmen.g != null ? fmt(R.rahmen.g, 2) : '–') + ' · oben ' + (R.rahmen && R.rahmen.dy != null ? fmt(R.rahmen.dy, 2, true) : '–') + '\nLicht: rot ' + (R.licht && R.licht.rot != null ? fmt(100 * R.licht.rot, 0) + ' %' : '–') + ' · Umgebung ' + (R.licht && R.licht.hell != null ? fmt(R.licht.hell, 2) : '–') + ' · Bild ' + (R.licht && R.licht.bild != null ? fmt(R.licht.bild, 2) : '–') : '\nAbstand ' + (R.abst != null ? fmt(R.abst, 2) : '–') + ' m (Soll ' + fmt(R.soll, 2) + ', ' + fmt(R.zonen.gruenLo, 1) + ' bis ' + fmt(R.zonen.gruenHi, 1) + ')') + ' · Mitte ' + (R.dx != null ? fmt(R.dx, 2, true) : '–') + '\n' + aiDebugText() : '') : 'Sensor liefert gerade nichts';
         tt.setAttribute('data-ok', R.alle ? '1' : '0');
       }
     }
@@ -2152,7 +2153,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         nicht_geprueft: (function () { return !(r.quelle === 'kamera' && !!(r.how && r.how.g) && !r.how.forced); })(),
         nicht_geprueft_grund: (function () { if (r.quelle !== 'kamera') return 'kamera_app'; if (!(r.how && r.how.g)) return 'ohne_fuehrung'; return r.how.forced ? ((r.how.grund || []).join(',') || 'notloesung') : ''; })(),
         fuehrung: (function () { var g = (r.how && r.how.g) || {}, r2 = function (x) { return x == null ? null : Math.round(x * 100) / 100; }, ok = r.quelle === 'kamera' && !!(r.how && r.how.g) && !r.how.forced;
-          return { stand: FUEHRUNG.stand, geprueft: ok, grund: ok ? [] : (r.quelle === 'kamera' ? ((r.how && r.how.grund) || []) : ['kamera_app']), umfang: g.det === 'erkannt' ? 'voll' : 'winkel', erkannt: g.det || null, zone: g.zone || null, abstand_m: r2(g.abst), soll_m: r2(g.soll), mitte: r2(g.dx), neigung: r2(g.p), rollen: r2(g.r), hoehe_m: camH(), abstand_art: VAR.abstand === 'r' ? 'rahmen' : 'boden', rahmen: g.rahmen ? { fuellung: r2(g.rahmen.g), oben: r2(g.rahmen.dy) } : undefined, winkel_soll: g.winkelSoll != null ? g.winkelSoll : undefined, licht: g.licht ? { rot: g.licht.rot == null ? null : Math.round(g.licht.rot * 1000) / 1000, hell: g.licht.hell == null ? null : Math.round(g.licht.hell * 1000) / 1000, lack_rot: !!g.licht.lack } : undefined }; })(),
+          return { stand: FUEHRUNG.stand, geprueft: ok, grund: ok ? [] : (r.quelle === 'kamera' ? ((r.how && r.how.grund) || []) : ['kamera_app']), umfang: g.det === 'erkannt' ? 'voll' : 'winkel', erkannt: g.det || null, zone: g.zone || null, abstand_m: r2(g.abst), soll_m: r2(g.soll), mitte: r2(g.dx), neigung: r2(g.p), rollen: r2(g.r), hoehe_m: camH(), abstand_art: VAR.abstand === 'r' ? 'rahmen' : 'boden', rahmen: g.rahmen ? { fuellung: r2(g.rahmen.g), oben: r2(g.rahmen.dy) } : undefined, winkel_soll: g.winkelSoll != null ? g.winkelSoll : undefined, licht: g.licht ? { rot: g.licht.rot == null ? null : Math.round(g.licht.rot * 1000) / 1000, hell: g.licht.hell == null ? null : Math.round(g.licht.hell * 1000) / 1000, bild: g.licht.bild == null ? null : Math.round(g.licht.bild * 1000) / 1000, lack_rot: !!g.licht.lack } : undefined }; })(),
         ruecksitzbank: rueckPflicht() ? 'pflicht' : 'keine', design: 'v4', abgleich: r.fit || null, aufnahme_ms: r.takeMs, aufnahme: r.aufn ? { zeit: new Date(r.aufn.zeit).toISOString(), nr: r.aufn.nr, verworfen: r.aufn.verworfen } : undefined, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), fenster: window.innerWidth + 'x' + window.innerHeight, schirm: screen.width + 'x' + screen.height, form: LAY.form || null, buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, folge: 'rundum-v4', winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v3 ' + FUEHRUNG.stand + ': Neigung grün ±' + FUEHRUNG.neigungTol.gruen + ' gelb ±' + FUEHRUNG.neigungTol.gelb + ', Rollen grün ±' + FUEHRUNG.rollen.aussen.gruen + ' gelb ±' + FUEHRUNG.rollen.aussen.gelb + ', Ziel-Neigung je Platz' } }
     };
     var item = { slot: r.slot, id: st.fotoId, path: S.vehicle.id + '/' + m.key + '_' + st.fotoId + '.jpg', blob: r.blob, meta: meta, tries: 0, fileDone: false, state: 'wartet' };
