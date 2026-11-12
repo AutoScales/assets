@@ -422,6 +422,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
      ===================================================================== */
   var FUEHRUNG = {
     stand: 'v9-autobuilder-18118d7',
+    // RAHMEN (nur mit &ab=r): Das erkannte Auto soll den Rahmen der Schablone füllen. klein/gross = Breite des Autos geteilt durch Breite des Rahmens; hoch = wie weit die Oberkante des Autos von der Oberkante des Rahmens abweichen darf (Anteil der Bildhöhe, etwa 3° Blickwinkel). Vorschlag Fable, 12.11.2026.
+    rahmen: { klein: 0.90, gross: 1.12, hoch: 0.05 },
     // Quelle: Autobuilder, werkzeuge/arbeiter/fuehrung.json (Commit 18118d7, 08.11.2026 abends). (S) = Schätzung, bleibt Vorschlag. Nur die Zahlen hier stellt man nach, die Optik bleibt.
     // Maßstab des Autobuilders: Grün = bis 7,5 cm Höhenfehler im Showroom (ohnehin unvermeidbar), Gelb = bis 15 cm (Grenze 1,05 bis 1,65 m), Rot = mehr.
 
@@ -774,6 +776,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         if (p.get('h') === '1m' || p.get('h') === 'brust' || p.get('h') === 'bereich') cfg.h = p.get('h');
         if (p.has('debug')) cfg.debug = true;
         if (p.get('ai') === 'aus') cfg.ai = 'aus';   // Auto-Erkennung abschalten (falls sie am Handy stört)
+        if (p.get('ab') === 'r') cfg.ab = 'r';   // RAHMEN: Führung über den Rahmen im Sucher statt über Meter am Boden (Test, 12.11.2026); ohne den Schalter bleibt alles wie bisher
         if (p.has('hs')) cfg.hs = true;                // Home-Bildschirm: Link-Teil bleibt in der Adresse, damit das Symbol ihn mitnimmt
         if (p.has('sim') && cfg.demo) cfg.sim = true;  // nur im Demo ohne Server: gezeichnete Kamera
         if (p.has('ohneshow') && cfg.demo) cfg.ohneShow = true;   // nur im Demo: Außenbilder „geprüft, ohne Showroom“ (Status geprueft)
@@ -1161,6 +1164,16 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         // Die Unterkante des erkannten Autos ist vorn und hinten die Stoßstange, nicht das Rad: auf die Tiefe der Radaufstände umrechnen (Unterschied aus dem Modell), damit sie zu den Zonen passt
         if (Zd != null) Zd += sollTiefe(m.key, kind) - sollModell(m.key, kind);
         R.abst = Zd; R.dx = (b.x0 + b.x1) / 2 - (sb.x0 + sb.x1) / 2;
+        // RAHMEN-ANFANG: ohne Haltehöhe und ohne Meter. Größe aus der Breite, Höhe im Bild aus der Oberkante (die Unterkante erkennt die Erkennung bei dunkler Front nicht sicher). Alles nur gelb: Hinweise.
+        if (VAR.abstand === 'r') {
+          var RA = FUEHRUNG.rahmen, gq = (b.x1 - b.x0) / (sb.x1 - sb.x0), dyo = b.y0 - sb.y0; R.rahmen = { g: gq, dy: dyo }; R.abst = null;
+          if (cutB || gq > RA.gross) { ab = { lvl: 1, hint: 'Schritt zurück', grund: 'rahmen_zu_gross' }; R.zone = 'gelbnah'; }
+          else if (gq < RA.klein) { ab = { lvl: 1, hint: 'Näher ran', grund: 'rahmen_zu_klein' }; R.zone = 'gelbfern'; }
+          else if (dyo > RA.hoch) { ab = { lvl: 1, hint: 'Handy tiefer halten', grund: 'rahmen_zu_tief' }; R.zone = 'ok'; }
+          else if (dyo < -RA.hoch) { ab = { lvl: 1, hint: 'Handy höher halten', grund: 'rahmen_zu_hoch' }; R.zone = 'ok'; }
+          else R.zone = 'ok';
+        } else
+        // RAHMEN-ENDE
         if (cutB || (Zd != null && Zd < Zn.gelbLo)) { ab = { lvl: 2, hint: 'Schritt zurück', grund: 'abstand_zu_nah' }; R.zone = 'rotnah'; }
         else if (Zd != null && Zd < Zn.gruenLo) { ab = { lvl: 1, hint: 'Schritt zurück', grund: 'abstand_zu_nah' }; R.zone = 'gelbnah'; }
         else if (Zd == null || Zd > Zn.gelbHi) { ab = { lvl: A.ferneRot ? 2 : 1, hint: 'Schritt vor', grund: 'abstand_zu_weit' }; R.zone = A.ferneRot ? 'rotfern' : 'gelbfern'; }
@@ -1254,7 +1267,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var R = S.guide || null, w = LAY.iw, hh = LAY.ih, lk = Math.max(.6, hh / 390), col = frameCol(), f = frameF(w), c = setupKeep(cv, w, hh);
     if (m.art === 'aussen' && kind) {
       var pz = drawP(m.key), pose = camPose(m.key, kind, camH(), GEO.winkel, GEO.eckeM), res = {};
-      if (R && R.sensor && R.zonen) drawZonen(c, R, w, hh, f, lk);
+      if (R && R.sensor && R.zonen && !R.rahmen) drawZonen(c, R, w, hh, f, lk);
       var cam = makeCam(pose.P, f, w / 2, hh / 2, pz, [aimShift(m.key, kind, camH(), GEO.winkel, pz, w, hh), 0, 0]);
       drawCar(c, cam, kind, { fill: false, outline: true, line: col, lw: lk, open: !!(R && R.zone === 'ok'), res: res });
       if (res.rect) drawMitte(c, res.rect, R, w, lk);
@@ -2072,7 +2085,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         nicht_geprueft: (function () { return !(r.quelle === 'kamera' && !!(r.how && r.how.g) && !r.how.forced); })(),
         nicht_geprueft_grund: (function () { if (r.quelle !== 'kamera') return 'kamera_app'; if (!(r.how && r.how.g)) return 'ohne_fuehrung'; return r.how.forced ? ((r.how.grund || []).join(',') || 'notloesung') : ''; })(),
         fuehrung: (function () { var g = (r.how && r.how.g) || {}, r2 = function (x) { return x == null ? null : Math.round(x * 100) / 100; }, ok = r.quelle === 'kamera' && !!(r.how && r.how.g) && !r.how.forced;
-          return { stand: FUEHRUNG.stand, geprueft: ok, grund: ok ? [] : (r.quelle === 'kamera' ? ((r.how && r.how.grund) || []) : ['kamera_app']), umfang: g.det === 'erkannt' ? 'voll' : 'winkel', erkannt: g.det || null, zone: g.zone || null, abstand_m: r2(g.abst), soll_m: r2(g.soll), mitte: r2(g.dx), neigung: r2(g.p), rollen: r2(g.r), hoehe_m: camH() }; })(),
+          return { stand: FUEHRUNG.stand, geprueft: ok, grund: ok ? [] : (r.quelle === 'kamera' ? ((r.how && r.how.grund) || []) : ['kamera_app']), umfang: g.det === 'erkannt' ? 'voll' : 'winkel', erkannt: g.det || null, zone: g.zone || null, abstand_m: r2(g.abst), soll_m: r2(g.soll), mitte: r2(g.dx), neigung: r2(g.p), rollen: r2(g.r), hoehe_m: camH(), abstand_art: VAR.abstand === 'r' ? 'rahmen' : 'boden', rahmen: g.rahmen ? { fuellung: r2(g.rahmen.g), oben: r2(g.rahmen.dy) } : undefined }; })(),
         ruecksitzbank: rueckPflicht() ? 'pflicht' : 'keine', design: 'v4', abgleich: r.fit || null, aufnahme_ms: r.takeMs, aufnahme: r.aufn ? { zeit: new Date(r.aufn.zeit).toISOString(), nr: r.aufn.nr, verworfen: r.aufn.verworfen } : undefined, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), fenster: window.innerWidth + 'x' + window.innerHeight, schirm: screen.width + 'x' + screen.height, form: LAY.form || null, buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: VAR.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, folge: 'rundum-v4', winkel_soll: GEO.winkel, abstand_ecke_m: GEO.eckeM, ampel: 'v3 ' + FUEHRUNG.stand + ': Neigung grün ±' + FUEHRUNG.neigungTol.gruen + ' gelb ±' + FUEHRUNG.neigungTol.gelb + ', Rollen grün ±' + FUEHRUNG.rollen.aussen.gruen + ' gelb ±' + FUEHRUNG.rollen.aussen.gelb + ', Ziel-Neigung je Platz' } }
     };
     var item = { slot: r.slot, id: st.fotoId, path: S.vehicle.id + '/' + m.key + '_' + st.fotoId + '.jpg', blob: r.blob, meta: meta, tries: 0, fileDone: false, state: 'wartet' };
@@ -2495,7 +2508,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
      ===================================================================== */
   function init() {
     S.cfg = readCfg();
-    VAR.anrede = (S.cfg && S.cfg.a) || 'sie'; VAR.hoehe = (S.cfg && S.cfg.h) || 'bereich'; VAR.debug = !!(S.cfg && (S.cfg.debug || S.cfg.demo)) || UI.mess;
+    VAR.anrede = (S.cfg && S.cfg.a) || 'sie'; VAR.hoehe = (S.cfg && S.cfg.h) || 'bereich'; VAR.abstand = (S.cfg && S.cfg.ab) || null; VAR.debug = !!(S.cfg && (S.cfg.debug || S.cfg.demo)) || UI.mess;
     Array.prototype.forEach.call(document.querySelectorAll('[data-du]'), function (el) { el.innerHTML = VAR.anrede === 'du' ? el.getAttribute('data-du') : el.getAttribute('data-sie'); });
     $('hHint').innerHTML = '<b>Kamerahöhe:</b> ' + esc(hoeheHint());
     var note = $('modeNote'), info = $('srvInfo');
