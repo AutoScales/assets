@@ -423,7 +423,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   var FUEHRUNG = {
     stand: 'v9-autobuilder-18118d7',
     // RAHMEN (nur mit &ab=r): Das erkannte Auto soll den Rahmen der Schablone füllen. klein/gross = Breite des Autos geteilt durch Breite des Rahmens; hoch = wie weit die Oberkante des Autos von der Oberkante des Rahmens abweichen darf (Anteil der Bildhöhe, etwa 3° Blickwinkel). Vorschlag Fable, 12.11.2026.
-    rahmen: { klein: 0.90, gross: 1.12, hoch: 0.05 },
+    // mitte: waagerecht von der Kamera zur Automitte in der Rahmen-Führung = mittlerer Kamerastand des G2-Raums (Autobuilder 12.11.2026: Blick 14° nach unten, Abstand 5,41 m, Höhe 1,35 m)
+    rahmen: { klein: 0.90, gross: 1.12, hoch: 0.05, mitte: 5.41 },
     // Quelle: Autobuilder, werkzeuge/arbeiter/fuehrung.json (Commit 18118d7, 08.11.2026 abends). (S) = Schätzung, bleibt Vorschlag. Nur die Zahlen hier stellt man nach, die Optik bleibt.
     // Maßstab des Autobuilders: Grün = bis 7,5 cm Höhenfehler im Showroom (ohnehin unvermeidbar), Gelb = bis 15 cm (Grenze 1,05 bis 1,65 m), Rot = mehr.
 
@@ -629,7 +630,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function klasseOf() { var k = S.vehicle && S.vehicle.klasse; if (k === 'van') k = 'suv'; return k && KINDS[k] ? k : null; }
   // Standpunkt des Händlers: Front und Heck auf der Längsachse, Dreiviertel 22° neben der Längsachse, jeweils GEO.mitteM zur Automitte; Seite 90° davon, seiteMitteM (dOff: nur Demo-Kamera)
   function camPose(key, kind, h, ang, eck, dOff) {
-    var d0 = dOff || 0, D = GEO.mitteM + d0, S2 = GEO.seiteMitteM + d0, a = ang * RAD;
+    var rp = VAR.abstand === 'r' ? FUEHRUNG.rahmen.mitte : 0;   // RAHMEN: Standpunkt des mittleren Kamerastands im Raum statt 4,7 m (rundum) und 5,2 m (Seite); Rahmen, Schablone und Demo ziehen mit
+    var d0 = dOff || 0, D = (rp || GEO.mitteM) + d0, S2 = (rp || GEO.seiteMitteM) + d0, a = ang * RAD;
     if (key === 'front') return { P: [D, 0, h], d: D, ang: 0 };
     if (key === 'heck') return { P: [-D, 0, h], d: D, ang: 0 };
     if (key === 'seite' || key === 'seite_l') return { P: [0, S2, h], d: S2, ang: 90 };
@@ -1410,7 +1412,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   // Rahmen der Schablone, normiert (0 bis 1 der Bildfläche), aus dem Kameramodell gerechnet
   var schabCache = {};
   function schabBox(key, kind) {
-    var ck = [key, kind, camH()].join('|'); if (schabCache[ck]) return schabCache[ck];
+    var ck = [key, kind, camH(), VAR.abstand || ''].join('|'); if (schabCache[ck]) return schabCache[ck];
     var w = 640, hh = 480, pose = camPose(key, kind, camH(), GEO.winkel, GEO.eckeM), cam = makeCam(pose.P, frameF(w), w / 2, hh / 2, drawP(key), [aimShift(key, kind, camH(), GEO.winkel, drawP(key), w, hh), 0, 0]);
     var M = buildModel(kind), b = { x0: 1e9, x1: -1e9, y0: 1e9, y1: -1e9 };
     M.faces.forEach(function (fc) { fc.poly.forEach(function (p) { var q = cam(p); if (q[2] < .2) return; b.x0 = Math.min(b.x0, q[0]); b.x1 = Math.max(b.x1, q[0]); b.y0 = Math.min(b.y0, q[1]); b.y1 = Math.max(b.y1, q[1]); }); });
