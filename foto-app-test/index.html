@@ -273,6 +273,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   <header class="brand"><span class="lockup"><span class="logo"><img class="l" src="logo.png" alt="AutoScales"><img class="d" src="logo-dunkel.png" alt="AutoScales"></span><b class="appname">Studio</b></span><span class="chip"><i class="dot go"></i>Testfassung</span></header>
   <div><h1>Neues Fahrzeug</h1><p class="sub" style="margin-top:6px">Zehn Fotos, ein Fahrzeug. Die App führt Sie durch jede Position.</p></div>
   <div class="note" id="modeNote"></div>
+  <div class="note" id="queueNote" role="status" aria-live="polite" hidden></div>
   <div id="resumeBox" class="note" hidden>
     <p id="resumeTxt"></p>
     <div class="actions" style="margin-top:10px"><button class="btn primary" id="resumeYes" type="button">Weitermachen</button><button class="btn" id="resumeNo" type="button">Neues Fahrzeug</button></div>
@@ -794,6 +795,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   /* =====================================================================
      Konfiguration aus dem Link (Teil nach #), nichts davon liegt im Quelltext
      ===================================================================== */
+  var SRV_OK = /^https:\/\/[a-z0-9-]+\.supabase\.co$/;   // nur diese Server-Adressen sind erlaubt (Link und Sendeschein)
   function readCfg() {
     var h = location.hash.replace(/^#/, ''), cfg = null;
     if (h) {
@@ -817,7 +819,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         store('fa_cfg', cfg); if (!cfg.hs) { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* egal */ } } }
     }
     if (!cfg) cfg = load('fa_cfg');
-    if (cfg && !cfg.demo && !/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(cfg.url || '')) cfg = { bad: 'Die Server-Adresse im Link ist nicht erlaubt.' };
+    if (cfg && !cfg.demo && !SRV_OK.test(cfg.url || '')) cfg = { bad: 'Die Server-Adresse im Link ist nicht erlaubt.' };
     return cfg;
   }
 
@@ -2303,22 +2305,40 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       catch (e) { res(null); }
     });
   }
-  function idbPut(it) { return idbDo('readwrite', function (st) { return st.put({ id: it.id, slot: it.slot, path: it.path, blob: it.blob, meta: it.meta, vehicleId: it.vehicleId, thumb: it.thumb || null, failed: !!it.failed, t: it.t || Date.now() }); }); }
+  function idbPut(it) { return idbDo('readwrite', function (st) { return st.put({ id: it.id, slot: it.slot, path: it.path, blob: it.blob, meta: it.meta, vehicleId: it.vehicleId, thumb: it.thumb || null, failed: !!it.failed, t: it.t || Date.now(), srv: it.srv || null }); }); }
   function idbDel(id) { return idbDo('readwrite', function (st) { return st.delete(id); }); }
   function idbAll() { return idbDo('readonly', function (st) { return st.getAll(); }); }
+  /* Sendeschein: Jedes wartende Foto trägt Adresse und Schlüssel des Servers bei sich, aber nie das Zugangswort. Damit sendet die App wartende Fotos auch dann nach,
+     wenn sie ohne den Link wieder geöffnet wird (neuer Tab, Home-Bildschirm). Zum Senden genügt die Fahrzeug-ID im Foto; ein neues Fahrzeug braucht weiter den Link.
+     Der Schein liegt nur so lange auf dem Gerät wie das Foto selbst und verschwindet mit ihm. */
+  function sendeschein() { var c = S.cfg; return c && !c.demo && !c.bad && c.url && c.key ? { u: c.url, k: c.key } : null; }
+  function scheinOk(r) { return !!(r && r.srv && SRV_OK.test(r.srv.u || '') && r.srv.k); }
+  function queueNote() {
+    var n = $('queueNote'), q = S.nach; if (!n || !q) return;
+    var rest = S.queue.length, t;
+    if (rest) t = (rest === 1 ? 'Auf diesem Gerät wartet noch 1 Foto. Es wird' : 'Auf diesem Gerät warten noch ' + rest + ' Fotos. Sie werden') + ' jetzt gesendet.' + (q.netz ? ' Im Moment besteht keine Verbindung, die App versucht es weiter.' : '');
+    else t = (q.ok ? (q.ok === 1 ? '1 wartendes Foto ist gesendet.' : q.ok + ' wartende Fotos sind gesendet.') : '') + (q.fehler ? (q.ok ? ' ' : '') + (q.fehler === 1 ? '1 Foto hat der Server nicht angenommen.' : q.fehler + ' Fotos hat der Server nicht angenommen.') : '');
+    n.hidden = !t; n.className = 'note' + (!rest && q.fehler ? ' bad' : ''); n.textContent = t;
+  }
   function enqueue(item) {
-    item.vehicleId = S.vehicle.id; item.thumb = slotState(item.slot).thumb; item.t = Date.now();
+    item.vehicleId = S.vehicle.id; item.thumb = slotState(item.slot).thumb; item.t = Date.now(); item.srv = sendeschein();
     idbPut(item).then(function () { S.queue.push(item); renderGalleryIfShown(); kick(); });
   }
   async function restoreQueue() {
-    if (!S.api || S.demo) return;
+    if (S.demo || (!S.api && S.cfg)) return;   // Demo oder ungültiger Link: nichts senden
     if (!(await idbOpen())) return;
     var all = (await idbAll()) || [];
     all.sort(function (a, b) { return a.t - b.t; });
+    if (!S.api) {   // ohne Link geöffnet: nur wartende Fotos mit Sendeschein nachsenden, alle an denselben Server
+      var mit = all.filter(function (r) { return !r.failed && scheinOk(r); }); if (!mit.length) return;
+      var s0 = mit[0].srv; all = mit.filter(function (r) { return r.srv.u === s0.u && r.srv.k === s0.k; });
+      S.sendApi = mkRealApi({ url: s0.u, key: s0.k }); S.nach = { ok: 0, fehler: 0, netz: false };
+    }
     all.forEach(function (r) {
-      var it = { slot: r.slot, id: r.id, path: r.path, blob: r.blob, meta: r.meta, vehicleId: r.vehicleId, thumb: r.thumb, t: r.t, tries: 0, fileDone: false, failed: !!r.failed };
+      var it = { slot: r.slot, id: r.id, path: r.path, blob: r.blob, meta: r.meta, vehicleId: r.vehicleId, thumb: r.thumb, t: r.t, tries: 0, fileDone: false, failed: !!r.failed, srv: r.srv || null };
       if (it.failed) S.restoredFailed.push(it); else S.queue.push(it);
     });
+    queueNote();
     if (S.queue.length) kick();
   }
   // Nach „Weitermachen“: Bilder dieses Fahrzeugs, die noch warten oder fehlgeschlagen sind, wieder in der Galerie zeigen
@@ -2334,20 +2354,22 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   window.addEventListener('beforeunload', function (e) { if (S.queue.length && !IDB.ok) { e.preventDefault(); e.returnValue = ''; } });
   async function kick() {
     if (S.uploading) return; S.uploading = true;
-    while (S.queue.length) {
+    var api = S.api || S.sendApi;   // S.sendApi: ohne Link geöffnet, nur Nachsenden (siehe Sendeschein)
+    while (S.queue.length && api) {
       var it = S.queue[0], mine = !!(S.vehicle && it.vehicleId === S.vehicle.id), st = mine ? slotState(it.slot) : {};
       try {
         st.state = 'sendet'; renderGalleryIfShown();
-        if (!it.fileDone) { await S.api.upload(it.path, it.blob); it.fileDone = true; }
-        var rep = await S.api.report(it.meta);
+        if (!it.fileDone) { await api.upload(it.path, it.blob); it.fileDone = true; }
+        var rep = await api.report(it.meta);
         S.queue.shift(); st.state = 'hochgeladen'; st.err = null; idbDel(it.id); it.blob = null; it.meta = null;
         if (rep && rep.status) st.server = Object.assign({}, st.server || {}, { status: rep.status });
+        if (S.nach) { S.nach.ok++; S.nach.netz = false; queueNote(); }
         saveSession(); renderGalleryIfShown(); schedulePoll(1500);
       } catch (e) {
         it.tries++;
-        if (permanent(e)) { S.queue.shift(); st.state = 'fehler'; st.err = e.message; st.item = it; it.failed = true; idbPut(it); renderGalleryIfShown(); }
+        if (permanent(e)) { S.queue.shift(); st.state = 'fehler'; st.err = e.message; st.item = it; it.failed = true; idbPut(it); if (S.nach) { S.nach.fehler++; queueNote(); } renderGalleryIfShown(); }
         else {
-          st.state = 'retry'; st.err = e.message; renderGalleryIfShown();
+          st.state = 'retry'; st.err = e.message; renderGalleryIfShown(); if (S.nach) { S.nach.netz = true; queueNote(); }
           var wait = Math.min(30000, 2000 * Math.pow(2, Math.min(it.tries, 4)));
           await new Promise(function (res) { var t = setTimeout(res, wait); onlineWake = function () { clearTimeout(t); res(); }; });
           onlineWake = null;
