@@ -98,6 +98,9 @@ h2 { font: 700 13px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
 .kar button { font: 600 10.5px/1 var(--font-body); border: 1px solid var(--gb); background: var(--glass); color: var(--t); border-radius: var(--rs); padding: 6px 4px 7px; display: grid; gap: 5px; justify-items: center; cursor: pointer; min-width: 0; }
 .kar button svg.ico { width: 60px; height: 30px; max-width: 100%; display: block; overflow: visible; }
 .kar button[aria-pressed="true"] { background: var(--prim); color: var(--prim-t); border-color: transparent; }
+.wahl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.wahl button { font: 600 14px/1.25 var(--font-body); min-height: 48px; border: 1px solid var(--gb); background: var(--glass); color: var(--t); border-radius: var(--rs); padding: 8px 10px; cursor: pointer; min-width: 0; }
+.wahl button[aria-pressed="true"] { background: var(--prim); color: var(--prim-t); border-color: transparent; }
 .how { padding: 14px 16px; display: grid; gap: 11px; }
 .how div { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: center; font-size: 14px; line-height: 1.4; }
 .how svg { width: 28px; height: 28px; }
@@ -275,6 +278,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     <div class="actions" style="margin-top:10px"><button class="btn primary" id="resumeYes" type="button">Weitermachen</button><button class="btn" id="resumeNo" type="button">Neues Fahrzeug</button></div>
   </div>
   <form id="fForm" class="glass form" autocomplete="off" novalidate>
+    <div class="fld"><span class="lbl" id="showLbl" style="line-height:1.35">Digitaler Showroom für dieses Fahrzeug?</span><div class="wahl" id="showBox" role="group" aria-labelledby="showLbl"></div></div>
+    <div class="fld" id="raumFld"><span class="lbl" id="raumLbl">Raum wählen</span><div class="wahl" id="raumBox" role="group" aria-labelledby="raumLbl"></div></div>
+    <p class="hs-tip" id="ohneTip" hidden></p>
     <div class="two">
       <label class="fld"><span class="lbl">Marke</span><input id="fMarke" type="text" maxlength="60" autocomplete="off" autocapitalize="words" placeholder="z. B. BMW"></label>
       <label class="fld"><span class="lbl">Baujahr</span><input id="fBaujahr" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="2021"></label>
@@ -767,6 +773,23 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       b.onclick = function () { S.klasse = k; buildKar(); fmsg(''); };
     });
   }
+  /* Showroom-Frage am Anfang je Auto (Giannis 17.11.2026: „Digitaler Showroom ja oder nein?“, Vorgabe je Händler; bei Nein kein Freistellen und kein Raum)
+     und Raumwahl (Giannis 19.11.2026: rund oder Beton mit Holz). S.raum geht beim Anlegen als p_raum an den Server (Spalte fahrzeuge.raum): rund | holz | kein. */
+  var RAEUME = [['rund', 'Runder Raum'], ['holz', 'Betonraum mit Holz']];
+  function raumVorgabe() { return 'rund'; }   // Vorgabe je Händler: kommt an dieser einen Stelle an
+  function raumName(r) { var x = RAEUME.filter(function (y) { return y[0] === r; })[0]; return x ? x[1] : r === 'kein' ? 'ohne Showroom' : RAEUME[0][1]; }
+  function buildShow() {
+    var sb = $('showBox'), rb = $('raumBox'); if (!sb || !rb) return;
+    if (!S.raum) S.raum = raumVorgabe();
+    var ja = S.raum !== 'kein'; if (ja) S.raumJa = S.raum;
+    function knopf(box, text, on, fn) { var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.textContent = text; b.onclick = function () { fn(); buildShow(); fmsg(''); }; box.appendChild(b); }
+    sb.innerHTML = ''; rb.innerHTML = '';
+    knopf(sb, 'Ja, mit Showroom', ja, function () { S.raum = S.raumJa || RAEUME[0][0]; });
+    knopf(sb, 'Nein', !ja, function () { S.raum = 'kein'; });
+    RAEUME.forEach(function (r) { knopf(rb, r[1], S.raum === r[0], function () { S.raum = r[0]; }); });
+    $('raumFld').hidden = !ja; $('ohneTip').hidden = ja;
+    $('ohneTip').textContent = T('Ohne Showroom: Wir stellen das Fahrzeug nicht frei und setzen es in keinen Raum. Deine Fotos erscheinen so, wie du sie aufnimmst.', 'Ohne Showroom: Wir stellen das Fahrzeug nicht frei und setzen es in keinen Raum. Ihre Fotos erscheinen so, wie Sie sie aufnehmen.');
+  }
 
   /* =====================================================================
      Konfiguration aus dem Link (Teil nach #), nichts davon liegt im Quelltext
@@ -827,7 +850,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       real: true,
       ping: function () { return rpc('app_ping', {}); },
       markNoRear: function (id, on) { return rpc('fahrzeug_merkmal', { p_id: id, p_ohne_ruecksitzbank: !!on }); },
-      createVehicle: function (v) { return rpc('fahrzeug_anlegen', { p_id: v.id, p_zugang: cfg.zugang, p_marke: v.marke, p_modell: v.modell, p_baujahr: v.baujahr, p_karosserie: v.karosserie || null, p_selbsttest: !!v.selbsttest }); },
+      createVehicle: function (v) { return rpc('fahrzeug_anlegen', { p_id: v.id, p_zugang: cfg.zugang, p_marke: v.marke, p_modell: v.modell, p_baujahr: v.baujahr, p_karosserie: v.karosserie || null, p_selbsttest: !!v.selbsttest, p_raum: v.raum || null }); },
       upload: async function (path, blob) {
         var r = await call(base + '/storage/v1/object/roh/' + path, { method: 'POST', headers: hdr({ 'Content-Type': 'image/jpeg', 'x-upsert': 'false', 'cache-control': 'max-age=3600' }), body: blob }, 90000);
         if (r.ok) return true;
@@ -849,7 +872,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       real: false,
       ping: async function () { await sleep(200); return { ok: true, schema: 1, zugang_gesetzt: true }; },
       markNoRear: async function (id, on) { await sleep(120); return { id: id, ohne_ruecksitzbank: !!on }; },
-      createVehicle: async function (v) { await sleep(300); vehicles[v.id] = true; return { id: v.id }; },
+      createVehicle: async function (v) { await sleep(300); vehicles[v.id] = { raum: v.raum || null }; return { id: v.id, raum: v.raum || null }; },
       upload: async function (path) { await sleep(500 + Math.random() * 700); if (!vehicles[path.split('/')[0]]) throw new ApiError(400, 'Demo: Ordner unbekannt', false); files[path] = true; return true; },
       report: async function (m) { await sleep(150); var q = { id: m.id, fahrzeug_id: m.fahrzeug_id, platz: m.platz, zusatz_nr: m.zusatz_nr || null, t: Date.now(), ampel_handy: m.ampel_handy || null }; photos = photos.filter(function (x) { return !(x.fahrzeug_id === q.fahrzeug_id && x.platz === q.platz && x.zusatz_nr === q.zusatz_nr); }); photos.push(q); return { id: m.id, version: 1, status: 'neu' }; },
       status: async function (id) {
@@ -859,7 +882,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
           var st = age < 3 ? 'neu' : age < (art === 'show' ? 9 : 4) ? 'in_arbeit' : 'fertig', amp = null, grund = null, fg = null;
           if (st === 'fertig') {
             if (p.platz === 'dreiviertel_hl') { st = 'fehler'; fg = 'Kein Kennzeichen erkannt (Demo)'; amp = 'rot'; grund = fg; }
-            else if (art === 'show' && S.cfg && S.cfg.ohneShow) { st = 'geprueft'; amp = p.platz === 'dreiviertel_vr' ? 'rot' : (p.platz === 'front' || p.platz === 'seite') ? 'gelb' : 'gruen'; grund = amp === 'rot' ? 'Falsche Ansicht, hinten statt vorn (Demo)' : amp === 'gelb' ? 'Auto leicht angeschnitten (Demo); Kamera etwas zu tief (Demo)' : null; }
+            else if (art === 'show' && ((S.cfg && S.cfg.ohneShow) || (vehicles[p.fahrzeug_id] || {}).raum === 'kein')) { st = 'geprueft'; amp = p.platz === 'dreiviertel_vr' ? 'rot' : (p.platz === 'front' || p.platz === 'seite') ? 'gelb' : 'gruen'; grund = amp === 'rot' ? 'Falsche Ansicht, hinten statt vorn (Demo)' : amp === 'gelb' ? 'Auto leicht angeschnitten (Demo); Kamera etwas zu tief (Demo)' : null; }
             else if (art === 'show') { amp = p.platz === 'seite' ? 'gelb' : 'gruen'; grund = amp === 'gelb' ? 'Auto leicht angeschnitten (Demo)' : null; }
           }
           return { platz: p.platz, zusatz_nr: p.zusatz_nr, version: 1, status: st, ampel_handy: p.ampel_handy, ampel_showroom: amp, ampel_showroom_gruende: grund, fehler_grund: fg };
@@ -2366,12 +2389,12 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function renderGallery() {
     var v = S.vehicle; if (!v) return;
     $('gTitle').textContent = v.marke + ' ' + v.modell;
-    $('gChip').textContent = (KINDS[v.klasse] ? KINDS[v.klasse].n + ' · ' : '') + v.baujahr;
+    $('gChip').textContent = (KINDS[v.klasse] ? KINDS[v.klasse].n + ' · ' : '') + v.baujahr + (v.raum ? ' · ' + raumName(v.raum) : '');
     var PF = pflicht(), NP = PF.length, ids = PF.map(function (p) { return p.key; }).concat(ohneRueck() && !hasPhoto('ruecksitzbank') ? ['ruecksitzbank'] : [], SEITEN.map(function (s) { return s.key; }), hasPhoto('seite') ? ['seite'] : [], freiInnen(), zusatzIds()), done = PF.filter(function (p) { return hasPhoto(p.key); }).length, kind = klasseOf();
     var pending = S.queue.length;
     $('gSum').textContent = done + ' von ' + NP + ' Pflichtbildern aufgenommen' + (zusatzIds().length ? ', ' + zusatzIds().length + ' Zusatzbild' + (zusatzIds().length > 1 ? 'er' : '') : '') + (pending ? ' · ' + pending + (pending === 1 ? ' wird' : ' werden') + ' noch hochgeladen' : '');
     $('gProg').innerHTML = '<i style="width:' + Math.round(done * 100 / NP) + '%"></i>';
-    var nG = $('gNote'); if (nG) { if (!S.noteStd) S.noteStd = nG.textContent; var anyOhne = ids.some(function (k) { return S.slots[k] && S.slots[k].server && S.slots[k].server.status === ST_OHNE; }); var nt = anyOhne ? 'Einige Außenbilder wurden nur geprüft: Die Ampel zeigt das Ergebnis am Originalfoto, ein Showroom-Bild entsteht dabei nicht. Innenbilder bleiben Original. Diese Seite aktualisiert sich selbst.' : S.noteStd; if (nG.textContent !== nt) nG.textContent = nt; }
+    var nG = $('gNote'); if (nG) { if (!S.noteStd) S.noteStd = nG.textContent; var anyOhne = ids.some(function (k) { return S.slots[k] && S.slots[k].server && S.slots[k].server.status === ST_OHNE; }); var nt = v.raum === 'kein' ? 'Dieses Fahrzeug ist ohne digitalen Showroom angelegt: Alle Bilder bleiben so, wie sie aufgenommen wurden. Diese Seite aktualisiert sich selbst.' : anyOhne ? 'Einige Außenbilder wurden nur geprüft: Die Ampel zeigt das Ergebnis am Originalfoto, ein Showroom-Bild entsteht dabei nicht. Innenbilder bleiben Original. Diese Seite aktualisiert sich selbst.' : S.noteStd; if (nG.textContent !== nt) nG.textContent = nt; }
     $('gGrid').innerHTML = ids.map(function (id) {
       var s = S.slots[id], m = slotMeta(id), ti = tileInfo(id), taken = hasPhoto(id), img;
       if (s && s.thumb) img = '<img alt="" src="' + s.thumb + '">';
@@ -2394,7 +2417,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var PF = pflicht(), aus = PF.filter(function (p) { return p.art === 'aussen' && hasPhoto(p.key); }).length, inn = PF.filter(function (p) { return p.art === 'innen' && hasPhoto(p.key); }).length, innN = PF.filter(function (p) { return p.art === 'innen'; }).length, fi = freiInnen(), fiN = fi.filter(function (k) { return hasPhoto(k); }).length, zu = zusatzIds().length, pending = S.queue.length;
     $('eH1').textContent = 'Alle ' + PF.length + ' Bilder sind aufgenommen';   // 9 bei einem Zweisitzer ohne Rücksitzbank
     $('eSub').textContent = pending ? pending + (pending === 1 ? ' Foto wird' : ' Fotos werden') + ' noch hochgeladen. Die App sendet im Hintergrund weiter.' : 'Die Bearbeitung läuft. Den Stand je Bild sehen Sie in der Galerie.';
-    $('eSum').innerHTML = '<div><span>Außenbilder</span><span>' + aus + ' von 6</span></div><div><span>Innenbilder</span><span>' + inn + ' von ' + innN + '</span></div>' + (ohneRueck() ? '<div><span>Rücksitzbank</span><span>kein Rücksitz</span></div>' : '') + '<div><span>Innen freiwillig</span><span>' + fiN + ' von ' + fi.length + '</span></div><div><span>Seiten (freiwillig)</span><span>' + SEITEN.filter(function (s) { return hasPhoto(s.key); }).length + ' von 2</span></div><div><span>Zusatzbilder</span><span>' + zu + '</span></div><div><span>Fahrzeug</span><span>' + esc(v.marke + ' ' + v.modell) + '</span></div>';
+    $('eSum').innerHTML = '<div><span>Außenbilder</span><span>' + aus + ' von 6</span></div><div><span>Innenbilder</span><span>' + inn + ' von ' + innN + '</span></div>' + (ohneRueck() ? '<div><span>Rücksitzbank</span><span>kein Rücksitz</span></div>' : '') + '<div><span>Innen freiwillig</span><span>' + fiN + ' von ' + fi.length + '</span></div><div><span>Seiten (freiwillig)</span><span>' + SEITEN.filter(function (s) { return hasPhoto(s.key); }).length + ' von 2</span></div><div><span>Zusatzbilder</span><span>' + zu + '</span></div><div><span>Fahrzeug</span><span>' + esc(v.marke + ' ' + v.modell) + '</span></div>' + (v.raum ? '<div><span>Showroom</span><span>' + esc(v.raum === 'kein' ? 'nein' : raumName(v.raum)) + '</span></div>' : '');
   }
   function showEnd() { showPage('pEnd'); renderEnd(); }
   $('gGrid').addEventListener('click', function (ev) {
@@ -2469,7 +2492,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var sl = {}; Object.keys(S.slots).forEach(function (k) { var s = S.slots[k]; if (s.state === 'hochgeladen') sl[k] = { zusatz_art: s.zusatz_art, ampelHandy: s.ampelHandy }; });
     store('fa_veh', { vehicle: S.vehicle, slots: sl });
   }
-  function resetVehicle() { S.vehicle = null; S.slots = {}; S.camChoice = null; S.klasse = null; store('fa_veh', null); clearTimeout(S.pollTimer); buildKar(); }
+  function resetVehicle() { S.vehicle = null; S.slots = {}; S.camChoice = null; S.klasse = null; S.raum = raumVorgabe(); S.raumJa = null; store('fa_veh', null); clearTimeout(S.pollTimer); buildKar(); buildShow(); }
   $('resumeYes').onclick = function () {
     var rs = load('fa_veh'); if (!rs) return;
     sensorsNachholen();   // Erlaubnis für den Bewegungssensor schon hier nachholen (nach dem Neuladen nötig)
@@ -2495,10 +2518,10 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       var perm = await sensorsPermission();
       // 2) Fahrzeug anlegen
       fmsg('Fahrzeug wird angelegt …');
-      var v = { id: uuid(), marke: marke, modell: modell, baujahr: bj, karosserie: DBKAR[S.klasse] || null, klasse: S.klasse };
+      var v = { id: uuid(), marke: marke, modell: modell, baujahr: bj, karosserie: DBKAR[S.klasse] || null, klasse: S.klasse, raum: S.raum || raumVorgabe() };
       try { await S.api.createVehicle(v); }
       catch (e) {
-        fmsg(e.net ? 'Keine Verbindung zum Server. Bitte Netz prüfen und nochmal tippen.' : (e.status === 403 || e.status === 401 ? 'Zugang verweigert. Der Link ist ungültig oder abgelaufen.' : 'Der Server hat das Fahrzeug nicht angenommen: ' + e.message), true);
+        fmsg(e.net ? 'Keine Verbindung zum Server. Bitte Netz prüfen und nochmal tippen.' : (e.status === 403 || e.status === 401 ? 'Zugang verweigert. Der Link ist ungültig oder abgelaufen.' : e.status === 404 ? 'Der Server kennt diese App-Fassung noch nicht (die Raumwahl fehlt in der Datenbank). Bitte AutoScales Bescheid geben.' : 'Der Server hat das Fahrzeug nicht angenommen: ' + e.message), true);
         $('fGo').disabled = false; return;
       }
       aiLoad();   // Auto-Erkennung im Hintergrund laden, ab hier
@@ -2606,7 +2629,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     }
     initSettings();
     if (S.cfg && S.cfg.ai === 'aus') $('aiTip').hidden = true;
-    buildKar(); applyTheme();
+    buildKar(); buildShow(); applyTheme();
     showStart();
     restoreQueue();
   }
