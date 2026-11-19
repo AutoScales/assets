@@ -310,6 +310,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   <div class="glass set" id="setBox">
     <div class="row"><label class="sw"><input type="checkbox" id="chkMess"> Messwerte anzeigen (für den Testplan)</label></div>
     <p class="hs-tip" id="hsTip" hidden></p>
+    <button class="btn" id="hsBtn" type="button" hidden></button>
   </div>
   <p class="priv"><b>Testfassung:</b> bitte nur Testfotos, keine Kundenfahrzeuge mit Personen oder Papieren. Die App schickt Fotos nur an den eingetragenen Test-Server der AutoScales GmbH i.G. (EU, Irland). Auf dem Handy bleiben nur Fotos, die noch nicht hochgeladen sind, bis sie gesendet wurden.</p>
   <p class="srv" id="srvInfo"></p>
@@ -808,7 +809,6 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         if (p.has('debug')) cfg.debug = true;
         if (p.get('ai') === 'aus') cfg.ai = 'aus';   // Auto-Erkennung abschalten (falls sie am Handy stört)
         if (p.get('ab') === 'r') cfg.ab = 'r';   // RAHMEN: Führung über den Rahmen im Sucher statt über Meter am Boden (Test, 12.11.2026); ohne den Schalter bleibt alles wie bisher
-        if (p.has('hs')) cfg.hs = true;                // Home-Bildschirm: Link-Teil bleibt in der Adresse, damit das Symbol ihn mitnimmt
         if (p.has('sim') && cfg.demo) cfg.sim = true;  // nur im Demo ohne Server: gezeichnete Kamera
         if (p.has('ohneshow') && cfg.demo) cfg.ohneShow = true;   // nur im Demo: Außenbilder „geprüft, ohne Showroom“ (Status geprueft)
         if (cfg.demo && /^(gruen|rot|gelb|fern|nein|winkel|schief|mitte|licht|dunkel|lackrot|scheinwerfer|glanz|weisslack)$/.test(p.get('simz') || '')) { cfg.sim = true; cfg.simz = p.get('simz'); }
@@ -816,7 +816,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         if (cfg.demo && cfg.sim && /^[012]\.\d{1,2}$/.test(p.get('simh') || '')) cfg.simh = Math.max(0.8, Math.min(2, parseFloat(p.get('simh'))));   // nur Test: echte Höhe der Demo-Kamera (m); die App rechnet weiter mit camH()
         if (cfg.demo && cfg.sim && /^-?\d\.\d{1,2}$/.test(p.get('simd') || '')) cfg.simd = Math.max(-2, Math.min(3, parseFloat(p.get('simd'))));     // nur Test: Demo-Kamera so viele Meter näher (−) oder weiter weg (+)
         if (cfg.demo && cfg.sim && /^0\.\d{1,2}$/.test(p.get('simu') || '')) cfg.simu = Math.min(0.3, parseFloat(p.get('simu')));   // nur Test: die Erkennung der Demo sieht den unteren Teil des Autos nicht (Unterkante um diesen Anteil der Bildhöhe zu hoch, Score 0,36); Muster Foto 18:10 am 11.11.2026
-        store('fa_cfg', cfg); if (!cfg.hs) { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* egal */ } } }
+        store('fa_cfg', cfg); try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* egal */ } }   // der Link-Teil verlässt die Adresse sofort, ohne Ausnahme
     }
     if (!cfg) cfg = load('fa_cfg');
     if (cfg && !cfg.demo && !SRV_OK.test(cfg.url || '')) cfg = { bad: 'Die Server-Adresse im Link ist nicht erlaubt.' };
@@ -2527,7 +2527,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 
   function fmsg(t, bad) { $('fMsg').textContent = t || ''; $('fMsg').className = 'msg' + (bad ? ' bad' : ''); }
   $('fForm').addEventListener('submit', async function (ev) {
-    ev.preventDefault();
+    ev.preventDefault(); hsAus();
     var marke = $('fMarke').value.trim(), modell = $('fModell').value.trim(), bj = parseInt($('fBaujahr').value, 10);
     if (!marke || !modell) { fmsg('Bitte Marke und Modell eintragen.', true); return; }
     if (!(bj >= 1900 && bj <= 2050)) { fmsg('Bitte das Baujahr vierstellig eintragen, z. B. 2021 (möglich sind 1900 bis 2050).', true); return; }   // Spanne: Giannis 11.11.2026 („die spanne muss sein 1900-2050“, Oldtimer); die Datenbank braucht dieselbe Spanne
@@ -2658,14 +2658,24 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function initSettings() {
     $('chkMess').checked = !!VAR.debug;
     $('chkMess').onchange = function () { VAR.debug = this.checked; UI.mess = this.checked; saveUI(); };
-    var standalone = (navigator.standalone === true) || !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches), tip = $('hsTip');
-    if (!standalone && S.cfg && !S.cfg.bad) {
-      var ios = /iPhone|iPad/.test(navigator.userAgent), and = /Android/.test(navigator.userAgent);
-      if (ios || and) {
-        tip.hidden = false;
-        tip.innerHTML = '<b>Ohne Browserleisten arbeiten:</b> ' + (S.cfg.hs ? (ios ? 'Teilen-Symbol tippen, „Zum Home-Bildschirm“ wählen und die App von dort öffnen.' : 'Browser-Menü öffnen, „Zum Startbildschirm hinzufügen“ wählen und die App von dort öffnen.') : 'Den Link in link-bauen.html mit der Option „Für Home-Bildschirm“ neu bauen, öffnen und dann zum Home-Bildschirm hinzufügen.');
-      }
+    var standalone = (navigator.standalone === true) || !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches), tip = $('hsTip'), btn = $('hsBtn');
+    if (!standalone && S.cfg && !S.cfg.bad && !S.cfg.demo && S.cfg.zugang && /iPhone|iPad|Android/.test(navigator.userAgent)) {
+      tip.hidden = false; btn.hidden = false; btn.onclick = function () { if (HS.an) hsAus(); else hsAn(); }; hsZeigen();
     }
+  }
+  /* Home-Bildschirm: Das Symbol merkt sich die Adresse, die beim Hinzufügen in der Adresszeile steht. Der Link-Teil (Server, Schlüssel, Zugangswort) steht deshalb nur
+     während dieses einen Schritts in der Adresse: nach dem Tipp auf „Für den Home-Bildschirm vorbereiten“, bis „Fertig“, bis zum Anlegen eines Fahrzeugs oder höchstens
+     zwei Minuten. Sonst nie. Beim Start vom Symbol liest die App ihn und nimmt ihn sofort wieder aus der Adresse (readCfg). */
+  var HS = { an: false, t: null, ms: 120000 };
+  function linkTeil() { var c = S.cfg, p = new URLSearchParams(); p.set('u', c.url); p.set('k', c.key); p.set('z', c.zugang); ['a', 'h', 'ai', 'ab'].forEach(function (k) { if (c[k]) p.set(k, c[k]); }); return p.toString() + (c.debug ? '&debug' : ''); }
+  function hsAdresse(an) { try { history.replaceState(null, '', location.pathname + location.search + (an ? '#' + linkTeil() : '')); return true; } catch (e) { return false; } }
+  function hsAus() { clearTimeout(HS.t); if (!HS.an) return; HS.an = false; hsAdresse(false); hsZeigen(); }
+  function hsAn() { if (!hsAdresse(true)) return; HS.an = true; clearTimeout(HS.t); HS.t = setTimeout(hsAus, HS.ms); hsZeigen(); }
+  function hsZeigen() {
+    var ios = /iPhone|iPad/.test(navigator.userAgent);
+    $('hsTip').innerHTML = HS.an ? '<b>Jetzt hinzufügen:</b> ' + (ios ? 'Teilen-Symbol tippen und „Zum Home-Bildschirm“ wählen.' : 'Browser-Menü öffnen und „Zum Startbildschirm hinzufügen“ wählen.') + ' Danach hier auf „Fertig“ tippen. Bis dahin steht der Zugang in der Adresszeile, höchstens zwei Minuten.'
+      : '<b>Ohne Browserleisten arbeiten:</b> Die App lässt sich auf den Home-Bildschirm legen und von dort öffnen.';
+    $('hsBtn').textContent = HS.an ? 'Fertig' : 'Für den Home-Bildschirm vorbereiten';
   }
   window.addEventListener('hashchange', function () { if (/(^#|&)(u=|demo)/.test(location.hash)) location.reload(); });
   init();
