@@ -770,6 +770,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         if (cfg.demo && /^[\w.\/-]{1,80}$/.test(p.get('simimg') || '')) { cfg.sim = true; cfg.simImg = p.get('simimg'); }   // nur Test: Bild statt Zeichnung
         if (cfg.demo && cfg.sim && /^[012]\.\d{1,2}$/.test(p.get('simh') || '')) cfg.simh = Math.max(0.8, Math.min(2, parseFloat(p.get('simh'))));   // nur Test: echte Höhe der Demo-Kamera (m); die App rechnet weiter mit camH()
         if (cfg.demo && cfg.sim && /^-?\d\.\d{1,2}$/.test(p.get('simd') || '')) cfg.simd = Math.max(-2, Math.min(3, parseFloat(p.get('simd'))));     // nur Test: Demo-Kamera so viele Meter näher (−) oder weiter weg (+)
+        if (cfg.demo && cfg.sim && /^-?\d{1,2}(\.\d)?$/.test(p.get('simp') || '')) cfg.simp = Math.max(-15, Math.min(15, parseFloat(p.get('simp'))));   // nur Test: Demo-Kamera so viele Grad weiter nach oben (+) oder nach unten (−) gekippt
         if (cfg.demo && cfg.sim && /^0\.\d{1,2}$/.test(p.get('simu') || '')) cfg.simu = Math.min(0.3, parseFloat(p.get('simu')));   // nur Test: die Erkennung der Demo sieht den unteren Teil des Autos nicht (Unterkante um diesen Anteil der Bildhöhe zu hoch, Score 0,36); Muster Foto 18:10 am 11.11.2026
         store('fa_cfg', cfg); try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* egal */ } }   // der Link-Teil verlässt die Adresse sofort, ohne Ausnahme
     }
@@ -978,12 +979,12 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     return { good: R.alle, lvl: R.lvl, why: R.hint, R: R };
   }
   function gateUi(ctl, prog) {
-    var key = ctl.forced ? (ctl.noSensor ? 'fn' : 'f') : ctl.released ? 'ok' : 'dim';
+    var key = ctl.forced ? (ctl.noSensor ? 'fn' : ctl.gut ? 'fg' : 'f') : ctl.released ? 'ok' : 'dim';   // fg: alles passt, nur die Ruhezeit läuft noch
     if (ctl.ui !== key) {
       ctl.ui = key;
       if (ctl.released) {
         shotReady(true, ctl.forced);
-        $('stillTxt').innerHTML = ctl.forced ? '<i class="dot warn"></i> ' + (ctl.noSensor ? 'Ohne Sensor, nicht geprüft' : 'Foto möglich, bitte Hinweis beachten') : '<i class="dot ok"></i> Passt, jetzt auslösen';
+        $('stillTxt').innerHTML = ctl.forced ? '<i class="dot warn"></i> ' + (ctl.noSensor ? 'Ohne Sensor, nicht geprüft' : ctl.gut ? 'Kurz ruhig halten …' : 'Foto möglich, bitte Hinweis beachten') : '<i class="dot ok"></i> Passt, jetzt auslösen';
         $('stillSub').textContent = '';
         setStill(100);
       } else {
@@ -1017,11 +1018,15 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         if (ctl.released && !ctl.forced) { if (!badSince) badSince = now; if (now - badSince > 400) { ctl.released = false; badSince = 0; L.verluste++; } }
       }
       // Immer frei: Passt noch nicht alles, gilt die Freigabe als erzwungen (Hinweis-Foto, „nicht geprüft“). Ohne Sensor erst nach FUEHRUNG.zeiten.ohneSensor; nur das zählt als Notlösung.
-      if (!ctl.released && (!g.noSensor || el >= FUEHRUNG.zeiten.ohneSensor)) { ctl.released = true; ctl.forced = true; ctl.noSensor = !!g.noSensor; ctl.at = Math.round(el); ctl.grund = g.R.grund.slice(); if (g.noSensor) L.notloesungen++; haptic(18); }
+      if (!ctl.released && (!g.noSensor || el >= FUEHRUNG.zeiten.ohneSensor)) { ctl.released = true; ctl.forced = true; ctl.at = Math.round(el); if (g.noSensor) L.notloesungen++; haptic(18); }
+      // Hinweis-Foto: Es zählt der Stand beim Tipp, nicht der bei der Freigabe (Gründe, ohne Sensor). gut = alle Punkte passen gerade, nur die Ruhezeit läuft noch.
+      if (ctl.forced) { ctl.noSensor = !!g.noSensor; ctl.grund = g.noSensor ? ['kein_sensor'] : g.R.warte ? ['sensor_wartet'] : g.R.grund.slice(); }
+      ctl.gut = !!g.good;
       ctl.reason = g.good ? '' : (g.why || 'Noch nicht frei');
       gateUi(ctl, okSince ? (now - okSince) / CFG.STILL_MS * 100 : 0);
       await sleep(80);
     }
+    if (ctl.forced && ctl.gut) { ctl.forced = false; ctl.noSensor = false; ctl.grund = []; }   // beim Tipp passte alles, nur die Ruhezeit lief noch: geprüft, kein Hinweis-Foto (erstes_gruen_ms bleibt dann leer)
     L.tipp_nach_ms = Math.round(performance.now() - t0);
     Object.keys(L.blockiert_ms).forEach(function (k) { L.blockiert_ms[k] = Math.round(L.blockiert_ms[k]); });
   }
@@ -1138,7 +1143,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       if (det.state === 'kein') ab = { lvl: 1, hint: 'Auto in den Kasten stellen', grund: 'kein_auto' };   // ohne erkanntes Auto kein „Passt“
       if (det.state === 'erkannt') {
         var b = det.box, sb = schabBox(m.key, kind), rm = FUEHRUNG.mitte.rand, K = FUEHRUNG.kasten;
-        var cutB = b.y1 > 1 - rm || (b.x0 < rm && b.x1 > 1 - rm) || (/^seite/.test(m.key) && b.x1 - b.x0 >= K.seiteVoll);   // unten oder an beiden Seiten angeschnitten, Seite: ab 92 % der Bildbreite = zu nah; nur an einer Seite zählt als Mitte
+        var cutB = (b.x0 < rm && b.x1 > 1 - rm) || (/^seite/.test(m.key) && b.x1 - b.x0 >= K.seiteVoll), cutU = b.y1 > 1 - rm;   // cutB: an beiden Seiten angeschnitten, Seite: ab 92 % der Bildbreite = zu nah (nur an einer Seite zählt als Mitte); cutU: unten angeschnitten
         R.dx = (b.x0 + b.x1) / 2 - (sb.x0 + sb.x1) / 2;
         // KASTEN-ANFANG: ohne Meter am Boden. Abstand aus der Breite des Autos gegen die Breite des Kastens, Haltehöhe aus der Oberkante (die Unterkante erkennt die Erkennung bei dunkler Front nicht sicher). Alles nur gelb: Hinweise.
         var sk = schabBox(m.key, kind, s.p), G = kastenGrenzen(m.key, kind, s.p), gq = (b.x1 - b.x0) / (sk.x1 - sk.x0) / K.erkennung, dyo = b.y0 - sk.y0;
@@ -1147,6 +1152,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         R.rahmen = { g: gq, dy: dyo };
         if (cutB || gq > G.gross) { ab = { lvl: 1, hint: 'Schritt zurück', grund: 'rahmen_zu_gross' }; R.zone = 'gelbnah'; }
         else if (gq < G.klein) { ab = { lvl: 1, hint: 'Näher ran', grund: 'rahmen_zu_klein' }; R.zone = 'gelbfern'; }
+        else if (cutU) { ab = { lvl: 1, hint: 'Handy etwas nach unten kippen', grund: 'winkel_neigung' }; R.zone = 'ok'; }   // Abstand passt (die Breite stimmt), das Auto ist nur unten angeschnitten: kippen, nicht zurückgehen
         else if (dyh > G.zuHoch) { ab = { lvl: 1, hint: 'Handy tiefer halten', grund: 'rahmen_zu_tief' }; R.zone = 'ok'; }
         else if (dyh < -G.zuTief) { ab = { lvl: 1, hint: 'Handy höher halten', grund: 'rahmen_zu_hoch' }; R.zone = 'ok'; }
         else R.zone = 'ok';
@@ -1305,7 +1311,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   // Zustände der Demo-Kamera zum Prüfen der Führung (Link: #demo&sim&simz=gruen|nah|fern|nein|winkel|schief|mitte); ohne simz: gruen
   //   d = Kamera so viele Meter näher (−) oder weiter weg (+), p = Neigung daneben (Grad), r = Rollen (Grad), x = seitlich versetzt (Meter am Auto), nodet = keine Erkennung
   var SIMZ = { gruen: {}, nah: { d: -0.9 }, fern: { d: 1.2 }, nein: { nodet: 1 }, winkel: { p: 4 }, schief: { r: 3 }, mitte: { x: 0.5 }, licht: { licht: 1 }, dunkel: { dunkel: 1 }, lackrot: { lack: 1 }, scheinwerfer: { sw: 1, halb: 1 }, glanz: { sw: 1 }, weisslack: { sw: 1, halb: 1, wl: 1 } };
-  function simPre() { var z = SIMZ[(S.cfg && S.cfg.simz) || 'gruen'] || {}, d = S.cfg && S.cfg.simd; return d ? Object.assign({}, z, { d: (z.d || 0) + d }) : z; }
+  function simPre() { var z = SIMZ[(S.cfg && S.cfg.simz) || 'gruen'] || {}, d = (S.cfg && S.cfg.simd) || 0, p = (S.cfg && S.cfg.simp) || 0; return d || p ? Object.assign({}, z, { d: (z.d || 0) + d, p: (z.p || 0) + p }) : z; }
   function simH() { return (S.cfg && S.cfg.simh) || camH(); }   // echte Höhe der Demo-Kamera: ohne &simh die Höhe, mit der die App rechnet
   function simSnap() {
     var t = performance.now() / 1000, pre = simPre(), mm = S.cur ? slotMeta(S.cur) : null, z = mm ? (mm.art === 'aussen' ? drawP(mm.key) : zielP(mm.key)) : null;
