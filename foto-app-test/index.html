@@ -281,7 +281,6 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   <form id="fForm" class="glass form" autocomplete="off" novalidate>
     <div class="fld"><span class="lbl" id="showLbl" style="line-height:1.35">Digitaler Showroom für dieses Fahrzeug?</span><div class="wahl" id="showBox" role="group" aria-labelledby="showLbl"></div></div>
     <div class="fld" id="raumFld"><span class="lbl" id="raumLbl">Raum wählen</span><div class="wahl" id="raumBox" role="group" aria-labelledby="raumLbl"></div></div>
-    <p class="hs-tip" id="ohneTip" hidden></p>
     <div class="two">
       <label class="fld"><span class="lbl">Marke</span><input id="fMarke" type="text" maxlength="60" autocomplete="off" autocapitalize="words" placeholder="z. B. BMW"></label>
       <label class="fld"><span class="lbl">Baujahr</span><input id="fBaujahr" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="2021"></label>
@@ -776,10 +775,11 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     });
   }
   /* Showroom-Frage am Anfang je Auto (Giannis 17.11.2026: „Digitaler Showroom ja oder nein?“, Vorgabe je Händler; bei Nein kein Freistellen und kein Raum)
-     und Raumwahl (Giannis 19.11.2026: rund oder Beton mit Holz). S.raum geht beim Anlegen als p_raum an den Server (Spalte fahrzeuge.raum): rund | holz | kein. */
-  var RAEUME = [['rund', 'Runder Raum'], ['holz', 'Betonraum mit Holz']];
+     und Raumwahl (Giannis 19.11.2026: rund oder Beton mit Holz; bei Nein wird nur der Wert kein gespeichert). S.raum geht beim Anlegen als p_raum an den Server (Spalte fahrzeuge.raum): rund | holz | kein. */
+  var RAEUME = [['rund', 'Schlicht'], ['holz', 'Studio']];   // Namen für Händler nach Giannis' Konzept (über Alfred, 19.11.2026): Schlicht = rund, Studio = holz, Ohne Showroom = kein
+  // Was „ohne Showroom“ am Bild bewirkt, ist offen (Giannis 19.11.2026). Die App speichert nur den Wert und verspricht dazu nichts.
   function raumVorgabe() { return 'rund'; }   // Vorgabe je Händler: kommt an dieser einen Stelle an
-  function raumName(r) { var x = RAEUME.filter(function (y) { return y[0] === r; })[0]; return x ? x[1] : r === 'kein' ? 'ohne Showroom' : RAEUME[0][1]; }
+  function raumName(r) { var x = RAEUME.filter(function (y) { return y[0] === r; })[0]; return x ? x[1] : r === 'kein' ? 'Ohne Showroom' : RAEUME[0][1]; }
   function buildShow() {
     var sb = $('showBox'), rb = $('raumBox'); if (!sb || !rb) return;
     if (!S.raum) S.raum = raumVorgabe();
@@ -789,8 +789,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     knopf(sb, 'Ja, mit Showroom', ja, function () { S.raum = S.raumJa || RAEUME[0][0]; });
     knopf(sb, 'Nein', !ja, function () { S.raum = 'kein'; });
     RAEUME.forEach(function (r) { knopf(rb, r[1], S.raum === r[0], function () { S.raum = r[0]; }); });
-    $('raumFld').hidden = !ja; $('ohneTip').hidden = ja;
-    $('ohneTip').textContent = T('Ohne Showroom: Wir stellen das Fahrzeug nicht frei und setzen es in keinen Raum. Deine Fotos erscheinen so, wie du sie aufnimmst.', 'Ohne Showroom: Wir stellen das Fahrzeug nicht frei und setzen es in keinen Raum. Ihre Fotos erscheinen so, wie Sie sie aufnehmen.');
+    $('raumFld').hidden = !ja;
   }
 
   /* =====================================================================
@@ -2416,7 +2415,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var pending = S.queue.length;
     $('gSum').textContent = done + ' von ' + NP + ' Pflichtbildern aufgenommen' + (zusatzIds().length ? ', ' + zusatzIds().length + ' Zusatzbild' + (zusatzIds().length > 1 ? 'er' : '') : '') + (pending ? ' · ' + pending + (pending === 1 ? ' wird' : ' werden') + ' noch hochgeladen' : '');
     $('gProg').innerHTML = '<i style="width:' + Math.round(done * 100 / NP) + '%"></i>';
-    var nG = $('gNote'); if (nG) { if (!S.noteStd) S.noteStd = nG.textContent; var anyOhne = ids.some(function (k) { return S.slots[k] && S.slots[k].server && S.slots[k].server.status === ST_OHNE; }); var nt = v.raum === 'kein' ? 'Dieses Fahrzeug ist ohne digitalen Showroom angelegt: Alle Bilder bleiben so, wie sie aufgenommen wurden. Diese Seite aktualisiert sich selbst.' : anyOhne ? 'Einige Außenbilder wurden nur geprüft: Die Ampel zeigt das Ergebnis am Originalfoto, ein Showroom-Bild entsteht dabei nicht. Innenbilder bleiben Original. Diese Seite aktualisiert sich selbst.' : S.noteStd; if (nG.textContent !== nt) nG.textContent = nt; }
+    var nG = $('gNote'); if (nG) { if (!S.noteStd) S.noteStd = nG.textContent; var anyOhne = ids.some(function (k) { return S.slots[k] && S.slots[k].server && S.slots[k].server.status === ST_OHNE; }); var nt = v.raum === 'kein' ? 'Dieses Fahrzeug ist ohne Showroom angelegt. Diese Seite aktualisiert sich selbst.' : anyOhne ? 'Einige Außenbilder wurden nur geprüft: Die Ampel zeigt das Ergebnis am Originalfoto, ein Showroom-Bild entsteht dabei nicht. Innenbilder bleiben Original. Diese Seite aktualisiert sich selbst.' : S.noteStd; if (nG.textContent !== nt) nG.textContent = nt; }
     $('gGrid').innerHTML = ids.map(function (id) {
       var s = S.slots[id], m = slotMeta(id), ti = tileInfo(id), taken = hasPhoto(id), img;
       if (s && s.thumb) img = '<img alt="" src="' + s.thumb + '">';
