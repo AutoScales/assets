@@ -264,6 +264,41 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .rv-btns .btn { min-height: 48px; font-size: 15px; padding: 0 10px; border-radius: var(--rs); }
 .rv-btns.two { grid-template-columns: 1fr 1.3fr; }
 .rv-btns .btn[hidden] { display: none; }
+/* Neue Schritte im Look der Designvorlage V10 (Entwurf 3, c01be09; Giannis 19.11.2026 „Design V10, nehmen wir A“).
+   Start, Sucher und Galerie stellt die App erst nach dem Sonntagstest um (Alfred 19.11.2026). */
+.v10 { --p-bg: #FAFAFA; --p-fg: #0B0C10; --p-mut: #5C626D; --p-line: #DCDDE2; --p-panel: #FFFFFF; --gold: #FFC77C; --v-bad: #B3261E;
+  --il-bg: #0B0C10; --il-line: #9CA3AF; --il-fill: #171A21; --il-gold: #FFC77C; --il-hell: #FAFAFA; --v-ui: 'Montserrat', system-ui, -apple-system, sans-serif;
+  background: var(--p-bg); color: var(--p-fg); border-radius: 22px; padding: 22px 18px; gap: 14px; min-height: calc(100dvh - 48px); box-sizing: border-box; font-family: var(--v-ui); }
+:root[data-dir="a"] .v10 { --p-bg: #0B0C10; --p-fg: #FAFAFA; --p-mut: #9CA3AF; --p-line: #2A2D36; --p-panel: #14161C; --v-bad: #FF8A80; }
+.v10 .schritt { font: 600 11px/1 var(--v-ui); letter-spacing: .12em; text-transform: uppercase; color: var(--p-mut); display: flex; justify-content: space-between; gap: 10px; }
+.v10 .prog { display: grid; grid-auto-flow: column; gap: 4px; } .v10 .prog i { height: 3px; background: var(--p-line); border-radius: 2px; } .v10 .prog i.on { background: var(--gold); }
+.v10 h4 { margin: 0; font: 400 19px/1.3 'Michroma', 'Montserrat', system-ui, sans-serif; }
+.v10 p { margin: 0; color: var(--p-mut); font-size: 14px; line-height: 1.5; } .v10 p b { color: var(--p-fg); }
+.v10 .karte { background: var(--p-panel); border: 1px solid var(--p-line); border-radius: 14px; overflow: hidden; }
+.v10 .il { display: block; width: 100%; height: auto; background: var(--il-bg); }
+.v10 .sp { flex: 1; }
+.v10 .btn { font: 700 15px/1 var(--v-ui); min-height: 52px; width: 100%; border-radius: 12px; border: 1px solid var(--p-line); background: transparent; color: var(--p-fg); box-shadow: none; cursor: pointer; padding: 0 16px; }
+.v10 .btn.pr { background: var(--gold); color: #0B0C10; border-color: var(--gold); }
+.v10 .link { font: 600 14px/1 var(--v-ui); min-height: 44px; background: none; border: 0; color: var(--p-mut); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.v10 .fld { display: grid; gap: 5px; } .v10 .fld > span { font: 600 11px/1 var(--v-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--p-mut); }
+.v10 .fld input { font: 500 16px/1 var(--v-ui); min-height: 46px; padding: 0 12px; border: 1px solid var(--p-line); border-radius: 10px; background: var(--p-panel); color: var(--p-fg); width: 100%; box-sizing: border-box; }
+.v10 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.v10 .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.v10 .chip { font: 600 13px/1 var(--v-ui); min-height: 44px; padding: 0 14px; border-radius: 22px; border: 1px solid var(--p-line); background: var(--p-panel); color: var(--p-fg); cursor: pointer; }
+.v10 .chip[aria-pressed="true"] { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); }
+.v10 .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.v10 .kachel { border: 1px solid var(--p-line); border-radius: 10px; overflow: hidden; background: var(--p-panel); display: grid; }
+.v10 .kachel img, .v10 .kachel .il { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; background: var(--il-bg); }
+.v10 .kachel span { font: 600 10.5px/1.25 var(--v-ui); padding: 6px 7px 7px; display: flex; gap: 5px; align-items: center; }
+.v10 .st { width: 14px; height: 14px; flex: none; }
+.v10 .zeile { display: flex; gap: 10px; align-items: center; padding: 11px 12px; border: 1px solid var(--p-line); border-radius: 12px; background: var(--p-panel); font: 500 13.5px/1.35 var(--v-ui); }
+.v10 .zeile .st { width: 18px; height: 18px; } .v10 .zeile b { font-weight: 700; }
+.v10 .msg { color: var(--p-mut); } .v10 .msg.bad { color: var(--v-bad); }
+.v10 .il .l { fill: none; stroke: var(--il-line); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.v10 .il .f { fill: var(--il-fill); stroke: var(--il-line); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.v10 .il .g { fill: none; stroke: var(--il-gold); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.v10 .il .gd { fill: none; stroke: var(--il-gold); stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 3 4; }
+.v10 .il .gp { fill: var(--il-gold); stroke: none; }
 </style>
 </head>
 <body>
@@ -327,22 +362,13 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   <div class="glass cta" id="gCta"><button class="btn big primary" id="gNext" type="button">Weiter fotografieren</button></div>
   <div class="actions">
     <button class="btn" id="gZusatz" type="button">Zusatzbild aufnehmen</button>
-    <button class="btn" id="gNew" type="button">Fertig, neues Fahrzeug</button>
+    <button class="btn" id="gNew" type="button">Fertig: prüfen und absenden</button>
   </div>
   <p class="msg" id="gMsg" role="status" aria-live="polite"></p>
 </main>
 
-<!-- Seite 3: Abschluss -->
-<main class="page" id="pEnd" hidden>
-  <header class="brand"><span class="lockup"><span class="logo"><img class="l" src="logo.png" alt="AutoScales"><img class="d" src="logo-dunkel.png" alt="AutoScales"></span><b class="appname">Studio</b></span><span class="chip"><i class="dot go"></i>Testfassung</span></header>
-  <div class="ring" aria-hidden="true"><svg viewBox="0 0 54 54" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 28l10 10L42 16"/></svg></div>
-  <div class="endc"><h1 id="eH1">Alle 10 Bilder sind aufgenommen</h1><p class="sub" id="eSub"></p></div>
-  <div class="glass sum" id="eSum"></div>
-  <div class="actions">
-    <button class="btn big primary" id="eNew" type="button">Nächstes Fahrzeug</button>
-    <button class="btn big" id="eGal" type="button">Galerie ansehen</button>
-  </div>
-</main>
+<!-- Seite 3: neue Schritte im V10-Look (Fahrzeugdaten, Zustand, Preis, Prüfen, Gesendet); Inhalt baut schrittHtml() -->
+<main class="page v10" id="pSchritt" hidden></main>
 
 <!-- Seite 4: Selbsttest -->
 <main class="page" id="pTest" hidden>
@@ -420,7 +446,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-9';
+  var APP = 'foto-app-test-10';
   var RAD = Math.PI / 180;
   /* =====================================================================
      ZAHLEN DER FÜHRUNG. Die Optik ist final (Giannis 08.11.2026 21:32); nachgestellt werden nur die Zahlen, und zwar hier.
@@ -459,7 +485,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     SETTLE_MS: 1500,            // Einschwingzeit nach Kamerastart
     NACH_MAX_MS: 900, NACH_FENSTER_MS: 220, NACH_RUHIG_MS: 120,   // nach dem Tipp kurz nachstabilisieren (der Tipp wackelt), höchstens so lange
     STILL_P: FUEHRUNG.ruhig.p, STILL_R: FUEHRUNG.ruhig.r, STILL_MS: FUEHRUNG.zeiten.ruhig, FRESH_MS: 250,   // ruhig (Schwellen aus Probe 4); FRESH_MS: Sensorwert höchstens so alt
-    ZUSATZ_MAX: 6
+    ZUSATZ_MAX: 6,
+    NACHPRUEFEN_MS: 300000      // nicht endgültig abgelehnte Fotos: so oft erneut senden (dazu bei jedem Öffnen)
   };
   // Vorgaben aus dem Link: &a=du|sie (Anrede), &debug (Messwerte in der Ansicht). Die Wahl landet in app_details.variante.
   var VAR = { anrede: 'sie', debug: false };
@@ -736,13 +763,13 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
      und Raumwahl (Giannis 19.11.2026: rund oder Beton mit Holz; bei Nein wird nur der Wert kein gespeichert). S.raum geht beim Anlegen als p_raum an den Server (Spalte fahrzeuge.raum): rund | holz | kein. */
   var RAEUME = [['rund', 'Schlicht'], ['holz', 'Studio']];   // Namen für Händler nach Giannis' Konzept (über Alfred, 19.11.2026): Schlicht = rund, Studio = holz, Ohne Showroom = kein
   // Was „ohne Showroom“ am Bild bewirkt, ist offen (Giannis 19.11.2026). Die App speichert nur den Wert und verspricht dazu nichts.
-  function raumVorgabe() { return 'rund'; }   // Vorgabe je Händler: kommt an dieser einen Stelle an
+  function raumVorgabe() { var r = S.cfg && S.cfg.raumVorgabe; return r === 'rund' || r === 'holz' || r === 'kein' ? r : 'rund'; }   // Vorgabe je Händler aus dem Zugang (zugang_info, Spalte zugaenge.raum_vorgabe); ohne Vorgabe rund
   function raumName(r) { var x = RAEUME.filter(function (y) { return y[0] === r; })[0]; return x ? x[1] : r === 'kein' ? 'Ohne Showroom' : RAEUME[0][1]; }
   function buildShow() {
     var sb = $('showBox'), rb = $('raumBox'); if (!sb || !rb) return;
     if (!S.raum) S.raum = raumVorgabe();
     var ja = S.raum !== 'kein'; if (ja) S.raumJa = S.raum;
-    function knopf(box, text, on, fn) { var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.textContent = text; b.onclick = function () { fn(); buildShow(); fmsg(''); }; box.appendChild(b); }
+    function knopf(box, text, on, fn) { var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.textContent = text; b.onclick = function () { fn(); S.raumGewaehlt = true; buildShow(); fmsg(''); }; box.appendChild(b); }
     sb.innerHTML = ''; rb.innerHTML = '';
     knopf(sb, 'Ja, mit Showroom', ja, function () { S.raum = S.raumJa || RAEUME[0][0]; });
     knopf(sb, 'Nein', !ja, function () { S.raum = 'kein'; });
@@ -782,7 +809,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   /* =====================================================================
      Server-Zugriff (Supabase per REST) und Demo ohne Server
      ===================================================================== */
-  function ApiError(status, message, net) { this.status = status; this.message = message; this.net = !!net; }
+  function ApiError(status, message, net, info) { this.status = status; this.message = message; this.net = !!net; this.info = info || null; this.fehler = (info && info.fehler) || null; }   // fehler: Antwort {"ok": false, "fehler": …} der neuen Funktionen (SQL 20.11.2026)
+  // Zugang je Händler (SQL 20.11.2026): Wort der Form kennung-geheimnis (8 Zeichen, Strich, 48 Zeichen). Jedes andere Wort geht den alten Weg (ein Wort für alle), bis das Abschluss-SQL ihn schließt.
+  function zugangNeu(z) { return /^[a-z0-9]{8}-[0-9a-f]{48}$/.test(z || ''); }
   ApiError.prototype = Object.create(Error.prototype);
   function permanent(e) { return e && !e.net && e.status >= 400 && e.status < 500 && e.status !== 408 && e.status !== 429; }
 
@@ -804,11 +833,15 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       if (!r.ok) throw new ApiError(r.status, msgOf(r), false);
       return r.json;
     }
+    async function rpcOk(name, body) { var j = await rpc(name, body); if (j && j.ok === false) throw new ApiError(422, j.fehler || 'abgelehnt', false, j); return j; }
     return {
       real: true,
       ping: function () { return rpc('app_ping', {}); },
       markNoRear: function (id, on) { return rpc('fahrzeug_merkmal', { p_id: id, p_ohne_ruecksitzbank: !!on }); },
-      createVehicle: function (v) { return rpc('fahrzeug_anlegen', { p_id: v.id, p_zugang: cfg.zugang, p_marke: v.marke, p_modell: v.modell, p_baujahr: v.baujahr, p_karosserie: v.karosserie || null, p_selbsttest: !!v.selbsttest, p_raum: v.raum || null }); },
+      createVehicle: function (v) { var b = { p_id: v.id, p_zugang: cfg.zugang, p_marke: v.marke, p_modell: v.modell, p_baujahr: v.baujahr, p_karosserie: v.karosserie || null, p_selbsttest: !!v.selbsttest, p_raum: v.raum || null }; return zugangNeu(cfg.zugang) ? rpcOk('fahrzeug_anlegen_v2', b) : rpc('fahrzeug_anlegen', b); },
+      zugangInfo: function () { return zugangNeu(cfg.zugang) ? rpc('zugang_info', { p_zugang: cfg.zugang }) : Promise.resolve(null); },
+      daten: function (id, p) { return rpcOk('fahrzeug_daten', { p_id: id, p: p || {} }); },   // {} liest nur: sagt, ob der Server für das Fahrzeug noch etwas annimmt
+      absenden: function (id) { return rpcOk('fahrzeug_absenden', { p_id: id }); },
       upload: async function (path, blob) {
         var r = await call(base + '/storage/v1/object/roh/' + path, { method: 'POST', headers: hdr({ 'Content-Type': 'image/jpeg', 'x-upsert': 'false', 'cache-control': 'max-age=3600' }), body: blob }, 90000);
         if (r.ok) return true;
@@ -820,7 +853,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       status: function (id) { return rpc('foto_status', { p_fahrzeug_id: id }); },
       fileThere: function (id, path) { return rpc('selbsttest_datei_da', { p_fahrzeug_id: id, p_pfad: path }); },
       raw: async function (method, path, extraHdr, body) { var r = await call(base + path, { method: method, headers: hdr(extraHdr || {}), body: body }); return r; },
-      badZugang: function (v) { return rpc('fahrzeug_anlegen', { p_id: v.id, p_zugang: 'falsch-' + uuid(), p_marke: 'x', p_modell: 'x', p_baujahr: 2020, p_karosserie: null, p_selbsttest: true }); }
+      badZugang: function (v) { return zugangNeu(cfg.zugang) ? rpcOk('fahrzeug_anlegen_v2', { p_id: v.id, p_zugang: 'xxxxxxxx-' + new Array(49).join('0'), p_marke: 'x', p_modell: 'x', p_baujahr: 2020, p_karosserie: null, p_selbsttest: true, p_raum: null }) : rpc('fahrzeug_anlegen', { p_id: v.id, p_zugang: 'falsch-' + uuid(), p_marke: 'x', p_modell: 'x', p_baujahr: 2020, p_karosserie: null, p_selbsttest: true }); }   // Kennung xxxxxxxx gibt es nie (Kennungen sind Hex-Zeichen)
     };
   }
 
@@ -831,6 +864,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       ping: async function () { await sleep(200); return { ok: true, schema: 1, zugang_gesetzt: true }; },
       markNoRear: async function (id, on) { await sleep(120); return { id: id, ohne_ruecksitzbank: !!on }; },
       createVehicle: async function (v) { await sleep(300); vehicles[v.id] = { raum: v.raum || null }; return { id: v.id, raum: v.raum || null }; },
+      zugangInfo: async function () { return null; },
+      daten: async function (id, p) { await sleep(120); if (!vehicles[id]) throw new ApiError(422, 'fahrzeug_unbekannt', false, { ok: false, fehler: 'fahrzeug_unbekannt' }); Object.assign(vehicles[id], p || {}); return { ok: true, id: id, fotos_gesamt: photos.filter(function (x) { return x.fahrzeug_id === id; }).length, fotos_max: 30 }; },
+      absenden: async function (id) { await sleep(150); if (!vehicles[id]) throw new ApiError(422, 'fahrzeug_unbekannt', false, { ok: false, fehler: 'fahrzeug_unbekannt' }); var d = !!vehicles[id].abgesendet; vehicles[id].abgesendet = true; return { ok: true, id: id, doppelt: d }; },
       upload: async function (path) { await sleep(500 + Math.random() * 700); if (!vehicles[path.split('/')[0]]) throw new ApiError(400, 'Demo: Ordner unbekannt', false); files[path] = true; return true; },
       report: async function (m) { await sleep(150); var q = { id: m.id, fahrzeug_id: m.fahrzeug_id, platz: m.platz, zusatz_nr: m.zusatz_nr || null, t: Date.now(), ampel_handy: m.ampel_handy || null }; photos = photos.filter(function (x) { return !(x.fahrzeug_id === q.fahrzeug_id && x.platz === q.platz && x.zusatz_nr === q.zusatz_nr); }); photos.push(q); return { id: m.id, version: 1, status: 'neu' }; },
       status: async function (id) {
@@ -1754,7 +1790,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   }
   function endSequence() {
     var wasSeq = S.mode === 'seq';
-    leaveStage().then(function () { if (wasSeq && pflicht().every(function (p) { return hasPhoto(p.key); })) showEnd(); else showGallery(); });
+    leaveStage().then(function () { if (wasSeq && pflicht().every(function (p) { return hasPhoto(p.key); })) zeigeSchritt(nachDenFotos()); else showGallery(); });
   }
   // Skizze von oben: Auto (Front oben), Standort des Händlers, Blickrichtung, Maßlinie zur Automitte.
   // Maßstab und Standorte werden aus GEO gerechnet (Winkel zur Längsachse, Abstand zur Automitte), nicht von Hand gesetzt.
@@ -2229,8 +2265,10 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var n = $('queueNote'), q = S.nach; if (!n || !q) return;
     var rest = S.queue.length, t;
     if (rest) t = (rest === 1 ? 'Auf diesem Gerät wartet noch 1 Foto. Es wird' : 'Auf diesem Gerät warten noch ' + rest + ' Fotos. Sie werden') + ' jetzt gesendet.' + (q.netz ? ' Im Moment besteht keine Verbindung, die App versucht es weiter.' : '');
-    else t = (q.ok ? (q.ok === 1 ? '1 wartendes Foto ist gesendet.' : q.ok + ' wartende Fotos sind gesendet.') : '') + (q.fehler ? (q.ok ? ' ' : '') + (q.fehler === 1 ? '1 Foto hat der Server nicht angenommen.' : q.fehler + ' Fotos hat der Server nicht angenommen.') : '');
-    n.hidden = !t; n.className = 'note' + (!rest && q.fehler ? ' bad' : ''); n.textContent = t;
+    else t = [q.ok ? (q.ok === 1 ? '1 wartendes Foto ist gesendet.' : q.ok + ' wartende Fotos sind gesendet.') : '',
+      q.fehler ? (q.fehler === 1 ? '1 Foto hat der Server noch nicht angenommen.' : q.fehler + ' Fotos hat der Server noch nicht angenommen.') + ' Die App sendet später erneut.' : '',
+      q.geloescht ? (q.geloescht === 1 ? '1 Foto konnte nicht mehr gesendet werden (Fahrzeug abgeschlossen) und ist vom Gerät gelöscht.' : q.geloescht + ' Fotos konnten nicht mehr gesendet werden (Fahrzeug abgeschlossen) und sind vom Gerät gelöscht.') : ''].filter(Boolean).join(' ');
+    n.hidden = !t; n.className = 'note' + (!rest && (q.fehler || q.geloescht) ? ' bad' : ''); n.textContent = t;
   }
   function enqueue(item) {
     item.vehicleId = S.vehicle.id; item.thumb = slotState(item.slot).thumb; item.t = Date.now(); item.srv = sendeschein();
@@ -2242,7 +2280,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var all = (await idbAll()) || [];
     all.sort(function (a, b) { return a.t - b.t; });
     if (!S.api) {   // ohne Link geöffnet: nur wartende Fotos mit Sendeschein nachsenden, alle an denselben Server
-      var mit = all.filter(function (r) { return !r.failed && scheinOk(r); }); if (!mit.length) return;
+      var mit = all.filter(function (r) { return scheinOk(r); }); if (!mit.length) return;   // auch nicht endgültig abgelehnte Fotos (failed) gehen erneut raus
       var s0 = mit[0].srv; all = mit.filter(function (r) { return r.srv.u === s0.u && r.srv.k === s0.k; });
       S.sendApi = mkRealApi({ url: s0.u, key: s0.k }); S.nach = { ok: 0, fehler: 0, netz: false };
     }
@@ -2252,6 +2290,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     });
     queueNote();
     if (S.queue.length) kick();
+    if (S.restoredFailed.length) setTimeout(nachpruefen, 1500);   // beim Öffnen: nicht endgültig abgelehnte Fotos erneut senden
   }
   // Nach „Weitermachen“: Bilder dieses Fahrzeugs, die noch warten oder fehlgeschlagen sind, wieder in der Galerie zeigen
   function markRestored() {
@@ -2262,8 +2301,56 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     });
   }
   var onlineWake = null;
-  window.addEventListener('online', function () { if (onlineWake) onlineWake(); });
+  window.addEventListener('online', function () { if (onlineWake) onlineWake(); if (auftragWake) auftragWake(); });
   window.addEventListener('beforeunload', function (e) { if (S.queue.length && !IDB.ok) { e.preventDefault(); e.returnValue = ''; } });
+  /* Lösch-Regel (Giannis 19.11.2026: „Wenn Fotos nicht mehr gesendet werden können, sollen sie gelöscht werden. Brauchen wir ja nicht. Aber wir müssen sicherstellen,
+     dass alle Fotos, die die Händler machen, an uns rüberkommen.“). Gelöscht wird nur, was der Server endgültig ablehnt: Das Fahrzeug ist unbekannt oder nicht mehr offen
+     (Antwort von fahrzeug_daten), oder es hat schon die Höchstzahl an Fotos. Netzfehler, Zeitüberschreitung, 401, 404 und 5xx sind nie endgültig; solche Fotos bleiben
+     auf dem Gerät und gehen erneut raus (bei jedem Öffnen und alle CFG.NACHPRUEFEN_MS), bis sie angekommen sind. */
+  async function abgelehnt(api, it, e) {
+    if (!api || !api.daten || !it.vehicleId) return null;
+    try { var j = await api.daten(it.vehicleId, {}); return (j && j.fotos_max && j.fotos_gesamt >= j.fotos_max && /zu viele fotos/i.test((e && e.message) || '')) ? 'voll' : null; }
+    catch (x) { return x && (x.fehler === 'fahrzeug_unbekannt' || x.fehler === 'nicht_offen') ? x.fehler : null; }
+  }
+  function verwerfen(it, st, grund) {
+    idbDel(it.id); it.blob = null; it.meta = null; it.failed = true;
+    if (st && st.fotoId === it.id) { st.state = st.server ? 'hochgeladen' : 'leer'; st.thumb = st.server ? st.thumb : null; st.item = null; st.err = null; }
+    if (S.nach) { S.nach.geloescht = (S.nach.geloescht || 0) + 1; queueNote(); }
+    toast(grund === 'voll' ? 'Ein Foto passt nicht mehr dazu (höchstens 30 je Fahrzeug). Es ist vom Gerät gelöscht.' : 'Ein Foto konnte nicht mehr gesendet werden (Fahrzeug abgeschlossen). Es ist vom Gerät gelöscht.', 4000);
+  }
+  function nachpruefenPlanen() { clearTimeout(S.nachTimer); S.nachTimer = setTimeout(nachpruefen, CFG.NACHPRUEFEN_MS); }
+  function nachpruefen() {
+    var seen = {}, alle = [];
+    S.restoredFailed.splice(0).concat(Object.keys(S.slots).map(function (k) { return S.slots[k].item; })).forEach(function (it) { if (it && it.failed && it.blob && !seen[it.id]) { seen[it.id] = true; alle.push(it); } });
+    alle.forEach(function (it) {
+      it.failed = false; it.tries = 0; idbPut(it); S.queue.push(it);
+      if (S.vehicle && it.vehicleId === S.vehicle.id) { var s = slotState(it.slot); if (s.item === it || s.fotoId === it.id) { s.item = null; s.state = 'wartet'; } }
+    });
+    if (alle.length) { renderGalleryIfShown(); kick(); }
+  }
+  /* Aufträge ohne Foto (Fahrzeugdaten, Absenden): liegen auf dem Gerät (localStorage, ohne Zugangswort, mit Sendeschein wie die Fotos), bis der Server sie angenommen hat,
+     und gehen raus, sobald Netz da ist, auch nach dem Schließen der App. Verworfen wird ein Auftrag nur bei einer Antwort {"ok": false} des Servers. */
+  function lsLoad(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
+  function lsStore(k, v) { try { if (v == null || (Array.isArray(v) && !v.length)) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ohne Speicher weiter */ } }
+  function auftrag(a) { var L = lsLoad('fa_auftraege') || []; a.nr = uuid(); a.t = Date.now(); a.srv = sendeschein(); L.push(a); lsStore('fa_auftraege', L); auftraegeSenden(); }
+  var auftragWake = null;
+  async function auftraegeSenden() {
+    if (S.auftragLaeuft) return; S.auftragLaeuft = true;
+    var warte = 0;
+    for (;;) {
+      var L = lsLoad('fa_auftraege') || [], a = L[0]; if (!a) break;
+      var api = a.srv ? (scheinOk(a) ? (S.api && S.api.real && S.cfg && S.cfg.url === a.srv.u && S.cfg.key === a.srv.k ? S.api : mkRealApi({ url: a.srv.u, key: a.srv.k })) : null) : (S.demo ? S.api : null), fertig = !api;
+      if (api) {
+        try { if (a.art === 'absenden') await api.absenden(a.id); else await api.daten(a.id, a.p || {}); fertig = true; warte = 0; }
+        catch (e) {
+          if (e && e.fehler) fertig = true;   // vom Server endgültig abgelehnt (Fahrzeug unbekannt oder abgeschlossen, Eingabe ungültig)
+          else { warte = Math.min(60000, (warte || 1000) * 2); await new Promise(function (res) { var t = setTimeout(res, warte); auftragWake = function () { clearTimeout(t); res(); }; }); auftragWake = null; }
+        }
+      }
+      if (fertig) { L = lsLoad('fa_auftraege') || []; if (L[0] && L[0].nr === a.nr) { L.shift(); lsStore('fa_auftraege', L); } }
+    }
+    S.auftragLaeuft = false;
+  }
   async function kick() {
     if (S.uploading) return; S.uploading = true;
     var api = S.api || S.sendApi;   // S.sendApi: ohne Link geöffnet, nur Nachsenden (siehe Sendeschein)
@@ -2279,7 +2366,13 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         saveSession(); renderGalleryIfShown(); schedulePoll(1500);
       } catch (e) {
         it.tries++;
-        if (permanent(e)) { S.queue.shift(); st.state = 'fehler'; st.err = e.message; st.item = it; it.failed = true; idbPut(it); if (S.nach) { S.nach.fehler++; queueNote(); } renderGalleryIfShown(); }
+        if (permanent(e)) {   // Lösch-Regel: erst beim Server nachfragen, ob die Ablehnung endgültig ist
+          var ende = await abgelehnt(api, it, e);
+          S.queue.shift();
+          if (ende) verwerfen(it, st, ende);
+          else { it.fileDone = false; st.state = 'fehler'; st.err = e.message; st.item = it; it.failed = true; idbPut(it); if (S.nach) { S.nach.fehler++; queueNote(); } nachpruefenPlanen(); }
+          renderGalleryIfShown();
+        }
         else {
           st.state = 'retry'; st.err = e.message; renderGalleryIfShown(); if (S.nach) { S.nach.netz = true; queueNote(); }
           var wait = Math.min(30000, 2000 * Math.pow(2, Math.min(it.tries, 4)));
@@ -2318,8 +2411,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (sv === 'fehler') return { t: (s.server.fehler_grund || 'Bearbeitung fehlgeschlagen'), c: 'bad' };
     return { t: 'hochgeladen', c: 'busy' };
   }
-  function showPage(id) { ['pStart', 'pGallery', 'pEnd', 'pTest'].forEach(function (p) { $(p).hidden = p !== id; }); window.scrollTo(0, 0); }
-  function renderGalleryIfShown() { if (!$('pGallery').hidden) renderGallery(); if (!$('pEnd').hidden) renderEnd(); if (!$('stage').hidden) renderStrip(); }
+  function showPage(id) { ['pStart', 'pGallery', 'pSchritt', 'pTest'].forEach(function (p) { $(p).hidden = p !== id; }); window.scrollTo(0, 0); }
+  function renderGalleryIfShown() { if (!$('pGallery').hidden) renderGallery(); schrittNeu(); if (!$('stage').hidden) renderStrip(); }
   function renderGallery() {
     var v = S.vehicle; if (!v) return;
     $('gTitle').textContent = v.marke + ' ' + v.modell;
@@ -2344,16 +2437,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     $('gCta').hidden = !next; $('gNext').hidden = !next; $('gNext').textContent = next ? 'Weiter: ' + next.name : '';
     $('gZusatz').hidden = done < NP || zusatzIds().length >= CFG.ZUSATZ_MAX;
     $('gZusatz').textContent = 'Zusatzbild aufnehmen (' + zusatzIds().length + ' von ' + CFG.ZUSATZ_MAX + ')';
+    $('gNew').textContent = v.abgesendet ? 'Neues Fahrzeug' : 'Fertig: prüfen und absenden';
   }
   // Abschluss nach dem letzten Pflichtbild
-  function renderEnd() {
-    var v = S.vehicle; if (!v) return;
-    var PF = pflicht(), aus = PF.filter(function (p) { return p.art === 'aussen' && hasPhoto(p.key); }).length, inn = PF.filter(function (p) { return p.art === 'innen' && hasPhoto(p.key); }).length, innN = PF.filter(function (p) { return p.art === 'innen'; }).length, fi = freiInnen(), fiN = fi.filter(function (k) { return hasPhoto(k); }).length, zu = zusatzIds().length, pending = S.queue.length;
-    $('eH1').textContent = 'Alle ' + PF.length + ' Bilder sind aufgenommen';   // 9 bei einem Zweisitzer ohne Rücksitzbank
-    $('eSub').textContent = pending ? pending + (pending === 1 ? ' Foto wird' : ' Fotos werden') + ' noch hochgeladen. Die App sendet im Hintergrund weiter.' : 'Die Bearbeitung läuft. Den Stand je Bild sehen Sie in der Galerie.';
-    $('eSum').innerHTML = '<div><span>Außenbilder</span><span>' + aus + ' von 6</span></div><div><span>Innenbilder</span><span>' + inn + ' von ' + innN + '</span></div>' + (ohneRueck() ? '<div><span>Rücksitzbank</span><span>kein Rücksitz</span></div>' : '') + '<div><span>Innen freiwillig</span><span>' + fiN + ' von ' + fi.length + '</span></div><div><span>Seiten (freiwillig)</span><span>' + SEITEN.filter(function (s) { return hasPhoto(s.key); }).length + ' von 2</span></div><div><span>Zusatzbilder</span><span>' + zu + '</span></div><div><span>Fahrzeug</span><span>' + esc(v.marke + ' ' + v.modell) + '</span></div>' + (v.raum ? '<div><span>Showroom</span><span>' + esc(v.raum === 'kein' ? 'nein' : raumName(v.raum)) + '</span></div>' : '');
-  }
-  function showEnd() { showPage('pEnd'); renderEnd(); }
   $('gGrid').addEventListener('click', function (ev) {
     var b = ev.target.closest('.tile'); if (!b) return; var id = b.getAttribute('data-id'), s = S.slots[id];
     if (s && s.state === 'fehler' && s.item && s.item.blob && /nochmal/.test(ev.target.textContent || '')) { var it = s.item; s.item = null; it.tries = 0; it.failed = false; idbPut(it); s.state = 'wartet'; S.queue.push(it); renderGallery(); kick(); return; }
@@ -2384,9 +2470,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (S.queue.length && !IDB.ok && !confirm('Es werden noch Fotos hochgeladen. Trotzdem beenden? Nicht hochgeladene Fotos gehen verloren.')) return;
     resetVehicle(); showStart();
   }
-  $('gNew').onclick = newVehicle;
-  $('eNew').onclick = newVehicle;
-  $('eGal').onclick = function () { showGallery(); };
+  $('gNew').onclick = function () { if (S.vehicle && !S.vehicle.abgesendet) zeigeSchritt(S.vehicle.preisGesehen ? 'pruefen' : 'preis'); else newVehicle(); };
   function showGallery() { showPage('pGallery'); renderGallery(); schedulePoll(200); }
 
   function allFinal() {
@@ -2411,6 +2495,168 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   }
 
   /* =====================================================================
+     Zugang je Händler (SQL 20.11.2026): Name und Vorgabe für die Showroom-Frage kommen aus zugang_info
+     ===================================================================== */
+  function dauer(sek) { var m = Math.max(1, Math.ceil((+sek || 60) / 60)); return m === 1 ? 'einer Minute' : m < 90 ? m + ' Minuten' : Math.round(m / 60) + ' Stunden'; }
+  function zugangText(f, w) {
+    if (f === 'zugang_verweigert') return T('Der Zugang gilt nicht mehr. Bitte öffne den Link von AutoScales erneut.', 'Der Zugang gilt nicht mehr. Bitte öffnen Sie den Link von AutoScales erneut.');
+    if (f === 'zugang_widerrufen') return T('Dieser Zugang ist gesperrt. Bitte melde dich bei AutoScales.', 'Dieser Zugang ist gesperrt. Bitte melden Sie sich bei AutoScales.');
+    if (f === 'zu_viele_versuche') return 'Zu viele Versuche mit einem falschen Zugang. Bitte in ' + dauer(w) + ' erneut versuchen.';
+    if (f === 'zu_viele_fahrzeuge') return 'Für diesen Zugang ist die Grenze an neuen Fahrzeugen erreicht. Das nächste Fahrzeug geht in ' + dauer(w) + '.';
+    if (f === 'eingabe_fehlt' || f === 'eingabe_ungueltig') return 'Bitte Marke, Modell, Baujahr und Karosserie prüfen.';
+    return 'Der Server hat das Fahrzeug nicht angenommen (' + (f || 'unbekannt') + ').';
+  }
+  function zugangZeigen() { if (S.cfg && S.cfg.name) $('modeNote').innerHTML = '<b>Zugang: ' + esc(S.cfg.name) + '.</b> Fotos gehen an den Test-Server der AutoScales GmbH i.G.'; }
+  async function zugangLaden() {
+    var j; try { j = await S.api.zugangInfo(); } catch (e) { return; }   // ohne Netz gilt die zuletzt gespeicherte Vorgabe
+    if (!j) return;
+    if (j.ok) {
+      S.cfg.name = j.name || ''; S.cfg.raumVorgabe = j.raum_vorgabe || null; store('fa_cfg', S.cfg); zugangZeigen();
+      if (!S.raumGewaehlt && !S.vehicle) { S.raum = raumVorgabe(); S.raumJa = null; buildShow(); }
+      return;
+    }
+    var n = $('modeNote'); n.className = 'note bad'; n.textContent = zugangText(j.fehler, j.warten_s);
+    if (j.fehler !== 'zu_viele_versuche') $('fGo').disabled = true;
+  }
+
+  /* =====================================================================
+     Neue Schritte im V10-Look (Designvorlage V10 Entwurf 3, c01be09): Fahrzeugdaten, Zustand, Fotos, Preis, Prüfen, Absenden.
+     Ablauf nach G1-Entscheidung 10.11.2026 Punkt 8; Preis als eigener Schritt vor dem Prüfen (Giannis 10.11.2026 ca. 22:40: „A: in der App“).
+     Jeder Daten-Schritt ist überspringbar („Später im Portal“). Die Angaben gehen über fahrzeug_daten an den Server, Absenden über fahrzeug_absenden.
+     Der Schritt Fahrzeugschein kommt am 24.11.2026 dazu (Giannis 19.11.2026).
+     ===================================================================== */
+  var SCHRITTE = [['daten', 'Fahrzeugdaten'], ['zustand', 'Zustand'], ['fotos', 'Fotos'], ['preis', 'Preis'], ['pruefen', 'Prüfen']];
+  var V10 = (function () {   // Bilder aus der Designvorlage V10 (S-daten, S-zustand, S-preis, Z-gesendet), Richtung A: graue Linien auf Schwarz, Gold für die eine wichtige Linie
+    function svg(inner) { return '<svg class="il" viewBox="0 0 240 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' + inner + '</svg>'; }
+    function g(t, inner) { return '<g transform="' + t + '">' + inner + '</g>'; }
+    function haken(x, y, r) { return '<circle class="g" cx="' + x + '" cy="' + y + '" r="' + r + '"/><path class="g" d="M' + (x - r * .45) + ' ' + y + 'l' + (r * .32) + ' ' + (r * .34) + 'l' + (r * .6) + ' ' + (-r * .66) + '"/>'; }
+    var auto = '<path class="f" d="M-70 16L-72 2Q-72 -8 -62 -11L-46 -14Q-32 -33 -10 -35L14 -36Q32 -37 44 -33L58 -18L76 -12Q82 -10 82 -2L80 10Q80 15 74 15L50 19Q46 20 44 19L36 19A12 13 0 0 0 12 19L-30 18A11 12 0 0 0 -52 18L-66 18Q-70 18 -70 16Z"/>' +
+      '<path class="l" d="M14 -36L24 -17L58 -18M24 -17L40 -13Q46 -11 46 -2L46 16M40 -13L76 -12M-42 -15Q-30 -30 -10 -31L10 -32L20 -17ZM-8 -31L-6 -16M-6 -16L-6 13M22 -17l-6 -4"/>' +
+      '<ellipse class="f" cx="24" cy="19" rx="10" ry="12"/><ellipse class="l" cx="24" cy="19" rx="3.5" ry="4.5"/><ellipse class="f" cx="-41" cy="18" rx="10" ry="11"/><ellipse class="l" cx="-41" cy="18" rx="3.5" ry="4"/>' +
+      '<path class="l" d="M54 1L74 0M54 9L74 7"/><circle class="gp" cx="51" cy="-5" r="2.4"/><circle class="gp" cx="76" cy="-6" r="2.2"/>';
+    return {
+      daten: svg(g('translate(84 84) scale(.62)', auto) + '<path class="l" d="M146 58L206 58M146 74L196 74M146 90L206 90M146 106L186 106"/><circle class="gp" cx="138" cy="58" r="2.5"/><circle class="gp" cx="138" cy="74" r="2.5"/><circle class="gp" cx="138" cy="90" r="2.5"/><circle class="gp" cx="138" cy="106" r="2.5"/>'),
+      zustand: svg('<rect class="f" x="52" y="38" width="58" height="84" rx="6"/><path class="l" d="M62 56L100 56M62 70L92 70M62 84L100 84"/>' + haken(92, 104, 8) + '<path class="f" d="M150 40L186 52L186 86Q186 108 150 122Q114 108 114 86L114 52Z" transform="translate(22 0)"/><path class="g" d="M158 82L168 92L186 70"/>'),
+      preis: svg('<path class="f" d="M96 40L150 40L186 80L132 124L78 96Z" transform="rotate(8 130 80)"/><circle class="g" cx="140" cy="60" r="6"/><path class="l" d="M112 82L142 98M104 94L128 107"/>'),
+      gesendet: svg(g('translate(78 80) scale(1.3)', '<rect class="f" x="-9" y="-17" width="18" height="34" rx="4"/><circle class="l" cx="0" cy="-9" r="3.2"/>') + '<path class="g" d="M100 80L138 80"/>' + haken(164, 80, 20)),
+      leer: svg('<rect class="gd" x="60" y="30" width="120" height="100" rx="10"/><path class="g" d="M120 66L120 94M106 80L134 80"/>'),
+      ok: '<svg class="st" viewBox="0 0 18 18" aria-label="erledigt"><circle cx="9" cy="9" r="8" fill="#5BD08A"/><path d="M5 9.2l2.6 2.6L13 6.4" fill="none" stroke="#0B0C10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      warn: '<svg class="st" viewBox="0 0 18 18" aria-label="Hinweis"><path d="M9 1.5L17 16H1Z" fill="#FFC77C"/><path d="M9 6.5v4.5M9 13.4v.2" stroke="#0B0C10" stroke-width="2" stroke-linecap="round"/></svg>',
+      offen: '<svg class="st" viewBox="0 0 18 18" aria-label="offen"><circle cx="9" cy="9" r="7" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-dasharray="3 3"/></svg>'
+    };
+  })();
+  function schrittKopf(name) {
+    var i = SCHRITTE.map(function (x) { return x[0]; }).indexOf(name), p = '';
+    SCHRITTE.forEach(function (x, j) { p += '<i class="' + (j <= i ? 'on' : '') + '"></i>'; });
+    return '<div class="schritt"><span>Schritt ' + (i + 1) + ' von ' + SCHRITTE.length + '</span><span>' + SCHRITTE[i][1] + '</span></div><div class="prog">' + p + '</div>';
+  }
+  function chip(k, text, on) { return '<button class="chip" type="button" data-k="' + k + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + text + '</button>'; }
+  function zeile(icon, html) { return '<div class="zeile">' + V10[icon] + '<span>' + html + '</span></div>'; }
+  function schrittFuss(spaeter) { return '<p class="msg" id="sMsg" role="status" aria-live="polite"></p><div class="sp"></div><button class="btn pr" id="sWeiter" type="button">Weiter</button><button class="link" id="sSpaeter" type="button">' + spaeter + '</button>'; }
+  function vDaten() { var v = S.vehicle; if (!v.daten) v.daten = {}; return v.daten; }
+  function tausender(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+  function euroText(n) { var t = (Math.round(n * 100) / 100).toFixed(2).split('.'); return tausender(t[0]) + (t[1] === '00' ? '' : ',' + t[1]) + ' €'; }
+  // Preis aus der Eingabe: „38.900“, „38900“, „38.900,50“ → Zahl; leer → null; sonst undefined (ungültig)
+  function euro(t) {
+    t = String(t || '').replace(/[\s€]/g, ''); if (!t) return null;
+    t = /,\d{1,2}$/.test(t) ? t.replace(/\./g, '').replace(',', '.') : t.replace(/[.,]/g, '');
+    if (!/^\d{1,7}(\.\d{1,2})?$/.test(t)) return undefined;
+    var n = parseFloat(t); return n <= 9999999.99 ? n : undefined;
+  }
+  function fotoZahlen() {
+    var ids = Object.keys(S.slots).filter(hasPhoto), unterwegs = ids.filter(function (k) { return /^(wartet|sendet|retry|fehler)$/.test(S.slots[k].state); }).length;
+    return { alle: ids.length, an: ids.length - unterwegs, unterwegs: unterwegs };
+  }
+  function schrittHtml(name) {
+    var v = S.vehicle, d = vDaten(), titel = esc(v.marke + ' ' + v.modell) + ' · ' + v.baujahr;
+    if (name === 'daten') return schrittKopf('daten') + '<div class="karte">' + V10.daten + '</div><h4>Welches Fahrzeug?</h4><p><b>' + titel + '</b></p>' +
+      '<div class="two"><label class="fld"><span>Kilometer</span><input id="sKm" type="text" inputmode="numeric" maxlength="9" autocomplete="off" placeholder="z. B. 48.500" value="' + (d.km != null ? tausender(d.km) : '') + '"></label>' +
+      '<label class="fld"><span>Motorisierung</span><input id="sMotor" type="text" maxlength="80" autocomplete="off" placeholder="z. B. 45 TFSI" value="' + esc(d.motorisierung || '') + '"></label></div>' + schrittFuss('Später im Portal ausfüllen');
+    if (name === 'zustand') return schrittKopf('zustand') + '<div class="karte">' + V10.zustand + '</div><h4>Zustand und Unterlagen</h4><p>Schäden bleiben auf den Bildern sichtbar, wie sie sind.</p>' +
+      '<div class="chips">' + chip('unfallfrei', 'Unfallfrei', d.unfallfrei === true) + chip('schaden', 'Schaden vorhanden', d.unfallfrei === false) + '</div>' +
+      '<div class="chips">' + chip('scheckheft', 'Scheckheft gepflegt', d.scheckheft === true) + chip('garantie', 'Garantie', d.garantie === true) + chip('hu_neu', 'HU neu', d.hu_neu === true) + '</div>' + schrittFuss('Später im Portal ausfüllen');
+    if (name === 'preis') return schrittKopf('preis') + '<div class="karte">' + V10.preis + '</div><h4>' + T('Dein Preis', 'Ihr Preis') + '</h4>' +
+      '<label class="fld"><span>Preis in Euro, brutto</span><input id="sPreis" type="text" inputmode="decimal" maxlength="13" autocomplete="off" placeholder="z. B. 38.900" value="' + (d.preis_brutto != null ? euroText(d.preis_brutto).replace(' €', '') : '') + '"></label>' +
+      '<div class="chips">' + chip('mwst_ausweisbar', 'MwSt. ausweisbar', d.mwst_ausweisbar === true) + chip('verhandlungsbasis', 'Verhandlungsbasis', d.verhandlungsbasis === true) + '</div>' + schrittFuss('Später im Portal festlegen');
+    if (name === 'pruefen') {
+      var PF = pflicht(), da = PF.filter(function (p) { return hasPhoto(p.key); }).length, z = '', fz = fotoZahlen(), fehlt = [];
+      var kacheln = PF.map(function (p) {
+        var s = S.slots[p.key], k = !hasPhoto(p.key) ? 'offen' : s.state === 'fehler' ? 'warn' : /^(wartet|sendet|retry)$/.test(s.state) ? 'offen' : 'ok';
+        return '<div class="kachel" data-id="' + p.key + '">' + (s && s.thumb && hasPhoto(p.key) ? '<img alt="" src="' + s.thumb + '">' : V10.leer) + '<span>' + V10[k] + esc(p.name) + '</span></div>';
+      }).join('');
+      PF.forEach(function (p) { if (!hasPhoto(p.key)) z += zeile('offen', '<b>' + esc(p.name) + '</b> fehlt noch'); else if (S.slots[p.key].state === 'fehler') z += zeile('warn', '<b>' + esc(p.name) + '</b> ist noch nicht angekommen, die App sendet erneut'); });
+      if (fz.unterwegs) z += zeile('offen', '<b>' + fz.unterwegs + (fz.unterwegs === 1 ? ' Foto wird' : ' Fotos werden') + '</b> noch gesendet');
+      if (d.km == null) fehlt.push('Kilometer'); if (!d.motorisierung) fehlt.push('Motorisierung');
+      z += zeile(fehlt.length ? 'offen' : 'ok', fehlt.length ? 'Fahrzeugdaten: <b>' + fehlt.join(', ') + '</b> ' + (fehlt.length === 1 ? 'fehlt' : 'fehlen') : 'Fahrzeugdaten vollständig');
+      z += zeile(d.ok_zustand ? 'ok' : 'offen', d.ok_zustand ? 'Zustand und Unterlagen angegeben' : '<b>Zustand und Unterlagen</b> fehlen');
+      z += zeile(d.preis_brutto != null ? 'ok' : 'offen', d.preis_brutto != null ? 'Preis: <b>' + euroText(d.preis_brutto) + '</b> brutto' + (d.verhandlungsbasis ? ', Verhandlungsbasis' : '') : '<b>Preis</b> fehlt');
+      return schrittKopf('pruefen') + '<h4>Alles beisammen?</h4><p><b>' + da + ' von ' + PF.length + '</b> Pflichtbildern · ' + titel + '</p><div class="grid">' + kacheln + '</div>' + z +
+        (fehlt.length || !d.ok_zustand || d.preis_brutto == null ? '<p>Fehlende Angaben lassen sich im Portal nachholen.</p>' : '') +
+        '<div class="sp"></div><button class="btn pr" id="sAbsenden" type="button">Absenden</button><button class="link" id="sGalerie" type="button">Zur Galerie</button>';
+    }
+    var f = fotoZahlen(), warten = f.unterwegs > 0;   // gesendet
+    return '<div class="schritt"><span>Fertig</span><span>' + esc(v.marke + ' ' + v.modell) + '</span></div><div class="karte">' + V10.gesendet + '</div><h4>' + (warten ? 'Wird gesendet' : 'Gesendet') + '</h4>' +
+      '<p>' + (warten ? T('Die letzten Fotos gehen raus, sobald Netz da ist. Du kannst schon das nächste Fahrzeug anlegen.', 'Die letzten Fotos gehen raus, sobald Netz da ist. Sie können schon das nächste Fahrzeug anlegen.') : T('Deine Fotos sind bei AutoScales.', 'Ihre Fotos sind bei AutoScales.')) + '</p>' +
+      zeile(warten ? 'offen' : 'ok', '<b>' + f.an + ' von ' + f.alle + '</b> Fotos angekommen') + (v.raum === 'kein' ? '' : zeile('offen', '<b>Showroom-Bilder</b> in Arbeit')) +
+      '<div class="sp"></div><button class="btn pr" id="sNeu" type="button">Nächstes Fahrzeug</button><button class="link" id="sGalerie" type="button">Galerie ansehen</button>';
+  }
+  function zeigeSchritt(name) {
+    if (!S.vehicle) { showStart(); return; }
+    S.schritt = name; S.vehicle.schritt = name; saveSession();
+    $('pSchritt').innerHTML = schrittHtml(name); showPage('pSchritt');
+  }
+  function schrittNeu() { if (!$('pSchritt').hidden && S.vehicle && /^(pruefen|gesendet)$/.test(S.schritt)) $('pSchritt').innerHTML = schrittHtml(S.schritt); }   // Stand der Fotos nachziehen
+  function nachDenFotos() { return S.vehicle.abgesendet ? 'gesendet' : S.vehicle.preisGesehen ? 'pruefen' : 'preis'; }
+  function schrittAn(k) { var c = $('pSchritt').querySelector('[data-k="' + k + '"]'); return !!c && c.getAttribute('aria-pressed') === 'true'; }
+  function smsg(t) { var m = $('sMsg'); if (m) { m.textContent = t; m.className = 'msg bad'; } }
+  function schrittWeiter(speichern) {
+    var v = S.vehicle, n = S.schritt, d = vDaten(), p = null;
+    if (speichern && n === 'daten') {
+      var km = $('sKm').value.replace(/[\s.]/g, ''), mo = $('sMotor').value.trim();
+      if (km && !(/^\d{1,7}$/.test(km) && +km <= 2000000)) { smsg('Bitte die Kilometer als ganze Zahl eintragen, z. B. 48.500.'); return; }
+      p = { km: km ? +km : null, motorisierung: mo || null };
+    } else if (speichern && n === 'zustand') {
+      p = { unfallfrei: schrittAn('unfallfrei') ? true : schrittAn('schaden') ? false : null, scheckheft: schrittAn('scheckheft'), garantie: schrittAn('garantie'), hu_neu: schrittAn('hu_neu') };
+      d.ok_zustand = true;
+    } else if (speichern && n === 'preis') {
+      var pr = euro($('sPreis').value);
+      if (pr === undefined) { smsg('Bitte den Preis in Euro eintragen, z. B. 38.900.'); return; }
+      p = { preis_brutto: pr, mwst_ausweisbar: schrittAn('mwst_ausweisbar'), verhandlungsbasis: schrittAn('verhandlungsbasis') };
+    }
+    if (p) { Object.keys(p).forEach(function (k) { d[k] = p[k]; }); auftrag({ art: 'daten', id: v.id, p: p }); }
+    if (n === 'preis') v.preisGesehen = true;
+    saveSession();
+    if (n === 'daten') zeigeSchritt('zustand');
+    else if (n === 'preis') zeigeSchritt('pruefen');
+    else if (n === 'zustand') {
+      var rest = pflicht().filter(function (x) { return !hasPhoto(x.key); }).map(function (x) { return x.key; });
+      if (!rest.length) { zeigeSchritt(nachDenFotos()); return; }
+      v.schritt = 'fotos'; S.schritt = 'fotos'; saveSession();
+      sensorsNachholen().then(function () { startSequence(rest, 'seq'); });   // Sensor-Erlaubnis direkt aus dem Tipp (iPhone)
+    }
+  }
+  function absenden() {
+    var v = S.vehicle, fehlen = pflicht().filter(function (p) { return !hasPhoto(p.key); });
+    if (fehlen.length && !confirm((fehlen.length === 1 ? 'Es fehlt noch 1 Pflichtbild' : 'Es fehlen noch ' + fehlen.length + ' Pflichtbilder') + ' (' + fehlen.map(function (p) { return p.name; }).join(', ') + '). Trotzdem absenden?')) return;
+    if (!v.abgesendet) { v.abgesendet = Date.now(); auftrag({ art: 'absenden', id: v.id }); }   // geht raus, sobald Netz da ist; das Fahrzeug bleibt offen, wartende Fotos kommen weiter an
+    zeigeSchritt('gesendet');
+  }
+  $('pSchritt').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button'); if (!b || !S.vehicle) return;
+    var k = b.getAttribute('data-k');
+    if (k) {
+      var an = b.getAttribute('aria-pressed') !== 'true';
+      if (k === 'unfallfrei' || k === 'schaden') b.parentNode.querySelectorAll('.chip').forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });   // entweder oder (keins = offen)
+      b.setAttribute('aria-pressed', an ? 'true' : 'false'); return;
+    }
+    if (b.id === 'sWeiter') schrittWeiter(true);
+    else if (b.id === 'sSpaeter') schrittWeiter(false);
+    else if (b.id === 'sAbsenden') absenden();
+    else if (b.id === 'sGalerie') showGallery();
+    else if (b.id === 'sNeu') newVehicle();
+  });
+
+  /* =====================================================================
      Start: Fahrzeug anlegen
      ===================================================================== */
   function showStart() {
@@ -2426,14 +2672,14 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var sl = {}; Object.keys(S.slots).forEach(function (k) { var s = S.slots[k]; if (s.state === 'hochgeladen') sl[k] = { zusatz_art: s.zusatz_art, ampelHandy: s.ampelHandy }; });
     store('fa_veh', { vehicle: S.vehicle, slots: sl });
   }
-  function resetVehicle() { S.vehicle = null; S.slots = {}; S.camChoice = null; S.klasse = null; S.raum = raumVorgabe(); S.raumJa = null; store('fa_veh', null); clearTimeout(S.pollTimer); buildKar(); buildShow(); }
+  function resetVehicle() { S.vehicle = null; S.slots = {}; S.camChoice = null; S.klasse = null; S.raum = raumVorgabe(); S.raumJa = null; S.raumGewaehlt = false; S.schritt = null; store('fa_veh', null); clearTimeout(S.pollTimer); buildKar(); buildShow(); }
   $('resumeYes').onclick = function () {
     var rs = load('fa_veh'); if (!rs) return;
     sensorsNachholen();   // Erlaubnis für den Bewegungssensor schon hier nachholen (nach dem Neuladen nötig)
     S.vehicle = rs.vehicle; S.slots = {};
     Object.keys(rs.slots || {}).forEach(function (k) { var s = slotState(k); s.state = 'hochgeladen'; s.zusatz_art = rs.slots[k].zusatz_art; s.ampelHandy = rs.slots[k].ampelHandy; });
     markRestored();
-    showGallery();
+    if (/^(daten|zustand|preis|pruefen|gesendet)$/.test(S.vehicle.schritt || '')) zeigeSchritt(S.vehicle.schritt); else showGallery();
   };
   $('resumeNo').onclick = function () { resetVehicle(); $('resumeBox').hidden = true; };
 
@@ -2453,9 +2699,10 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       // 2) Fahrzeug anlegen
       fmsg('Fahrzeug wird angelegt …');
       var v = { id: uuid(), marke: marke, modell: modell, baujahr: bj, karosserie: DBKAR[S.klasse] || null, klasse: S.klasse, raum: S.raum || raumVorgabe() };
-      try { await S.api.createVehicle(v); }
-      catch (e) {
-        fmsg(e.net ? 'Keine Verbindung zum Server. Bitte Netz prüfen und nochmal tippen.' : (e.status === 403 || e.status === 401 ? 'Zugang verweigert. Der Link ist ungültig oder abgelaufen.' : e.status === 404 ? 'Der Server kennt diese App-Fassung noch nicht (die Raumwahl fehlt in der Datenbank). Bitte AutoScales Bescheid geben.' : 'Der Server hat das Fahrzeug nicht angenommen: ' + e.message), true);
+      var fe = null;
+      for (var vers = 0; vers < 2; vers++) { try { await S.api.createVehicle(v); fe = null; break; } catch (e) { fe = e; if (e.fehler !== 'id_vergeben') break; v.id = uuid(); } }   // id_vergeben: neue ID, einmal
+      if (fe) {
+        fmsg(fe.fehler ? zugangText(fe.fehler, fe.info && fe.info.warten_s) : fe.net ? 'Keine Verbindung zum Server. Bitte Netz prüfen und nochmal tippen.' : (fe.status === 403 || fe.status === 401 ? 'Zugang verweigert. Der Link ist ungültig oder abgelaufen.' : fe.status === 404 ? (zugangNeu(S.cfg.zugang) ? 'Der Server kennt diese App-Fassung noch nicht (der Zugang je Händler fehlt in der Datenbank). Bitte AutoScales Bescheid geben.' : 'Der Server kennt diese App-Fassung noch nicht (die Raumwahl fehlt in der Datenbank). Bitte AutoScales Bescheid geben.') : 'Der Server hat das Fahrzeug nicht angenommen: ' + fe.message), true);
         $('fGo').disabled = false; return;
       }
       aiLoad();   // Auto-Erkennung im Hintergrund laden, ab hier
@@ -2469,7 +2716,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       S.vehicle = v; S.slots = {}; S.camChoice = null; S.devs = null; S.fallbackInput = false; saveSession();
       S.sensorPerm = perm;
       fmsg('');
-      startSequence(pflicht().map(function (p) { return p.key; }), 'seq');
+      zeigeSchritt('daten');   // Ablauf G1 10.11.2026: Fahrzeugdaten, Zustand, Fotos, Preis, Prüfen, Absenden
     } catch (e) { fmsg('Das hat nicht geklappt: ' + errText(e), true); }
     $('fGo').disabled = false;
   });
@@ -2490,8 +2737,13 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       row = tAdd('Server erreichbar');
       try { var p = await api.ping(); row.ok('Schema ' + p.schema + (p.zugang_gesetzt === false ? ' · ACHTUNG: Zugangswort noch nicht gesetzt (Zeile aus link-bauen.html ausführen)' : '')); if (p.zugang_gesetzt === false) { tResults[tResults.length - 1].s = 'bad'; tRender(); } } catch (e) { row.bad(e.message + (e.status ? ' (HTTP ' + e.status + ')' : '')); throw e; }
 
+      if (api.real && zugangNeu(S.cfg && S.cfg.zugang)) {
+        row = tAdd('Zugang je Händler');
+        try { var zi = await api.zugangInfo(); zi && zi.ok ? row.ok((zi.name || 'ohne Namen') + ' · Vorgabe ' + raumName(zi.raum_vorgabe || 'rund')) : row.bad(zugangText(zi && zi.fehler, zi && zi.warten_s)); } catch (e) { row.bad(e.message + (e.status ? ' (HTTP ' + e.status + ')' : '')); }
+      }
+
       row = tAdd('Falsches Zugangswort wird abgelehnt');
-      try { await api.badZugang({ id: uuid() }); row.bad('wurde angenommen!'); } catch (e) { (e.status >= 400 && e.status < 500) || !api.real ? row.ok('abgelehnt (HTTP ' + e.status + ')') : row.bad('keine saubere Ablehnung: ' + e.message); }
+      try { await api.badZugang({ id: uuid() }); row.bad('wurde angenommen!'); } catch (e) { (e.status >= 400 && e.status < 500) || !api.real ? row.ok('abgelehnt (' + (e.fehler || 'HTTP ' + e.status) + ')') : row.bad('keine saubere Ablehnung: ' + e.message); }
 
       row = tAdd('Probefahrzeug anlegen (richtiges Zugangswort)');
       try { await api.createVehicle({ id: id, marke: 'Selbsttest', modell: 'Probe', baujahr: 2026, selbsttest: true }); row.ok('angelegt'); } catch (e) { row.bad(e.message); throw e; }
@@ -2504,6 +2756,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 
       row = tAdd('Foto melden');
       try { var m = await api.report({ id: fid, fahrzeug_id: id, platz: 'titel', geraet: dev(), app_details: { app: APP, selbsttest: true } }); row.ok('Status ' + m.status); } catch (e) { row.bad(e.message); throw e; }
+
+      row = tAdd('Fahrzeugdaten speichern und absenden');
+      try { await api.daten(id, { km: 1, motorisierung: 'Selbsttest' }); var ab = await api.absenden(id); row.ok('gespeichert, abgesendet' + (ab && ab.fotos_gesamt != null ? ' (' + ab.fotos_gesamt + ' Foto)' : '')); } catch (e) { row.bad((e.fehler || e.message) + (e.status && !e.fehler ? ' (HTTP ' + e.status + ')' : '')); }
 
       row = tAdd('Status abrufen');
       try { var st = await api.status(id); row.ok(st.length + (st.length === 1 ? ' Eintrag' : ' Einträge') + ', keine Pfade'); } catch (e) { row.bad(e.message); }
@@ -2559,6 +2814,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     } else if (S.cfg) {
       S.api = mkRealApi(S.cfg);
       note.innerHTML = '<b>Test mit echtem Server.</b> Fotos gehen an den Test-Server der AutoScales GmbH i.G.'; info.textContent = 'Server: ' + S.cfg.url.replace('https://', '');
+      zugangZeigen(); if (zugangNeu(S.cfg.zugang)) zugangLaden();
     } else {
       note.className = 'note bad'; note.innerHTML = T('Dieser Link ist unvollständig. Bitte den Link neu öffnen, den du von AutoScales bekommen hast.', 'Dieser Link ist unvollständig. Bitte den Link neu öffnen, den Sie von AutoScales bekommen haben.') + ' <br><a href="#demo" onclick="setTimeout(function(){location.reload()},0)">Demo ohne Server ansehen</a>'; $('fGo').disabled = true;
     }
@@ -2567,6 +2823,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     buildKar(); buildShow(); applyTheme();
     showStart();
     restoreQueue();
+    auftraegeSenden();
   }
   function initSettings() {
     $('chkMess').checked = !!VAR.debug;
