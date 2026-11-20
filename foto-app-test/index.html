@@ -127,6 +127,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .tile .nr { position: absolute; left: 6px; top: 6px; font: 700 11px/1 var(--font-body); padding: 4px 7px; border-radius: 999px; background: var(--chipbg); border: 1px solid var(--gb); }
 .tile b { font: 600 13px/1.25 var(--font-body); }
 .tile .gr { font: 500 11px/1.35 var(--font-body); color: var(--t2); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; }
+.tile .gr.bad { color: var(--bad); font-weight: 600; }
 .tile .st { font: 600 11px/1.3 var(--font-body); display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; color: var(--t2); }
 .amp { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; }
 .amp i { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(0,0,0,.3); }
@@ -445,7 +446,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-11';
+  var APP = 'foto-app-test-12';
   var RAD = Math.PI / 180;
   /* =====================================================================
      ZAHLEN DER FÜHRUNG. Die Optik ist final (Giannis 08.11.2026 21:32); nachgestellt werden nur die Zahlen, und zwar hier.
@@ -2408,8 +2409,10 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   var ST_OHNE = 'geprueft';
   function srvEnde(sv) { return !!sv && (sv.status === 'fertig' || sv.status === 'fehler' || sv.status === ST_OHNE); }
   function ampSrv(sv) { return sv ? amp(sv.ampel_showroom, sv.status === ST_OHNE ? 'Prüfung' : 'Showroom') : ''; }
-  function gruendeOf(sv) { return sv && sv.status === ST_OHNE ? String(sv.ampel_showroom_gruende || '').split(/\s*;\s*/).filter(Boolean) : []; }
-  function gruendeTile(sv) { var g = gruendeOf(sv); return g.length ? '<span class="gr">' + g.map(function (x) { return '• ' + esc(x); }).join('<br>') + '</span>' : ''; }
+  /* Gründe der Ampel: bei „geprueft“ immer, bei „fertig“ nur mit gelber oder roter Ampel (Giannis 20.11.2026 „Ja, beheben“: ein zerschnittenes Auto, fertig und rot,
+     zeigte nur „Showroom rot“ ohne „Auto nicht vollständig freigestellt: bitte neu fotografieren“). Rot in roter Schrift. */
+  function gruendeOf(sv) { return sv && (sv.status === ST_OHNE || (sv.status === 'fertig' && /^(rot|gelb)$/.test(sv.ampel_showroom || ''))) ? String(sv.ampel_showroom_gruende || '').split(/\s*;\s*/).filter(Boolean) : []; }
+  function gruendeTile(sv) { var g = gruendeOf(sv); return g.length ? '<span class="gr' + (sv.ampel_showroom === 'rot' ? ' bad' : '') + '">' + g.map(function (x) { return '• ' + esc(x); }).join('<br>') + '</span>' : ''; }
   function gruendeChips(sv) { return gruendeOf(sv).map(function (x) { return '<span class="chip"><i class="dot ' + (sv.ampel_showroom === 'rot' ? 'bad' : 'warn') + '"></i>' + esc(x) + '</span>'; }).join(''); }
   function amp(a, label) { return a ? '<span class="amp" title="' + esc(label) + '"><i class="' + a + '"></i>' + esc(label) + ' ' + ({ gruen: 'grün', gelb: 'gelb', rot: 'rot' })[a] + '</span>' : ''; }
   function tileInfo(id) {
@@ -2423,7 +2426,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (sv === 'neu') return { t: 'hochgeladen, wartet', c: 'busy' };
     if (sv === 'in_arbeit') return { t: 'wird bearbeitet', c: 'busy' };
     if (sv === ST_OHNE) { var ao = s.server.ampel_showroom; return { t: 'geprüft, ohne Showroom', c: ao === 'rot' ? 'bad' : ao === 'gelb' ? 'warn' : 'ok' }; }
-    if (sv === 'fertig') return { t: 'fertig', c: 'ok' };
+    if (sv === 'fertig') { var af = s.server.ampel_showroom; return { t: 'fertig', c: af === 'rot' ? 'bad' : af === 'gelb' ? 'warn' : 'ok' }; }
     if (sv === 'fehler') return { t: (s.server.fehler_grund || 'Bearbeitung fehlgeschlagen'), c: 'bad' };
     return { t: 'hochgeladen', c: 'busy' };
   }
