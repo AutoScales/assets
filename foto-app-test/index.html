@@ -101,6 +101,11 @@ h2 { font: 700 13px/1.3 var(--font-body); letter-spacing: .08em; text-transform:
 .wahl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 .wahl button { font: 600 14px/1.25 var(--font-body); min-height: 48px; border: 1px solid var(--gb); background: var(--glass); color: var(--t); border-radius: var(--rs); padding: 8px 10px; cursor: pointer; min-width: 0; }
 .wahl button[aria-pressed="true"] { background: var(--prim); color: var(--prim-t); border-color: transparent; }
+.wahl.raeume button { padding: 0; overflow: hidden; display: grid; align-content: start; }
+.wahl.raeume img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; background: #0B0C10; }
+.wahl.raeume span { display: block; padding: 10px 8px 11px; }
+.wahl.raeume button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--acc); }
+.ohne { font-size: 14px; line-height: 1.45; color: var(--t2); margin: -2px 0 0; }
 .how { padding: 14px 16px; display: grid; gap: 11px; }
 .how div { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: center; font-size: 14px; line-height: 1.4; }
 .how svg { width: 28px; height: 28px; }
@@ -316,7 +321,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   </div>
   <form id="fForm" class="glass form" autocomplete="off" novalidate>
     <div class="fld"><span class="lbl" id="showLbl" style="line-height:1.35">Digitaler Showroom für dieses Fahrzeug?</span><div class="wahl" id="showBox" role="group" aria-labelledby="showLbl"></div></div>
-    <div class="fld" id="raumFld"><span class="lbl" id="raumLbl">Raum wählen</span><div class="wahl" id="raumBox" role="group" aria-labelledby="raumLbl"></div></div>
+    <div class="fld" id="raumFld"><span class="lbl" id="raumLbl">Raum wählen</span><div class="wahl raeume" id="raumBox" role="group" aria-labelledby="raumLbl"></div></div>
+    <p class="ohne" id="raumOhne" hidden>Ohne Showroom bleibt jedes Foto das Originalfoto, ohne Raum dahinter.</p>
     <div class="two">
       <label class="fld"><span class="lbl">Marke</span><input id="fMarke" type="text" maxlength="60" autocomplete="off" autocapitalize="words" placeholder="z. B. BMW"></label>
       <label class="fld"><span class="lbl">Baujahr</span><input id="fBaujahr" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="2021"></label>
@@ -446,7 +452,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-13';
+  var APP = 'foto-app-test-14';
   var RAD = Math.PI / 180;
   /* =====================================================================
      ZAHLEN DER FÜHRUNG. Die Optik ist final (Giannis 08.11.2026 21:32); nachgestellt werden nur die Zahlen, und zwar hier.
@@ -763,18 +769,21 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
      und Raumwahl (Giannis 19.11.2026: rund oder Beton mit Holz; bei Nein wird nur der Wert kein gespeichert). S.raum geht beim Anlegen als p_raum an den Server (Spalte fahrzeuge.raum): rund | holz | kein. */
   var RAEUME = [['rund', 'Schlicht'], ['holz', 'Studio']];   // Namen für Händler nach Giannis' Konzept (über Alfred, 19.11.2026): Schlicht = rund, Studio = holz, Ohne Showroom = kein
   // Was „ohne Showroom“ am Bild bewirkt, ist offen (Giannis 19.11.2026). Die App speichert nur den Wert und verspricht dazu nichts.
+  /* Vorschau je Raum (Massimo über Giannis 20.11.2026: „die Showrooms als Bilder, als Vorschau reinpacken“): RS6 vorne im abgenommenen Look (Fable (Studio) 12),
+     Kennzeichen unkenntlich, 480 × 320, je unter 40 KB. Bei „Ohne Showroom“ steht statt der Bilder ein Satz: Das Originalfoto bleibt (gültiger Stand Fotostrecke, Raum „kein“). */
+  var RAUM_BILD = { rund: 'raum-schlicht.jpg', holz: 'raum-studio.jpg' };
   function raumVorgabe() { var r = S.cfg && S.cfg.raumVorgabe; return r === 'rund' || r === 'holz' || r === 'kein' ? r : 'rund'; }   // Vorgabe je Händler aus dem Zugang (zugang_info, Spalte zugaenge.raum_vorgabe); ohne Vorgabe rund
   function raumName(r) { var x = RAEUME.filter(function (y) { return y[0] === r; })[0]; return x ? x[1] : r === 'kein' ? 'Ohne Showroom' : RAEUME[0][1]; }
   function buildShow() {
     var sb = $('showBox'), rb = $('raumBox'); if (!sb || !rb) return;
     if (!S.raum) S.raum = raumVorgabe();
     var ja = S.raum !== 'kein'; if (ja) S.raumJa = S.raum;
-    function knopf(box, text, on, fn) { var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.textContent = text; b.onclick = function () { fn(); S.raumGewaehlt = true; buildShow(); fmsg(''); }; box.appendChild(b); }
+    function knopf(box, text, on, fn) { var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.textContent = text; b.onclick = function () { fn(); S.raumGewaehlt = true; buildShow(); fmsg(''); }; box.appendChild(b); return b; }
     sb.innerHTML = ''; rb.innerHTML = '';
     knopf(sb, 'Ja, mit Showroom', ja, function () { S.raum = S.raumJa || RAEUME[0][0]; });
     knopf(sb, 'Nein', !ja, function () { S.raum = 'kein'; });
-    RAEUME.forEach(function (r) { knopf(rb, r[1], S.raum === r[0], function () { S.raum = r[0]; }); });
-    $('raumFld').hidden = !ja;
+    RAEUME.forEach(function (r) { var b = knopf(rb, r[1], S.raum === r[0], function () { S.raum = r[0]; }); b.innerHTML = '<img alt="" src="' + RAUM_BILD[r[0]] + '" width="480" height="320" decoding="async"><span>' + esc(r[1]) + '</span>'; });
+    $('raumFld').hidden = !ja; $('raumOhne').hidden = ja;
   }
 
   /* =====================================================================
