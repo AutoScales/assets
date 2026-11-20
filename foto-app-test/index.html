@@ -289,7 +289,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .v10 .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .v10 .kachel { border: 1px solid var(--p-line); border-radius: 10px; overflow: hidden; background: var(--p-panel); display: grid; }
 .v10 .kachel img, .v10 .kachel .il { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; background: var(--il-bg); }
-.v10 .kachel span { font: 600 10.5px/1.25 var(--v-ui); padding: 6px 7px 7px; display: flex; gap: 5px; align-items: center; }
+.v10 .kachel span { font: 600 10.5px/1.25 var(--v-ui); padding: 6px 7px 7px; display: flex; gap: 5px; align-items: center; overflow-wrap: anywhere; hyphens: auto; }
 .v10 .st { width: 14px; height: 14px; flex: none; }
 .v10 .zeile { display: flex; gap: 10px; align-items: center; padding: 11px 12px; border: 1px solid var(--p-line); border-radius: 12px; background: var(--p-panel); font: 500 13.5px/1.35 var(--v-ui); }
 .v10 .zeile .st { width: 18px; height: 18px; } .v10 .zeile b { font-weight: 700; }
@@ -2545,6 +2545,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       offen: '<svg class="st" viewBox="0 0 18 18" aria-label="offen"><circle cx="9" cy="9" r="7" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-dasharray="3 3"/></svg>'
     };
   })();
+  var KURZ = { titel: 'Vorn Fahrerseite', dreiviertel_vr: 'Vorn Beifahrerseite', dreiviertel_hr: 'Hinten Beifahrerseite', dreiviertel_hl: 'Hinten Fahrerseite' };   // kurze Namen für die Kacheln (wie in der Designvorlage V10)
   function schrittKopf(name) {
     var i = SCHRITTE.map(function (x) { return x[0]; }).indexOf(name), p = '';
     SCHRITTE.forEach(function (x, j) { p += '<i class="' + (j <= i ? 'on' : '') + '"></i>'; });
@@ -2582,7 +2583,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       var PF = pflicht(), da = PF.filter(function (p) { return hasPhoto(p.key); }).length, z = '', fz = fotoZahlen(), fehlt = [];
       var kacheln = PF.map(function (p) {
         var s = S.slots[p.key], k = !hasPhoto(p.key) ? 'offen' : s.state === 'fehler' ? 'warn' : /^(wartet|sendet|retry)$/.test(s.state) ? 'offen' : 'ok';
-        return '<div class="kachel" data-id="' + p.key + '">' + (s && s.thumb && hasPhoto(p.key) ? '<img alt="" src="' + s.thumb + '">' : V10.leer) + '<span>' + V10[k] + esc(p.name) + '</span></div>';
+        return '<div class="kachel" data-id="' + p.key + '">' + (s && s.thumb && hasPhoto(p.key) ? '<img alt="" src="' + s.thumb + '">' : V10.leer) + '<span>' + V10[k] + esc(KURZ[p.key] || p.name) + '</span></div>';
       }).join('');
       PF.forEach(function (p) { if (!hasPhoto(p.key)) z += zeile('offen', '<b>' + esc(p.name) + '</b> fehlt noch'); else if (S.slots[p.key].state === 'fehler') z += zeile('warn', '<b>' + esc(p.name) + '</b> ist noch nicht angekommen, die App sendet erneut'); });
       if (fz.unterwegs) z += zeile('offen', '<b>' + fz.unterwegs + (fz.unterwegs === 1 ? ' Foto wird' : ' Fotos werden') + '</b> noch gesendet');
