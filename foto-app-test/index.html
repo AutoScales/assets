@@ -346,7 +346,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     <div class="row"><label class="sw"><input type="checkbox" id="chkMess"> Messwerte anzeigen (für den Testplan)</label></div>
     <p class="hs-tip" id="hsTip" hidden></p>
   </div>
-  <p class="priv"><b>Testfassung:</b> bitte nur Testfotos, keine Kundenfahrzeuge mit Personen oder Papieren. Die App schickt Fotos nur an den eingetragenen Test-Server der AutoScales GmbH i.G. (EU, Irland). Auf dem Handy bleiben nur Fotos, die noch nicht hochgeladen sind, bis sie gesendet wurden.</p>
+  <p class="priv"><b>Testfassung:</b> bitte nur Testfotos, keine Kundenfahrzeuge mit Personen oder Papieren; den Fahrzeugschein nur von eigenen Autos. Die App schickt Fotos nur an den eingetragenen Test-Server der AutoScales GmbH i.G. (EU, Irland). Auf dem Handy bleiben nur Fotos, die noch nicht hochgeladen sind, bis sie gesendet wurden.</p>
   <p class="srv" id="srvInfo"></p>
   <button class="link" id="btnSelftest" type="button">Selbsttest der Verbindung</button>
 </main>
@@ -446,7 +446,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-12';
+  var APP = 'foto-app-test-13';
   var RAD = Math.PI / 180;
   /* =====================================================================
      ZAHLEN DER FÜHRUNG. Die Optik ist final (Giannis 08.11.2026 21:32); nachgestellt werden nur die Zahlen, und zwar hier.
@@ -922,6 +922,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   };
 
   function slotMeta(id) {
+    if (id === 'fahrzeugschein') return { id: id, key: id, nr: null, art: 'dokument', name: 'Fahrzeugschein', sub: null, hint: '', zusatz_nr: null };   // Art „dokument“: die Datenbank setzt es sofort auf „geprueft“, der Arbeiter fasst es nie an
     var m = /^zusatz(\d)$/.exec(id);
     if (m) return { id: id, key: 'zusatz', nr: null, art: 'zusatz', name: 'Zusatzbild ' + m[1], zusatz_nr: +m[1], hint: T('Zeig, was das Inserat braucht. Handy ruhig halten.', 'Zeigen Sie, was das Inserat braucht. Handy ruhig halten.') };
     var sd = SEITEN.filter(function (x) { return x.key === id; })[0] || (id === 'seite' ? { key: 'seite', name: 'Fahrerseite', hint: SEITEN[0].hint } : null);
@@ -2544,7 +2545,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
      Jeder Daten-Schritt ist überspringbar („Später im Portal“). Die Angaben gehen über fahrzeug_daten an den Server, Absenden über fahrzeug_absenden.
      Der Schritt Fahrzeugschein kommt am 24.11.2026 dazu (Giannis 19.11.2026).
      ===================================================================== */
-  var SCHRITTE = [['daten', 'Fahrzeugdaten'], ['zustand', 'Zustand'], ['fotos', 'Fotos'], ['preis', 'Preis'], ['pruefen', 'Prüfen']];
+  var SCHRITTE = [['daten', 'Fahrzeugdaten'], ['zustand', 'Zustand'], ['schein', 'Fahrzeugschein'], ['fotos', 'Fotos'], ['preis', 'Preis'], ['pruefen', 'Prüfen']];
   var V10 = (function () {   // Bilder aus der Designvorlage V10 (S-daten, S-zustand, S-preis, Z-gesendet), Richtung A: graue Linien auf Schwarz, Gold für die eine wichtige Linie
     function svg(inner) { return '<svg class="il" viewBox="0 0 240 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' + inner + '</svg>'; }
     function g(t, inner) { return '<g transform="' + t + '">' + inner + '</g>'; }
@@ -2595,6 +2596,14 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (name === 'zustand') return schrittKopf('zustand') + '<div class="karte">' + V10.zustand + '</div><h4>Zustand und Unterlagen</h4><p>Schäden bleiben auf den Bildern sichtbar, wie sie sind.</p>' +
       '<div class="chips">' + chip('unfallfrei', 'Unfallfrei', d.unfallfrei === true) + chip('schaden', 'Schaden vorhanden', d.unfallfrei === false) + '</div>' +
       '<div class="chips">' + chip('scheckheft', 'Scheckheft gepflegt', d.scheckheft === true) + chip('garantie', 'Garantie', d.garantie === true) + chip('hu_neu', 'HU neu', d.hu_neu === true) + '</div>' + schrittFuss('Später im Portal ausfüllen');
+    if (name === 'schein') {
+      var hatS = hasPhoto('fahrzeugschein'), sS = S.slots.fahrzeugschein;
+      return schrittKopf('schein') + '<div class="karte">' + (hatS && sS.thumb ? '<img alt="Fahrzeugschein" src="' + sS.thumb + '" style="display:block;width:100%;border-radius:12px">' : V10.daten) + '</div><h4>Fahrzeugschein</h4>' +
+        '<p>' + T('Fotografiere die Vorderseite (Zulassungsbescheinigung Teil I) und trag die FIN aus Feld E ein.', 'Fotografieren Sie die Vorderseite (Zulassungsbescheinigung Teil I) und tragen Sie die FIN aus Feld E ein.') + ' Testphase: nur bei eigenen Autos.</p>' +
+        '<label class="btn" id="sScheinLbl" style="position:relative">' + (hatS ? 'Neu fotografieren' : 'Fahrzeugschein fotografieren') + '<input type="file" id="sScheinIn" accept="image/*" capture="environment" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;font-size:0"></label>' +
+        (hatS ? '<p>' + (sS.state === 'hochgeladen' || sS.server ? 'Foto angekommen.' : 'Foto gespeichert, wird gesendet.') + '</p>' : '') +
+        '<label class="fld"><span>FIN (Feld E, 17 Zeichen)</span><input id="sFin" type="text" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="z. B. WVWZZZ1KZAW000000" value="' + esc(d.fin || '') + '"></label>' + schrittFuss('Später im Portal nachreichen');
+    }
     if (name === 'preis') return schrittKopf('preis') + '<div class="karte">' + V10.preis + '</div><h4>' + T('Dein Preis', 'Ihr Preis') + '</h4>' +
       '<label class="fld"><span>Preis in Euro, brutto</span><input id="sPreis" type="text" inputmode="decimal" maxlength="13" autocomplete="off" placeholder="z. B. 38.900" value="' + (d.preis_brutto != null ? euroText(d.preis_brutto).replace(' €', '') : '') + '"></label>' +
       '<div class="chips">' + chip('mwst_ausweisbar', 'MwSt. ausweisbar', d.mwst_ausweisbar === true) + chip('verhandlungsbasis', 'Verhandlungsbasis', d.verhandlungsbasis === true) + '</div>' + schrittFuss('Später im Portal festlegen');
@@ -2609,6 +2618,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       if (d.km == null) fehlt.push('Kilometer'); if (!d.motorisierung) fehlt.push('Motorisierung');
       z += zeile(fehlt.length ? 'offen' : 'ok', fehlt.length ? 'Fahrzeugdaten: <b>' + fehlt.join(', ') + '</b> ' + (fehlt.length === 1 ? 'fehlt' : 'fehlen') : 'Fahrzeugdaten vollständig');
       z += zeile(d.ok_zustand ? 'ok' : 'offen', d.ok_zustand ? 'Zustand und Unterlagen angegeben' : '<b>Zustand und Unterlagen</b> fehlen');
+      z += zeile(hasPhoto('fahrzeugschein') && d.fin ? 'ok' : 'offen', (hasPhoto('fahrzeugschein') ? 'Fahrzeugschein fotografiert' : '<b>Fahrzeugschein</b> fehlt') + (d.fin ? ', FIN <b>' + esc(d.fin) + '</b>' : ', <b>FIN</b> fehlt'));
       z += zeile(d.preis_brutto != null ? 'ok' : 'offen', d.preis_brutto != null ? 'Preis: <b>' + euroText(d.preis_brutto) + '</b> brutto' + (d.verhandlungsbasis ? ', Verhandlungsbasis' : '') : '<b>Preis</b> fehlt');
       return schrittKopf('pruefen') + '<h4>Alles beisammen?</h4><p><b>' + da + ' von ' + PF.length + '</b> Pflichtbildern · ' + titel + '</p><div class="grid">' + kacheln + '</div>' + z +
         (fehlt.length || !d.ok_zustand || d.preis_brutto == null ? '<p>Fehlende Angaben lassen sich im Portal nachholen.</p>' : '') +
@@ -2626,6 +2636,21 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     $('pSchritt').innerHTML = schrittHtml(name); showPage('pSchritt');
   }
   function schrittNeu() { if (!$('pSchritt').hidden && S.vehicle && /^(pruefen|gesendet)$/.test(S.schritt)) $('pSchritt').innerHTML = schrittHtml(S.schritt); }   // Stand der Fotos nachziehen
+  async function scheinFoto(f) {
+    if (!f || !S.vehicle) return;
+    smsg(''); toast('Foto wird verkleinert …');
+    try {
+      var exif = await readExif(f), img = await decodeImage(f), orient = exif.orientation || 1, extra = 0;
+      if (exif.sofW && (orient === 6 || orient === 8) && exif.sofW !== exif.sofH && img.w === exif.sofW && img.h === exif.sofH) extra = orient === 6 ? 90 : 270;
+      var res = await renderUpright(img, extra); URL.revokeObjectURL(img.url);
+      var st = slotState('fahrzeugschein'); st.thumb = res.thumb; st.state = 'wartet'; st.err = null; st.fotoId = uuid(); st.server = null;
+      var meta = { id: st.fotoId, fahrzeug_id: S.vehicle.id, platz: 'fahrzeugschein', zusatz_nr: null, zusatz_art: null, ampel_handy: null, ampel_handy_gruende: '', geraet: dev(),
+        brennweite_kb: exif.focal35 != null ? exif.focal35 : null, neigung: null, rollen: null, drehung: extra, breite: res.w, hoehe: res.h, bytes: res.blob.size,
+        app_details: { app: APP, quelle: 'kamera-app', dokument: true } };
+      enqueue({ slot: 'fahrzeugschein', id: st.fotoId, path: S.vehicle.id + '/fahrzeugschein_' + st.fotoId + '.jpg', blob: res.blob, meta: meta, tries: 0, fileDone: false, state: 'wartet' });
+      saveSession(); if (S.schritt === 'schein') { var fv = $('sFin') ? $('sFin').value : ''; zeigeSchritt('schein'); if ($('sFin')) $('sFin').value = fv; }
+    } catch (e) { smsg('Das Foto ließ sich nicht lesen. Bitte noch einmal fotografieren.'); }
+  }
   function nachDenFotos() { return S.vehicle.abgesendet ? 'gesendet' : S.vehicle.preisGesehen ? 'pruefen' : 'preis'; }
   function schrittAn(k) { var c = $('pSchritt').querySelector('[data-k="' + k + '"]'); return !!c && c.getAttribute('aria-pressed') === 'true'; }
   function smsg(t) { var m = $('sMsg'); if (m) { m.textContent = t; m.className = 'msg bad'; } }
@@ -2638,6 +2663,12 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     } else if (speichern && n === 'zustand') {
       p = { unfallfrei: schrittAn('unfallfrei') ? true : schrittAn('schaden') ? false : null, scheckheft: schrittAn('scheckheft'), garantie: schrittAn('garantie'), hu_neu: schrittAn('hu_neu') };
       d.ok_zustand = true;
+    } else if (speichern && n === 'schein') {
+      var fin = $('sFin').value.toUpperCase().replace(/[\s.-]/g, '');
+      if (fin && !/^[A-Z0-9]{5,17}$/.test(fin)) { smsg('Die FIN besteht aus Buchstaben und Ziffern, meist 17 Zeichen. Bitte prüfen.'); return; }
+      if (fin.length === 17 && /[IOQ]/.test(fin)) { smsg('Eine FIN mit 17 Zeichen enthält kein I, O oder Q (meist ist 1 oder 0 gemeint). Bitte prüfen.'); return; }
+      if (fin && fin.length !== 17 && !(v.baujahr < 1981)) { smsg('Die FIN hat 17 Zeichen (Feld E im Fahrzeugschein). Bitte prüfen.'); return; }
+      if (fin || d.fin) p = { fin: fin || null };
     } else if (speichern && n === 'preis') {
       var pr = euro($('sPreis').value);
       if (pr === undefined) { smsg('Bitte den Preis in Euro eintragen, z. B. 38.900.'); return; }
@@ -2647,8 +2678,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (n === 'preis') v.preisGesehen = true;
     saveSession();
     if (n === 'daten') zeigeSchritt('zustand');
+    else if (n === 'zustand') zeigeSchritt('schein');
     else if (n === 'preis') zeigeSchritt('pruefen');
-    else if (n === 'zustand') {
+    else if (n === 'schein') {
       var rest = pflicht().filter(function (x) { return !hasPhoto(x.key); }).map(function (x) { return x.key; });
       if (!rest.length) { zeigeSchritt(nachDenFotos()); return; }
       v.schritt = 'fotos'; S.schritt = 'fotos'; saveSession();
@@ -2661,6 +2693,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (!v.abgesendet) { v.abgesendet = Date.now(); auftrag({ art: 'absenden', id: v.id }); }   // geht raus, sobald Netz da ist; das Fahrzeug bleibt offen, wartende Fotos kommen weiter an
     zeigeSchritt('gesendet');
   }
+  $('pSchritt').addEventListener('change', function (ev) { if (ev.target && ev.target.id === 'sScheinIn') { var f = ev.target.files && ev.target.files[0]; ev.target.value = ''; scheinFoto(f); } });
   $('pSchritt').addEventListener('click', function (ev) {
     var b = ev.target.closest('button'); if (!b || !S.vehicle) return;
     var k = b.getAttribute('data-k');
@@ -2699,7 +2732,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     S.vehicle = rs.vehicle; S.slots = {};
     Object.keys(rs.slots || {}).forEach(function (k) { var s = slotState(k); s.state = 'hochgeladen'; s.zusatz_art = rs.slots[k].zusatz_art; s.ampelHandy = rs.slots[k].ampelHandy; });
     markRestored();
-    if (/^(daten|zustand|preis|pruefen|gesendet)$/.test(S.vehicle.schritt || '')) zeigeSchritt(S.vehicle.schritt); else showGallery();
+    if (/^(daten|zustand|schein|preis|pruefen|gesendet)$/.test(S.vehicle.schritt || '')) zeigeSchritt(S.vehicle.schritt); else showGallery();
   };
   $('resumeNo').onclick = function () { resetVehicle(); $('resumeBox').hidden = true; };
 
