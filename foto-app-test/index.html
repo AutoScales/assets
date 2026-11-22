@@ -1033,6 +1033,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   }
   // Nach dem Neuladen der Seite liefert das iPhone erst wieder Sensorwerte, wenn die Erlaubnis in diesem Seitenaufruf aus einem Tipp heraus angefragt wurde (es fragt nur beim ersten Mal sichtbar).
   // Deshalb fragt jeder Tipp, der die Kamera öffnet, die Erlaubnis nach, solange sie in diesem Seitenaufruf noch nicht erteilt ist.
+  // Wartezeit ohne Sensorwert: Hat der Händler die Erlaubnis abgelehnt oder kennt der Browser keinen Lagesensor, kommt kein Wert mehr; dann gleich frei.
+  // Sonst FUEHRUNG.zeiten.ohneSensor (der Sensor startet manchmal verzögert). Seit 22.11.2026 richtet der Arbeiter solche Fotos aus dem Bild aus (GeoCalib, Ampel gelb).
+  function ohneSensorWarte() { return (S.sensorPerm === 'denied' || S.sensorPerm === 'fehlt') ? 0 : FUEHRUNG.zeiten.ohneSensor; }
   function sensorsNachholen() {
     if (S.sensorPerm === 'granted') return Promise.resolve();
     return sensorsPermission().then(function (p) { S.sensorPerm = p; if (p === 'granted' && sensorsOn) { sensorsDetach(); sensorsAttach(); } });
@@ -1143,7 +1146,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         if (ctl.released && !ctl.forced) { if (!badSince) badSince = now; if (now - badSince > 400) { ctl.released = false; badSince = 0; L.verluste++; } }
       }
       // Immer frei: Passt noch nicht alles, gilt die Freigabe als erzwungen (Hinweis-Foto, „nicht geprüft“). Ohne Sensor erst nach FUEHRUNG.zeiten.ohneSensor; nur das zählt als Notlösung.
-      if (!ctl.released && (!g.noSensor || el >= FUEHRUNG.zeiten.ohneSensor)) { ctl.released = true; ctl.forced = true; ctl.at = Math.round(el); if (g.noSensor) L.notloesungen++; haptic(18); }
+      if (!ctl.released && (!g.noSensor || el >= ohneSensorWarte())) { ctl.released = true; ctl.forced = true; ctl.at = Math.round(el); if (g.noSensor) L.notloesungen++; haptic(18); }
       // Hinweis-Foto: Es zählt der Stand beim Tipp, nicht der bei der Freigabe (Gründe, ohne Sensor). gut = alle Punkte passen gerade, nur die Ruhezeit läuft noch.
       if (ctl.forced) { ctl.noSensor = !!g.noSensor; ctl.grund = g.noSensor ? ['kein_sensor'] : g.R.warte ? ['sensor_wartet'] : g.R.grund.slice(); }
       ctl.gut = !!g.good;
@@ -1306,7 +1309,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         // stehen weiter im Protokoll (rahmen), damit der Arbeiter sieht, wie weit weg und wie hoch fotografiert wurde.
         // Bildschirm (bv: der erkannte Rahmen im sichtbaren Teil, ohne Gerade-Richten) und Foto (bg: nach dem Gerade-Richten) getrennt prüfen (Prüfbefund 15); auf dem Bildschirm
         // zählen Kamera-Insel bzw. Sicherheitsrand und im Vollbild die kleine Galerie unten nicht als sichtbar (Prüfbefund 14)
-        var bv = imSicht(b), vo = LAY.form === 'voll', rL = rm + (vo ? (LAY.sl || 0) / (LAY.vw || 1) : 0), rR = rm + (vo ? (LAY.sr || 0) / (LAY.vw || 1) : 0), rU = rm + (vo ? 40 / (LAY.vh || 1) : 0);
+        var bv = imSicht(b), vo = LAY.form === 'voll', rL = rm + (vo ? (LAY.sl || 0) / (LAY.vw || 1) : 0), rR = rm + (vo ? (LAY.sr || 0) / (LAY.vw || 1) : 0), rU = rm + (vo ? 44 / (LAY.vh || 1) : 0);   // 44 px: Galerie-Leiste im Vollbild (CSS .gal.gu)
         var cutL = bv.x0 < rL || bg.x0 < rm, cutR = bv.x1 > 1 - rR || bg.x1 > 1 - rm;
         var cutB = (cutL && cutR) || (/^seite/.test(m.key) && bg.x1 - bg.x0 >= K.seiteVoll), cutU = bv.y1 > 1 - rU || bg.y1 > 1 - rm, cutO = bv.y0 < rm || bg.y0 < rm;   // cutB: an beiden Seiten angeschnitten (Seite: ab 92 % der Bildbreite), cutU/cutO: unten/oben angeschnitten
         R.dx = (b.x0 + b.x1) / 2 - (sb.x0 + sb.x1) / 2;
@@ -1766,7 +1769,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var le = dv.getUint16(base) === 0x4949;
     if (dv.getUint16(base + 2, le) !== 42) return null;
     var ifd0 = readIFD(dv, base, dv.getUint32(base + 4, le), le), ex = ifd0[0x8769] != null ? readIFD(dv, base, ifd0[0x8769], le) : {};
-    return { model: ifd0[0x0110] || null, orientation: ifd0[0x0112] != null ? ifd0[0x0112] : null, focal: ex[0x920A] != null ? ex[0x920A] : null, focal35: ex[0xA405] != null ? ex[0xA405] : null };
+    return { model: ifd0[0x0110] || null, orientation: ifd0[0x0112] != null ? ifd0[0x0112] : null, focal: ex[0x920A] != null ? ex[0x920A] : null, focal35: ex[0xA405] ? ex[0xA405] : null };   // 0 = unbekannt (EXIF-Norm)
   }
   async function readExif(blob) {
     var res = {}, sofW = null, sofH = null;
@@ -1852,6 +1855,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   }
   function gum(c) { return navigator.mediaDevices.getUserMedia(c); }
   // Linse und Zoomstufe der laufenden Kamera, soweit der Browser sie nennt (Name der Kamera, z. B. „Back Camera“; zoom aus getSettings, nur wo es das gibt). Sonst null.
+  function camF35Jetzt() { try { var id = S.track && S.track.getSettings ? S.track.getSettings().deviceId : null; return id && S.camF35 && S.camF35[id] != null ? S.camF35[id] : null; } catch (e) { return null; } }   // Brennweite aus dem Probefoto der laufenden Kamera
   function linseJetzt() {
     try { if (!S.track) return null; var st = S.track.getSettings ? S.track.getSettings() : {}, c = (S.devs || []).filter(function (d) { return d.id === st.deviceId; })[0];
       return { name: S.track.label || null, art: c ? c.kind : null, zoom: st.zoom != null ? +(+st.zoom).toFixed(2) : null }; } catch (e) { return null; }
@@ -1907,7 +1911,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         S.stream = await gum(v); S.track = S.stream.getVideoTracks()[0];
         if (!('ImageCapture' in window)) throw new Error('ImageCapture fehlt');
         var ic = new ImageCapture(S.track); await sleep(500);
-        var b = await withTimeout(ic.takePhoto(), 10000), x = await readExif(b); row.f35 = x.focal35;
+        var b = await withTimeout(ic.takePhoto(), 10000), x = await readExif(b); row.f35 = x.focal35; if (x.focal35 != null) (S.camF35 || (S.camF35 = {}))[wide[i].id] = x.focal35;
       } catch (e) { row.err = errText(e); }
       closeStream(); info.push(row);
     }
@@ -2159,7 +2163,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       else if (f35 < 22 || f35 > 30) { lvl = Math.max(lvl, 1); kurz.push('Kamera weicht von 1x ab'); why.push('Kamera weicht von 1x ab (' + fmt(f35, 0) + ' mm)'); }
     }
     var amp = (!sensor && lvl === 0) ? null : ['gruen', 'gelb', 'rot'][lvl];
-    if (!sensor) why.push('kein Sensorwert');
+    if (!sensor) { why.push('kein Sensorwert'); kurz.push('Ohne Lagesensor aufgenommen'); }   // Foto erlaubt (Giannis 22.11.2026), Lage nicht geprüft
     return { ampel: amp, gruende: why, kurz: kurz };
   }
   function aufnZaehler() { var k = ((S.vehicle && S.vehicle.id) || '') + '|' + (S.cur || ''), A = S.aufn || (S.aufn = {}); return A[k] || (A[k] = { n: 0, v: 0 }); }
@@ -2203,9 +2207,10 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         fovP = (async function () { await sleep(30); try { var pm = smallOf(img.el, img.w, img.h); if (extra) pm = extra === 90 ? rotSmall(pm, true) : rotSmall(pm, false); var fr = fovFit(o.live, pm); URL.revokeObjectURL(img.url); return fr ? { faktor: +fr.f.toFixed(3), passung: +fr.r.toFixed(2) } : null; } catch (e) { URL.revokeObjectURL(img.url); return null; } })();
       } else URL.revokeObjectURL(img.url);
       chk(my);
-      var f35 = exif.focal35 != null ? exif.focal35 : null, am = ampelHandy(lev != null ? { p: o.snap.p, r: 0 } : o.snap, f35, S.cur), amp = am.ampel, why = am.gruende.slice(), kurz = am.kurz.slice();
-      if (res.h > res.w) { amp = 'rot'; why.push('Foto ist hochkant (Handy war nicht quer)'); kurz.push('Foto ist hochkant (Handy war nicht quer)'); }
-      var r = { aufn: o.aufn || null, gerade: lev != null ? { grad: lev, faktor: res.gerade, ende: (o.snapEnde && o.snapEnde.age <= 800) ? o.snapEnde.r : null } : null, slot: S.cur, blob: res.blob, w: res.w, h: res.h, thumb: res.thumb, drehung: (rot + extra) % 360, hand: 0, f35: f35, zuschnitt: res.zuschnitt || null, exif: { orient: exif.orientation, focal: exif.focal, model: exif.model }, srcW: img.w, srcH: img.h,
+      var f35 = exif.focal35 != null ? exif.focal35 : (o.quelle === 'kamera' ? camF35Jetzt() : null), f35q = exif.focal35 != null ? 'exif' : f35 != null ? 'kamera_probe' : null, am = ampelHandy(lev != null ? { p: o.snap.p, r: 0 } : o.snap, f35, S.cur), amp = am.ampel, why = am.gruende.slice(), kurz = am.kurz.slice();
+      if (res.h > res.w && o.quelle === 'kamera' && o.cls == null && !(o.snap && o.snap.p != null)) { if (amp !== 'rot') amp = 'gelb'; why.push('Foto ist hochkant (ohne Lagesensor, Lage des Handys unbekannt)'); kurz = kurz.map(function (k) { return k === 'Ohne Lagesensor aufgenommen' ? 'Ohne Lagesensor aufgenommen, Foto hochkant' : k; }); }
+      else if (res.h > res.w) { amp = 'rot'; why.push('Foto ist hochkant (Handy war nicht quer)'); kurz.push('Foto ist hochkant (Handy war nicht quer)'); }
+      var r = { aufn: o.aufn || null, gerade: lev != null ? { grad: lev, faktor: res.gerade, ende: (o.snapEnde && o.snapEnde.age <= 800) ? o.snapEnde.r : null } : null, slot: S.cur, blob: res.blob, w: res.w, h: res.h, thumb: res.thumb, drehung: (rot + extra) % 360, hand: 0, f35: f35, f35q: f35q, zuschnitt: res.zuschnitt || null, exif: { orient: exif.orientation, focal: exif.focal, model: exif.model }, srcW: img.w, srcH: img.h,
         snap: o.snap, cls: o.cls, ampel: amp, gruende: why, kurz: kurz, fit: o.fit || null, how: o.how || {}, takeMs: o.takeMs, quelle: o.quelle, note: note, url: null, fovP: fovP, video: o.video || null,
         zeiten: { entschluesseln: tDec, gesamt: Math.round(performance.now() - T0), zeichnen: res.ms.zeichnen, kodieren: res.ms.kodieren, vorschau: res.ms.vorschau, glaettung: res.ms.glaettung } };
       showReview(r);
@@ -2326,7 +2331,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       id: st.fotoId, fahrzeug_id: S.vehicle.id, platz: m.key, zusatz_nr: m.zusatz_nr, zusatz_art: m.art === 'zusatz' ? S.zusatzArt : null,
       ampel_handy: r.ampel, ampel_handy_gruende: r.gruende.join('; '), geraet: dev(), brennweite_kb: (r.gerade && r.f35 != null) ? +(r.f35 * r.gerade.faktor).toFixed(1) : r.f35, neigung: r.snap ? +r.snap.p.toFixed(1) : null, rollen: r.gerade ? 0 : (r.snap ? +r.snap.r.toFixed(1) : null),
       drehung: r.drehung, breite: r.w, hoehe: r.h, bytes: r.blob.size,
-      app_details: { app: APP, quelle: r.quelle, selbstausloeser: false, ausloeser: { art: 'manuell', freigabe: r.quelle === 'kamera-app' ? 'kamera_app' : (r.how.forced ? (r.how.noSensor ? 'erzwungen_ohne_sensor' : 'erzwungen') : 'frei'), frei_nach_ms: r.how.waitMs || 0, nachstabil_ms: r.how.nach ? r.how.nach.ms : null, nachstabil_ruhig: r.how.nach ? r.how.nach.ruhig : null, verlauf: r.how.verlauf || null }, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, klasse: (S.vehicle && S.vehicle.klasse && KLASSE_NAME[S.vehicle.klasse]) || null, cabrio: klasseOf() === 'cabrio', schablone: 'kasten', ziel_neigung: zielP(m.key),
+      app_details: { app: APP, quelle: r.quelle, selbstausloeser: false, ausloeser: { art: 'manuell', freigabe: r.quelle === 'kamera-app' ? 'kamera_app' : (r.how.forced ? (r.how.noSensor ? 'erzwungen_ohne_sensor' : 'erzwungen') : 'frei'), frei_nach_ms: r.how.waitMs || 0, nachstabil_ms: r.how.nach ? r.how.nach.ms : null, nachstabil_ruhig: r.how.nach ? r.how.nach.ruhig : null, verlauf: r.how.verlauf || null }, warte_ms: r.how.waitMs || 0, ohne_sensor: !!r.how.noSensor, haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, brennweite_quelle: r.f35q || null, klasse: (S.vehicle && S.vehicle.klasse && KLASSE_NAME[S.vehicle.klasse]) || null, cabrio: klasseOf() === 'cabrio', schablone: 'kasten', ziel_neigung: zielP(m.key),
         gerade: r.gerade ? { rollen_roh: +r.gerade.grad.toFixed(2), faktor: +r.gerade.faktor.toFixed(4), brennweite_roh: r.f35, rollen_ende: r.gerade.ende == null ? null : +r.gerade.ende.toFixed(2) } : null,   // gerade gerichtet: Rohwerte; brennweite_kb und rollen oben sind die Werte des fertigen Fotos
         nicht_geprueft: (function () { return !(r.quelle === 'kamera' && !!(r.how && r.how.g) && !r.how.forced); })(),
         nicht_geprueft_grund: (function () { if (r.quelle !== 'kamera') return 'kamera_app'; if (!(r.how && r.how.g)) return 'ohne_fuehrung'; return r.how.forced ? ((r.how.grund || []).join(',') || 'notloesung') : ''; })(),
