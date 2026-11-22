@@ -491,7 +491,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-16';
+  var APP = 'foto-app-test-16b';
   var RAD = Math.PI / 180;
   /* =====================================================================
      ZAHLEN DER FÜHRUNG. Die Optik ist final (Giannis 08.11.2026 21:32); nachgestellt werden nur die Zahlen, und zwar hier.
@@ -912,6 +912,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       zugangInfo: function () { return zugangNeu(cfg.zugang) ? rpc('zugang_info', { p_zugang: cfg.zugang }) : Promise.resolve(null); },
       daten: function (id, p) { return rpcOk('fahrzeug_daten', { p_id: id, p: p || {} }); },   // {} liest nur: sagt, ob der Server für das Fahrzeug noch etwas annimmt
       absenden: function (id) { return rpcOk('fahrzeug_absenden', { p_id: id }); },
+      raumOffen: function (id) { return rpcOk('fahrzeug_raum_offen', { p_id: id }); },   // Fassung 16 b: Raum bis Schritt 5 offen, der Server parkt die Fahrzeugfotos (wartet_raum)
+      raumSetzen: function (id, raum) { return rpcOk('fahrzeug_raum', { p_id: id, p_raum: raum }); },   // Schritt 5: Raum setzen, geparkte Fotos frei
       upload: async function (path, blob) {
         var r = await call(base + '/storage/v1/object/roh/' + path, { method: 'POST', headers: hdr({ 'Content-Type': 'image/jpeg', 'x-upsert': 'false', 'cache-control': 'max-age=3600' }), body: blob }, 90000);
         if (r.ok) return true;
@@ -2490,7 +2492,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   }
   function enqueue(item) {
     item.vehicleId = S.vehicle.id; item.thumb = slotState(item.slot).thumb; item.t = Date.now(); item.srv = sendeschein();
-    idbPut(item).then(function () { S.queue.push(item); if (item.slot !== 'fahrzeugschein') haltAuffrischen(item.vehicleId); renderGalleryIfShown(); kick(); });
+    idbPut(item).then(function () { S.queue.push(item); if (item.slot !== 'fahrzeugschein') { haltAuffrischen(item.vehicleId); if (S.vehicle && S.vehicle.id === item.vehicleId && S.vehicle.raumOffen) { S.vehicle.letztesFoto = Date.now(); saveSession(); } } renderGalleryIfShown(); kick(); });
   }
   async function restoreQueue() {
     if (S.demo || (!S.api && S.cfg)) return;   // Demo oder ungültiger Link: nichts senden
@@ -2554,9 +2556,10 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function auftrag(a) { var L = lsLoad('fa_auftraege') || []; a.nr = uuid(); a.t = Date.now(); a.srv = sendeschein(); L.push(a); lsStore('fa_auftraege', L); auftraegeSenden(); }
   var auftragWake = null;
   // Der Server hat den Raum abgelehnt, weil schon Fahrzeugfotos gemeldet waren (Haltezeit abgelaufen): den gültigen Raum zeigen und es sagen
-  function raumAbgelehnt(id) {
-    var v = S.vehicle; if (!v || v.id !== id || !v.raumAnlage) return;
-    v.raum = v.raumAnlage; v.raumWahl = v.raumAnlage; saveSession();
+  function raumBestaetigt(id) { var v = S.vehicle; if (v && v.id === id) { v.raumZu = true; saveSession(); renderGalleryIfShown(); } }   // 16 b: Raum steht beim Server fest
+  function raumAbgelehnt(id, raumSrv) {   // raumSrv: der gültige Raum laut Server (16 b: Frist abgelaufen, der Server hat die Fotos im Vorgabe-Raum freigegeben)
+    var v = S.vehicle, r0 = raumSrv || (v && v.raumAnlage); if (!v || v.id !== id || !r0) return;
+    v.raum = r0; v.raumWahl = r0; v.raumZu = true; saveSession();
     toast(T('Der Showroom stand schon fest (' + raumName(v.raum) + '): Die Fotos waren bereits bei AutoScales.', 'Der Showroom stand schon fest (' + raumName(v.raum) + '): Die Fotos waren bereits bei AutoScales.'), 6000);
     renderGalleryIfShown(); if (!$('pSchritt').hidden && v.schritt) zeigeSchritt(v.schritt);
   }
@@ -2567,9 +2570,10 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       var L = lsLoad('fa_auftraege') || [], a = L[0]; if (!a) break;
       var api = a.srv ? (scheinOk(a) ? (S.api && S.api.real && S.cfg && S.cfg.url === a.srv.u && S.cfg.key === a.srv.k ? S.api : mkRealApi({ url: a.srv.u, key: a.srv.k })) : null) : (S.demo ? S.api : null), fertig = !api;
       if (api) {
-        try { if (a.art === 'absenden') await api.absenden(a.id); else await api.daten(a.id, a.p || {}); fertig = true; warte = 0; }
+        try { if (a.art === 'absenden') await api.absenden(a.id); else if (a.art === 'raum') { await api.raumSetzen(a.id, a.raum); raumBestaetigt(a.id); } else await api.daten(a.id, a.p || {}); fertig = true; warte = 0; }
         catch (e) {
-          if (e && e.fehler) { fertig = true; if (e.fehler === 'schon_fotos' && a.p && 'raum' in a.p) raumAbgelehnt(a.id); }   // vom Server endgültig abgelehnt (Fahrzeug unbekannt oder abgeschlossen, Eingabe ungültig, Raum schon fest)
+          if (e && e.fehler) { fertig = true; if (e.fehler === 'schon_fotos' && ((a.p && 'raum' in a.p) || (a.art === 'raum' && !a.still))) raumAbgelehnt(a.id, e.info && e.info.raum); }
+          else if (e && e.status === 404 && a.art === 'raum') fertig = true;   // Server ohne das SQL „Raum offen“: nichts zu tun   // vom Server endgültig abgelehnt (Fahrzeug unbekannt oder abgeschlossen, Eingabe ungültig, Raum schon fest)
           else if (e && e.status >= 400 && e.status < 500 && e.status !== 408 && e.status !== 429) {   // dauerhafter Fehler (z. B. 401, 404): nach drei Versuchen aufgeben, damit spätere Aufträge nicht ewig warten (Prüfbefund 10)
             var L2 = lsLoad('fa_auftraege') || []; if (L2[0] && L2[0].nr === a.nr) { L2[0].fehl = (L2[0].fehl || 0) + 1; lsStore('fa_auftraege', L2); if (L2[0].fehl >= 3) fertig = true; }
           }
@@ -2595,15 +2599,22 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function halten(id, an) { if (!id) return; var L = haltListe().filter(function (h) { return h.id !== id; }); if (an) L.push({ id: id, t: Date.now() }); lsStore('fa_halten', L); haltWecker(); if (!an) { kick(); renderGalleryIfShown(); } }
   function haltAuffrischen(id) { var L = haltListe(), da = false; L.forEach(function (h) { if (h.id === id) { h.t = Date.now(); da = true; } }); if (da) { lsStore('fa_halten', L); haltWecker(); } }   // Haltezeit ab dem letzten Foto
   function haltWecker() { clearTimeout(S.haltT); var L = haltListe(); if (!L.length) return; var nx = Math.min.apply(null, L.map(function (h) { return h.t + HALTEN_MAX_MS; })) - Date.now(); S.haltT = setTimeout(function () { kick(); renderGalleryIfShown(); haltWecker(); }, Math.max(1000, nx + 500)); }
-  function raumAuftragOffen(id) { return (lsLoad('fa_auftraege') || []).some(function (a) { return a.freigabe === id; }); }
+  function raumAuftragOffen(id) { return (lsLoad('fa_auftraege') || []).some(function (a) { return a.freigabe === id || (a.art === 'raum' && a.id === id && !a.still); }); }
   function haltStart() {   // beim Öffnen: gehalten bleibt nur das Fahrzeug, das dieser Tab fortsetzen kann; liegt für ein Fahrzeug ein Raum-Auftrag, gibt der es frei
     var rs = load('fa_veh'), mein = rs && rs.vehicle && rs.vehicle.id, L = haltListe(), bleibt = L.filter(function (h) { return h.id === mein || raumAuftragOffen(h.id); });
     if (bleibt.length !== L.length) lsStore('fa_halten', bleibt);
     haltWecker();
   }
-  function raumWaehlbar(v) { return !!v && (gehalten(v.id) || raumAuftragOffen(v.id)); }   // Raum noch änderbar: kein Fahrzeugfoto gemeldet
+  function raumWaehlbar(v) { return !!v && (gehalten(v.id) || raumAuftragOffen(v.id) || (!!v.raumOffen && !v.raumZu && Date.now() - Math.max(v.angelegt || 0, v.letztesFoto || 0) < HALTEN_MAX_MS)); }   // Raum noch änderbar: kein Fahrzeugfoto gemeldet
   // Fahrzeug verlassen ohne Raumwahl: Fotos mit der Vorgabe melden. Liegt noch ein Raum-Auftrag für das Fahrzeug, gibt der die Fotos frei (sonst käme eine Meldung vor dem Raum an).
-  function raumFrei(id) { if (!id || !gehalten(id)) return; if ((lsLoad('fa_auftraege') || []).some(function (a) { return a.freigabe === id; })) return; halten(id, false); }
+  async function raumOffenAnfragen(id) {
+    if (!S.api || !S.api.raumOffen) return 'nein';
+    try { var j = await withTimeout(S.api.raumOffen(id), 6000); return j && j.ok && j.raum_offen ? 'ja' : 'nein'; }
+    catch (e) { return e && (e.fehler || (e.status >= 400 && e.status < 500 && e.status !== 408 && e.status !== 429)) ? 'nein' : 'unklar'; }
+  }
+  // 16 b: Verlässt der Händler ein Fahrzeug mit offenem Raum ohne Schritt 5 (neues Fahrzeug), gilt die Vorgabe; der Server gibt die geparkten Fotos gleich frei (sonst nach Frist)
+  function raumOffenFrei(id) { var alt = (load('fa_veh') || {}).vehicle; if (!alt || alt.id !== id || !alt.raumOffen || alt.raumFest || alt.raumZu) return; auftrag({ art: 'raum', id: id, raum: alt.raumAnlage || alt.raum || raumVorgabe(), still: true }); }
+  function raumFrei(id) { raumOffenFrei(id); if (!id || !gehalten(id)) return; if ((lsLoad('fa_auftraege') || []).some(function (a) { return a.freigabe === id; })) return; halten(id, false); }
   function haltOf(it) { return it.slot !== 'fahrzeugschein' && gehalten(it.vehicleId); }
   async function kick() {
     if (S.uploading) return; S.uploading = true;
@@ -2664,6 +2675,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (s.state === 'fehler') return { t: 'Senden fehlgeschlagen', c: 'bad' };
     if (s.state === 'gehalten') return { t: 'hochgeladen, Showroom nach der Raumwahl', c: 'ok' };
     var sv = s.server && s.server.status;
+    if (sv === 'wartet_raum') return { t: 'bei AutoScales, Showroom nach der Raumwahl', c: 'ok' };   // 16 b: der Server parkt das Foto bis zur Raumwahl
     if (sv === 'neu') return { t: 'hochgeladen, wartet', c: 'busy' };
     if (sv === 'in_arbeit') return { t: 'wird bearbeitet', c: 'busy' };
     if (sv === ST_OHNE) { var ao = s.server.ampel_showroom; return { t: 'geprüft, ohne Showroom', c: ao === 'rot' ? 'bad' : ao === 'gelb' ? 'warn' : 'ok' }; }
@@ -2681,7 +2693,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var pending = S.queue.filter(function (it) { return !(it.fileDone && haltOf(it)); }).length, haltWarte = raumWaehlbar(v) && !v.raumFest;   // gehaltene Fotos sind hochgeladen, nicht „noch hochzuladen“
     $('gSum').textContent = done + ' von ' + NP + ' Pflichtbildern aufgenommen' + (zusatzIds().length ? ', ' + zusatzIds().length + ' Zusatzbild' + (zusatzIds().length > 1 ? 'er' : '') : '') + (pending ? ' · ' + pending + (pending === 1 ? ' wird' : ' werden') + ' noch hochgeladen' : '');
     $('gProg').innerHTML = PF.map(function (p, i) { return '<i' + (i < done ? ' class="on"' : '') + '></i>'; }).join('');
-    var nG = $('gNote'); if (nG) { if (!S.noteStd) S.noteStd = nG.textContent; var anyOhne = ids.some(function (k) { return S.slots[k] && S.slots[k].server && S.slots[k].server.status === ST_OHNE; }); var nt = haltWarte ? T('Die Fotos sind hochgeladen. Sie gehen an AutoScales, sobald du in Schritt 5 den Showroom wählst. Danach aktualisiert sich diese Seite selbst.', 'Die Fotos sind hochgeladen. Sie gehen an AutoScales, sobald Sie in Schritt 5 den Showroom wählen. Danach aktualisiert sich diese Seite selbst.') : v.raum === 'kein' ? 'Dieses Fahrzeug ist ohne Showroom angelegt. Diese Seite aktualisiert sich selbst.' : anyOhne ? 'Einige Außenbilder wurden nur geprüft: Die Ampel zeigt das Ergebnis am Originalfoto, ein Showroom-Bild entsteht dabei nicht. Innenbilder bleiben Original. Diese Seite aktualisiert sich selbst.' : S.noteStd; if (nG.textContent !== nt) nG.textContent = nt; }
+    var nG = $('gNote'); if (nG) { if (!S.noteStd) S.noteStd = nG.textContent; var anyOhne = ids.some(function (k) { return S.slots[k] && S.slots[k].server && S.slots[k].server.status === ST_OHNE; }); var nt = haltWarte && v.raumOffen ? T('Die Fotos sind bei AutoScales. Bearbeitet werden sie, sobald du in Schritt 5 den Showroom wählst.', 'Die Fotos sind bei AutoScales. Bearbeitet werden sie, sobald Sie in Schritt 5 den Showroom wählen.') : haltWarte ? T('Die Fotos sind hochgeladen. Sie gehen an AutoScales, sobald du in Schritt 5 den Showroom wählst. Danach aktualisiert sich diese Seite selbst.', 'Die Fotos sind hochgeladen. Sie gehen an AutoScales, sobald Sie in Schritt 5 den Showroom wählen. Danach aktualisiert sich diese Seite selbst.') : v.raum === 'kein' ? 'Dieses Fahrzeug ist ohne Showroom angelegt. Diese Seite aktualisiert sich selbst.' : anyOhne ? 'Einige Außenbilder wurden nur geprüft: Die Ampel zeigt das Ergebnis am Originalfoto, ein Showroom-Bild entsteht dabei nicht. Innenbilder bleiben Original. Diese Seite aktualisiert sich selbst.' : S.noteStd; if (nG.textContent !== nt) nG.textContent = nt; }
     $('gGrid').innerHTML = ids.map(function (id) {
       var s = S.slots[id], m = slotMeta(id), ti = tileInfo(id), taken = hasPhoto(id), img;
       if (s && s.thumb) img = '<img alt="" src="' + s.thumb + '">';
@@ -2935,7 +2947,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       p = { preis_brutto: pr, mwst_ausweisbar: schrittAn('mwst_ausweisbar'), verhandlungsbasis: schrittAn('verhandlungsbasis') };
     }
     if (n === 'preis') {   // Raum immer festhalten (auch bei „später“): erst dieser Auftrag, dann werden die gehaltenen Fotos gemeldet
-      if (raumWaehlbar(v) || S.demo) { var rw = v.raumWahl || v.raum || raumVorgabe(); v.raum = rw; v.raumFest = true; auftrag({ art: 'daten', id: v.id, p: { raum: rw }, freigabe: v.id }); }
+      if (raumWaehlbar(v) || S.demo) { var rw = v.raumWahl || v.raum || raumVorgabe(); v.raum = rw; v.raumFest = true; if (v.raumOffen) auftrag({ art: 'raum', id: v.id, raum: rw });   // 16 b: fahrzeug_raum setzt den Raum und gibt die geparkten Fotos frei
+        else { auftrag({ art: 'daten', id: v.id, p: { raum: rw }, freigabe: v.id }); if (v.raumOffenUnklar) auftrag({ art: 'raum', id: v.id, raum: rw, still: true }); } }
       else v.raumFest = true;   // schon gemeldet: der Raum vom Anlegen gilt
     }
     if (p) { Object.keys(p).forEach(function (k) { if (k !== 'weitere') d[k] = p[k]; }); auftrag({ art: 'daten', id: v.id, p: p }); }
@@ -3034,8 +3047,12 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         $('fGo').disabled = false; return;
       }
       var altV = (load('fa_veh') || {}).vehicle; if (altV && altV.id && altV.id !== v.id) raumFrei(altV.id);   // Formular trotz „Weitermachen“-Box: voriges Fahrzeug freigeben (Prüfbefund 2)
-      v.raumAnlage = v.raum;
-      halten(v.id, true);   // Fotos erst nach der Raumwahl in Schritt 5 melden
+      v.raumAnlage = v.raum; v.angelegt = Date.now();
+      // Fassung 16 b: Hält der Server den Raum offen (SQL „Raum offen“), meldet die App jedes Foto sofort und der Server parkt die Fahrzeugfotos bis zur Raumwahl.
+      // Kennt er die Funktion nicht (404, SQL noch nicht ausgeführt) oder lehnt er ab: halten wie bisher. Bleibt die Antwort aus (Netz): halten und in Schritt 5 beide Wege.
+      var ro = await raumOffenAnfragen(v.id);
+      if (ro === 'ja') v.raumOffen = true;
+      else { if (ro === 'unklar') v.raumOffenUnklar = true; halten(v.id, true); }   // Fotos erst nach der Raumwahl in Schritt 5 melden
       S.vehicle = v; S.slots = {}; S.camChoice = null; S.devs = null; S.fallbackInput = false; saveSession();
       S.sensorPerm = perm;
       fmsg('');
