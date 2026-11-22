@@ -535,7 +535,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     ton: true
   };
   var CFG = {
-    LONG_EDGE: 2560, QUALITY: 0.85,
+    LONG_EDGE: 2560, LONG_EDGE_VOLL: 4032, QUALITY: 0.85,   // LONG_EDGE_VOLL nur mit dem Schalter &aufnahme=voll
     SETTLE_MS: 1500,            // Einschwingzeit nach Kamerastart
     NACH_MAX_MS: 900, NACH_FENSTER_MS: 220, NACH_RUHIG_MS: 120,   // nach dem Tipp kurz nachstabilisieren (der Tipp wackelt), höchstens so lange
     STILL_P: FUEHRUNG.ruhig.p, STILL_R: FUEHRUNG.ruhig.r, STILL_MS: FUEHRUNG.zeiten.ruhig, FRESH_MS: 250,   // ruhig (Schwellen aus Probe 4); FRESH_MS: Sensorwert höchstens so alt
@@ -842,6 +842,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         if (p.get('a') === 'du' || p.get('a') === 'sie') cfg.a = p.get('a');
         if (p.has('debug')) cfg.debug = true;
         if (p.get('ai') === 'aus') cfg.ai = 'aus';   // Auto-Erkennung abschalten (falls sie am Handy stört)
+        if (p.get('aufnahme') === 'voll') cfg.aufnahme = 'voll';   // Neuheiten-Check Punkt 6 (nach Dienstag am Gerät messen): volle Fotoauflösung über takePhoto und feste Linse; Standard aus
         if (p.has('sim') && cfg.demo) cfg.sim = true;  // nur im Demo ohne Server: gezeichnete Kamera
         if (p.has('ohneshow') && cfg.demo) cfg.ohneShow = true;   // nur im Demo: Außenbilder „geprüft, ohne Showroom“ (Status geprueft)
         if (cfg.demo && /^(gruen|nah|fern|nein|winkel|schief|mitte|licht|dunkel|lackrot|scheinwerfer|glanz|weisslack)$/.test(p.get('simz') || '')) { cfg.sim = true; cfg.simz = p.get('simz'); }
@@ -1854,6 +1855,15 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     return 'other';
   }
   function gum(c) { return navigator.mediaDevices.getUserMedia(c); }
+  // NEUHEITEN-CHECK PUNKT 6 (Alfred 22.11.2026: als eigener Commit hinter einem Schalter, Standard aus; erst nach Dienstag am Gerät messen): volle Fotoauflösung.
+  // takePhoto ohne Angaben liefert je nach Browser nur die Auflösung des Stroms; mit imageWidth/imageHeight aus getPhotoCapabilities die größte, die der Browser nennt.
+  // Quellen: ImageCapture in Safari ab 18.4 (webkit.org/blog/16574), MDN takePhoto(photoSettings). Was iOS wirklich liefert, ist noch nicht gemessen.
+  function aufnahmeVoll() { return !!(S.cfg && S.cfg.aufnahme === 'voll'); }
+  async function fotoEinstellung() {
+    if (!S.ic || typeof S.ic.getPhotoCapabilities !== 'function') { S.fotoCaps = 'fehlt'; return null; }
+    if (S.fotoCaps === undefined) { try { var pc = await withTimeout(S.ic.getPhotoCapabilities(), 2000); S.fotoCapsW = pc && pc.imageWidth && pc.imageWidth.max; S.fotoCapsH = pc && pc.imageHeight && pc.imageHeight.max; S.fotoCaps = S.fotoCapsW && S.fotoCapsH ? S.fotoCapsW + 'x' + S.fotoCapsH : 'ohne Maße'; } catch (e) { S.fotoCaps = 'fehler'; S.fotoCapsW = S.fotoCapsH = null; } }
+    return S.fotoCapsW && S.fotoCapsH ? { imageWidth: S.fotoCapsW, imageHeight: S.fotoCapsH } : null;
+  }
   // Linse und Zoomstufe der laufenden Kamera, soweit der Browser sie nennt (Name der Kamera, z. B. „Back Camera“; zoom aus getSettings, nur wo es das gibt). Sonst null.
   function camF35Jetzt() { try { var id = S.track && S.track.getSettings ? S.track.getSettings().deviceId : null; return id && S.camF35 && S.camF35[id] != null ? S.camF35[id] : null; } catch (e) { return null; } }   // Brennweite aus dem Probefoto der laufenden Kamera
   function linseJetzt() {
@@ -1877,14 +1887,17 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   }
   async function openStream(dev) {
     closeStream();
-    function mk(w, h, exact) {
+    var voll = aufnahmeVoll();
+    function mk(w, h, exact, ohneZoom) {
       var v = { frameRate: { ideal: 30 }, width: exact ? { exact: w } : { ideal: w }, height: exact ? { exact: h } : { ideal: h } };
       if (dev && dev.id) v.deviceId = { exact: dev.id }; else v.facingMode = { ideal: 'environment' };
+      if (voll && !ohneZoom) v.zoom = false;   // feste Linse (nur mit dem Schalter)
       return { audio: false, video: v };
     }
-    var tries = [[4032, 3024, true], [3024, 4032, true], [4032, 3024, false], [1920, 1440, false]], s = null, err = null;
-    for (var i = 0; i < tries.length && !s; i++) { try { s = await gum(mk(tries[i][0], tries[i][1], tries[i][2])); } catch (e) { err = e; } }
+    var tries = [[4032, 3024, true], [3024, 4032, true], [4032, 3024, false], [1920, 1440, false]].concat(voll ? [[4032, 3024, false, true]] : []), s = null, err = null;
+    for (var i = 0; i < tries.length && !s; i++) { try { s = await gum(mk(tries[i][0], tries[i][1], tries[i][2], tries[i][3])); S.zoomAus = voll && !tries[i][3]; } catch (e) { err = e; } }
     if (!s) throw err || new Error('Kamera startet nicht');
+    S.fotoCaps = undefined;   // Fähigkeiten für Fotos je Strom neu lesen
     S.stream = s; S.track = s.getVideoTracks()[0];
     var v = $('video'); v.srcObject = s;
     try { await v.play(); } catch (e) { /* muted autoplay */ }
@@ -2125,7 +2138,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   // dreht (rot = Grad im Uhrzeigersinn) und verkleinert auf lange Seite CFG.LONG_EDGE, Qualität CFG.QUALITY
   // lev (Grad, kann fehlen): Rollen des Handys; das Bild wird zusätzlich um −lev gedreht und um geradeFaktor größer gezeichnet (gerade richten, FUEHRUNG.gerade)
   async function renderUpright(img, rot, lev) {
-    var t0 = performance.now(), quarter = rot === 90 || rot === 270, ow = quarter ? img.h : img.w, oh = quarter ? img.w : img.h, s = Math.min(1, CFG.LONG_EDGE / Math.max(ow, oh));
+    var t0 = performance.now(), quarter = rot === 90 || rot === 270, ow = quarter ? img.h : img.w, oh = quarter ? img.w : img.h, s = Math.min(1, (aufnahmeVoll() ? CFG.LONG_EDGE_VOLL : CFG.LONG_EDGE) / Math.max(ow, oh));
     var c = document.createElement('canvas'); c.width = Math.max(1, Math.round(ow * s)); c.height = Math.max(1, Math.round(oh * s));
     var x = c.getContext('2d'); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = S.smooth;
     var k = lev ? geradeFaktor(lev, ow / oh) : 1, sk = s * k;
@@ -2178,8 +2191,10 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var fit = aiOuter() ? aiSnap() : null;
     S.phase = 'shoot'; shotReady(false); say('Foto wird gemacht …');
     var live = null; try { live = smallOf($('video'), S.vw, S.vh); } catch (e) { /* ohne Vergleich weiter */ }
-    try { blob = await withTimeout(S.ic.takePhoto(), 15000); }
+    var ps = aufnahmeVoll() ? await fotoEinstellung() : null, rueck = false;
+    try { blob = await withTimeout(ps ? S.ic.takePhoto(ps).catch(function () { rueck = true; return S.ic.takePhoto(); }) : S.ic.takePhoto(), 15000); }
     catch (e) { if (my !== S.token) throw CANCEL; problem('Das Foto konnte nicht gemacht werden', errText(e), true); return; }
+    if (aufnahmeVoll()) how.voll = { faehig: S.fotoCaps || null, verlangt: ps ? ps.imageWidth + 'x' + ps.imageHeight : null, rueckfall: rueck, zoom_aus: !!S.zoomAus };
     var snapE = snapshot();   // Lage nach der Aufnahme: nur fürs Protokoll (wie weit das Handy während der Aufnahme weiterdreht)
     chk(my);
     flash();
@@ -2341,7 +2356,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         // Fassung 16 (Fable (Studio) 18, 22.11.2026): Lage beim Tippen und nach dem Ruhig-Werden mit Spanne und Rohwerten, Zuschnitt gegenüber dem Ausgangsbild, Linse und Zoom.
         // brennweite_kb oben gilt für das ausgelieferte Bild (nach Zuschnitt und Gerade-Richten). sichtfeld ist kein Winkel, sondern Foto gegen Live-Bild (Lehre 9).
         sensor: r.quelle === 'kamera' ? { fenster_ms: CFG.NACH_FENSTER_MS, tipp: (r.how.nach && r.how.nach.tipp) || null, ruhig: r.how.sens || null } : null,   // Zeit vom Tipp bis zum Foto: ausloeser.nachstabil_ms
-        zuschnitt: r.zuschnitt || null, linse: r.how.linse || null,
+        zuschnitt: r.zuschnitt || null, linse: r.how.linse || null, aufnahme_voll: r.how.voll || undefined,   // nur mit dem Schalter &aufnahme=voll
         variante: { anrede: VAR.anrede, vorgabe: GEO.stand, folge: 'rundum-v4', winkel_soll: GEO.winkel, ampel: 'v4 ' + FUEHRUNG.stand + ': keine feste Fotoposition, Kasten zum Einrahmen (gezeichnet ab ' + GEO.mitteM + ' m, Seite ' + GEO.seiteMitteM + ' m), Hinweise nur bei Anschnitt, Rollen ±' + FUEHRUNG.rollen.aussen.gruen + '°, gerade gerichtet bis ' + FUEHRUNG.gerade.max + '°, Tipp „Näher ran“ unter ' + Math.round(FUEHRUNG.kasten.kleinTipp * 100) + ' % der Kastenbreite, ruhig ohne Sperre' } }
     };
     detailsPassend(meta.app_details);
