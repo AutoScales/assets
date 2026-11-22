@@ -157,10 +157,10 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .flash.on { opacity: .85; transition: none; }
 #ovCv { position: absolute; left: var(--ix); top: var(--iy); width: var(--iw); height: var(--ih); pointer-events: none; z-index: 1; }
 .brk { position: absolute; z-index: 3; width: 22px; height: 22px; border: 3px solid #FFC77C; pointer-events: none; filter: drop-shadow(0 0 1px rgba(0,0,0,.6)); }
-.brk.tl { left: var(--ix); top: var(--iy); border-right: 0; border-bottom: 0; }
-.brk.tr { left: calc(var(--ix) + var(--iw) - 22px); top: var(--iy); border-left: 0; border-bottom: 0; }
-.brk.bl { left: var(--ix); top: calc(var(--iy) + var(--ih) - 22px); border-right: 0; border-top: 0; }
-.brk.br { left: calc(var(--ix) + var(--iw) - 22px); top: calc(var(--iy) + var(--ih) - 22px); border-left: 0; border-top: 0; }
+.brk.tl { left: var(--vx); top: var(--vy); border-right: 0; border-bottom: 0; }   /* Ecken des sichtbaren Bildes (--v*: im Vollbild der Bildschirm, sonst das ganze Kamerabild) */
+.brk.tr { left: calc(var(--vx) + var(--vw) - 22px); top: var(--vy); border-left: 0; border-bottom: 0; }
+.brk.bl { left: var(--vx); top: calc(var(--vy) + var(--vh) - 22px); border-right: 0; border-top: 0; }
+.brk.br { left: calc(var(--vx) + var(--vw) - 22px); top: calc(var(--vy) + var(--vh) - 22px); border-left: 0; border-top: 0; }
 
 /* Phone-Drehen, Zwischenseiten */
 #vTurn, #vBet { display: grid; place-items: center; padding: 18px; z-index: 7; }
@@ -218,24 +218,54 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .railtitle .nr { font: 600 10px/1.2 var(--font-body); letter-spacing: .1em; text-transform: uppercase; color: var(--t2); }
 .railtitle b { font: 700 12px/1.25 var(--font-body); overflow-wrap: anywhere; }
 .railtitle .more { font: 600 10.5px/1.2 var(--font-body); color: var(--t2); }
-.topwrap { position: absolute; z-index: 5; left: var(--ix); width: var(--iw); top: calc(var(--iy) + 10px); display: flex; justify-content: center; pointer-events: none; padding: 0 10px; }
+.topwrap { position: absolute; z-index: 5; left: var(--vx); width: var(--vw); top: calc(var(--vy) + 10px); display: flex; justify-content: center; pointer-events: none; padding: 0 10px; }
 .hintcard { pointer-events: auto; max-width: 100%; padding: 10px 14px; font: 500 13px/1.45 var(--font-body); color: var(--t); text-align: left; cursor: pointer; border-radius: var(--r); }
-.mid { position: absolute; left: var(--ix); width: var(--iw); top: 50%; transform: translateY(-50%); text-align: center; pointer-events: none; z-index: 6; }
+.mid { position: absolute; left: var(--vx); width: var(--vw); top: 50%; transform: translateY(-50%); text-align: center; pointer-events: none; z-index: 6; }
 .mid .big { display: inline-block; font: 700 clamp(15px, 3.6vw, 22px)/1.3 var(--font-body); background: var(--chipbg); border: 1px solid var(--gb); color: var(--t); padding: 10px 18px; border-radius: var(--r); max-width: 90%; }
-#lvlMsg { position: absolute; z-index: 5; left: var(--ix); width: var(--iw); bottom: calc(var(--fh) - var(--iy) - var(--ih) + 50px); text-align: center; pointer-events: none; }
+#lvlMsg { position: absolute; z-index: 5; left: var(--vx); width: var(--vw); bottom: calc(var(--fh) - var(--vy) - var(--vh) + 50px); text-align: center; pointer-events: none; }
 #lvlMsg span { display: inline-flex; align-items: center; gap: 9px; font: 700 15px/1.2 var(--font-body); padding: 9px 14px 9px 11px; border-radius: 12px; background: var(--chipbg); border: 1px solid var(--as-gold); color: var(--t); box-shadow: 0 2px 12px rgba(0,0,0,.28); }
 #lvlMsg span::before { content: ''; width: 18px; height: 18px; flex: none; background: var(--sym-warn) center / contain no-repeat; }
 #lvlMsg[data-l="tipp"] span { border-color: var(--line, rgba(255,255,255,.28)); font-weight: 600; padding-left: 14px; } #lvlMsg[data-l="tipp"] span::before { display: none; }
 #lvlMsg[data-l="rot"] span { border-color: #FF6B5E; } #lvlMsg[data-l="rot"] span::before { background-image: var(--sym-bad); }
-#noRueck { position: absolute; z-index: 6; left: calc(var(--ix) + var(--iw) - 8px); transform: translateX(-100%); bottom: calc(var(--fh) - var(--iy) - var(--ih) + 48px); font: 600 12px/1.2 var(--font-body); padding: 9px 12px; border-radius: var(--rs); cursor: pointer; }
-.lvlt { white-space: pre-line; position: absolute; z-index: 5; left: calc(var(--ix) + 8px); top: calc(var(--iy) + 8px); font: 600 11px/1 var(--font-data); padding: 7px 9px; border-radius: 6px; background: var(--chipbg); border: 1px solid var(--gb); color: var(--t); }
+#noRueck { position: absolute; z-index: 6; left: calc(var(--vx) + var(--vw) - 8px); transform: translateX(-100%); bottom: calc(var(--fh) - var(--vy) - var(--vh) + 48px); font: 600 12px/1.2 var(--font-body); padding: 9px 12px; border-radius: var(--rs); cursor: pointer; }
+.lvlt { white-space: pre-line; position: absolute; z-index: 5; left: calc(var(--vx) + 8px); top: calc(var(--vy) + 8px); font: 600 11px/1 var(--font-data); padding: 7px 9px; border-radius: 6px; background: var(--chipbg); border: 1px solid var(--gb); color: var(--t); }
 .lvlt[data-ok="1"] { border-color: var(--ok); }
 .toast { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); background: var(--as-gold); color: #0B0C10; font-weight: 700; font-size: 14px; padding: 8px 14px; border-radius: 999px; pointer-events: none; z-index: 12; }
 #revDbg { font: 500 11px/1.35 var(--font-data); color: var(--t2); overflow-wrap: anywhere; }
 
+/* VOLLBILD (Fassung 16, Giannis 22.11.2026): das Kamerabild füllt den ganzen Bildschirm. Bedienung und Hinweise liegen als schmale, halb durchsichtige Schilder
+   am Rand („wie so eine Art Wasserzeichen“) und lassen die Mitte frei: links oben Schließen und Platz, links unten die Skizze, rechts oben der Stand, rechts in der Mitte
+   der Auslöser (Ring, innen durchsichtig), oben in der Mitte der eine Hinweis, unten die kleine Galerie. Fläche: --ovbg (hell: weiß, dunkel: schwarz), im Tageslicht lesbar. */
+:root, :root[data-dir="b"] { --ovbg: rgba(250,250,250,.80); --ovline: rgba(11,12,16,.10); }
+:root[data-dir="a"] { --ovbg: rgba(11,12,16,.66); --ovline: rgba(250,250,250,.14); }
+#ui[data-form="voll"] .rail { width: auto; top: 0; bottom: 0; padding-top: 10px; padding-bottom: 10px; gap: 8px; pointer-events: none; }
+#ui[data-form="voll"] .rail > * { pointer-events: auto; }
+#ui[data-form="voll"] .rail.L { left: 0; padding-left: calc(var(--sl, 0px) + 10px); padding-right: 0; align-items: flex-start; justify-content: flex-start; }
+#ui[data-form="voll"] .rail.R { right: 0; padding-right: calc(var(--sr, 0px) + 10px); padding-left: 0; align-items: flex-end; justify-content: space-between; }
+#ui[data-form="voll"] .rail.L .railtitle { order: 1; }
+#ui[data-form="voll"] .rail.L .mini { order: 2; margin-top: auto; width: 64px; max-width: 64px; opacity: .92; background: var(--ovbg); border-color: var(--ovline); }
+#ui[data-form="voll"] .round { width: 40px; height: 40px; font-size: 18px; background: var(--ovbg); border-color: var(--ovline); }
+#ui[data-form="voll"] .railtitle { width: auto; max-width: 168px; text-align: left; padding: 6px 10px; background: var(--ovbg); border-color: var(--ovline); }
+#ui[data-form="voll"] .rgrp { width: auto; justify-items: end; gap: 5px; }
+#ui[data-form="voll"] .rtxt { width: auto; max-width: 168px; padding: 5px 10px; border-radius: 999px; font-size: 11.5px; background: var(--ovbg); border-color: var(--ovline); }
+#ui[data-form="voll"] .shut { width: 72px; height: 72px; }
+#ui[data-form="voll"] .shut .in { background: transparent; text-shadow: 0 0 3px var(--base); }
+#ui[data-form="voll"] #lvlMsg { position: static; width: auto; text-align: right; }
+#ui[data-form="voll"] #lvlMsg span { font-size: 13px; padding: 6px 12px 6px 9px; border-radius: 999px; background: var(--ovbg); box-shadow: none; }
+#ui[data-form="voll"] .railtitle { position: absolute; top: 10px; left: calc(var(--sl, 0px) + 58px); height: 40px; display: flex; align-items: center; gap: 7px; max-width: min(calc(var(--fw) - var(--sl, 0px) - var(--sr, 0px) - 270px), 340px); padding: 0 13px; border-radius: 999px; }
+#ui[data-form="voll"] .rgrp:has(#lvlMsg:not([hidden])) #stillTxt { display: none; }   /* mit Hinweis genügt der Hinweis selbst; der Ring des Auslösers zeigt, dass ein Foto möglich ist */
+#ui[data-form="voll"] .railtitle .nr { white-space: nowrap; flex: none; }
+#ui[data-form="voll"] .railtitle b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+#ui[data-form="voll"] .railtitle .more { font-size: 0; flex: none; } #ui[data-form="voll"] .railtitle .more::after { content: '▾'; font-size: 12px; }
+#ui[data-form="voll"] .rtxt .dot { vertical-align: -3px; }
+#ui[data-form="voll"] .topwrap { top: calc(var(--vy) + 58px); }
+#ui[data-form="voll"] .mid .big { background: var(--ovbg); border-color: var(--ovline); }
+#ui[data-form="voll"] .gal.gu { left: calc(var(--vx) + 25%); width: 50%; height: 34px; padding: 4px 8px; background: var(--ovbg); border-color: var(--ovline); }
+#ui[data-form="voll"] .lvlt { left: calc(var(--vx) + var(--sl, 0px) + 60px); top: calc(var(--vy) + 10px); background: var(--ovbg); }
+#ui[data-form="voll"] #noRueck { background: var(--ovbg); }
 /* Kleine Galerie im Sucher */
 .gal { display: flex; gap: 4px; }
-.gal.gu { position: absolute; z-index: 5; left: var(--ix); width: var(--iw); bottom: calc(var(--fh) - var(--iy) - var(--ih)); height: 40px; padding: 5px 10px; justify-content: center; border-radius: var(--r) var(--r) 0 0; border-bottom: 0; }
+.gal.gu { position: absolute; z-index: 5; left: var(--vx); width: var(--vw); bottom: calc(var(--fh) - var(--vy) - var(--vh)); height: 40px; padding: 5px 10px; justify-content: center; border-radius: var(--r) var(--r) 0 0; border-bottom: 0; }
 .gt { position: relative; flex: 1 1 0; min-width: 0; max-width: 46px; height: 100%; border-radius: 6px; overflow: hidden; border: 1px solid var(--gb); background: var(--il-bg); padding: 0; cursor: pointer; color: var(--il-line); display: grid; place-items: center; }
 .gt img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .gt.empty { border: 1.5px dashed var(--t2); }
@@ -300,6 +330,23 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .v10 .il .g { fill: none; stroke: var(--il-gold); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .v10 .il .gd { fill: none; stroke: var(--il-gold); stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 3 4; }
 .v10 .il .gp { fill: var(--il-gold); stroke: none; }
+/* Fassung 16 (Giannis 22.11.2026): Fahrzeug-Kachel oben, Freifeld mit Diktat, Preis klein, Raumwahl groß */
+.v10 .fz { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 12px; align-items: center; padding: 14px; background: var(--il-bg); border-color: var(--il-bg); color: #FAFAFA; }
+.v10 .fz-ic { color: var(--gold); display: grid; place-items: center; } .v10 .fz-ic svg { width: 76px; height: 36px; display: block; }
+.v10 .fz-t { display: grid; gap: 3px; min-width: 0; } .v10 .fz-t > span { font: 600 10.5px/1 var(--v-ui); letter-spacing: .12em; text-transform: uppercase; color: #9CA3AF; }
+.v10 .fz-t h4 { color: #FAFAFA; font-size: 17px; overflow-wrap: anywhere; } .v10 .fz-t p { color: #C4CAD4; font-size: 13.5px; }
+.v10 .fld textarea { font: 500 16px/1.45 var(--v-ui); min-height: 112px; padding: 10px 12px; border: 1px solid var(--p-line); border-radius: 10px; background: var(--p-panel); color: var(--p-fg); width: 100%; box-sizing: border-box; resize: vertical; }
+.v10 .fld input:focus, .v10 .fld textarea:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 35%, transparent); }
+.v10 .fld .tipp { font: 500 12.5px/1.4 var(--v-ui); color: var(--p-mut); }
+.v10 .preis { display: grid; gap: 10px; }
+.v10 .preis .chips .chip { min-height: 40px; font-size: 12.5px; }
+.v10 .raumwahl { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 640px) { .v10 .raumwahl { grid-template-columns: repeat(2, minmax(0, 1fr)); } .v10 .raumwahl .ohne { grid-column: 1 / -1; } }
+.v10 .raum { display: grid; padding: 0; overflow: hidden; border: 1px solid var(--p-line); border-radius: 14px; background: var(--p-panel); color: var(--p-fg); cursor: pointer; text-align: left; font: inherit; }
+.v10 .raum img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; background: var(--il-bg); }
+.v10 .raum span { display: flex; align-items: center; gap: 8px; padding: 12px 14px; font: 700 15px/1.2 var(--v-ui); }
+.v10 .raum[aria-checked="true"] { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
+.v10 .raum.ohne span { padding-bottom: 2px; } .v10 .raum.ohne small { padding: 0 14px 12px 40px; font: 500 12.5px/1.4 var(--v-ui); color: var(--p-mut); }
 </style>
 </head>
 <body>
@@ -307,7 +354,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 <!-- Seite 1: Start (hochkant) -->
 <main class="page" id="pStart">
   <header class="brand"><span class="lockup"><span class="logo"><img class="l" src="logo.png" alt="AutoScales"><img class="d" src="logo-dunkel.png" alt="AutoScales"></span><b class="appname">Studio</b></span><span class="chip"><i class="dot go"></i>Testfassung</span></header>
-  <div><h1>Neues Fahrzeug</h1><p class="sub" style="margin-top:6px">Zehn Fotos, ein Fahrzeug. Die App führt Sie durch jede Position.</p></div>
+  <div><h1>Neues Fahrzeug</h1><p class="sub" style="margin-top:6px">Fahrzeug anlegen, dann führt die App durch Daten und zehn Fotos.</p></div>
   <div class="note" id="modeNote"></div>
   <div class="note" id="queueNote" role="status" aria-live="polite" hidden></div>
   <div id="resumeBox" class="note" hidden>
@@ -315,9 +362,6 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     <div class="actions" style="margin-top:10px"><button class="btn primary" id="resumeYes" type="button">Weitermachen</button><button class="btn" id="resumeNo" type="button">Neues Fahrzeug</button></div>
   </div>
   <form id="fForm" class="form" autocomplete="off" novalidate>
-    <div class="fld"><span class="lbl" id="showLbl" style="line-height:1.35">Digitaler Showroom für dieses Fahrzeug?</span><div class="wahl" id="showBox" role="group" aria-labelledby="showLbl"></div></div>
-    <div class="fld" id="raumFld"><span class="lbl" id="raumLbl">Raum wählen</span><div class="wahl raeume" id="raumBox" role="group" aria-labelledby="raumLbl"></div></div>
-    <p class="ohne" id="raumOhne" hidden>Ohne Showroom bleibt jedes Foto das Originalfoto, ohne Raum dahinter.</p>
     <div class="two">
       <label class="fld"><span class="lbl">Marke</span><input id="fMarke" type="text" maxlength="60" autocomplete="off" autocapitalize="words" placeholder="z. B. BMW"></label>
       <label class="fld"><span class="lbl">Baujahr</span><input id="fBaujahr" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="2021"></label>
@@ -447,7 +491,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-15';
+  var APP = 'foto-app-test-16';
   var RAD = Math.PI / 180;
   /* =====================================================================
      ZAHLEN DER FÜHRUNG. Die Optik ist final (Giannis 08.11.2026 21:32); nachgestellt werden nur die Zahlen, und zwar hier.
@@ -455,14 +499,16 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
      Die frühere Führung über Meter am Boden und die Link-Schalter &ab und &h gibt es nicht mehr. Vorzeichen der Neigung wie in der Anzeige: negativ = Kamera schaut nach unten, 0 = Handy senkrecht.
      ===================================================================== */
   var FUEHRUNG = {
-    stand: 'v11-kasten-4.5',
+    stand: 'v16-frei',
     // KASTEN: die eine Führung für alle Außenbilder. Der Kasten hat Länge, Breite und Höhe der Fahrzeugklasse und steht dort, wo das Auto vom Soll-Standpunkt aus zu sehen ist.
     // mitte: waagerecht von der Kamera zur AUTOMITTE (m) für die sechs Pflichtbilder rundum. seite: dasselbe für die zwei freiwilligen Seitenfotos; EINE Zahl, vorläufig 5,0 m (Alfred 19.11.2026, Entscheidung Giannis offen: bei 4,5 m füllt das längste Modell das Bild zu etwa 97 %).
     // band: grün von Soll + band[0] bis Soll + band[1] (rundum 4,0 bis 5,0 m, Seite 4,5 bis 5,5 m). hoehe ± hoeheTol: Haltehöhe (m). Die Grenzen im Bild rechnet kastenGrenzen() daraus je Platz und Klasse.
     // erkennung: so breit sieht die Auto-Erkennung ein echtes Auto, geteilt durch die Breite des Modells. 1 = wie das Modell. OFFEN bis zum Test am echten Auto (So 22.11.2026, Maßband): An 9 Fotos eines A6 vom 08.11. lag der erkannte Rahmen im Mittel bei 0,9 (AI.K_SCALE); stimmt das auch hier, stünde man bei Grün etwa 10 % zu nah.
     // rand: so nah darf der Kasten an den oberen und unteren Bildrand kommen. winkel: schräg 35° neben der Längsachse (Front 38 %, Flanke 62 % der Breite; Festlegung fable-studio-2 12.11.2026, Giannis: „Das muss Fable vorgeben“).
     // seiteVoll: Seite zu nah, wenn das Auto so viel der Bildbreite füllt. neigung: Blick nach unten (Grad), mit dem Kasten und Beispielbilder ohne Sensor gezeichnet werden (kein Ziel, wird außen nicht geprüft).
-    kasten: { mitte: 4.5, seite: 5.0, band: [-0.5, 0.5], hoehe: 1.35, hoeheTol: 0.20, erkennung: 1, rand: 0.03, winkel: 35, seiteVoll: 0.92, neigung: { rundum: -11, seite: -8 } },
+    // kleinTipp (Fassung 16): füllt das erkannte Auto weniger als diesen Anteil der sichtbaren Breite, steht der Tipp „Näher ran“ (kein Hinweis, das Foto bleibt geprüft).
+    // Seit Fassung 16 sind mitte, band und hoehe keine Vorgaben mehr (Giannis 22.11.2026: keine feste Fotoposition); sie zeichnen nur noch den Kasten zum Einrahmen.
+    kasten: { mitte: 4.5, seite: 5.0, band: [-0.5, 0.5], hoehe: 1.35, hoeheTol: 0.20, erkennung: 1, rand: 0.03, winkel: 35, seiteVoll: 0.92, kleinTipp: 0.35, neigung: { rundum: -11, seite: -8 } },
     // Licht (nur Hinweise): gleiche Messung wie der Arbeiter (arbeiter.py: licht_an, umgebung_hell). rot: Anteil rot leuchtender Fläche im Rahmen des Autos, ab dem „Licht an“ gilt (echte Fotos mit Rücklicht an: 28 bis 39 % im mittleren Bildfeld, ohne höchstens 2 %; deshalb keine Obergrenze); lackVorn: so viel Rot in einer Ansicht von vorn heißt roter Lack, dann kein Hinweis (Schätzung; ein roter Jaguar aus dem Netz: Front 19 bis 35 %, schräg vorn nur 6 bis 13 %); lackKein: darunter ist der Lack sicher nicht rot; dazwischen und ohne Foto von vorn gilt er als unbekannt (im Upload null, Wunsch Autobuilder 13.11.2026); bezug und dunkel: Umgebung dunkler als bezug / dunkel heißt „zu dunkel“, aber nur, wenn auch das ganze Bild dunkel ist (Mittel höchstens bildMax). Grund: An 19 Außenfotos bei Tageslicht lag die Umgebung einmal unter der Grenze (dunkler Boden, heller Himmel), das Bildmittel aber bei 0,17 bis 0,33; in der dunklen Garage bei 0,15 bis 0,16. bildMax ist eine Schätzung aus wenigen Fotos. spitzeMax: zusätzlich dürfen die hellsten 2 % des Bilds höchstens so hell sein (Autobuilder 12.11.2026: helle Halle mit dunklen Podesten schlug sonst falsch an; dunkle Garage 0,51 bis 0,59, helle Hallen 0,62 bis 0,94; Schätzung, knappe Spanne)
     // weiss: Scheinwerfer an. Anteil weiß überstrahlter Bildpunkte (alle Kanäle ab 250) in den unteren 60 % des Rahmens, in den Ansichten von vorn; nur bei Bildmittel bis weissBildMax, damit weißer Lack in der Sonne nicht anschlägt. Foto 10 der Runde 3 (Giannis: „nein“ wegen Licht an): im Sucherformat 160×120 0,77 %, 28 andere Fotos 0,00 % (in voller Größe 1,35 % gegen höchstens 0,16 %). Schätzung aus einem Beispiel
     // hellLackMax: Scheinwerfer-Hinweis nur, wenn höchstens so viel vom Rahmen hell und fast farblos ist (kleinster Kanal ab 160). Grund: Weißer Lack mit gespiegelten Hallenlampen sah wie ein Scheinwerfer aus (Autobuilder 13.11.2026, Foto 18: 20 % hell). Echte Fälle mit Scheinwerfern an (dunkler A6, dunkle Garage): 2,3 bis 3,1 %; alle anderen Ansichten von vorn im Bestand: ab 5,7 %. Folge: Ein weißes oder silbernes Auto mit Licht an bekommt keinen Hinweis. Schätzung, schmale Lücke
@@ -506,19 +552,18 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   var GEO = { stand: 'kasten-2026-11-19', winkel: FUEHRUNG.kasten.winkel, eckeM: 0, seiteMitteM: FUEHRUNG.kasten.seite, mitteM: FUEHRUNG.kasten.mitte, autoL: 4.9, autoB: 1.9 };
   function T(du, sie) { return VAR.anrede === 'du' ? du : sie; }
   function mTxt(x) { return String(Math.round(x * 100) / 100).replace('.', ','); }   // Meter für Texte: 4.5 wird „4,5“, 5 bleibt „5“
-  function hoeheHint() { return 'Handy auf Brusthöhe halten (etwa ' + mTxt(FUEHRUNG.kasten.hoehe) + ' m).'; }
   // Abstände in den Hinweistexten: eine Quelle (FUEHRUNG.kasten), damit Text und Kasten nie auseinanderlaufen. nase: von der Kamera bis zum Kennzeichen bei Front und Heck, auf halbe Meter gerundet
   var AB = { rundum: mTxt(FUEHRUNG.kasten.mitte), nase: mTxt(Math.round((FUEHRUNG.kasten.mitte - GEO.autoL / 2) * 2) / 2), seite: mTxt(FUEHRUNG.kasten.seite), seiteMin: mTxt(FUEHRUNG.kasten.seite + FUEHRUNG.kasten.band[0]) };
   // Bildfolge seit 08.11.2026 (Giannis: „4x 3/4 je vorne L+R und hinten L+R (seiten dann optional), Front und Heck“): einmal ums Auto.
   // Pflicht: 6 außen + 4 innen (Cockpit, Tacho, Vordersitze, Rücksitzbank). Freiwillig: Seite Fahrerseite und Beifahrerseite (SEITEN) und Kofferraum (INNEN_FREI).
   // Rücksitzbank: bei allen Autos Pflicht; ein Zweisitzer meldet sich mit dem Knopf „Kein Rücksitz“ (dann 9 Bilder). Schlüssel wie im Schema `plaetze` (titel = dreiviertel_vl).
   var PLAETZE = [
-    { key: 'titel', nr: 1, art: 'aussen', name: 'Dreiviertel vorn Fahrerseite', sub: 'Titelbild', hint: 'Schräg vor die vordere Ecke auf der Fahrerseite, etwa ' + AB.rundum + ' m von der Automitte. Scheinwerfer und Fahrerseite im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
-    { key: 'front', nr: 2, art: 'aussen', name: 'Front', hint: 'Genau vor das Auto, mittig, etwa ' + AB.rundum + ' m von der Automitte, also etwa ' + AB.nase + ' m vor dem Kennzeichen. Scheinwerfer im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
-    { key: 'dreiviertel_vr', nr: 3, art: 'aussen', name: 'Dreiviertel vorn Beifahrerseite', hint: 'Schräg vor die vordere Ecke auf der Beifahrerseite, etwa ' + AB.rundum + ' m von der Automitte. Scheinwerfer und Beifahrerseite im Bild (vorn, nicht das Heck), das ganze Auto mit Rand. Niemand im Auto.' },
-    { key: 'dreiviertel_hr', nr: 4, art: 'aussen', name: 'Dreiviertel hinten Beifahrerseite', hint: 'Schräg hinter die hintere Ecke auf der Beifahrerseite, etwa ' + AB.rundum + ' m von der Automitte. Rückleuchten und Beifahrerseite im Bild (hinten, nicht die Front), das ganze Auto mit Rand. Niemand im Auto.' },
-    { key: 'heck', nr: 5, art: 'aussen', name: 'Heck', hint: 'Genau hinter das Auto, mittig, etwa ' + AB.rundum + ' m von der Automitte, also etwa ' + AB.nase + ' m hinter dem Kennzeichen. Rückleuchten im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
-    { key: 'dreiviertel_hl', nr: 6, art: 'aussen', name: 'Dreiviertel hinten Fahrerseite', hint: 'Schräg hinter die hintere Ecke auf der Fahrerseite, etwa ' + AB.rundum + ' m von der Automitte. Rückleuchten und Fahrerseite im Bild (hinten, nicht die Front), das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'titel', nr: 1, art: 'aussen', name: 'Dreiviertel vorn Fahrerseite', sub: 'Titelbild', hint: 'Schräg vor die vordere Ecke auf der Fahrerseite. Scheinwerfer und Fahrerseite im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'front', nr: 2, art: 'aussen', name: 'Front', hint: 'Genau vor das Auto, mittig. Scheinwerfer im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'dreiviertel_vr', nr: 3, art: 'aussen', name: 'Dreiviertel vorn Beifahrerseite', hint: 'Schräg vor die vordere Ecke auf der Beifahrerseite. Scheinwerfer und Beifahrerseite im Bild (vorn, nicht das Heck), das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'dreiviertel_hr', nr: 4, art: 'aussen', name: 'Dreiviertel hinten Beifahrerseite', hint: 'Schräg hinter die hintere Ecke auf der Beifahrerseite. Rückleuchten und Beifahrerseite im Bild (hinten, nicht die Front), das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'heck', nr: 5, art: 'aussen', name: 'Heck', hint: 'Genau hinter das Auto, mittig. Rückleuchten im Bild, das ganze Auto mit Rand. Niemand im Auto.' },
+    { key: 'dreiviertel_hl', nr: 6, art: 'aussen', name: 'Dreiviertel hinten Fahrerseite', hint: 'Schräg hinter die hintere Ecke auf der Fahrerseite. Rückleuchten und Fahrerseite im Bild (hinten, nicht die Front), das ganze Auto mit Rand. Niemand im Auto.' },
     { key: 'cockpit', nr: 7, art: 'innen', name: 'Cockpit', hint: 'Foto von Rücksitzbank aus, mittig. Zündung an, Lenkrad und Armaturenbrett im Bild.' },
     { key: 'tacho', nr: 8, art: 'innen', name: 'Tacho', hint: 'Zündung an. Kilometerstand gut lesbar.' },
     { key: 'vordersitze', nr: 9, art: 'innen', name: 'Vordersitze', hint: 'Fahrertür auf. Von außen durch die offene Tür beide Vordersitze im Bild.' },
@@ -529,8 +574,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   ];
   // Rücksitzbank: bei allen Autos Pflicht (Giannis 08.11.2026). Hat ein Auto keine (Zweisitzer), meldet der Händler das mit dem Knopf „Kein Rücksitz“; dann gelten 9 Bilder als vollständig.
   var SEITEN = [
-    { key: 'seite_l', name: 'Fahrerseite', hint: 'Freiwillig. Seitlich auf der Fahrerseite, Auto mittig, etwa ' + AB.seite + ' m von der Automitte (in engen Garagen mindestens etwa ' + AB.seiteMin + ' m). Vorderräder gerade. Das ganze Auto mit Rand im Bild, vorn und hinten je etwas Platz. Niemand im Auto.' },
-    { key: 'seite_r', name: 'Beifahrerseite', hint: 'Freiwillig. Seitlich auf der Beifahrerseite, Auto mittig, etwa ' + AB.seite + ' m von der Automitte (in engen Garagen mindestens etwa ' + AB.seiteMin + ' m). Vorderräder gerade. Das ganze Auto mit Rand im Bild, vorn und hinten je etwas Platz. Niemand im Auto.' }
+    { key: 'seite_l', name: 'Fahrerseite', hint: 'Freiwillig. Seitlich auf der Fahrerseite, Auto mittig. Vorderräder gerade. Das ganze Auto mit Rand im Bild, vorn und hinten je etwas Platz. Niemand im Auto.' },
+    { key: 'seite_r', name: 'Beifahrerseite', hint: 'Freiwillig. Seitlich auf der Beifahrerseite, Auto mittig. Vorderräder gerade. Das ganze Auto mit Rand im Bild, vorn und hinten je etwas Platz. Niemand im Auto.' }
   ];
   function ohneRueck() { return !!(S.vehicle && S.vehicle.keineRueck); }
   function rueckPflicht() { return !ohneRueck(); }
@@ -766,25 +811,20 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       b.onclick = function () { S.klasse = k; buildKar(); fmsg(''); };
     });
   }
-  /* Showroom-Frage am Anfang je Auto (Giannis 17.11.2026: „Digitaler Showroom ja oder nein?“, Vorgabe je Händler; bei Nein kein Freistellen und kein Raum)
-     und Raumwahl (Giannis 19.11.2026: rund oder Beton mit Holz; bei Nein wird nur der Wert kein gespeichert). S.raum geht beim Anlegen als p_raum an den Server (Spalte fahrzeuge.raum): rund | holz | kein. */
-  var RAEUME = [['rund', 'Schlicht'], ['holz', 'Studio']];   // Namen für Händler nach Giannis' Konzept (über Alfred, 19.11.2026): Schlicht = rund, Studio = holz, Ohne Showroom = kein
-  // Was „ohne Showroom“ am Bild bewirkt, ist offen (Giannis 19.11.2026). Die App speichert nur den Wert und verspricht dazu nichts.
-  /* Vorschau je Raum (Massimo über Giannis 20.11.2026: „die Showrooms als Bilder, als Vorschau reinpacken“): RS6 vorne im abgenommenen Look (Fable (Studio) 12),
-     Kennzeichen unkenntlich, 480 × 320, je unter 40 KB. Bei „Ohne Showroom“ steht statt der Bilder ein Satz: Das Originalfoto bleibt (gültiger Stand Fotostrecke, Raum „kein“). */
+  /* Raumwahl je Auto, seit Fassung 16 im letzten Daten-Schritt bei „Preis“ (Giannis 22.11.2026: „da, wo der Preis reinkommt, als letzter Step“, Raumbilder „schön groß“).
+     Werte für den Server (Spalte fahrzeuge.raum): rund | holz | kein. „Schlicht“ heißt seit 22.11.2026 „Rund“ (Giannis); der Rechenschlüssel rund bleibt.
+     Bei „Ohne Showroom“ kein Freistellen und kein Raum (Giannis 17.11.2026). Das Fahrzeug wird mit der Vorgabe des Händlers angelegt; die Wahl geht in Schritt 5 über
+     fahrzeug_daten an den Server. Weil der Server den Raum nach dem ersten gemeldeten Foto nicht mehr annimmt (schon_fotos), lädt die App die Fotos sofort hoch,
+     meldet sie aber erst, wenn der Raum fest ist (halten(), siehe Warteschlange). Der Arbeiter sieht ein Fahrzeug so immer mit dem gewählten Raum. */
+  var RAEUME = [['rund', 'Rund'], ['holz', 'Studio']];
+  // Vorschau je Raum: leerer Raum ohne Auto, 480 × 320, unter 40 KB (neue, nähere Bilder liefert Fable (Studio) 18; bis dahin die bisherigen)
   var RAUM_BILD = { rund: 'raum-schlicht.jpg', holz: 'raum-studio.jpg' };
   function raumVorgabe() { var r = S.cfg && S.cfg.raumVorgabe; return r === 'rund' || r === 'holz' || r === 'kein' ? r : 'rund'; }   // Vorgabe je Händler aus dem Zugang (zugang_info, Spalte zugaenge.raum_vorgabe); ohne Vorgabe rund
   function raumName(r) { var x = RAEUME.filter(function (y) { return y[0] === r; })[0]; return x ? x[1] : r === 'kein' ? 'Ohne Showroom' : RAEUME[0][1]; }
-  function buildShow() {
-    var sb = $('showBox'), rb = $('raumBox'); if (!sb || !rb) return;
-    if (!S.raum) S.raum = raumVorgabe();
-    var ja = S.raum !== 'kein'; if (ja) S.raumJa = S.raum;
-    function knopf(box, text, on, fn) { var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.textContent = text; b.onclick = function () { fn(); S.raumGewaehlt = true; buildShow(); fmsg(''); }; box.appendChild(b); return b; }
-    sb.innerHTML = ''; rb.innerHTML = '';
-    knopf(sb, 'Ja, mit Showroom', ja, function () { S.raum = S.raumJa || RAEUME[0][0]; });
-    knopf(sb, 'Nein', !ja, function () { S.raum = 'kein'; });
-    RAEUME.forEach(function (r) { var b = knopf(rb, r[1], S.raum === r[0], function () { S.raum = r[0]; }); b.innerHTML = '<img alt="" src="' + RAUM_BILD[r[0]] + '" width="480" height="320" decoding="async"><span>' + esc(r[1]) + '</span>'; });
-    $('raumFld').hidden = !ja; $('raumOhne').hidden = ja;
+  function raumWahlHtml(r) {
+    return '<div class="raumwahl" role="radiogroup" aria-label="Showroom wählen">' + RAEUME.map(function (x) {
+      return '<button class="raum" type="button" role="radio" data-raum="' + x[0] + '" aria-checked="' + (r === x[0] ? 'true' : 'false') + '"><img alt="" src="' + RAUM_BILD[x[0]] + '" width="480" height="320" decoding="async"><span>' + V10[r === x[0] ? 'ok' : 'offen'] + esc(x[1]) + '</span></button>';
+    }).join('') + '<button class="raum ohne" type="button" role="radio" data-raum="kein" aria-checked="' + (r === 'kein' ? 'true' : 'false') + '"><span>' + V10[r === 'kein' ? 'ok' : 'offen'] + 'Ohne Showroom</span><small>Jedes Foto bleibt das Originalfoto, ohne Raum dahinter.</small></button></div>';
   }
 
   /* =====================================================================
@@ -941,7 +981,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (fi) return { id: id, key: fi.key, nr: null, art: 'innen', frei: true, name: fi.name, sub: null, hint: fi.hint, zusatz_nr: null };
     var p = PLAETZE.filter(function (x) { return x.key === id; })[0];
     if (!p) return null;
-    return { id: id, key: p.key, nr: p.nr, art: p.art, name: p.name, sub: p.sub, hint: p.hint + (p.key === 'titel' ? ' ' + hoeheHint() : ''), zusatz_nr: null };
+    return { id: id, key: p.key, nr: p.nr, art: p.art, name: p.name, sub: p.sub, hint: p.hint, zusatz_nr: null };
   }
   function slotState(id) {
     if (!S.slots[id]) { var m = slotMeta(id); S.slots[id] = { id: id, key: m.key, zusatz_nr: m.zusatz_nr, zusatz_art: null, thumb: null, fotoId: null, state: 'leer', err: null, server: null, ampelHandy: null }; }
@@ -1150,13 +1190,24 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var wH = fw, hH = wH / asp, maxH = fh - si.t - si.b - BAND; if (hH > maxH) { hH = maxH; wH = hH * asp; }
     var wB = Math.min(Math.max(160, fw - 2 * RMIN), fh * asp), hB = wB / asp; if (hB > fh) { hB = fh; wB = hB * asp; }
     var vor = LAY && LAY.form, hoch = vor === 'hoch' ? wH * 1.08 >= wB : vor === 'breit' ? wH > wB * 1.08 : wH > wB;
+    var form = hoch ? 'hoch' : 'breit';
     if (hoch) { w = wH; h = hH; ix = Math.round((fw - w) / 2); iy = Math.round(si.t); }
     else { w = wB; h = hB; ix = Math.round((fw - w) / 2); iy = Math.round((fh - h) / 2); }
+    // VOLLBILD (Fassung 16, Giannis 22.11.2026: „dass der ganze Bildschirm die Kamera wird“, auch auf dem Außenbildschirm des iPhone Duo): Ist der Sucher quer
+    // (Breite mindestens 1,15 × Höhe), füllt das Kamerabild den ganzen Bildschirm wie object-fit: cover. Was über den Rand ragt, ist im Foto trotzdem drin (das Foto bleibt
+    // das ganze Kamerabild); die Führung prüft gegen den sichtbaren Teil (LAY.vis), damit das Auto auf dem Bildschirm ganz zu sehen ist. Bedienung und Hinweise liegen
+    // als schmale Schilder am Rand über dem Bild. Hochkant-Fenster (Tablet hochkant) behalten die Form „hoch“ mit dem Band unter dem Bild.
+    if (vrot === S.textRot && fw >= fh * 1.15) { form = 'voll'; if (fw / fh > asp) { w = fw; h = fw / asp; } else { h = fh; w = fh * asp; } ix = Math.round((fw - w) / 2); iy = Math.round((fh - h) / 2); }
+    w = Math.round(w); h = Math.round(h);
+    var vx = Math.max(0, ix), vy = Math.max(0, iy), vw = Math.min(fw, ix + w) - vx, vh = Math.min(fh, iy + h) - vy;
     var rw = Math.min(Math.round(fh * 4 / 3), Math.max(200, fw - 250 - si.l - si.r));
-    LAY = { fw: fw, fh: fh, ix: ix, iy: iy, iw: Math.round(w), ih: Math.round(h), aligned: vrot === S.textRot, sl: si.l, sr: si.r, rw: rw, form: hoch ? 'hoch' : 'breit' };
+    LAY = { fw: fw, fh: fh, ix: ix, iy: iy, iw: w, ih: h, vx: vx, vy: vy, vw: vw, vh: vh, aligned: vrot === S.textRot, sl: si.l, sr: si.r, rw: rw, form: form,
+      vis: { x0: (vx - ix) / w, y0: (vy - iy) / h, x1: (vx + vw - ix) / w, y1: (vy + vh - iy) / h } };
     $('ui').setAttribute('data-form', LAY.form);
+    // Im Vollbild steht der eine Hinweis rechts oben unter dem Stand (am Rand, nicht über dem Auto); sonst wie bisher über dem Bild
+    var lm = $('lvlMsg'), heim = LAY.form === 'voll' ? document.querySelector('#vCam .rail.R .rgrp') : $('vCam'); if (lm && heim && lm.parentNode !== heim) heim.appendChild(lm);
     var u = $('ui').style;
-    ['fw', 'fh', 'ix', 'iy', 'iw', 'ih', 'sl', 'sr', 'rw'].forEach(function (k) { u.setProperty('--' + k, LAY[k] + 'px'); });
+    ['fw', 'fh', 'ix', 'iy', 'iw', 'ih', 'vx', 'vy', 'vw', 'vh', 'sl', 'sr', 'rw'].forEach(function (k) { u.setProperty('--' + k, LAY[k] + 'px'); });
   }
   function applyGeom() {
     geom($('ui'), S.textRot);
@@ -1202,6 +1253,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (now - c.t > AI.every * 2 + 600 || c.status === 'keins' || !c.box) return { state: 'kein' };
     return { state: 'erkannt', box: c.box };
   }
+  // Rahmen im Kamerabild (Anteile) umgerechnet auf den sichtbaren Teil des Suchers (Anteile): 0 bis 1 heißt auf dem Bildschirm zu sehen (Vollbild, Fassung 16)
+  function imSicht(b) { var V = LAY.vis || { x0: 0, y0: 0, x1: 1, y1: 1 }, w = V.x1 - V.x0, h = V.y1 - V.y0; return { x0: (b.x0 - V.x0) / w, x1: (b.x1 - V.x0) / w, y0: (b.y0 - V.y0) / h, y1: (b.y1 - V.y0) / h }; }
   // GERADE RICHTEN (21.11.2026). Rollen r > 0 heißt: Die Welt steht im Bild um r im Uhrzeigersinn gedreht (so zeichnet es der Kasten, so rechnet der Arbeiter, so folgt es aus attitude()). Das Foto wird darum um −r gedreht.
   // geradeFaktor: so viel größer wird das Bild dabei gezeichnet, damit keine leeren Ecken bleiben (Seitenverhältnis A). geradeGrad: der Winkel für dieses Foto oder null (kein Sensor, kein Außenbild, mehr als FUEHRUNG.gerade.max).
   function geradeFaktor(r, A) { var a = Math.abs(r) * RAD; A = A >= 1 ? A : 1 / A; return Math.cos(a) + A * Math.sin(a); }
@@ -1229,32 +1282,30 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       var det = aiDetNow(); R.det = det.state; R.suche = !!det.suche; R.rahmen = { g: null, dy: null };
       if (det.state === 'kein') ab = { lvl: 1, hint: 'Auto in den Kasten stellen', grund: 'kein_auto' };   // ohne erkanntes Auto kein „Passt“
       if (det.state === 'erkannt') {
-        var b = det.box, sb = schabBox(m.key, kind), rm = FUEHRUNG.mitte.rand, K = FUEHRUNG.kasten, bg = nachGerade(b, s.rMed != null ? s.rMed : s.r);   // bg: Rahmen im gerade gerichteten Foto (für die Ränder)
-        var cutB = (bg.x0 < rm && bg.x1 > 1 - rm) || (/^seite/.test(m.key) && bg.x1 - bg.x0 >= K.seiteVoll), cutU = bg.y1 > 1 - rm;   // cutB: an beiden Seiten angeschnitten, Seite: ab 92 % der Bildbreite = zu nah (nur an einer Seite zählt als Mitte); cutU: unten angeschnitten
+        var b = det.box, sb = kastenBox(m.key, kind), rm = FUEHRUNG.mitte.rand, K = FUEHRUNG.kasten, bg = nachGerade(b, s.rMed != null ? s.rMed : s.r);   // bg: Rahmen im gerade gerichteten Foto (für die Ränder)
+        // KEINE FESTE FOTOPOSITION (Fassung 16, Giannis 22.11.2026): Abstand und Haltehöhe geben keine Hinweise mehr. Es zählt nur, dass das ganze Auto auf dem Bildschirm
+        // zu sehen ist (sichtbarer Teil im Vollbild, nach dem Gerade-Richten) und das Handy gerade ist. Der Kasten bleibt zum Einrahmen. Größe und Oberkante gegen den Kasten
+        // stehen weiter im Protokoll (rahmen), damit der Arbeiter sieht, wie weit weg und wie hoch fotografiert wurde.
+        var bv = imSicht(bg), cutL = bv.x0 < rm, cutR = bv.x1 > 1 - rm;
+        var cutB = (cutL && cutR) || (/^seite/.test(m.key) && bg.x1 - bg.x0 >= K.seiteVoll), cutU = bv.y1 > 1 - rm, cutO = bv.y0 < rm;   // cutB: an beiden Seiten angeschnitten (Seite: ab 92 % der Bildbreite), cutU/cutO: unten/oben angeschnitten
         R.dx = (b.x0 + b.x1) / 2 - (sb.x0 + sb.x1) / 2;
-        // KASTEN-ANFANG: ohne Meter am Boden. Abstand aus der Breite des Autos gegen die Breite des Kastens, Haltehöhe aus der Oberkante (die Unterkante erkennt die Erkennung bei dunkler Front nicht sicher). Alles nur gelb: Hinweise.
-        var sk = schabBox(m.key, kind, s.p), G = kastenGrenzen(m.key, kind, s.p), gq = (b.x1 - b.x0) / (sk.x1 - sk.x0) / K.erkennung, dyo = b.y0 - sk.y0;
-        // Die Oberkante wandert auch mit dem Abstand (näher = Auto größer). Diesen Anteil abziehen; übrig bleibt, was von der Haltehöhe kommt.
-        var dyh = dyo - (gq >= 1 ? (gq - 1) / (G.gross - 1) * G.obenNah : (1 - gq) / (1 - G.klein) * G.obenFern);
-        R.rahmen = { g: gq, dy: dyo };
-        if (cutB || gq > G.gross) { ab = { lvl: 1, hint: 'Schritt zurück', grund: 'rahmen_zu_gross' }; R.zone = 'gelbnah'; }
-        else if (gq < G.klein) { ab = { lvl: 1, hint: 'Näher ran', grund: 'rahmen_zu_klein' }; R.zone = 'gelbfern'; }
-        else if (cutU) { ab = { lvl: 1, hint: 'Handy etwas nach unten kippen', grund: 'winkel_neigung' }; R.zone = 'ok'; }   // Abstand passt (die Breite stimmt), das Auto ist nur unten angeschnitten: kippen, nicht zurückgehen
-        // Haltehöhe: seit 21.11.2026 nur noch ein Tipp, der nicht sperrt (Giannis: „dieses "kamera höher halten" hat mich irreriert“; die App schätzt die Höhe nur aus der Oberkante, der Arbeiter misst sie je Foto selbst)
-        else if (dyh > G.zuHoch) { R.tipp = 'Handy tiefer halten'; R.tippGrund = 'rahmen_zu_tief'; R.zone = 'ok'; }
-        else if (dyh < -G.zuTief) { R.tipp = 'Handy höher halten'; R.tippGrund = 'rahmen_zu_hoch'; R.zone = 'ok'; }
-        else R.zone = 'ok';
-        // KASTEN-ENDE
-        if (Math.abs(R.dx) > FUEHRUNG.mitte.gruen) mi = { lvl: 1, hint: R.dx > 0 ? 'Etwas nach rechts' : 'Etwas nach links', grund: R.dx > 0 ? 'mitte_rechts' : 'mitte_links' };   // nur Hinweise, nichts Rotes
+        var sk = kastenBox(m.key, kind, s.p), gq = (b.x1 - b.x0) / (sk.x1 - sk.x0) / K.erkennung, dyo = b.y0 - sk.y0;
+        R.rahmen = { g: gq, dy: dyo, sicht: [bv.x0, bv.y0, bv.x1, bv.y1] };
+        if (cutB) { ab = { lvl: 1, hint: 'Schritt zurück', grund: 'rahmen_zu_gross' }; R.zone = 'gelbnah'; }
+        else if (cutU && cutO) { ab = { lvl: 1, hint: 'Schritt zurück', grund: 'rahmen_zu_gross' }; R.zone = 'gelbnah'; }
+        else if (cutU) { ab = { lvl: 1, hint: 'Handy etwas nach unten kippen', grund: 'winkel_neigung' }; R.zone = 'ok'; }
+        else if (cutO) { ab = { lvl: 1, hint: 'Handy etwas nach oben kippen', grund: 'winkel_neigung' }; R.zone = 'ok'; }
+        else { R.zone = 'ok'; if (bv.x1 - bv.x0 < K.kleinTipp) { R.tipp = 'Näher ran'; R.tippGrund = 'auto_klein'; } }   // sehr klein: nur ein Tipp, kein Hinweis
+        if (!cutB && (cutL || cutR)) mi = { lvl: 1, hint: cutR ? 'Etwas nach rechts' : 'Etwas nach links', grund: cutR ? 'mitte_rechts' : 'mitte_links' };   // an einer Seite angeschnitten: schwenken
       }
     }
     R.alvl = ab.lvl;
     if (!sim && !holdLandscape()) wi = { lvl: 2, hint: 'Handy quer halten', grund: 'nicht_quer' };
-    else if (aussen) {   // KASTEN: keine Zielneigung; der Kasten soll nur ganz im Bild bleiben, das Handy gerade
-      var kb = schabBox(m.key, kind, s.p), rdK = FUEHRUNG.kasten.rand + geradeRand(s.r);   // der Rand wächst um den Beschnitt beim Gerade-Richten
+    else if (aussen) {   // KASTEN: keine Zielneigung, das Handy soll gerade sein. Ohne erkanntes Auto hilft der Kasten beim Kippen (er soll auf dem Bildschirm bleiben); mit erkanntem Auto zählt das Auto selbst (oben)
+      var kb = imSicht(kastenBox(m.key, kind, s.p)), rdK = FUEHRUNG.kasten.rand + geradeRand(s.r);   // der Rand wächst um den Beschnitt beim Gerade-Richten
       if (Math.abs(s.r) > tolR(m.key).g) wi = { lvl: 1, hint: 'Gerade halten', grund: 'winkel_rollen' };
-      else if (kb.y1 > 1 - rdK) wi = { lvl: 1, hint: 'Handy etwas nach unten kippen', grund: 'winkel_neigung' };
-      else if (kb.y0 < rdK) wi = { lvl: 1, hint: 'Handy etwas nach oben kippen', grund: 'winkel_neigung' };
+      else if (R.det !== 'erkannt' && kb.y1 > 1 - rdK) wi = { lvl: 1, hint: 'Handy etwas nach unten kippen', grund: 'winkel_neigung' };
+      else if (R.det !== 'erkannt' && kb.y0 < rdK) wi = { lvl: 1, hint: 'Handy etwas nach oben kippen', grund: 'winkel_neigung' };
       else wi = { lvl: 0 };
     }
     else { var aw = ampelWinkel(S.cur, s); wi = { lvl: aw.lvl, hint: aw.why, grund: aw.lvl ? (aw.why === 'Gerade halten' ? 'winkel_rollen' : 'winkel_neigung') : '' }; R.p0 = aw.p0; R.tolG = aw.tolG; }
@@ -1318,7 +1369,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   // KASTEN: Länge, Breite und Höhe der Fahrzeugklasse am Soll-Standpunkt (FUEHRUNG.kasten: mitte bzw. seite zur Automitte, Haltehöhe hoehe). Neigung und Schiefe kommen vom Sensor, damit er sich wie das echte Auto mitbewegt.
   function drawKasten(c, key, kind, R, w, hh, f, lk) {
     var K = KINDS[kind], hl = K.L / 2, hb = K.W / 2, H = K.cab.H, live = !!(R && R.sensor), p = live ? R.p : drawP(key), rl = live ? R.r : 0;
-    var pose = camPose(key, kind, camH(), GEO.winkel, GEO.eckeM), cam = makeCam(pose.P, f, w / 2, hh / 2, p, [aimShift(key, kind, camH(), GEO.winkel, drawP(key), w, hh), 0, 0]);
+    var pose = camPose(key, kind, camH(), GEO.winkel, GEO.eckeM, kastenAbstand(key, kind)), cam = makeCam(pose.P, f, w / 2, hh / 2, p, [aimShift(key, kind, camH(), GEO.winkel, drawP(key), w, hh), 0, 0]);
     var E = [[hl, hb], [hl, -hb], [-hl, -hb], [-hl, hb]], bo = E.map(function (e) { return cam([e[0], e[1], 0]); }), to = E.map(function (e) { return cam([e[0], e[1], H]); });
     if (bo.concat(to).some(function (q) { return q[2] < .2; })) return;
     var ok = !!(R && R.alle && R.det === 'erkannt'), kante = ok ? COLG : 'rgba(255,255,255,.92)', i;
@@ -1351,6 +1402,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (s.state === 'wartet' || s.state === 'sendet') return ['send', ''];
     if (s.state === 'retry') return ['warn', '!'];
     if (s.state === 'fehler') return ['bad', '!'];
+    if (s.state === 'gehalten') return ['sent', '✓'];
     var sv = s.server && s.server.status;
     if (sv === ST_OHNE) return s.server.ampel_showroom === 'rot' ? ['bad', '!'] : s.server.ampel_showroom === 'gelb' ? ['warn', '!'] : ['sent', '✓'];
     if (sv === 'fertig') return ['sent', '✓'];
@@ -1399,7 +1451,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   // Zustände der Demo-Kamera zum Prüfen der Führung (Link: #demo&sim&simz=gruen|nah|fern|nein|winkel|schief|mitte); ohne simz: gruen
   //   d = Kamera so viele Meter näher (−) oder weiter weg (+), p = Neigung daneben (Grad), r = Rollen (Grad), x = seitlich versetzt (Meter am Auto), nodet = keine Erkennung
   var SIMZ = { gruen: {}, nah: { d: -0.9 }, fern: { d: 1.2 }, nein: { nodet: 1 }, winkel: { p: 4 }, schief: { r: 4.5 }, mitte: { x: 0.5 }, licht: { licht: 1 }, dunkel: { dunkel: 1 }, lackrot: { lack: 1 }, scheinwerfer: { sw: 1, halb: 1 }, glanz: { sw: 1 }, weisslack: { sw: 1, halb: 1, wl: 1 } };
-  function simPre() { var z = SIMZ[(S.cfg && S.cfg.simz) || 'gruen'] || {}, d = (S.cfg && S.cfg.simd) || 0, p = (S.cfg && S.cfg.simp) || 0; return d || p ? Object.assign({}, z, { d: (z.d || 0) + d, p: (z.p || 0) + p }) : z; }
+  function simPre() { var z = SIMZ[(S.cfg && S.cfg.simz) || 'gruen'] || {}, d = (S.cfg && S.cfg.simd) || 0, p = (S.cfg && S.cfg.simp) || 0, mm = S.cur ? slotMeta(S.cur) : null;
+    if (mm && mm.art === 'aussen') d += kastenAbstand(mm.key, klasseOf());   // Demo: das Auto steht dort, wo der Kasten steht (Vollbild)
+    return d || p ? Object.assign({}, z, { d: (z.d || 0) + d, p: (z.p || 0) + p }) : z; }
   function simH() { return (S.cfg && S.cfg.simh) || camH(); }   // echte Höhe der Demo-Kamera: ohne &simh die Höhe, mit der die App rechnet
   function simSnap() {
     var t = performance.now() / 1000, pre = simPre(), mm = S.cur ? slotMeta(S.cur) : null, z = mm ? (mm.art === 'aussen' ? drawP(mm.key) : zielP(mm.key)) : null;
@@ -1493,6 +1547,26 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     M.wheels.forEach(function (wh) { var q = cam([wh.x, wh.y, 0]); if (q[2] > .2) b.y1 = Math.max(b.y1, q[1]); });
     return (schabCache[ck] = { x0: b.x0 / w, x1: b.x1 / w, y0: b.y0 / hh, y1: b.y1 / hh });
   }
+  /* KASTEN IM VOLLBILD (Fassung 16): Weil es keine feste Fotoposition mehr gibt, steht der Kasten so weit weg, dass er ganz in den sichtbaren Bildschirm passt und die
+     Schilder am Rand frei lässt (links Schließen und Skizze, rechts der Auslöser, oben der Hinweis, unten die kleine Galerie). kastenAbstand: so viele Meter weiter weg
+     als FUEHRUNG.kasten.mitte (in Schritten von 25 cm, gerechnet mit der Zeichen-Neigung). Ohne Vollbild 0 (wie bisher). kastenBox: der Kasten, wie er gezeichnet wird. */
+  var kaCache = {};
+  function kastenRand() { return { l: (LAY.sl || 0) + 58, r: (LAY.sr || 0) + 92, o: 54, u: 46 }; }   // frei zu haltende Ränder in Bildschirmpunkten
+  function kastenAbstand(key, kind) {
+    if (!key || !kind || LAY.form !== 'voll' || !LAY.vis) return 0;
+    var R = kastenRand(), ck = [key, kind, LAY.vw, LAY.vh, LAY.iw, LAY.ih, R.l, R.r].join('|'); if (ck in kaCache) return kaCache[ck];
+    var rl = R.l / LAY.vw, rr = R.r / LAY.vw, ro = R.o / LAY.vh, ru = R.u / LAY.vh, d = 0, b;
+    for (; d < 8; d += 0.25) { b = imSicht(kastenHuelle(key, kind, d)); if (b.x0 >= rl && b.x1 <= 1 - rr && b.y0 >= ro && b.y1 <= 1 - ru) break; }
+    return (kaCache[ck] = d);
+  }
+  // Umriss des gezeichneten Kastens (alle acht Ecken, wie drawKasten mit der Zeichen-Neigung) zusammen mit dem Rahmen des Automodells, als Anteile des Kamerabilds
+  function kastenHuelle(key, kind, dOff) {
+    var K = KINDS[kind], hl = K.L / 2, hb = K.W / 2, H = K.cab.H, w = 640, hh = 480, pz = drawP(key), b = schabBox(key, kind, null, dOff), o = { x0: b.x0 * w, x1: b.x1 * w, y0: b.y0 * hh, y1: b.y1 * hh };
+    var pose = camPose(key, kind, camH(), GEO.winkel, GEO.eckeM, dOff), cam = makeCam(pose.P, frameF(w), w / 2, hh / 2, pz, [aimShift(key, kind, camH(), GEO.winkel, pz, w, hh), 0, 0]);
+    [[hl, hb], [hl, -hb], [-hl, -hb], [-hl, hb]].forEach(function (e) { [0, H].forEach(function (z) { var q = cam([e[0], e[1], z]); if (q[2] < .2) return; o.x0 = Math.min(o.x0, q[0]); o.x1 = Math.max(o.x1, q[0]); o.y0 = Math.min(o.y0, q[1]); o.y1 = Math.max(o.y1, q[1]); }); });
+    return { x0: o.x0 / w, x1: o.x1 / w, y0: o.y0 / hh, y1: o.y1 / hh };
+  }
+  function kastenBox(key, kind, pp) { return schabBox(key, kind, pp, kastenAbstand(key, kind)); }
   function iouOf(a, b) {
     var ix = Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0)), iy = Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0)), inter = ix * iy;
     var ua = (a.x1 - a.x0) * (a.y1 - a.y0) + (b.x1 - b.x0) * (b.y1 - b.y0) - inter;
@@ -1563,7 +1637,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       if (v.readyState >= 2 && v.videoWidth) {
         try {
           var t0 = performance.now(), ts = Math.max(AI.lastTs + 1, Math.round(t0)); AI.lastTs = ts;
-          var res = (S.cfg && S.cfg.sim) ? simDet(v.videoWidth, v.videoHeight) : AI.det.detectForVideo(v, ts), dt = performance.now() - t0, kind = klasseOf(), sb = schabBox(m.key, kind), best = null, W = v.videoWidth, H = v.videoHeight;
+          var res = (S.cfg && S.cfg.sim) ? simDet(v.videoWidth, v.videoHeight) : AI.det.detectForVideo(v, ts), dt = performance.now() - t0, kind = klasseOf(), sb = kastenBox(m.key, kind), best = null, W = v.videoWidth, H = v.videoHeight;
           AI.tms.push(dt); if (AI.tms.length > 8) AI.tms.shift(); AI.fails = 0; AI.n++;
           (res.detections || []).forEach(function (d) {
             var b = d.boundingBox, c = d.categories && d.categories[0]; if (!c || c.score < AI.SCORE_MIN) return;
@@ -1877,18 +1951,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     s += '<text' + lab + ' y="11" font-family="Montserrat,sans-serif" font-weight="700" font-size="7.5" style="fill:var(--t2)">VORN</text><text' + lab + ' y="95" font-family="Montserrat,sans-serif" font-weight="700" font-size="7.5" style="fill:var(--t2)">HINTEN</text>';
     var cone = '<g transform="translate(' + px.toFixed(1) + ' ' + py.toFixed(1) + ') rotate(' + ang.toFixed(1) + ')"><path d="M4 -6 L17 0 L4 6 Z" fill="#FFC77C" opacity=".5"/><circle r="6" fill="#FFC77C" stroke="#0B0C10" stroke-width="1.5"/></g>';
     s += cone;
-    if (g.mass) {
-      var mx = X(g.mass.x), my = Y(g.mass.y), mx2 = (px + mx) / 2, my2 = (py + my) / 2, tx, ty, anc, mt = String(g.txt).replace('.', ',') + ' m';
-      var mtB = mt.split('').reduce(function (w, c) { return w + (c === ',' || c === ' ' ? .27 : c === 'm' ? .95 : .63); }, 0) * 13;   // Breite des Etiketts in Einheiten der Skizze (Montserrat 700, 13)
-      if (key === 'front' || key === 'heck') { tx = px + 9; ty = my2 + 4.5; anc = 'start'; }
-      else if (/^seite/.test(key)) { tx = mx2; ty = my2 - 5; anc = 'middle'; }
-      else { var dx = mx - px, dy = my - py, dl = Math.hypot(dx, dy) || 1, nx = -dy / dl, ny = dx / dl; if (nx * (px - 50) < 0) { nx = -nx; ny = -ny; } tx = mx2 + nx * 8; ty = my2 + ny * 8 + 4.5; anc = nx < 0 ? 'end' : 'start';
-        // Etikett in der Karte halten (Alfred 20.11.2026: „4,5 m“ war bei Dreiviertel am Rand abgeschnitten): Ragt es über den Rand, rückt es um den Überstand herein und um denselben Betrag von der Maßlinie weg.
-        var li = anc === 'end' ? tx - mtB : tx, ueber = li < 4 ? 4 - li : li + mtB > 96 ? 96 - (li + mtB) : 0;
-        if (ueber) { tx += ueber; ty += (ny < 0 ? -1 : 1) * Math.abs(ueber); } }
-      s += '<line x1="' + px.toFixed(1) + '" y1="' + py.toFixed(1) + '" x2="' + mx.toFixed(1) + '" y2="' + my.toFixed(1) + '" style="stroke:var(--t)" stroke-width="1.6" stroke-dasharray="3 2.5"/>' +
-        '<text x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" text-anchor="' + anc + '" font-family="Montserrat,sans-serif" font-weight="700" font-size="13" style="fill:var(--t);stroke:var(--base);stroke-width:2.6px;paint-order:stroke">' + mt + '</text>';
-    }
+    // Seit Fassung 16 ohne Abstandsangabe: keine feste Fotoposition (Giannis 22.11.2026); die Skizze zeigt nur noch, an welcher Ecke man steht
     s += '</svg>';
     return s;
   }
@@ -2202,7 +2265,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         nicht_geprueft: (function () { return !(r.quelle === 'kamera' && !!(r.how && r.how.g) && !r.how.forced); })(),
         nicht_geprueft_grund: (function () { if (r.quelle !== 'kamera') return 'kamera_app'; if (!(r.how && r.how.g)) return 'ohne_fuehrung'; return r.how.forced ? ((r.how.grund || []).join(',') || 'notloesung') : ''; })(),
         fuehrung: (function () { var g = (r.how && r.how.g) || {}, r2 = function (x) { return x == null ? null : Math.round(x * 100) / 100; }, ok = r.quelle === 'kamera' && !!(r.how && r.how.g) && !r.how.forced;
-          return { stand: FUEHRUNG.stand, geprueft: ok, grund: ok ? [] : (r.quelle === 'kamera' ? ((r.how && r.how.grund) || []) : ['kamera_app']), umfang: g.det === 'erkannt' ? 'voll' : 'winkel', erkannt: g.det || null, zone: g.zone || null, soll_mitte_m: m.art === 'aussen' ? (/^seite/.test(m.key) ? GEO.seiteMitteM : GEO.mitteM) : null, mitte: r2(g.dx), neigung: r2(g.p), rollen: r2(g.r), hoehe_m: camH(), abstand_art: 'rahmen', rahmen: g.rahmen ? { fuellung: r2(g.rahmen.g), oben: r2(g.rahmen.dy) } : undefined, winkel_soll: g.winkelSoll != null ? g.winkelSoll : undefined, licht: g.licht ? { rot: g.licht.rot == null ? null : Math.round(g.licht.rot * 1000) / 1000, hell: g.licht.hell == null ? null : Math.round(g.licht.hell * 1000) / 1000, bild: g.licht.bild == null ? null : Math.round(g.licht.bild * 1000) / 1000, spitze: g.licht.spitze == null ? null : Math.round(g.licht.spitze * 1000) / 1000, weiss: g.licht.weiss == null ? null : Math.round(g.licht.weiss * 10000) / 10000, hell_lack: g.licht.hellLack == null ? null : Math.round(g.licht.hellLack * 1000) / 1000, lack_rot: g.licht.lack == null ? null : !!g.licht.lack } : undefined }; })(),
+          return { stand: FUEHRUNG.stand, geprueft: ok, grund: ok ? [] : (r.quelle === 'kamera' ? ((r.how && r.how.grund) || []) : ['kamera_app']), umfang: g.det === 'erkannt' ? 'voll' : 'winkel', erkannt: g.det || null, zone: g.zone || null, soll_mitte_m: m.art === 'aussen' ? (/^seite/.test(m.key) ? GEO.seiteMitteM : GEO.mitteM) + kastenAbstand(m.key, klasseOf()) : null,   /* seit Fassung 16: Abstand, in dem der Kasten gezeichnet ist (keine Vorgabe mehr) */ mitte: r2(g.dx), neigung: r2(g.p), rollen: r2(g.r), hoehe_m: camH(), abstand_art: 'rahmen', rahmen: g.rahmen ? { fuellung: r2(g.rahmen.g), oben: r2(g.rahmen.dy) } : undefined, winkel_soll: g.winkelSoll != null ? g.winkelSoll : undefined, licht: g.licht ? { rot: g.licht.rot == null ? null : Math.round(g.licht.rot * 1000) / 1000, hell: g.licht.hell == null ? null : Math.round(g.licht.hell * 1000) / 1000, bild: g.licht.bild == null ? null : Math.round(g.licht.bild * 1000) / 1000, spitze: g.licht.spitze == null ? null : Math.round(g.licht.spitze * 1000) / 1000, weiss: g.licht.weiss == null ? null : Math.round(g.licht.weiss * 10000) / 10000, hell_lack: g.licht.hellLack == null ? null : Math.round(g.licht.hellLack * 1000) / 1000, lack_rot: g.licht.lack == null ? null : !!g.licht.lack } : undefined }; })(),
         ruecksitzbank: rueckPflicht() ? 'pflicht' : 'keine', design: 'v4', abgleich: r.fit || null, aufnahme_ms: r.takeMs, aufnahme: r.aufn ? { zeit: new Date(r.aufn.zeit).toISOString(), nr: r.aufn.nr, verworfen: r.aufn.verworfen } : undefined, kamera: S.camNote, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), fenster: window.innerWidth + 'x' + window.innerHeight, schirm: screen.width + 'x' + screen.height, form: LAY.form || null, buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null, variante: { anrede: VAR.anrede, hoehe: FUEHRUNG.kasten.hoehe, hoehe_text: hoeheHint(), vorgabe: GEO.stand, folge: 'rundum-v4', winkel_soll: GEO.winkel, ampel: 'v4 ' + FUEHRUNG.stand + ': Kasten ' + GEO.mitteM + ' m (Seite ' + GEO.seiteMitteM + ' m), grün ' + FUEHRUNG.kasten.band.join(' bis ') + ' m, Höhe ' + FUEHRUNG.kasten.hoehe + ' ± ' + FUEHRUNG.kasten.hoeheTol + ' m, Rollen ±' + FUEHRUNG.rollen.aussen.gruen + '°, gerade gerichtet bis ' + FUEHRUNG.gerade.max + '°, Höhe und ruhig ohne Sperre' } }
     };
     var item = { slot: r.slot, id: st.fotoId, path: S.vehicle.id + '/' + m.key + '_' + st.fotoId + '.jpg', blob: r.blob, meta: meta, tries: 0, fileDone: false, state: 'wartet' };
@@ -2410,20 +2473,35 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
           else { warte = Math.min(60000, (warte || 1000) * 2); await new Promise(function (res) { var t = setTimeout(res, warte); auftragWake = function () { clearTimeout(t); res(); }; }); auftragWake = null; }
         }
       }
-      if (fertig) { L = lsLoad('fa_auftraege') || []; if (L[0] && L[0].nr === a.nr) { L.shift(); lsStore('fa_auftraege', L); } }
+      if (fertig) { L = lsLoad('fa_auftraege') || []; if (L[0] && L[0].nr === a.nr) { L.shift(); lsStore('fa_auftraege', L); } if (a.freigabe) halten(a.freigabe, false); }   // Raum ist beim Server (oder endgültig abgelehnt): Fotos melden
     }
     S.auftragLaeuft = false;
   }
+  /* HALTEN (Fassung 16): Die Raumwahl steht am Ende (Schritt 5). Bis dahin lädt die App die Fotos eines Fahrzeugs hoch, meldet sie aber nicht (foto_melden),
+     denn nach dem ersten gemeldeten Foto nimmt der Server keinen anderen Raum mehr an (fahrzeug_daten: schon_fotos) und der Arbeiter finge schon im Vorgabe-Raum an.
+     Die Liste liegt im localStorage (überlebt Schließen und Neuladen). Sie wird frei, wenn der Raum gewählt ist (erst nachdem fahrzeug_daten den Raum angenommen
+     oder endgültig abgelehnt hat), beim Absenden, beim nächsten Fahrzeug und spätestens nach HALTEN_MAX_MS (dann gilt die Vorgabe; das Fahrzeug ist 24 h offen).
+     Der Fahrzeugschein (Art dokument) zählt beim Server nicht als Foto und wird sofort gemeldet. */
+  var HALTEN_MAX_MS = 6 * 3600 * 1000;
+  function haltListe() { var L = lsLoad('fa_halten') || [], now = Date.now(); return Array.isArray(L) ? L.filter(function (h) { return h && h.id && now - h.t < HALTEN_MAX_MS; }) : []; }
+  function gehalten(id) { return !!id && haltListe().some(function (h) { return h.id === id; }); }
+  function halten(id, an) { if (!id) return; var L = haltListe().filter(function (h) { return h.id !== id; }); if (an) L.push({ id: id, t: Date.now() }); lsStore('fa_halten', L); if (!an) kick(); }
+  // Fahrzeug verlassen ohne Raumwahl: Fotos mit der Vorgabe melden. Liegt noch ein Raum-Auftrag für das Fahrzeug, gibt der die Fotos frei (sonst käme eine Meldung vor dem Raum an).
+  function raumFrei(id) { if (!id || !gehalten(id)) return; if ((lsLoad('fa_auftraege') || []).some(function (a) { return a.freigabe === id; })) return; halten(id, false); }
+  function haltOf(it) { return it.slot !== 'fahrzeugschein' && gehalten(it.vehicleId); }
   async function kick() {
     if (S.uploading) return; S.uploading = true;
     var api = S.api || S.sendApi;   // S.sendApi: ohne Link geöffnet, nur Nachsenden (siehe Sendeschein)
     while (S.queue.length && api) {
-      var it = S.queue[0], mine = !!(S.vehicle && it.vehicleId === S.vehicle.id), st = mine ? slotState(it.slot) : {};
+      var it = null; for (var qi = 0; qi < S.queue.length; qi++) { if (!(S.queue[qi].fileDone && haltOf(S.queue[qi]))) { it = S.queue[qi]; break; } }
+      if (!it) break;   // alles Übrige ist hochgeladen und wartet nur auf die Raumwahl
+      var mine = !!(S.vehicle && it.vehicleId === S.vehicle.id), st = mine ? slotState(it.slot) : {};
       try {
         st.state = 'sendet'; renderGalleryIfShown();
         if (!it.fileDone) { await api.upload(it.path, it.blob); it.fileDone = true; }
+        if (haltOf(it)) { st.state = 'gehalten'; st.err = null; renderGalleryIfShown(); continue; }   // Datei liegt beim Server, Meldung nach der Raumwahl
         var rep = await api.report(it.meta);
-        S.queue.shift(); st.state = 'hochgeladen'; st.err = null; idbDel(it.id); it.blob = null; it.meta = null;
+        S.queue.splice(S.queue.indexOf(it), 1); st.state = 'hochgeladen'; st.err = null; idbDel(it.id); it.blob = null; it.meta = null;
         if (rep && rep.status) st.server = Object.assign({}, st.server || {}, { status: rep.status });
         if (S.nach) { S.nach.ok++; S.nach.netz = false; queueNote(); }
         saveSession(); renderGalleryIfShown(); schedulePoll(1500);
@@ -2431,7 +2509,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         it.tries++;
         if (permanent(e)) {   // Lösch-Regel: erst beim Server nachfragen, ob die Ablehnung endgültig ist
           var ende = await abgelehnt(api, it, e);
-          S.queue.shift();
+          S.queue.splice(S.queue.indexOf(it), 1);
           if (ende) verwerfen(it, st, ende);
           else { it.fileDone = false; st.state = 'fehler'; st.err = e.message; st.item = it; it.failed = true; idbPut(it); if (S.nach) { S.nach.fehler++; queueNote(); } nachpruefenPlanen(); }
           renderGalleryIfShown();
@@ -2468,6 +2546,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (s.state === 'wartet' || s.state === 'sendet') return { t: 'wird hochgeladen', c: 'busy' };
     if (s.state === 'retry') return { t: 'wartet auf Netz', c: 'warn' };
     if (s.state === 'fehler') return { t: 'Senden fehlgeschlagen', c: 'bad' };
+    if (s.state === 'gehalten') return { t: 'hochgeladen, Showroom nach der Raumwahl', c: 'ok' };
     var sv = s.server && s.server.status;
     if (sv === 'neu') return { t: 'hochgeladen, wartet', c: 'busy' };
     if (sv === 'in_arbeit') return { t: 'wird bearbeitet', c: 'busy' };
@@ -2577,7 +2656,6 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (!j) return;
     if (j.ok) {
       S.cfg.name = j.name || ''; S.cfg.raumVorgabe = j.raum_vorgabe || null; store('fa_cfg', S.cfg); zugangZeigen();
-      if (!S.raumGewaehlt && !S.vehicle) { S.raum = raumVorgabe(); S.raumJa = null; buildShow(); }
       return;
     }
     var n = $('modeNote'); n.className = 'note bad'; n.textContent = zugangText(j.fehler, j.warten_s);
@@ -2590,7 +2668,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
      Jeder Daten-Schritt ist überspringbar („Später im Portal“). Die Angaben gehen über fahrzeug_daten an den Server, Absenden über fahrzeug_absenden.
      Der Schritt Fahrzeugschein kommt am 24.11.2026 dazu (Giannis 19.11.2026).
      ===================================================================== */
-  var SCHRITTE = [['daten', 'Fahrzeugdaten'], ['zustand', 'Zustand'], ['schein', 'Fahrzeugschein'], ['fotos', 'Fotos'], ['preis', 'Preis'], ['pruefen', 'Prüfen']];
+  var SCHRITTE = [['daten', 'Fahrzeugdaten'], ['zustand', 'Zustand'], ['schein', 'Fahrzeugschein'], ['fotos', 'Fotos'], ['preis', 'Preis und Showroom'], ['pruefen', 'Prüfen']];
   var V10 = (function () {   // Bilder aus der Designvorlage V10 (S-daten, S-zustand, S-preis, Z-gesendet), Richtung A: graue Linien auf Schwarz, Gold für die eine wichtige Linie
     function svg(inner) { return '<svg class="il" viewBox="0 0 240 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' + inner + '</svg>'; }
     function g(t, inner) { return '<g transform="' + t + '">' + inner + '</g>'; }
@@ -2633,14 +2711,22 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var ids = Object.keys(S.slots).filter(hasPhoto), unterwegs = ids.filter(function (k) { return /^(wartet|sendet|retry|fehler)$/.test(S.slots[k].state); }).length;
     return { alle: ids.length, an: ids.length - unterwegs, unterwegs: unterwegs };
   }
+  var NOTIZ_MAX = 1800;   // Weitere Notizen: daten_weitere ist beim Server auf 4000 Zeichen begrenzt (jsonb als Text, Zeilenumbrüche zählen doppelt)
+  // Fahrzeug-Kachel oben in Schritt 1 (Giannis 22.11.2026): Überschrift mit den Daten aus dem Anlegen, darunter Kilometer und Motorisierung
+  function fzKachel(v) {
+    var d = vDaten(), mehr = [v.baujahr, KINDS[v.klasse] ? KINDS[v.klasse].n : ''].concat(d.km != null ? [tausender(d.km) + ' km'] : []).concat(d.motorisierung ? [d.motorisierung] : []).filter(Boolean);
+    return '<div class="karte fz"><div class="fz-ic">' + carIcon(v.klasse) + '</div><div class="fz-t"><span>Fahrzeug</span><h4>' + esc(v.marke + ' ' + v.modell) + '</h4><p>' + mehr.map(esc).join(' · ') + '</p></div></div>';
+  }
   function schrittHtml(name) {
     var v = S.vehicle, d = vDaten(), titel = esc(v.marke + ' ' + v.modell) + ' · ' + v.baujahr;
-    if (name === 'daten') return schrittKopf('daten') + '<div class="karte">' + V10.daten + '</div><h4>Welches Fahrzeug?</h4><p><b>' + titel + '</b></p>' +
+    if (name === 'daten') return schrittKopf('daten') + fzKachel(v) +
       '<div class="two"><label class="fld"><span>Kilometer</span><input id="sKm" type="text" inputmode="numeric" maxlength="9" autocomplete="off" placeholder="z. B. 48.500" value="' + (d.km != null ? tausender(d.km) : '') + '"></label>' +
       '<label class="fld"><span>Motorisierung</span><input id="sMotor" type="text" maxlength="80" autocomplete="off" placeholder="z. B. 45 TFSI" value="' + esc(d.motorisierung || '') + '"></label></div>' + schrittFuss('Später im Portal ausfüllen');
     if (name === 'zustand') return schrittKopf('zustand') + '<div class="karte">' + V10.zustand + '</div><h4>Zustand und Unterlagen</h4><p>Schäden bleiben auf den Bildern sichtbar, wie sie sind.</p>' +
       '<div class="chips">' + chip('unfallfrei', 'Unfallfrei', d.unfallfrei === true) + chip('schaden', 'Schaden vorhanden', d.unfallfrei === false) + '</div>' +
-      '<div class="chips">' + chip('scheckheft', 'Scheckheft gepflegt', d.scheckheft === true) + chip('garantie', 'Garantie', d.garantie === true) + chip('hu_neu', 'HU neu', d.hu_neu === true) + '</div>' + schrittFuss('Später im Portal ausfüllen');
+      '<div class="chips">' + chip('scheckheft', 'Scheckheft gepflegt', d.scheckheft === true) + chip('garantie', 'Garantie', d.garantie === true) + chip('hu_neu', 'HU neu', d.hu_neu === true) + '</div>' +
+      '<label class="fld"><span>Weitere Notizen</span><textarea id="sNotiz" rows="4" maxlength="' + NOTIZ_MAX + '" autocapitalize="sentences" autocorrect="on" spellcheck="true" placeholder="z. B. zweiter Schlüssel vorhanden, Winterräder auf Alu">' + esc(d.notizen || '') + '</textarea>' +
+      '<small class="tipp">' + T('Tipp: Tipp aufs Mikrofon der Tastatur und sprich die Notiz einfach ein.', 'Tipp: Tippen Sie auf das Mikrofon der Tastatur und sprechen Sie die Notiz ein.') + '</small></label>' + schrittFuss('Später im Portal ausfüllen');
     if (name === 'schein') {
       var hatS = hasPhoto('fahrzeugschein'), sS = S.slots.fahrzeugschein;
       return schrittKopf('schein') + '<div class="karte">' + (hatS && sS.thumb ? '<img alt="Fahrzeugschein" src="' + sS.thumb + '" style="display:block;width:100%;border-radius:12px">' : V10.daten) + '</div><h4>Fahrzeugschein</h4>' +
@@ -2649,9 +2735,11 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         (hatS ? '<p>' + (sS.state === 'hochgeladen' || sS.server ? 'Foto angekommen.' : 'Foto gespeichert, wird gesendet.') + '</p>' : '') +
         '<label class="fld"><span>FIN (Feld E, 17 Zeichen)</span><input id="sFin" type="text" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="z. B. WVWZZZ1KZAW000000" value="' + esc(d.fin || '') + '"></label>' + schrittFuss('Später im Portal nachreichen');
     }
-    if (name === 'preis') return schrittKopf('preis') + '<div class="karte">' + V10.preis + '</div><h4>' + T('Dein Preis', 'Ihr Preis') + '</h4>' +
+    if (name === 'preis') { if (!v.raumWahl) v.raumWahl = v.raum || raumVorgabe();
+      return schrittKopf('preis') + '<div class="preis"><h4>' + T('Dein Preis', 'Ihr Preis') + '</h4>' +
       '<label class="fld"><span>Preis in Euro, brutto</span><input id="sPreis" type="text" inputmode="decimal" maxlength="13" autocomplete="off" placeholder="z. B. 38.900" value="' + (d.preis_brutto != null ? euroText(d.preis_brutto).replace(' €', '') : '') + '"></label>' +
-      '<div class="chips">' + chip('mwst_ausweisbar', 'MwSt. ausweisbar', d.mwst_ausweisbar === true) + chip('verhandlungsbasis', 'Verhandlungsbasis', d.verhandlungsbasis === true) + '</div>' + schrittFuss('Später im Portal festlegen');
+      '<div class="chips">' + chip('mwst_ausweisbar', 'MwSt. ausweisbar', d.mwst_ausweisbar === true) + chip('verhandlungsbasis', 'Verhandlungsbasis', d.verhandlungsbasis === true) + '</div></div>' +
+      '<h4>Showroom</h4><p>' + T('In diesen Raum setzen wir deine Außenbilder.', 'In diesen Raum setzen wir Ihre Außenbilder.') + '</p>' + raumWahlHtml(v.raumWahl) + schrittFuss('Preis später im Portal festlegen'); }
     if (name === 'pruefen') {
       var PF = pflicht(), da = PF.filter(function (p) { return hasPhoto(p.key); }).length, z = '', fz = fotoZahlen(), fehlt = [];
       var kacheln = PF.map(function (p) {
@@ -2707,6 +2795,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       p = { km: km ? +km : null, motorisierung: mo || null };
     } else if (speichern && n === 'zustand') {
       p = { unfallfrei: schrittAn('unfallfrei') ? true : schrittAn('schaden') ? false : null, scheckheft: schrittAn('scheckheft'), garantie: schrittAn('garantie'), hu_neu: schrittAn('hu_neu') };
+      var no = ($('sNotiz').value || '').trim().slice(0, NOTIZ_MAX);
+      if (no || d.notizen) { p.weitere = { notizen: no || null }; d.notizen = no || null; }   // vorhandenes JSON-Feld weitere (Spalte daten_weitere), keine neue Spalte
       d.ok_zustand = true;
     } else if (speichern && n === 'schein') {
       var fin = $('sFin').value.toUpperCase().replace(/[\s.-]/g, '');
@@ -2719,7 +2809,11 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       if (pr === undefined) { smsg('Bitte den Preis in Euro eintragen, z. B. 38.900.'); return; }
       p = { preis_brutto: pr, mwst_ausweisbar: schrittAn('mwst_ausweisbar'), verhandlungsbasis: schrittAn('verhandlungsbasis') };
     }
-    if (p) { Object.keys(p).forEach(function (k) { d[k] = p[k]; }); auftrag({ art: 'daten', id: v.id, p: p }); }
+    if (n === 'preis') {   // Raum immer festhalten (auch bei „später“): erst dieser Auftrag, dann werden die gehaltenen Fotos gemeldet
+      var rw = v.raumWahl || v.raum || raumVorgabe(); v.raum = rw; v.raumFest = true;
+      auftrag({ art: 'daten', id: v.id, p: { raum: rw }, freigabe: v.id });
+    }
+    if (p) { Object.keys(p).forEach(function (k) { if (k !== 'weitere') d[k] = p[k]; }); auftrag({ art: 'daten', id: v.id, p: p }); }
     if (n === 'preis') v.preisGesehen = true;
     saveSession();
     if (n === 'daten') zeigeSchritt('zustand');
@@ -2741,6 +2835,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   $('pSchritt').addEventListener('change', function (ev) { if (ev.target && ev.target.id === 'sScheinIn') { var f = ev.target.files && ev.target.files[0]; ev.target.value = ''; scheinFoto(f); } });
   $('pSchritt').addEventListener('click', function (ev) {
     var b = ev.target.closest('button'); if (!b || !S.vehicle) return;
+    var rk = b.getAttribute('data-raum');
+    if (rk) { S.vehicle.raumWahl = rk; saveSession(); var pv = $('sPreis') ? $('sPreis').value : null, an0 = ['mwst_ausweisbar', 'verhandlungsbasis'].filter(schrittAn), y = window.scrollY;
+      $('pSchritt').innerHTML = schrittHtml('preis'); if (pv != null) $('sPreis').value = pv; an0.forEach(function (x) { var c = $('pSchritt').querySelector('[data-k="' + x + '"]'); if (c) c.setAttribute('aria-pressed', 'true'); }); window.scrollTo(0, y); return; }
     var k = b.getAttribute('data-k');
     if (k) {
       var an = b.getAttribute('aria-pressed') !== 'true';
@@ -2770,7 +2867,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var sl = {}; Object.keys(S.slots).forEach(function (k) { var s = S.slots[k]; if (s.state === 'hochgeladen') sl[k] = { zusatz_art: s.zusatz_art, ampelHandy: s.ampelHandy }; });
     store('fa_veh', { vehicle: S.vehicle, slots: sl });
   }
-  function resetVehicle() { S.vehicle = null; S.slots = {}; S.camChoice = null; S.klasse = null; S.raum = raumVorgabe(); S.raumJa = null; S.raumGewaehlt = false; S.schritt = null; store('fa_veh', null); clearTimeout(S.pollTimer); buildKar(); buildShow(); }
+  function resetVehicle() { var alt = S.vehicle || ((load('fa_veh') || {}).vehicle); if (alt && alt.id) raumFrei(alt.id); S.vehicle = null; S.slots = {}; S.camChoice = null; S.klasse = null; S.schritt = null; store('fa_veh', null); clearTimeout(S.pollTimer); buildKar(); }
   $('resumeYes').onclick = function () {
     var rs = load('fa_veh'); if (!rs) return;
     sensorsNachholen();   // Erlaubnis für den Bewegungssensor schon hier nachholen (nach dem Neuladen nötig)
@@ -2796,7 +2893,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       var perm = await sensorsPermission();
       // 2) Fahrzeug anlegen
       fmsg('Fahrzeug wird angelegt …');
-      var v = { id: uuid(), marke: marke, modell: modell, baujahr: bj, karosserie: DBKAR[S.klasse] || null, klasse: S.klasse, raum: S.raum || raumVorgabe() };
+      var v = { id: uuid(), marke: marke, modell: modell, baujahr: bj, karosserie: DBKAR[S.klasse] || null, klasse: S.klasse, raum: raumVorgabe() };   // Raum: erst die Vorgabe, gewählt wird in Schritt 5 (Fotos werden bis dahin nur hochgeladen, nicht gemeldet)
       var fe = null;
       for (var vers = 0; vers < 2; vers++) { try { await S.api.createVehicle(v); fe = null; break; } catch (e) { fe = e; if (e.fehler !== 'id_vergeben') break; v.id = uuid(); } }   // id_vergeben: neue ID, einmal
       if (fe) {
@@ -2811,6 +2908,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         fmsg((e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) ? T('Die Kamera wurde nicht erlaubt. Erlaube sie in den Einstellungen des Browsers für diese Seite und lade die Seite neu.', 'Die Kamera wurde nicht erlaubt. Erlauben Sie sie in den Einstellungen des Browsers für diese Seite und laden Sie die Seite neu.') : 'Die Kamera startet auf diesem Handy nicht. (' + errText(e) + ')', true);
         $('fGo').disabled = false; return;
       }
+      halten(v.id, true);   // Fotos erst nach der Raumwahl in Schritt 5 melden
       S.vehicle = v; S.slots = {}; S.camChoice = null; S.devs = null; S.fallbackInput = false; saveSession();
       S.sensorPerm = perm;
       fmsg('');
@@ -2902,7 +3000,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     VAR.anrede = (S.cfg && S.cfg.a) || 'sie'; VAR.debug = !!(S.cfg && (S.cfg.debug || S.cfg.demo)) || UI.mess;
     if (S.cfg && S.cfg.demo && S.cfg.sim) { window.__kasten = kastenTabelle; window.__lageplan = diagSvg; }   // nur Demo mit gezeichneter Kamera: Zahlen des Kastens und Skizze des Standorts für die Tests
     Array.prototype.forEach.call(document.querySelectorAll('[data-du]'), function (el) { el.innerHTML = VAR.anrede === 'du' ? el.getAttribute('data-du') : el.getAttribute('data-sie'); });
-    $('hHint').innerHTML = '<b>Kamerahöhe:</b> ' + esc(hoeheHint());
+    $('hHint').innerHTML = '<b>Standort frei:</b> Abstand und Höhe wählen Sie selbst. Wichtig ist nur: das ganze Auto auf dem Bildschirm, das Handy gerade.';
     var note = $('modeNote'), info = $('srvInfo');
     if (S.cfg && S.cfg.demo) {
       S.demo = true; S.api = mkDemoApi();
@@ -2918,7 +3016,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     }
     initSettings();
     if (S.cfg && S.cfg.ai === 'aus') $('aiTip').hidden = true;
-    buildKar(); buildShow(); applyTheme();
+    buildKar(); applyTheme();
     showStart();
     restoreQueue();
     auftraegeSenden();
