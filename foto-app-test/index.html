@@ -492,7 +492,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-16d';
+  var APP = 'foto-app-test-16e';
   var RAD = Math.PI / 180;
   /* =====================================================================
      ZAHLEN DER FÜHRUNG. Die Optik ist final (Giannis 08.11.2026 21:32); nachgestellt werden nur die Zahlen, und zwar hier.
@@ -821,11 +821,34 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   var RAEUME = [['rund', 'Rund'], ['holz', 'Studio']];
   // Vorschau je Raum: leerer Raum ohne Auto, 480 × 320, unter 40 KB (neue, nähere Bilder liefert Fable (Studio) 18; bis dahin die bisherigen)
   var RAUM_BILD = { rund: 'raum-rund.jpg', holz: 'raum-studio.jpg' };   // 480 × 320 (unter 40 KB) und @2x 960 × 640 für scharfe Anzeige; Bilder von Fable (Studio) 20, 22.11.2026 (leerer Raum, gleicher Kreis)
+  // Vorrat der Vorschaubilder (Fassung 16 e, Befund Giannis 23.11.2026 aus der Tiefgarage: „die vorlagen bilder garnicht da waren - die waren schwarz“). Die App lud die Bilder
+  // erst, wenn Schritt 5 aufging; ohne Netz blieb die Fläche schwarz. Jetzt lädt sie beide (@2x, zusammen unter 200 KB) beim Start in den Speicher und zeigt sie von dort.
+  // Fehlt das Netz schon beim Start, nimmt Schritt 5 die Dateien wie bisher; kommt das Netz zurück (online, Schritt 5 öffnet), lädt die App nach und füllt Karten ohne Bild.
+  var RAUM_VORRAT = {}, raumVorratLaeuft = {};
+  function raumVorratLaden() {
+    if (!window.fetch || !window.URL || !URL.createObjectURL) return;
+    Object.keys(RAUM_BILD).forEach(function (k) {
+      if (RAUM_VORRAT[k] || raumVorratLaeuft[k]) return;
+      raumVorratLaeuft[k] = true;
+      fetch(RAUM_BILD[k].replace('.jpg', '@2x.jpg'), { cache: 'force-cache' })
+        .then(function (a) { if (!a.ok) throw new Error('HTTP ' + a.status); return a.blob(); })
+        .then(function (b) { if (!b || !b.size) throw new Error('leer'); RAUM_VORRAT[k] = URL.createObjectURL(b); raumVorratLaeuft[k] = false; raumKartenFuellen(); })
+        .catch(function () { raumVorratLaeuft[k] = false; });   // kein Netz: beim nächsten „online“ oder in Schritt 5 nochmal
+    });
+  }
+  function raumKartenFuellen() {   // Karten, deren Bild fehlt oder noch lädt, bekommen es aus dem Vorrat
+    Array.prototype.forEach.call(document.querySelectorAll('.raumwahl button.raum[data-raum] img'), function (i) {
+      var k = i.parentNode.getAttribute('data-raum');
+      if (RAUM_VORRAT[k] && i.getAttribute('src') !== RAUM_VORRAT[k] && !(i.complete && i.naturalWidth > 0)) { i.removeAttribute('srcset'); i.removeAttribute('sizes'); i.src = RAUM_VORRAT[k]; }
+    });
+  }
+  function raumBildAttr(k) { var f = RAUM_BILD[k]; return 'data-bild="' + f + '" ' + (RAUM_VORRAT[k] ? 'src="' + RAUM_VORRAT[k] + '"' : 'src="' + f + '" srcset="' + f + ' 480w, ' + f.replace('.jpg', '@2x.jpg') + ' 960w" sizes="(min-width: 640px) 280px, 100vw"'); }
+  window.addEventListener('online', raumVorratLaden);
   function raumVorgabe() { var r = S.cfg && S.cfg.raumVorgabe; return r === 'rund' || r === 'holz' || r === 'kein' ? r : 'rund'; }   // Vorgabe je Händler aus dem Zugang (zugang_info, Spalte zugaenge.raum_vorgabe); ohne Vorgabe rund
   function raumName(r) { var x = RAEUME.filter(function (y) { return y[0] === r; })[0]; return x ? x[1] : r === 'kein' ? 'Ohne Showroom' : RAEUME[0][1]; }
   function raumWahlHtml(r) {
     return '<div class="raumwahl" role="radiogroup" aria-label="Showroom wählen">' + RAEUME.map(function (x) {
-      return '<button class="raum" type="button" role="radio" data-raum="' + x[0] + '" aria-checked="' + (r === x[0] ? 'true' : 'false') + '"><img alt="" src="' + RAUM_BILD[x[0]] + '" srcset="' + RAUM_BILD[x[0]] + ' 480w, ' + RAUM_BILD[x[0]].replace('.jpg', '@2x.jpg') + ' 960w" sizes="(min-width: 640px) 280px, 100vw" width="480" height="320" decoding="async"><span>' + V10[r === x[0] ? 'ok' : 'offen'] + esc(x[1]) + '</span></button>';
+      return '<button class="raum" type="button" role="radio" data-raum="' + x[0] + '" aria-checked="' + (r === x[0] ? 'true' : 'false') + '"><img alt="" ' + raumBildAttr(x[0]) + ' width="480" height="320" decoding="async"><span>' + V10[r === x[0] ? 'ok' : 'offen'] + esc(x[1]) + '</span></button>';
     }).join('') + '<button class="raum ohne" type="button" role="radio" data-raum="kein" aria-checked="' + (r === 'kein' ? 'true' : 'false') + '"><span>' + V10[r === 'kein' ? 'ok' : 'offen'] + 'Ohne Showroom</span><small>Jedes Foto bleibt das Originalfoto, ohne Raum dahinter.</small></button></div>';
   }
 
@@ -2907,7 +2930,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         (hatS ? '<p>' + (sS.state === 'hochgeladen' || sS.server ? 'Foto angekommen.' : 'Foto gespeichert, wird gesendet.') + '</p>' : '') +
         '<label class="fld"><span>FIN (Feld E, 17 Zeichen)</span><input id="sFin" type="text" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="z. B. WVWZZZ1KZAW000000" value="' + esc(d.fin || '') + '"></label>' + schrittFuss('Später im Portal nachreichen');
     }
-    if (name === 'preis') { if (!v.raumWahl) v.raumWahl = v.raum || raumVorgabe();
+    if (name === 'preis') { raumVorratLaden(); if (!v.raumWahl) v.raumWahl = v.raum || raumVorgabe();
       return schrittKopf('preis') + '<div class="preis"><h4>' + T('Dein Preis', 'Ihr Preis') + '</h4>' +
       '<label class="fld"><span>Preis in Euro, brutto</span><input id="sPreis" type="text" inputmode="decimal" maxlength="13" autocomplete="off" placeholder="z. B. 38.900" value="' + (d.preis_brutto != null ? euroText(d.preis_brutto).replace(' €', '') : '') + '"></label>' +
       '<div class="chips">' + chip('mwst_ausweisbar', 'MwSt. ausweisbar', d.mwst_ausweisbar === true) + chip('verhandlungsbasis', 'Verhandlungsbasis', d.verhandlungsbasis === true) + '</div></div>' +
@@ -3244,6 +3267,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     buildKar(); applyTheme();
     vehLokalHolen();   // Tab geschlossen oder App weggewischt: das laufende Fahrzeug aus dem localStorage (Befund A3)
     showStart();
+    if (S.cfg && !S.cfg.bad) raumVorratLaden();   // Vorschaubilder für Schritt 5 jetzt laden, solange Netz da ist (16 e)
     S.restoreP = restoreQueue();
     auftraegeSenden();
   }
