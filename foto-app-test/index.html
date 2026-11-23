@@ -514,7 +514,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-17b';
+  var APP = 'foto-app-test-17c';
   var RAD = Math.PI / 180;
   /* =====================================================================
      FREIE KAMERA (Fassung 17). Giannis 23.11.2026: „man öffnet die App, man sieht den ganzen Bildschirm als freie Kamera und wir lassen das mit den Kasten und alles weg.
@@ -2871,5 +2871,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   init();
 })();
 </script>
+<!-- Fahrzeugschein am Gerät lesen (Paket C): setzt window.ScheinLesen. Modelle laden erst beim ersten Schein-Foto, nichts verlässt das Gerät. -->
+<script type="module" src="schein/schein.js"></script>
 </body>
 </html>

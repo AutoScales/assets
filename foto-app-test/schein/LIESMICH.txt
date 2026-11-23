@@ -1,0 +1,3 @@
+Fahrzeugschein lesen am Gerät (Modul schein-1).
+Modelle: PP-OCRv6_tiny_det.onnx, PP-OCRv6_tiny_rec.onnx (PaddleOCR, Apache-2.0). Laufzeit: onnxruntime-web (MIT). Ablauf: esearch-ocr (Apache-2.0).
+Gebaut mit werkzeug/bauen.mjs im Repo autoscales-foto-app-schein.
