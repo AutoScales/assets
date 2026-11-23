@@ -347,6 +347,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .v10 .raum span { display: flex; align-items: center; gap: 8px; padding: 12px 14px; font: 700 15px/1.2 var(--v-ui); }
 .v10 .raum[aria-checked="true"] { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
 .v10 .raum.ohne span { padding-bottom: 2px; } .v10 .raum.ohne small { padding: 0 14px 12px 40px; font: 500 12.5px/1.4 var(--v-ui); color: var(--p-mut); }
+.sperre { pointer-events: none; }   /* kurz nach dem Seitenwechsel: Doppeltipp trifft nicht den Knopf der neuen Seite */
 </style>
 </head>
 <body>
@@ -491,7 +492,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-16b';
+  var APP = 'foto-app-test-16c';
   var RAD = Math.PI / 180;
   /* =====================================================================
      ZAHLEN DER FÜHRUNG. Die Optik ist final (Giannis 08.11.2026 21:32); nachgestellt werden nur die Zahlen, und zwar hier.
@@ -914,8 +915,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       absenden: function (id) { return rpcOk('fahrzeug_absenden', { p_id: id }); },
       raumOffen: function (id) { return rpcOk('fahrzeug_raum_offen', { p_id: id }); },   // Fassung 16 b: Raum bis Schritt 5 offen, der Server parkt die Fahrzeugfotos (wartet_raum)
       raumSetzen: function (id, raum) { return rpcOk('fahrzeug_raum', { p_id: id, p_raum: raum }); },   // Schritt 5: Raum setzen, geparkte Fotos frei
-      upload: async function (path, blob) {
-        var r = await call(base + '/storage/v1/object/roh/' + path, { method: 'POST', headers: hdr({ 'Content-Type': 'image/jpeg', 'x-upsert': 'false', 'cache-control': 'max-age=3600' }), body: blob }, 90000);
+      upload: async function (path, blob, ms) {
+        var r = await call(base + '/storage/v1/object/roh/' + path, { method: 'POST', headers: hdr({ 'Content-Type': 'image/jpeg', 'x-upsert': 'false', 'cache-control': 'max-age=3600' }), body: blob }, ms || 90000);
         if (r.ok) return true;
         var dup = r.status === 409 || (r.json && String(r.json.statusCode) === '409');
         if (dup) return true;   // Datei liegt schon (Wiederholung nach Abbruch)
@@ -1736,6 +1737,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function updateLayout() {
     var g = gravClass();
     if (g) S.lastCls = { cls: g, t: performance.now() };
+    if (isLandCls(g)) S.lastQuer = { cls: g, t: performance.now() };
     var rot = S.textRot;
     if (isLandCls(g)) rot = uiRot(g);
     else if (g === 'hoch' || g === 'hoch kopfüber') rot = 0;
@@ -1887,7 +1889,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     try { devs = (await navigator.mediaDevices.enumerateDevices()).filter(function (d) { return d.kind === 'videoinput'; }); } catch (e) { /* ohne Liste weiter */ }
     S.devs = devs.map(function (d) { return { id: d.deviceId, label: d.label || '', kind: classify(d.label) }; });
   }
-  async function openStream(dev) {
+  async function openStream(dev, my) {
     closeStream();
     var voll = aufnahmeVoll();
     function mk(w, h, exact, ohneZoom) {
@@ -1899,6 +1901,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var tries = [[4032, 3024, true], [3024, 4032, true], [4032, 3024, false], [1920, 1440, false]].concat(voll ? [[4032, 3024, false, true]] : []), s = null, err = null;
     for (var i = 0; i < tries.length && !s; i++) { try { s = await gum(mk(tries[i][0], tries[i][1], tries[i][2], tries[i][3])); S.zoomAus = voll && !tries[i][3]; } catch (e) { err = e; } }
     if (!s) throw err || new Error('Kamera startet nicht');
+    if (my != null && my !== S.token) { s.getTracks().forEach(function (t) { t.stop(); }); throw CANCEL; }   // abgebrochen, während die Kamera startete: Strom gleich schließen (Befund B5)
     S.fotoCaps = undefined;   // Fähigkeiten für Fotos je Strom neu lesen
     S.stream = s; S.track = s.getVideoTracks()[0];
     var v = $('video'); v.srcObject = s;
@@ -2041,7 +2044,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         else {
           if (!S.devs) await discover();
           await chooseCamera(); chk(my);
-          await openStream(S.camChoice || null); chk(my);
+          await openStream(S.camChoice || null, my); chk(my);
         }
         if (!S.ic) { closeStream(); S.fallbackInput = true; await fallbackShot(my); return; }
       }
@@ -2061,6 +2064,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       await shoot(my, { auto: false, noSensor: ctl.noSensor, forced: ctl.forced, waitMs: ctl.at || 0, nach: nach, g: ctl.g || null, grund: ctl.grund || [], verlauf: ctl.log || null });
     } catch (e) {
       if (e === CANCEL) return;
+      if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) { problem('Kamera nicht erlaubt', T('Erlaube die Kamera für diese Seite und tippe auf „Nochmal versuchen“. Hilft das nicht, „Seite neu laden“: Fotos und Angaben bleiben erhalten („Weitermachen“).', 'Erlauben Sie die Kamera für diese Seite und tippen Sie auf „Nochmal versuchen“. Hilft das nicht, „Seite neu laden“: Fotos und Angaben bleiben erhalten („Weitermachen“).'), true, true); return; }   // Befund B2
       problem('Die Kamera hat nicht geklappt', errText(e), true);
     }
   }
@@ -2077,7 +2081,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       if (land) { if (!okSince) okSince = now; if (now - okSince >= 400) break; } else okSince = 0;
       if (S.turnMan) break;
       if (c !== null && !land && !handyForm() && now - t0 > 4000) { $('turnTxt').textContent = T('Dreh das Gerät, bis der Bildschirm quer steht. Steht er schon quer, tippe auf „Trotzdem weiter“.', 'Drehen Sie das Gerät, bis der Bildschirm quer steht. Steht er schon quer, tippen Sie auf „Trotzdem weiter“.'); $('turnBtnBox').hidden = false; }
-      if (c === null && now - t0 > 6000) { $('turnTxt').textContent = T('Dein Handy meldet die Lage nicht. Dreh es quer und tippe dann auf „Trotzdem weiter“.', 'Ihr Handy meldet die Lage nicht. Drehen Sie es quer und tippen Sie dann auf „Trotzdem weiter“.'); $('turnBtnBox').hidden = false; }
+      if (c === null && now - t0 > (ohneSensorWarte() === 0 ? 0 : 6000)) {   /* Erlaubnis abgelehnt oder kein Sensor: gleich anbieten (Befund B3) */ $('turnTxt').textContent = T('Dein Handy meldet die Lage nicht. Dreh es quer und tippe dann auf „Trotzdem weiter“.', 'Ihr Handy meldet die Lage nicht. Drehen Sie es quer und tippen Sie dann auf „Trotzdem weiter“.'); $('turnBtnBox').hidden = false; }
       await sleep(100);
     }
     paneShow('vTurn', false);
@@ -2113,7 +2117,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') { kick(); auftraegeSenden(); haltWecker(); } });   // zurück in der App: abgelaufenes Halten melden, liegende Aufträge senden
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'hidden') { if (!$('stage').hidden) { closeStream(); S.token++; } }
-    else if (!$('stage').hidden && S.phase !== 'review' && S.cur && $('vBet').hidden && $('vRev').hidden) { keepAwake(); runShot(); }
+    else { if (!$('stage').hidden) keepAwake();   // Bildschirm-Sperre nach der Rückkehr immer neu (Befund B6)
+      if (!$('stage').hidden && S.phase !== 'review' && S.phase !== 'fallback' && S.cur && $('vBet').hidden && $('vRev').hidden) runShot(); }   // fallback: das Foto kommt aus der Kamera-App, kein Neustart (Befund B8)
   });
 
   /* =====================================================================
@@ -2184,6 +2189,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function aufnZaehler() { var k = ((S.vehicle && S.vehicle.id) || '') + '|' + (S.cur || ''), A = S.aufn || (S.aufn = {}); return A[k] || (A[k] = { n: 0, v: 0 }); }
   async function shoot(my, how) {
     var snap = snapshot(), cls = (gravClass() || (S.lastCls && performance.now() - S.lastCls.t < 3000 ? S.lastCls.cls : null)), t0 = performance.now(), blob;
+    var clsDreh = (cls && !isLandCls(cls) && !/^hoch/.test(cls) && S.lastQuer && performance.now() - S.lastQuer.t < 10000) ? S.lastQuer.cls : cls;   // steil nach unten (flach, unklar): für die Drehung die letzte Querlage (Befund B9)
     how.sens = sensorsOn ? sensWin(t0, CFG.NACH_FENSTER_MS) : null; how.linse = linseJetzt();
     var mS0 = S.cur ? slotMeta(S.cur) : null, r3 = function (x) { return Math.round(x * 1000) / 1000; };
     how.sucher = { form: LAY.form || null, fenster: window.innerWidth + 'x' + window.innerHeight, sichtbar: LAY.vis ? [r3(LAY.vis.x0), r3(LAY.vis.y0), r3(LAY.vis.x1), r3(LAY.vis.y1)] : null, gedreht: !!LAY.gedreht,
@@ -2202,7 +2208,13 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     flash();
     var takeMs = Math.round(performance.now() - t0);
     say('Foto wird verkleinert …');
-    await processAndReview(my, blob, { snap: snap, snapEnde: snapE, cls: cls, how: how, takeMs: takeMs, quelle: 'kamera', live: live, video: S.vw + 'x' + S.vh, fit: fit, aufn: aufn });
+    await processAndReview(my, blob, { snap: snap, snapEnde: snapE, cls: cls, clsDreh: clsDreh, how: how, takeMs: takeMs, quelle: 'kamera', live: live, video: S.vw + 'x' + S.vh, fit: fit, aufn: aufn });
+  }
+  function hochkantLage(q, ohneSensor) {   // Ampel und Gründe für ein Foto, das hochkant ist: ohne Lagesensor gelb (Giannis 22.11.2026), sonst rot
+    var a = q.a, w = q.w.slice(), k = q.k.slice();
+    if (ohneSensor) { if (a !== 'rot') a = 'gelb'; w.push('Foto ist hochkant (ohne Lagesensor, Lage des Handys unbekannt)'); k = k.map(function (x) { return x === 'Ohne Lagesensor aufgenommen' ? 'Ohne Lagesensor aufgenommen, Foto hochkant' : x; }); }
+    else { a = 'rot'; w.push('Foto ist hochkant (Handy war nicht quer)'); k.push('Foto ist hochkant (Handy war nicht quer)'); }
+    return { a: a, w: w, k: k };
   }
   async function processAndReview(my, blob, o) {
     try {
@@ -2210,11 +2222,12 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       // Hat der Browser die EXIF-Ausrichtung angewandt? (Maße des Bildes gegen die Maße im JPEG; manche Browser tun es nicht)
       var orient = exif.orientation || 1, effW = img.w, effH = img.h, extra = 0;
       if (exif.sofW && (orient === 6 || orient === 8) && exif.sofW !== exif.sofH && img.w === exif.sofW && img.h === exif.sofH) { extra = orient === 6 ? 90 : 270; effW = img.h; effH = img.w; note = 'EXIF-Ausrichtung selbst angewandt'; }
+      var ohneDreh = null;
       if (o.quelle === 'kamera' && effH > effW) {
         // Hochformat-Pixel (typisch iPhone, Fold, Samsung): nach der Schwerkraft quer drehen
-        var cls = o.cls;
+        var cls = o.clsDreh !== undefined ? o.clsDreh : o.cls;
         if (/Kopf links/.test(cls || '')) rot = 270; else if (/Kopf rechts/.test(cls || '')) rot = 90;
-        else if (cls === null) { var a = screenAngle(); rot = a === 90 ? 270 : a === 270 ? 90 : 0; note = (note ? note + '; ' : '') + 'Drehung ohne Sensor nach Bildschirm'; }
+        else if (cls === null) { var a = screenAngle(); rot = a === 90 ? 270 : a === 270 ? 90 : 0; if (!rot && S.handOhne && S.vehicle && S.handOhne.id === S.vehicle.id) { rot = S.handOhne.grad; note = (note ? note + '; ' : '') + 'Drehung ohne Sensor wie beim vorigen Foto (von Hand)'; } else note = (note ? note + '; ' : '') + 'Drehung ohne Sensor nach Bildschirm'; ohneDreh = rot; }   // Befund B3
       }
       var mS = S.cur ? slotMeta(S.cur) : null, lev = o.quelle === 'kamera' ? geradeGrad(o.snap, mS && mS.art) : null;   // Außenfoto mit Sensor: gerade richten
       var res = await renderUpright(img, (rot + extra) % 360, lev);
@@ -2225,9 +2238,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       } else URL.revokeObjectURL(img.url);
       chk(my);
       var f35 = exif.focal35 != null ? exif.focal35 : (o.quelle === 'kamera' ? camF35Jetzt() : null), f35q = exif.focal35 != null ? 'exif' : f35 != null ? 'kamera_probe' : null, am = ampelHandy(lev != null ? { p: o.snap.p, r: 0 } : o.snap, f35, S.cur), amp = am.ampel, why = am.gruende.slice(), kurz = am.kurz.slice();
-      if (res.h > res.w && o.quelle === 'kamera' && o.cls == null && !(o.snap && o.snap.p != null)) { if (amp !== 'rot') amp = 'gelb'; why.push('Foto ist hochkant (ohne Lagesensor, Lage des Handys unbekannt)'); kurz = kurz.map(function (k) { return k === 'Ohne Lagesensor aufgenommen' ? 'Ohne Lagesensor aufgenommen, Foto hochkant' : k; }); }
-      else if (res.h > res.w) { amp = 'rot'; why.push('Foto ist hochkant (Handy war nicht quer)'); kurz.push('Foto ist hochkant (Handy war nicht quer)'); }
-      var r = { aufn: o.aufn || null, gerade: lev != null ? { grad: lev, faktor: res.gerade, ende: (o.snapEnde && o.snapEnde.age <= 800) ? o.snapEnde.r : null } : null, slot: S.cur, blob: res.blob, w: res.w, h: res.h, thumb: res.thumb, drehung: (rot + extra) % 360, hand: 0, f35: f35, f35q: f35q, zuschnitt: res.zuschnitt || null, exif: { orient: exif.orientation, focal: exif.focal, model: exif.model }, srcW: img.w, srcH: img.h,
+      var lageQ = { a: amp, w: why.slice(), k: kurz.slice() }, lageH = hochkantLage(lageQ, o.quelle === 'kamera' && o.cls == null && !(o.snap && o.snap.p != null)), lg0 = res.h > res.w ? lageH : lageQ;   // beide Fassungen, damit „↻“ Ampel und Hinweis anpasst (Befund B3)
+      amp = lg0.a; why = lg0.w.slice(); kurz = lg0.k.slice();
+      var r = { aufn: o.aufn || null, gerade: lev != null ? { grad: lev, faktor: res.gerade, ende: (o.snapEnde && o.snapEnde.age <= 800) ? o.snapEnde.r : null } : null, slot: S.cur, blob: res.blob, w: res.w, h: res.h, thumb: res.thumb, drehung: (rot + extra) % 360, hand: 0, lageQ: lageQ, lageH: lageH, ohneDreh: ohneDreh, f35: f35, f35q: f35q, zuschnitt: res.zuschnitt || null, exif: { orient: exif.orientation, focal: exif.focal, model: exif.model }, srcW: img.w, srcH: img.h,
         snap: o.snap, cls: o.cls, ampel: amp, gruende: why, kurz: kurz, fit: o.fit || null, how: o.how || {}, takeMs: o.takeMs, quelle: o.quelle, note: note, url: null, fovP: fovP, video: o.video || null,
         zeiten: { entschluesseln: tDec, gesamt: Math.round(performance.now() - T0), zeichnen: res.ms.zeichnen, kodieren: res.ms.kodieren, vorschau: res.ms.vorschau, glaettung: res.ms.glaettung } };
       showReview(r);
@@ -2283,6 +2296,10 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (!kind || !m || m.art !== 'aussen' || w < 60 || h < 40) return;
     drawScene($('exCv'), w, h, { kind: kind, key: m.key, h: camH(), ang: GEO.winkel, pitch: drawP(m.key), bg: 'hof', fill: true });
   }
+  function revInfoZeigen(r) {
+    var list = VAR.debug ? r.gruende : (r.kurz || []);
+    $('revInfo').innerHTML = list.length ? list.map(function (g) { return '<span class="chip"><i class="dot ' + (r.ampel === 'rot' ? 'bad' : 'warn') + '"></i>' + esc(g) + '</span>'; }).join('') : '<span class="chip"><i class="dot ok"></i>Lage in Ordnung</span>';
+  }
   function showReview(r) {
     S.review = r; S.phase = 'review'; r.url = URL.createObjectURL(r.blob);
     S.shotsSinceOpen++;
@@ -2290,8 +2307,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var m = slotMeta(r.slot);
     $('revLbl').textContent = (m.nr ? m.nr + ' von ' + pflicht().length + ' · ' : '') + m.name;
     $('revTitle').textContent = 'Passt das Foto?';
-    var list = VAR.debug ? r.gruende : (r.kurz || []);
-    $('revInfo').innerHTML = list.length ? list.map(function (g) { return '<span class="chip"><i class="dot ' + (r.ampel === 'rot' ? 'bad' : 'warn') + '"></i>' + esc(g) + '</span>'; }).join('') : '<span class="chip"><i class="dot ok"></i>Lage in Ordnung</span>';
+    revInfoZeigen(r);
     // Beispielbild: so soll es aussehen (Außenplätze nach der Klasse, Innenplätze als einfache Zeichnung)
     var kind = klasseOf(); $('exBox').hidden = !((m.art === 'aussen' && kind) || m.art === 'innen');
     $('revRot').hidden = false; $('revBtns').classList.remove('two'); $('revNeu').textContent = 'Neu'; $('revOk').textContent = 'Passt';
@@ -2305,13 +2321,18 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     $('revOk').disabled = false;
   }
   $('revNeu').onclick = function () { if (S.phase === 'view') { paneShow('vRev', false); runShot(); return; } if (S.review) aufnZaehler().v++; discardReview(); runShot(); };
-  $('revRot').onclick = async function () {
-    var r = S.review; if (!r) return; $('revRot').disabled = true;
+  $('revRot').onclick = async function () {   // Befund B7: während des Drehens „Passt“ und „Neu“ sperren; r erst nach vollem Erfolg ändern
+    var r = S.review; if (!r || S.dreht || $('revOk').disabled) return; S.dreht = true;
+    ['revRot', 'revOk', 'revNeu'].forEach(function (k) { $(k).disabled = true; });
     try {
       var img = await decodeImage(r.blob), res = await renderUpright(img, 90); URL.revokeObjectURL(img.url);
-      URL.revokeObjectURL(r.url); r.blob = res.blob; r.w = res.w; r.h = res.h; r.thumb = res.thumb; r.hand = (r.hand + 90) % 360; r.drehung = (r.drehung + 90) % 360; r.url = URL.createObjectURL(r.blob); $('revImg').src = r.url;
+      if (!res || !res.blob) throw new Error('leer');
+      if (S.review === r) {
+        var alt = r.url; r.blob = res.blob; r.w = res.w; r.h = res.h; r.thumb = res.thumb; r.hand = (r.hand + 90) % 360; r.drehung = (r.drehung + 90) % 360; r.url = URL.createObjectURL(r.blob); $('revImg').src = r.url; if (alt) URL.revokeObjectURL(alt);
+        var lg = r.h > r.w ? r.lageH : r.lageQ; if (lg) { r.ampel = lg.a; r.gruende = lg.w.slice(); r.kurz = lg.k.slice(); revInfoZeigen(r); }   // Befund B3: Ampel und Hinweis zur neuen Lage
+      }
     } catch (e) { toast('Drehen nicht möglich'); }
-    $('revRot').disabled = false;
+    S.dreht = false; ['revRot', 'revOk', 'revNeu'].forEach(function (k) { $(k).disabled = false; });
   };
   /* SICHERUNG app_details (Fassung 16): foto_melden verwirft app_details ganz, wenn der Block als Text (jsonb) länger als 4000 Zeichen ist (SQL foto_app_komplett, v_det := null).
      Mit Erkennung, Sensor- und Zuschnitt-Daten liegt ein Foto bei etwa 3800 Zeichen. Wird es zu lang, kürzt die App zuerst Entbehrliches und schreibt in „gekuerzt“, was fehlt. */
@@ -2342,6 +2363,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var fov = null; if (r.fovP) { try { fov = await Promise.race([r.fovP, sleep(1500).then(function () { return null; })]); } catch (e) { fov = null; } }
     if (S.review !== r) return;
     var st = slotState(r.slot), m = slotMeta(r.slot);
+    if (r.ohneDreh != null && r.hand) S.handOhne = { id: S.vehicle.id, grad: (r.ohneDreh + r.hand) % 360 };   // ohne Lagesensor: die Drehung von Hand gilt für die nächsten Hochkant-Fotos dieses Fahrzeugs (Befund B3)
     st.thumb = r.thumb; st.state = 'wartet'; st.err = null; st.fotoId = uuid(); st.ampelHandy = r.ampel; st.server = null; aufnZaehler().v = 0;
     if (m.art === 'zusatz') st.zusatz_art = S.zusatzArt;
     var meta = {
@@ -2430,11 +2452,12 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     $('betGo').onclick = function () { paneShow('vBet', false); endSequence(); };
     Array.prototype.forEach.call($('betBox').querySelectorAll('[data-side]'), function (b) { b.onclick = function () { startSide(b.getAttribute('data-side'), 'ende'); }; });
   }
-  function problem(title, text, retry) {
+  function problem(title, text, retry, kamera) {   // kamera: Kamera nicht erlaubt (Befund B2): die Kamera-Frage direkt aus dem Tipp stellen, Neuladen als Ausweg
     S.token++; S.phase = 'problem';
-    $('betBox').innerHTML = '<h1>' + esc(title) + '</h1><p>' + esc(text) + '</p><div class="btns">' + (retry ? '<button class="btn big primary" id="betRetry" type="button">Nochmal versuchen</button>' : '') + '<button class="btn big" id="betEnd" type="button">Zur Übersicht</button></div>';
+    $('betBox').innerHTML = '<h1>' + esc(title) + '</h1><p>' + esc(text) + '</p><div class="btns">' + (retry ? '<button class="btn big primary" id="betRetry" type="button">Nochmal versuchen</button>' : '') + (kamera ? '<button class="btn big" id="betReload" type="button">Seite neu laden</button>' : '') + '<button class="btn big" id="betEnd" type="button">Zur Übersicht</button></div>';
     paneShow('vCam', false); paneShow('vRev', false); paneShow('vTurn', false); paneShow('vBet', true);
-    if (retry) $('betRetry').onclick = function () { paneShow('vBet', false); closeStream(); runShot(); };
+    if (retry) $('betRetry').onclick = function () { paneShow('vBet', false); closeStream(); if (kamera && !(S.cfg && S.cfg.sim)) camPermission().catch(function () {}).then(function () { runShot(); }); else runShot(); };
+    if (kamera) $('betReload').onclick = function () { location.reload(); };
     $('betEnd').onclick = function () { paneShow('vBet', false); endSequence(); };
   }
   $('camX').onclick = function () { S.token++; leaveStage().then(showGallery); };
@@ -2492,7 +2515,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   }
   function enqueue(item) {
     item.vehicleId = S.vehicle.id; item.thumb = slotState(item.slot).thumb; item.t = Date.now(); item.srv = sendeschein();
-    idbPut(item).then(function () { S.queue.push(item); if (item.slot !== 'fahrzeugschein') { haltAuffrischen(item.vehicleId); if (S.vehicle && S.vehicle.id === item.vehicleId && S.vehicle.raumOffen) { S.vehicle.letztesFoto = Date.now(); saveSession(); } } renderGalleryIfShown(); kick(); });
+    idbPut(item).then(function (gesichert) { if (!gesichert && IDB.ok) { item.unsicher = true; toast(T('Das Foto ist nicht auf dem Handy gesichert (Speicher voll?). Bitte lass die App offen, bis es gesendet ist.', 'Das Foto ist nicht auf dem Handy gesichert (Speicher voll?). Bitte lassen Sie die App offen, bis es gesendet ist.'), 6000); }   // Befund B4
+      S.queue.push(item); if (item.slot !== 'fahrzeugschein') { haltAuffrischen(item.vehicleId); if (S.vehicle && S.vehicle.id === item.vehicleId && S.vehicle.raumOffen) { var vv = S.vehicle; if (!vv.raumZu && !vv.raumFest && Date.now() - Math.max(vv.angelegt || 0, vv.letztesFoto || 0) >= HALTEN_MAX_MS) vv.raumZu = true; vv.letztesFoto = Date.now(); saveSession(); /* Frist beim Server (raum_frist) schon um: der Raum bleibt zu, auch wenn neue Fotos kommen (Befund A1) */ } } renderGalleryIfShown(); kick(); });
   }
   async function restoreQueue() {
     if (S.demo || (!S.api && S.cfg)) return;   // Demo oder ungültiger Link: nichts senden
@@ -2522,15 +2546,15 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     });
   }
   var onlineWake = null;
-  window.addEventListener('online', function () { if (onlineWake) onlineWake(); if (auftragWake) auftragWake(); });
-  window.addEventListener('beforeunload', function (e) { if (S.queue.length && !IDB.ok) { e.preventDefault(); e.returnValue = ''; } });
+  window.addEventListener('online', function () { if (onlineWake) onlineWake(); if (auftragWake) auftragWake(); if (S.cfg && !S.cfg.zugangDa && !S.demo && S.api && S.api.real && zugangNeu(S.cfg.zugang)) zugangLaden(); });   // Vorgabe des Zugangs nachholen (Befund A13)
+  window.addEventListener('beforeunload', function (e) { if (S.queue.length && (!IDB.ok || S.queue.some(function (q) { return q.unsicher; }))) { e.preventDefault(); e.returnValue = ''; } });
   /* Lösch-Regel (Giannis 19.11.2026: „Wenn Fotos nicht mehr gesendet werden können, sollen sie gelöscht werden. Brauchen wir ja nicht. Aber wir müssen sicherstellen,
      dass alle Fotos, die die Händler machen, an uns rüberkommen.“). Gelöscht wird nur, was der Server endgültig ablehnt: Das Fahrzeug ist unbekannt oder nicht mehr offen
      (Antwort von fahrzeug_daten), oder es hat schon die Höchstzahl an Fotos. Netzfehler, Zeitüberschreitung, 401, 404 und 5xx sind nie endgültig; solche Fotos bleiben
      auf dem Gerät und gehen erneut raus (bei jedem Öffnen und alle CFG.NACHPRUEFEN_MS), bis sie angekommen sind. */
   async function abgelehnt(api, it, e) {
     if (!api || !api.daten || !it.vehicleId) return null;
-    try { var j = await api.daten(it.vehicleId, {}); return (j && j.fotos_max && j.fotos_gesamt >= j.fotos_max && /zu viele fotos/i.test((e && e.message) || '')) ? 'voll' : null; }
+    try { var j = await api.daten(it.vehicleId, {}); return (j && j.fotos_max && j.fotos_gesamt >= j.fotos_max) ? 'voll' : null; }   // voll auch dann, wenn der Speicher die Datei mit eigenem Text ablehnt (Befund A10)
     catch (x) { return x && (x.fehler === 'fahrzeug_unbekannt' || x.fehler === 'nicht_offen') ? x.fehler : null; }
   }
   function verwerfen(it, st, grund) {
@@ -2545,7 +2569,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     S.restoredFailed.splice(0).concat(Object.keys(S.slots).map(function (k) { return S.slots[k].item; })).forEach(function (it) { if (it && it.failed && it.blob && !seen[it.id]) { seen[it.id] = true; alle.push(it); } });
     alle.forEach(function (it) {
       it.failed = false; it.tries = 0; idbPut(it); S.queue.push(it);
-      if (S.vehicle && it.vehicleId === S.vehicle.id) { var s = slotState(it.slot); if (s.item === it || s.fotoId === it.id) { s.item = null; s.state = 'wartet'; } }
+      if (S.vehicle && it.vehicleId === S.vehicle.id) { var s = slotState(it.slot); if (s.fotoId === it.id) { s.item = null; s.state = 'wartet'; /* nur die Kachel dieses Fotos, nach einer Neuaufnahme zeigt der Platz ein anderes (Befund A9) */ } }
     });
     if (alle.length) { renderGalleryIfShown(); kick(); }
   }
@@ -2613,22 +2637,38 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     catch (e) { return e && (e.fehler || (e.status >= 400 && e.status < 500 && e.status !== 408 && e.status !== 429)) ? 'nein' : 'unklar'; }
   }
   // 16 b: Verlässt der Händler ein Fahrzeug mit offenem Raum ohne Schritt 5 (neues Fahrzeug), gilt die Vorgabe; der Server gibt die geparkten Fotos gleich frei (sonst nach Frist)
-  function raumOffenFrei(id) { var alt = (load('fa_veh') || {}).vehicle; if (!alt || alt.id !== id || !alt.raumOffen || alt.raumFest || alt.raumZu) return; auftrag({ art: 'raum', id: id, raum: alt.raumAnlage || alt.raum || raumVorgabe(), still: true }); }
+  function raumOffenFrei(id) { var alt = (load('fa_veh') || {}).vehicle; if (!alt || alt.id !== id || !(alt.raumOffen || alt.raumOffenUnklar) || alt.raumFest || alt.raumZu) return; /* auch bei unklarer Antwort beim Anlegen (Befund A7) */ auftrag({ art: 'raum', id: id, raum: alt.raumAnlage || alt.raum || raumVorgabe(), still: true }); }
   function raumFrei(id) { raumOffenFrei(id); if (!id || !gehalten(id)) return; if ((lsLoad('fa_auftraege') || []).some(function (a) { return a.freigabe === id; })) return; halten(id, false); }
-  function haltOf(it) { return it.slot !== 'fahrzeugschein' && gehalten(it.vehicleId); }
+  function freigabeOffen(id) { return !!id && (lsLoad('fa_auftraege') || []).some(function (a) { return a.freigabe === id; }); }   // Raum-Auftrag aus Schritt 5 liegt noch: erst danach melden, auch wenn die Haltezeit um ist (Befund A6)
+  function haltOf(it) { return it.slot !== 'fahrzeugschein' && (gehalten(it.vehicleId) || freigabeOffen(it.vehicleId)); }
+  // Kachel eines Fotos: nur beim laufenden Fahrzeug und nur, solange der Platz dieses Foto zeigt. Nach jedem await neu holen: „Weitermachen“ baut die Plätze neu,
+  // eine Neuaufnahme gibt dem Platz ein neues Foto (Fehlersuche A 23.11.2026, Befunde 2 und 9).
+  function kachelVon(it) { var s = S.vehicle && it.vehicleId === S.vehicle.id ? slotState(it.slot) : null; return s && (s.fotoId == null || s.fotoId === it.id) ? s : {}; }
+  // Server je Foto aus seinem Sendeschein (wie bei den Aufträgen), nicht der Server des gerade offenen Links (Befund A4)
+  function apiFuer(it) {
+    if (S.demo) return S.api;
+    if (!it.srv) return S.api || S.sendApi || null;
+    if (!scheinOk(it)) return null;
+    if (S.api && S.api.real && S.cfg && S.cfg.url === it.srv.u && S.cfg.key === it.srv.k) return S.api;
+    var c = S.apiJeSchein || (S.apiJeSchein = {}), k = it.srv.u + '|' + it.srv.k; return c[k] || (c[k] = mkRealApi({ url: it.srv.u, key: it.srv.k }));
+  }
+  // Zeitgrenze je Upload nach Größe: 30 s plus 8 KB je Sekunde, mindestens 90 s; nach jeder Zeitüberschreitung doppelt so lang, höchstens 15 Minuten (Befund A5)
+  function uploadMs(it) { var b = it.blob ? it.blob.size || 0 : 0; return Math.min(900000, Math.max(90000, 30000 + b / 8) * Math.pow(2, Math.min(it.zeitAus || 0, 3))); }
+  function ausSchlange(it) { var i = S.queue.indexOf(it); if (i >= 0) S.queue.splice(i, 1); }
   async function kick() {
     if (S.uploading) return; S.uploading = true;
-    var api = S.api || S.sendApi;   // S.sendApi: ohne Link geöffnet, nur Nachsenden (siehe Sendeschein)
-    while (S.queue.length && api) {
-      var it = null; for (var qi = 0; qi < S.queue.length; qi++) { if (!(S.queue[qi].fileDone && haltOf(S.queue[qi]))) { it = S.queue[qi]; break; } }
-      if (!it) break;   // alles Übrige ist hochgeladen und wartet nur auf die Raumwahl
-      var mine = !!(S.vehicle && it.vehicleId === S.vehicle.id), st = mine ? slotState(it.slot) : {};
+    for (;;) {
+      var it = null; for (var qi = 0; qi < S.queue.length; qi++) { var q = S.queue[qi]; if (!(q.fileDone && haltOf(q)) && apiFuer(q)) { it = q; break; } }
+      if (!it) break;   // alles Übrige ist hochgeladen und wartet nur auf die Raumwahl (oder hat keinen gültigen Sendeschein)
+      var api = apiFuer(it), st = kachelVon(it);
       try {
         st.state = 'sendet'; renderGalleryIfShown();
-        if (!it.fileDone) { await api.upload(it.path, it.blob); it.fileDone = true; }
+        if (!it.fileDone) { await api.upload(it.path, it.blob, uploadMs(it)); it.fileDone = true; }
+        st = kachelVon(it);
         if (haltOf(it)) { st.state = 'gehalten'; st.err = null; idbPut(it); renderGalleryIfShown(); continue; }   // Datei liegt beim Server, Meldung nach der Raumwahl (auch nach dem Neuladen: fileDone im Gerätespeicher)
         var rep = await api.report(it.meta);
-        S.queue.splice(S.queue.indexOf(it), 1); st.state = 'hochgeladen'; st.err = null; idbDel(it.id); it.blob = null; it.meta = null;
+        st = kachelVon(it);
+        ausSchlange(it); st.state = 'hochgeladen'; st.err = null; idbDel(it.id); it.blob = null; it.meta = null;
         if (rep && rep.status) st.server = Object.assign({}, st.server || {}, { status: rep.status });
         if (S.nach) { S.nach.ok++; S.nach.netz = false; queueNote(); }
         saveSession(); renderGalleryIfShown(); schedulePoll(1500);
@@ -2636,13 +2676,14 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
         it.tries++;
         if (permanent(e)) {   // Lösch-Regel: erst beim Server nachfragen, ob die Ablehnung endgültig ist
           var ende = await abgelehnt(api, it, e);
-          S.queue.splice(S.queue.indexOf(it), 1);
+          st = kachelVon(it); ausSchlange(it);
           if (ende) verwerfen(it, st, ende);
           else { it.fileDone = false; st.state = 'fehler'; st.err = e.message; st.item = it; it.failed = true; idbPut(it); if (S.nach) { S.nach.fehler++; queueNote(); } nachpruefenPlanen(); }
           renderGalleryIfShown();
         }
         else {
-          st.state = 'retry'; st.err = e.message; renderGalleryIfShown(); if (S.nach) { S.nach.netz = true; queueNote(); }
+          if (e && e.message === 'Zeitüberschreitung') it.zeitAus = (it.zeitAus || 0) + 1;
+          st = kachelVon(it); st.state = 'retry'; st.err = e.message; renderGalleryIfShown(); if (S.nach) { S.nach.netz = true; queueNote(); }
           var wait = Math.min(30000, 2000 * Math.pow(2, Math.min(it.tries, 4)));
           await new Promise(function (res) { var t = setTimeout(res, wait); onlineWake = function () { clearTimeout(t); res(); }; });
           onlineWake = null;
@@ -2683,14 +2724,15 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (sv === 'fehler') return { t: (s.server.fehler_grund || 'Bearbeitung fehlgeschlagen'), c: 'bad' };
     return { t: 'hochgeladen', c: 'busy' };
   }
-  function showPage(id) { ['pStart', 'pGallery', 'pSchritt', 'pTest'].forEach(function (p) { $(p).hidden = p !== id; }); window.scrollTo(0, 0); }
+  function showPage(id) { ['pStart', 'pGallery', 'pSchritt', 'pTest'].forEach(function (p) { $(p).hidden = p !== id; }); window.scrollTo(0, 0); klickSperre($(id)); }
+  function klickSperre(el) { if (!el) return; el.classList.add('sperre'); clearTimeout(el._sperre); el._sperre = setTimeout(function () { el.classList.remove('sperre'); }, 400); }   // Doppeltipp: der zweite Tipp träfe sonst den Knopf der neuen Seite (Befund A12, im Demo gemessen)
   function renderGalleryIfShown() { if (!$('pGallery').hidden) renderGallery(); schrittNeu(); if (!$('stage').hidden) renderStrip(); }
   function renderGallery() {
     var v = S.vehicle; if (!v) return;
     $('gTitle').textContent = v.marke + ' ' + v.modell;
     $('gChip').textContent = (KINDS[v.klasse] ? KINDS[v.klasse].n + ' · ' : '') + v.baujahr + (v.raum && (v.raumFest || !raumWaehlbar(v)) ? ' · ' + raumName(v.raum) : '');   // Raum erst, wenn er feststeht
     var PF = pflicht(), NP = PF.length, ids = PF.map(function (p) { return p.key; }).concat(ohneRueck() && !hasPhoto('ruecksitzbank') ? ['ruecksitzbank'] : [], SEITEN.map(function (s) { return s.key; }), hasPhoto('seite') ? ['seite'] : [], freiInnen(), zusatzIds()), done = PF.filter(function (p) { return hasPhoto(p.key); }).length, kind = klasseOf();
-    var pending = S.queue.filter(function (it) { return !(it.fileDone && haltOf(it)); }).length, haltWarte = raumWaehlbar(v) && !v.raumFest;   // gehaltene Fotos sind hochgeladen, nicht „noch hochzuladen“
+    var pending = S.queue.filter(function (it) { return it.vehicleId === v.id && !(it.fileDone && haltOf(it)); }).length, haltWarte = raumWaehlbar(v) && !v.raumFest;   // gehaltene Fotos sind hochgeladen, nicht „noch hochzuladen“
     $('gSum').textContent = done + ' von ' + NP + ' Pflichtbildern aufgenommen' + (zusatzIds().length ? ', ' + zusatzIds().length + ' Zusatzbild' + (zusatzIds().length > 1 ? 'er' : '') : '') + (pending ? ' · ' + pending + (pending === 1 ? ' wird' : ' werden') + ' noch hochgeladen' : '');
     $('gProg').innerHTML = PF.map(function (p, i) { return '<i' + (i < done ? ' class="on"' : '') + '></i>'; }).join('');
     var nG = $('gNote'); if (nG) { if (!S.noteStd) S.noteStd = nG.textContent; var anyOhne = ids.some(function (k) { return S.slots[k] && S.slots[k].server && S.slots[k].server.status === ST_OHNE; }); var nt = haltWarte && v.raumOffen ? T('Die Fotos sind bei AutoScales. Bearbeitet werden sie, sobald du in Schritt 5 den Showroom wählst.', 'Die Fotos sind bei AutoScales. Bearbeitet werden sie, sobald Sie in Schritt 5 den Showroom wählen.') : haltWarte ? T('Die Fotos sind hochgeladen. Sie gehen an AutoScales, sobald du in Schritt 5 den Showroom wählst. Danach aktualisiert sich diese Seite selbst.', 'Die Fotos sind hochgeladen. Sie gehen an AutoScales, sobald Sie in Schritt 5 den Showroom wählen. Danach aktualisiert sich diese Seite selbst.') : v.raum === 'kein' ? 'Dieses Fahrzeug ist ohne Showroom angelegt. Diese Seite aktualisiert sich selbst.' : anyOhne ? 'Einige Außenbilder wurden nur geprüft: Die Ampel zeigt das Ergebnis am Originalfoto, ein Showroom-Bild entsteht dabei nicht. Innenbilder bleiben Original. Diese Seite aktualisiert sich selbst.' : S.noteStd; if (nG.textContent !== nt) nG.textContent = nt; }
@@ -2739,7 +2781,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     $('zBack').onclick = function () { leaveStage().then(showGallery); };
   };
   function newVehicle() {
-    if (S.queue.length && !IDB.ok && !confirm('Es werden noch Fotos hochgeladen. Trotzdem beenden? Nicht hochgeladene Fotos gehen verloren.')) return;
+    if (S.queue.length && (!IDB.ok || S.queue.some(function (q) { return q.unsicher; })) && !confirm('Es werden noch Fotos hochgeladen. Trotzdem beenden? Nicht hochgeladene Fotos gehen verloren.')) return;
     resetVehicle(); showStart();
   }
   $('gNew').onclick = function () { if (S.vehicle && !S.vehicle.abgesendet) zeigeSchritt(S.vehicle.preisGesehen ? 'pruefen' : 'preis'); else newVehicle(); };
@@ -2754,7 +2796,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if ($('pGallery').hidden || !S.vehicle) return;
     syncFlag();
     try {
-      var list = await S.api.status(S.vehicle.id);
+      var vid = S.vehicle.id, list = await S.api.status(vid);
+      if (!S.vehicle || S.vehicle.id !== vid) return;   // inzwischen ein anderes Fahrzeug
+      var vz = S.vehicle; if (vz.raumOffen && !vz.raumZu && (list || []).some(function (r) { return r.platz !== 'fahrzeugschein' && r.status && r.status !== 'wartet_raum'; })) { vz.raumZu = true; saveSession(); }   // Server hat den Raum geschlossen (Frist): Raumwahl nicht mehr anbieten (Befund A1)
       (list || []).forEach(function (r) {
         var id = r.platz === 'zusatz' ? 'zusatz' + r.zusatz_nr : r.platz, s = slotState(id);
         if (s.state === 'sendet' || s.state === 'wartet') return;
@@ -2783,7 +2827,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     var j; try { j = await S.api.zugangInfo(); } catch (e) { return; }   // ohne Netz gilt die zuletzt gespeicherte Vorgabe
     if (!j) return;
     if (j.ok) {
-      S.cfg.name = j.name || ''; S.cfg.raumVorgabe = j.raum_vorgabe || null; store('fa_cfg', S.cfg); zugangZeigen();
+      S.cfg.name = j.name || ''; S.cfg.raumVorgabe = j.raum_vorgabe || null; S.cfg.zugangDa = true; store('fa_cfg', S.cfg); zugangZeigen();
       return;
     }
     var n = $('modeNote'); n.className = 'note bad'; n.textContent = zugangText(j.fehler, j.warten_s);
@@ -2896,6 +2940,19 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (!S.vehicle) { showStart(); return; }
     S.schritt = name; S.vehicle.schritt = name; saveSession();
     $('pSchritt').innerHTML = schrittHtml(name); showPage('pSchritt');
+    if (name === 'preis' && S.vehicle.raumOffen && !S.vehicle.raumZu && !S.vehicle.raumFest && !S.demo) raumNochOffen(S.vehicle);
+  }
+  /* Schritt 5 (Befund A1): beim Server nachfragen, ob der Raum noch offen ist. Hat die Frist (raum_frist) die Fotos schon freigegeben, antwortet fahrzeug_raum_offen
+     „schon_fotos“; dann zeigt Schritt 5 den festen Raum statt einer Wahl, die nichts mehr bewirkt. Ohne Antwort (Netz) bleibt die Anzeige, wie sie ist. */
+  async function raumNochOffen(v) {
+    if (!S.api || !S.api.raumOffen) return;
+    try { await withTimeout(S.api.raumOffen(v.id), 6000); }
+    catch (e) { if (e && e.fehler === 'schon_fotos' && S.vehicle === v && !v.raumFest) { v.raumZu = true; v.raumWahl = v.raum; saveSession(); if (S.schritt === 'preis' && !$('pSchritt').hidden) preisNeuZeichnen(); } }
+  }
+  function preisNeuZeichnen() {   // Schritt 5 neu zeichnen, Eingaben behalten
+    var pv = $('sPreis') ? $('sPreis').value : null, an0 = ['mwst_ausweisbar', 'verhandlungsbasis'].filter(schrittAn), y = window.scrollY;
+    $('pSchritt').innerHTML = schrittHtml('preis'); if (pv != null && $('sPreis')) $('sPreis').value = pv;
+    an0.forEach(function (x) { var c = $('pSchritt').querySelector('[data-k="' + x + '"]'); if (c) c.setAttribute('aria-pressed', 'true'); }); window.scrollTo(0, y);
   }
   function schrittNeu() { if (!$('pSchritt').hidden && S.vehicle && /^(pruefen|gesendet)$/.test(S.schritt)) $('pSchritt').innerHTML = schrittHtml(S.schritt); }   // Stand der Fotos nachziehen
   async function scheinFoto(f) {
@@ -2949,7 +3006,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     if (n === 'preis') {   // Raum immer festhalten (auch bei „später“): erst dieser Auftrag, dann werden die gehaltenen Fotos gemeldet
       if (raumWaehlbar(v) || S.demo) { var rw = v.raumWahl || v.raum || raumVorgabe(); v.raum = rw; v.raumFest = true; if (v.raumOffen) auftrag({ art: 'raum', id: v.id, raum: rw });   // 16 b: fahrzeug_raum setzt den Raum und gibt die geparkten Fotos frei
         else { auftrag({ art: 'daten', id: v.id, p: { raum: rw }, freigabe: v.id }); if (v.raumOffenUnklar) auftrag({ art: 'raum', id: v.id, raum: rw, still: true }); } }
-      else v.raumFest = true;   // schon gemeldet: der Raum vom Anlegen gilt
+      else { if (!S.demo && $('pSchritt').querySelector('[data-raum]') && v.raumWahl && v.raumWahl !== v.raum) toast(T('Der Showroom steht inzwischen fest (' + raumName(v.raum) + '): Die Fotos waren schon bei AutoScales.', 'Der Showroom steht inzwischen fest (' + raumName(v.raum) + '): Die Fotos waren schon bei AutoScales.'), 6000); v.raumWahl = v.raum; v.raumFest = true; }   // schon gemeldet: der Raum vom Anlegen gilt (Befund A14: sagen, wenn die angezeigte Wahl nicht mehr gilt)
     }
     if (p) { Object.keys(p).forEach(function (k) { if (k !== 'weitere') d[k] = p[k]; }); auftrag({ art: 'daten', id: v.id, p: p }); }
     if (n === 'preis') v.preisGesehen = true;
@@ -3003,16 +3060,35 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
   function saveSession() {
     if (!S.vehicle) return;
     var sl = {}; Object.keys(S.slots).forEach(function (k) { var s = S.slots[k]; if (s.state === 'hochgeladen') sl[k] = { zusatz_art: s.zusatz_art, ampelHandy: s.ampelHandy }; });
-    store('fa_veh', { vehicle: S.vehicle, slots: sl });
+    store('fa_veh', { vehicle: S.vehicle, slots: sl }); vehLokal({ vehicle: S.vehicle, slots: sl });
   }
-  function resetVehicle() { var alt = S.vehicle || ((load('fa_veh') || {}).vehicle); if (alt && alt.id) raumFrei(alt.id); S.vehicle = null; S.slots = {}; S.camChoice = null; S.klasse = null; S.schritt = null; store('fa_veh', null); clearTimeout(S.pollTimer); buildKar(); }
+  /* Laufendes Fahrzeug zusätzlich im localStorage (Befund A3, 23.11.2026): sessionStorage endet mit dem Tab. Wird der Tab geschlossen oder die App vom Home-Bildschirm
+     weggewischt, bietet die App beim nächsten Öffnen „Weitermachen“ an. Übernommen wird es nur, wenn kein offener Tab es führt (Lebenszeichen älter als 8 s), es höchstens
+     24 h alt und nicht abgesendet ist und zu Server und Zugang des Links passt (gespeichert wird nur die Kennung des Zugangs, nie das Zugangswort). */
+  var VEH_LOKAL_MS = 24 * 3600 * 1000, VEH_HB_MS = 8000;
+  function zugangKennung() { return S.cfg && S.cfg.zugang ? String(S.cfg.zugang).split('-')[0] : ''; }
+  function vehLokal(rs) { if (S.demo || !S.cfg || !S.cfg.url || !rs.vehicle) return; lsStore('fa_veh_l', rs.vehicle.abgesendet ? null : { rs: rs, t: Date.now(), hb: Date.now(), u: S.cfg.url, z: zugangKennung() }); }
+  function vehLokalHolen() {
+    if (S.demo || !S.cfg || S.cfg.bad || !S.cfg.url || load('fa_veh')) return;
+    var m = lsLoad('fa_veh_l'), now = Date.now();
+    if (!m || !m.rs || !m.rs.vehicle || m.rs.vehicle.abgesendet || now - (m.rs.vehicle.angelegt || m.t) > VEH_LOKAL_MS || now - (m.hb || 0) < VEH_HB_MS || m.u !== S.cfg.url || m.z !== zugangKennung()) return;
+    store('fa_veh', m.rs);
+  }
+  function vehLokalWeg(id) { var m = lsLoad('fa_veh_l'); if (m && m.rs && m.rs.vehicle && m.rs.vehicle.id === id) lsStore('fa_veh_l', null); }
+  setInterval(function () { if (document.visibilityState !== 'visible' || !S.vehicle) return; var m = lsLoad('fa_veh_l'); if (m && m.rs && m.rs.vehicle && m.rs.vehicle.id === S.vehicle.id) { m.hb = Date.now(); lsStore('fa_veh_l', m); } }, 3000);   // Lebenszeichen dieses Tabs
+  function resetVehicle() { var alt = S.vehicle || ((load('fa_veh') || {}).vehicle); if (alt && alt.id) { raumFrei(alt.id); vehLokalWeg(alt.id); } S.vehicle = null; S.slots = {}; S.camChoice = null; S.klasse = null; S.schritt = null; store('fa_veh', null); clearTimeout(S.pollTimer); buildKar(); }
   $('resumeYes').onclick = function () {
-    var rs = load('fa_veh'); if (!rs) return;
+    var rs = load('fa_veh'); if (!rs || S.resumeLaeuft) return;
     sensorsNachholen();   // Erlaubnis für den Bewegungssensor schon hier nachholen (nach dem Neuladen nötig)
-    S.vehicle = rs.vehicle; S.slots = {};
-    Object.keys(rs.slots || {}).forEach(function (k) { var s = slotState(k); s.state = 'hochgeladen'; s.zusatz_art = rs.slots[k].zusatz_art; s.ampelHandy = rs.slots[k].ampelHandy; });
-    markRestored();
-    if (/^(daten|zustand|schein|preis|pruefen|gesendet)$/.test(S.vehicle.schritt || '')) zeigeSchritt(S.vehicle.schritt); else showGallery();
+    S.resumeLaeuft = true;
+    var weiter = function () {   // erst, wenn die Warteschlange aus dem Gerätespeicher geladen ist, sonst fehlen wartende Fotos in der Galerie (Befund A8)
+      S.resumeLaeuft = false; if (S.vehicle) return;
+      S.vehicle = rs.vehicle; S.slots = {};
+      Object.keys(rs.slots || {}).forEach(function (k) { var s = slotState(k); s.state = 'hochgeladen'; s.zusatz_art = rs.slots[k].zusatz_art; s.ampelHandy = rs.slots[k].ampelHandy; });
+      markRestored(); saveSession();
+      if (/^(daten|zustand|schein|preis|pruefen|gesendet)$/.test(S.vehicle.schritt || '')) zeigeSchritt(S.vehicle.schritt); else showGallery();
+    };
+    Promise.resolve(S.restoreP).then(weiter, weiter);
   };
   $('resumeNo').onclick = function () { resetVehicle(); $('resumeBox').hidden = true; };
 
@@ -3029,23 +3105,26 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
       // 1) Bewegungssensor: Erlaubnis muss direkt aus dem Tipp heraus gefragt werden
       fmsg('Bewegungssensor … bitte „Erlauben“ tippen');
       var perm = await sensorsPermission();
-      // 2) Fahrzeug anlegen
-      fmsg('Fahrzeug wird angelegt …');
-      var v = { id: uuid(), marke: marke, modell: modell, baujahr: bj, karosserie: DBKAR[S.klasse] || null, klasse: S.klasse, raum: raumVorgabe() };   // Raum: erst die Vorgabe, gewählt wird in Schritt 5 (Fotos werden bis dahin nur hochgeladen, nicht gemeldet)
-      var fe = null;
-      for (var vers = 0; vers < 2; vers++) { try { await S.api.createVehicle(v); fe = null; break; } catch (e) { fe = e; if (e.fehler !== 'id_vergeben') break; v.id = uuid(); } }   // id_vergeben: neue ID, einmal
-      if (fe) {
-        fmsg(fe.fehler ? zugangText(fe.fehler, fe.info && fe.info.warten_s) : fe.net ? 'Keine Verbindung zum Server. Bitte Netz prüfen und nochmal tippen.' : (fe.status === 403 || fe.status === 401 ? 'Zugang verweigert. Der Link ist ungültig oder abgelaufen.' : fe.status === 404 ? (zugangNeu(S.cfg.zugang) ? 'Der Server kennt diese App-Fassung noch nicht (der Zugang je Händler fehlt in der Datenbank). Bitte AutoScales Bescheid geben.' : 'Der Server kennt diese App-Fassung noch nicht (die Raumwahl fehlt in der Datenbank). Bitte AutoScales Bescheid geben.') : 'Der Server hat das Fahrzeug nicht angenommen: ' + fe.message), true);
-        $('fGo').disabled = false; return;
-      }
-      aiLoad();   // Auto-Erkennung im Hintergrund laden, ab hier
-      // 3) Kamera-Erlaubnis
+      // 2) Kamera-Erlaubnis vor dem Anlegen: wird sie abgelehnt, entsteht beim Server kein leeres Fahrzeug (Fehlersuche B 23.11.2026, Befund 1)
       fmsg('Kamera … bitte „Erlauben“ tippen');
       try { if (!(S.cfg && S.cfg.sim)) await camPermission(); }
       catch (e) {
         fmsg((e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) ? T('Die Kamera wurde nicht erlaubt. Erlaube sie in den Einstellungen des Browsers für diese Seite und lade die Seite neu.', 'Die Kamera wurde nicht erlaubt. Erlauben Sie sie in den Einstellungen des Browsers für diese Seite und laden Sie die Seite neu.') : 'Die Kamera startet auf diesem Handy nicht. (' + errText(e) + ')', true);
         $('fGo').disabled = false; return;
       }
+      // 3) Fahrzeug anlegen. Nach einem Netzabbruch nimmt der nächste Tipp dieselbe ID (der Server antwortet „doppelt“, kein zweites Fahrzeug; Befund A13).
+      fmsg('Fahrzeug wird angelegt …');
+      var vkey = [marke, modell, bj, S.klasse, S.cfg && S.cfg.url].join('|'), vorgabeOffen = !!(S.api && S.api.real && S.cfg && zugangNeu(S.cfg.zugang) && !S.cfg.zugangDa);   // Vorgabe des Zugangs unbekannt (zugang_info ohne Netz): der Server setzt sie
+      var v = { id: S.anlegeId && S.anlegeId.key === vkey ? S.anlegeId.id : uuid(), marke: marke, modell: modell, baujahr: bj, karosserie: DBKAR[S.klasse] || null, klasse: S.klasse, raum: vorgabeOffen ? null : raumVorgabe() };   // Raum: erst die Vorgabe, gewählt wird in Schritt 5 (Fotos werden bis dahin nur hochgeladen, nicht gemeldet)
+      var fe = null;
+      var cj = null; for (var vers = 0; vers < 2; vers++) { S.anlegeId = { id: v.id, key: vkey }; try { cj = await S.api.createVehicle(v); fe = null; break; } catch (e) { fe = e; if (e.fehler !== 'id_vergeben') break; v.id = uuid(); } }   // id_vergeben: neue ID, einmal
+      if (fe) {
+        if (fe.fehler || permanent(fe)) S.anlegeId = null;
+        fmsg(fe.fehler ? zugangText(fe.fehler, fe.info && fe.info.warten_s) : fe.net ? 'Keine Verbindung zum Server. Bitte Netz prüfen und nochmal tippen.' : (fe.status === 403 || fe.status === 401 ? 'Zugang verweigert. Der Link ist ungültig oder abgelaufen.' : fe.status === 404 ? (zugangNeu(S.cfg.zugang) ? 'Der Server kennt diese App-Fassung noch nicht (der Zugang je Händler fehlt in der Datenbank). Bitte AutoScales Bescheid geben.' : 'Der Server kennt diese App-Fassung noch nicht (die Raumwahl fehlt in der Datenbank). Bitte AutoScales Bescheid geben.') : 'Der Server hat das Fahrzeug nicht angenommen: ' + fe.message), true);
+        $('fGo').disabled = false; return;
+      }
+      S.anlegeId = null; if (!v.raum) v.raum = (cj && /^(rund|holz|kein)$/.test(cj.raum || '') ? cj.raum : null) || raumVorgabe();
+      aiLoad();   // Auto-Erkennung im Hintergrund laden, ab hier
       var altV = (load('fa_veh') || {}).vehicle; if (altV && altV.id && altV.id !== v.id) raumFrei(altV.id);   // Formular trotz „Weitermachen“-Box: voriges Fahrzeug freigeben (Prüfbefund 2)
       v.raumAnlage = v.raum; v.angelegt = Date.now();
       // Fassung 16 b: Hält der Server den Raum offen (SQL „Raum offen“), meldet die App jedes Foto sofort und der Server parkt die Fahrzeugfotos bis zur Raumwahl.
@@ -3161,8 +3240,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
     initSettings();
     if (S.cfg && S.cfg.ai === 'aus') $('aiTip').hidden = true;
     buildKar(); applyTheme();
+    vehLokalHolen();   // Tab geschlossen oder App weggewischt: das laufende Fahrzeug aus dem localStorage (Befund A3)
     showStart();
-    restoreQueue();
+    S.restoreP = restoreQueue();
     auftraegeSenden();
   }
   function initSettings() {
