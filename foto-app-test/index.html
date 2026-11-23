@@ -239,8 +239,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .gt.empty { border: 1.5px dashed var(--t2); }
 .gt.cur { box-shadow: 0 0 0 2px var(--acc); border-color: transparent; }
 .gt svg { width: 62%; height: 62%; opacity: .8; }
-.gt .ic { display: grid; place-items: center; width: 100%; height: 100%; }
-.gt svg.lp { width: 100%; height: 100%; opacity: .9; } .tile .im svg.lp { width: 64%; height: 92%; opacity: .9; }   /* leerer Außenplatz: kleiner Lageplan (wo man steht) */
+.gt .ic { position: absolute; inset: 0; display: grid; place-items: center; }   /* feste Fläche der Kachel: sonst wächst ein Bild über die Kachel hinaus (breite Leiste am Faltgerät) */
+.gt svg.lp { width: 100%; height: 100%; opacity: .9; } .tile .im svg.lp { position: absolute; left: 18%; top: 4%; width: 64%; height: 92%; opacity: .9; }   /* leerer Außenplatz: kleiner Lageplan (wo man steht) */
 .bd { position: absolute; right: 2px; bottom: 2px; width: 13px; height: 13px; border-radius: 50%; display: grid; place-items: center; font: 700 9px/1 var(--font-body); color: #fff; border: 1px solid rgba(255,255,255,.75); background: #0B0C10; }
 .bd.sent { background: #1E7B45; } .bd.work { background: #FFC77C; animation: pu 1.4s ease-in-out infinite; } .bd.bad { background: #B3261E; } .bd.warn { background: #C98A00; }
 .bd.send { background: #0B0C10; } .bd.send::after { content: ""; width: 6px; height: 6px; border-radius: 50%; border: 1.6px solid #FFC77C; border-right-color: transparent; animation: spin 1s linear infinite; }
@@ -639,7 +639,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   // Pflicht: 6 außen + 4 innen (Cockpit, Tacho, Vordersitze, Rücksitzbank). Freiwillig: Seite Fahrerseite und Beifahrerseite (SEITEN) und Kofferraum (INNEN_FREI).
   // Rücksitzbank: bei allen Autos Pflicht; ein Zweisitzer meldet sich mit dem Knopf „Kein Rücksitz“ (dann 9 Bilder). Schlüssel wie im Schema `plaetze` (titel = dreiviertel_vl).
   // Tipp je Platz (aufklappbar an der Platz-Anzeige, standardmäßig zu): kurz, ohne Abstand und Höhe. hint ist ein Text oder ein Paar [du, sie].
-  var INNEN_FREI_TXT = ['So, wie es für dich gut aussieht. ', 'So, wie es für Sie gut aussieht. '];
+  // Der Block von „var PLAETZE“ bis vor „function ohneRueck“ wird vom Vertragstest (vertrag_schema.mjs) für sich ausgeführt: nur Daten, keine Bezüge nach außen.
   var PLAETZE = [
     { key: 'titel', nr: 1, art: 'aussen', name: 'Dreiviertel vorn Fahrerseite', sub: 'Titelbild', hint: 'Schräg von vorn, Fahrerseite. Das ganze Auto im Bild, mit etwas Rand. Niemand im Auto.' },
     { key: 'front', nr: 2, art: 'aussen', name: 'Front', hint: 'Von vorn. Das ganze Auto im Bild, mit etwas Rand. Niemand im Auto.' },
@@ -647,13 +647,13 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     { key: 'dreiviertel_hr', nr: 4, art: 'aussen', name: 'Dreiviertel hinten Beifahrerseite', hint: 'Schräg von hinten, Beifahrerseite. Das ganze Auto im Bild, mit etwas Rand. Niemand im Auto.' },
     { key: 'heck', nr: 5, art: 'aussen', name: 'Heck', hint: 'Von hinten. Das ganze Auto im Bild, mit etwas Rand. Niemand im Auto.' },
     { key: 'dreiviertel_hl', nr: 6, art: 'aussen', name: 'Dreiviertel hinten Fahrerseite', hint: 'Schräg von hinten, Fahrerseite. Das ganze Auto im Bild, mit etwas Rand. Niemand im Auto.' },
-    { key: 'cockpit', nr: 7, art: 'innen', name: 'Cockpit', hint: [INNEN_FREI_TXT[0] + 'Lenkrad und Armaturenbrett im Bild, Zündung an.', INNEN_FREI_TXT[1] + 'Lenkrad und Armaturenbrett im Bild, Zündung an.'] },
-    { key: 'tacho', nr: 8, art: 'innen', name: 'Tacho', hint: [INNEN_FREI_TXT[0] + 'Kilometerstand gut lesbar, Zündung an.', INNEN_FREI_TXT[1] + 'Kilometerstand gut lesbar, Zündung an.'] },
-    { key: 'vordersitze', nr: 9, art: 'innen', name: 'Vordersitze', hint: [INNEN_FREI_TXT[0] + 'Beide Vordersitze im Bild.', INNEN_FREI_TXT[1] + 'Beide Vordersitze im Bild.'] },
-    { key: 'ruecksitzbank', nr: 10, art: 'innen', name: 'Rücksitzbank', hint: [INNEN_FREI_TXT[0] + 'Die ganze Rücksitzbank im Bild.', INNEN_FREI_TXT[1] + 'Die ganze Rücksitzbank im Bild.'] }
+    { key: 'cockpit', nr: 7, art: 'innen', name: 'Cockpit', hint: ['So, wie es für dich gut aussieht. Lenkrad und Armaturenbrett im Bild, Zündung an.', 'So, wie es für Sie gut aussieht. Lenkrad und Armaturenbrett im Bild, Zündung an.'] },
+    { key: 'tacho', nr: 8, art: 'innen', name: 'Tacho', hint: ['So, wie es für dich gut aussieht. Kilometerstand gut lesbar, Zündung an.', 'So, wie es für Sie gut aussieht. Kilometerstand gut lesbar, Zündung an.'] },
+    { key: 'vordersitze', nr: 9, art: 'innen', name: 'Vordersitze', hint: ['So, wie es für dich gut aussieht. Beide Vordersitze im Bild.', 'So, wie es für Sie gut aussieht. Beide Vordersitze im Bild.'] },
+    { key: 'ruecksitzbank', nr: 10, art: 'innen', name: 'Rücksitzbank', hint: ['So, wie es für dich gut aussieht. Die ganze Rücksitzbank im Bild.', 'So, wie es für Sie gut aussieht. Die ganze Rücksitzbank im Bild.'] }
   ];
   var INNEN_FREI = [
-    { key: 'kofferraum', name: 'Kofferraum', hint: ['Freiwillig. ' + INNEN_FREI_TXT[0] + 'Kofferraum offen, Ladefläche frei.', 'Freiwillig. ' + INNEN_FREI_TXT[1] + 'Kofferraum offen, Ladefläche frei.'] }
+    { key: 'kofferraum', name: 'Kofferraum', hint: ['Freiwillig. So, wie es für dich gut aussieht. Kofferraum offen, Ladefläche frei.', 'Freiwillig. So, wie es für Sie gut aussieht. Kofferraum offen, Ladefläche frei.'] }
   ];
   // Rücksitzbank: bei allen Autos Pflicht (Giannis 08.11.2026). Hat ein Auto keine (Zweisitzer), meldet der Händler das mit dem Knopf „Kein Rücksitz“; dann gelten 9 Bilder als vollständig.
   var SEITEN = [
@@ -1253,7 +1253,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       if (E.stand === 'erkannt') {
         box = E.box; var B = autoBefund(box, o.w, o.key);
         zahlen.box = [r3(box.x0), r3(box.y0), r3(box.x1), r3(box.y1)]; zahlen.score = Math.round(box.score * 100) / 100; zahlen.breite_px = B.breitePx; zahlen.soll_px = B.sollPx;
-        if (B.an.length) zeile('warn', 'angeschnitten', 'Auto ist ' + B.an.join(' und ') + ' angeschnitten. Bitte mit etwas mehr Abstand neu aufnehmen. „Trotzdem nehmen“ kann beim Einsetzen abgelehnt werden.');
+        if (B.an.length) zeile('warn', 'angeschnitten', 'Auto ist ' + B.an.join(' und ') + ' angeschnitten. Bitte mit etwas mehr Abstand neu aufnehmen. Sonst kann das Foto abgelehnt werden.');   // der Arbeiter lehnt ein Foto ab, wenn das Auto den Rand berührt (unter 0,4 %)
         else if (B.klein) zeile('warn', 'auto_klein', 'Auto ist klein im Bild. Bitte näher ran.');
       } else zeile('info', E.stand === 'kein' ? 'kein_auto' : E.stand === 'zeit' ? 'erkennung_zeit' : 'erkennung_fehlt', 'Auto nicht erkannt, bitte selbst prüfen.');
     }
@@ -2491,7 +2491,8 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     if (!r || !r.blob || !S.vehicle || r.id !== S.vehicle.id || scheinUrl() || !hasPhoto('fahrzeugschein')) return;
     S.schein = { id: r.id, url: URL.createObjectURL(r.blob) }; scheinNeuZeichnen();
   }
-  /* Großansicht: das Bild über die ganze Seite. Tippen aufs Bild vergrößert in Stufen (1, 2, 3, dann wieder 1), verschoben wird mit dem Finger; Schließen oben rechts oder Esc. */
+  /* Großansicht: das Bild über die ganze Seite. Tippen aufs Bild vergrößert in Stufen (1, 2, 3, dann wieder 1), verschoben wird mit dem Finger;
+     Schließen oben rechts, mit einem Tipp neben das Bild oder mit Esc. */
   function grossAuf(url, alt) {
     if (!url) return; var g = $('gross'), im = $('grossImg');
     im.src = url; im.alt = alt || ''; g.setAttribute('data-z', '1'); $('grossTipp').hidden = false; g.hidden = false;
@@ -2499,6 +2500,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   }
   function grossZu() { var g = $('gross'); if (!g || g.hidden) return; g.hidden = true; $('grossImg').removeAttribute('src'); document.body.style.overflow = S.grossVorher || ''; }
   $('grossX').onclick = grossZu;
+  $('grossSc').onclick = function (ev) { if (ev.target === $('grossSc')) grossZu(); };   // Tipp neben das Bild schließt
   $('grossImg').onclick = function (ev) {
     var g = $('gross'), sc = $('grossSc'), im = $('grossImg'), z = +g.getAttribute('data-z') || 1, r = im.getBoundingClientRect(), fx = r.width ? (ev.clientX - r.left) / r.width : .5, fy = r.height ? (ev.clientY - r.top) / r.height : .5;
     g.setAttribute('data-z', String(z >= 3 ? 1 : z + 1)); $('grossTipp').hidden = true;
