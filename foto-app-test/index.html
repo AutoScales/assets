@@ -1219,8 +1219,11 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       AI.det = await window.Vision.ObjectDetector.createFromOptions(fs, { baseOptions: { modelAssetPath: 'ai/efficientdet_lite0.tflite', delegate: 'CPU' }, runningMode: 'IMAGE', scoreThreshold: AI.SCORE_MIN, maxResults: 6, categoryAllowlist: ['car', 'truck'] });
       try { var wc = document.createElement('canvas'); wc.width = 320; wc.height = 240; wc.getContext('2d').fillRect(0, 0, 320, 240); AI.det.detect(wc); } catch (e) { /* Aufwärmlauf: der erste Lauf baut den Rechenweg auf und soll nicht das erste Foto treffen */ }
       AI.state = 'bereit'; AI.loadMs = Math.round(performance.now() - t0);
-    } catch (e) { AI.state = 'fehler'; AI.err = errText(e).slice(0, 120); AI.det = null; }
+    } catch (e) { AI.state = 'fehler'; AI.err = errText(e).slice(0, 120); AI.det = null; AI.ladeFehler = true; }
   }
+  // Lud das Modell nicht (z. B. kein Netz beim Anlegen in der Tiefgarage), versucht die App es wieder, sobald das Netz zurück ist und beim nächsten Öffnen der Kamera.
+  function aiNochmal() { if (AI.state === 'fehler' && AI.ladeFehler) { AI.ladeFehler = false; AI.state = 'aus'; AI.err = null; if (S.vehicle) aiLoad(); } }
+  window.addEventListener('online', aiNochmal);
   // Ein Lauf am Prüfbild. Ergebnis: stand 'erkannt' (mit box als Anteile des Fotos) | 'kein' | 'fehlt' (Modell nicht bereit) | 'zeit' (Zeitgrenze gerissen); ms: Dauer des Laufs
   function autoErkennen(cv) {
     if (AI.state !== 'bereit' || !AI.det) return { stand: 'fehlt', warum: AI.state === 'laedt' ? 'laedt' : (AI.err || AI.state) };
@@ -1509,7 +1512,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     $('stage').hidden = false; document.body.style.overflow = 'hidden';
     paneShow('vCam', false); paneShow('vRev', false); paneShow('vBet', false); paneShow('vTurn', false);
     sensorsAttach(); updateLayout(); applyGeom();
-    keepAwake(); aiLoad();
+    keepAwake(); aiNochmal(); aiLoad();
   }
   async function leaveStage() {
     S.token++; S.phase = ''; closeStream(); sensorsDetach();
