@@ -365,7 +365,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     <div><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="24" height="14" rx="3"/><circle cx="14" cy="14" r="4"/></svg><span><b>6 Außenbilder</b> einmal ums Auto (4 × schräg, Front, Heck), dann <b>4 innen</b> (mit Rücksitzbank). Seiten und Kofferraum sind freiwillig.</span></div>
     <div><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="22" height="10" rx="2.5"/><path d="M8 14h.01"/></svg><span data-du="Handy <b>quer</b>, Kamera <b>1x</b>. Fotografiere <b>frei</b>, so wie es für dich gut aussieht." data-sie="Handy <b>quer</b>, Kamera <b>1x</b>. Fotografieren Sie <b>frei</b>, so wie es für Sie gut aussieht.">Handy <b>quer</b>, Kamera <b>1x</b>. Fotografiere <b>frei</b>, so wie es für dich gut aussieht.</span></div>
     <div><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="9" r="4"/><path d="M6 23c0-4.5 3.5-7 8-7s8 2.5 8 7"/><path d="M4 4l20 20"/></svg><span>Das <b>ganze Auto</b> im Bild, mit etwas Rand. <b>Niemand im Auto</b>, auch nicht auf den Sitzen.</span></div>
-    <div><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="14" r="10"/><path d="M9 14.5l3.4 3.4L19 11"/></svg><span>Nach jedem Foto <b>prüft die App</b>, ob es passt.</span></div>
+    <div><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="14" r="10"/><path d="M9 14.5l3.4 3.4L19 11"/></svg><span>Am besten bei <b>gutem Licht</b> fotografieren. Nach jedem Foto <b>prüft die App</b>, ob es passt.</span></div>
   </div>
   <p class="hs-tip" id="aiTip" data-du="<b>Foto-Prüfung:</b> Beim Anlegen lädt die App einmalig rund 20 MB im Hintergrund (der Browser merkt sich das). Nach dem Auslösen prüft sie das Foto auf dem Gerät: Ist das ganze Auto im Bild, ist das Foto scharf und hell genug? Das Foto bleibt dabei auf dem Gerät. Ohne Erkennung prüfst du das Foto selbst." data-sie="<b>Foto-Prüfung:</b> Beim Anlegen lädt die App einmalig rund 20 MB im Hintergrund (der Browser merkt sich das). Nach dem Auslösen prüft sie das Foto auf dem Gerät: Ist das ganze Auto im Bild, ist das Foto scharf und hell genug? Das Foto bleibt dabei auf dem Gerät. Ohne Erkennung prüfen Sie das Foto selbst."></p>
   <details class="more">
@@ -1262,7 +1262,8 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       zahlen.licht = { bild: r3(L.bild), spitze: r3(L.spitze), hell: r3(L.hell), rot: r3(L.rot), weiss: L.weiss == null ? null : Math.round(L.weiss * 10000) / 10000, hell_lack: r3(L.hellLack) };
       if (aussen && box) lackMerken(o.key, L.rot);
       if (aussen && box && lichtAn(L, o.key, lackRot())) zeile('warn', 'licht_an', 'Bitte Licht am Auto ausschalten.');
-      if (lichtDunkel(L, aussen)) zeile('warn', 'zu_dunkel', 'Foto ist sehr dunkel.');
+      // Giannis 23.11.2026 14:25: „Wir werden den Händler natürlich dazu anreizen, bei bestmöglichem Licht zu fotografieren“: ein Hinweis, keine Sperre („Trotzdem nehmen“ bleibt)
+      if (lichtDunkel(L, aussen)) zeile('warn', 'zu_dunkel', 'Foto ist sehr dunkel. Bei gutem Licht wird das Ergebnis deutlich besser.');
     }
     var Sm = null; try { Sm = schaerfeMessen(kl); } catch (e) { Sm = null; }
     if (Sm) { zahlen.schaerfe = Math.round(Sm.wert * 1000) / 1000; zahlen.laplace = Math.round(Sm.laplace); zahlen.kontrast = Math.round(Sm.streuung * 10) / 10; if (Sm.wert < PRUEF.unscharf) zeile('warn', 'unscharf', 'Foto ist unscharf. Bitte ruhig halten und neu aufnehmen.'); }
@@ -1587,7 +1588,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   }
 
   async function runShot() {
-    var my = ++S.token, m = slotMeta(S.cur);
+    var my = ++S.token, tStart = performance.now();
     S.phase = 'start'; S.review = null;
     paneShow('vRev', false); paneShow('vBet', false);
     try {
@@ -1613,7 +1614,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       // 4) Auslösen von Hand: Der Auslöser ist frei, sobald das Livebild läuft. Kein Warten auf Sensor, Ruhe oder Erkennung (freie Kamera, Fassung 17).
       //    Nach dem Tipp wartet afterTap() unsichtbar und kurz, bis das Handy wieder ruhig ist (der Tipp wackelt).
       S.phase = 'still';
-      var tFrei = performance.now(), frei = Math.round(tFrei - S.streamOpenedAt);
+      var tFrei = performance.now(), frei = Math.round(tFrei - tStart);   // frei_nach_ms: vom Öffnen des Suchers für diesen Platz bis zum freien Auslöser (Querhaltung, Kamerastart, Einschwingen)
       $('shotBtn').disabled = false;
       var tTipp = await warteAufTipp(my);
       $('shotBtn').disabled = true;
