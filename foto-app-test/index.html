@@ -273,6 +273,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .rv-btns.warn { grid-template-columns: 52px 1fr; } .rv-btns.warn #revNeu { grid-column: 1 / -1; }
 /* Andockstelle für den Icon-Satz (Paket B): <svg class="ic"><use href="#ic-NAME"/></svg>, Linien in der Textfarbe; siehe icon() */
 svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; vertical-align: -0.22em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* Symbol eines Platzes ohne Foto: in der Bildleiste, in der Galerie und im Prüfen-Schritt immer auf der dunklen Bildkarte */
+.gt svg.ic { width: 68%; height: 68%; opacity: 1; } .tile .im svg.ic { width: 40%; height: 60%; opacity: 1; }
+.v10 .kachel svg.ic { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; box-sizing: border-box; padding: 8% 32%; background: var(--il-bg); color: var(--il-line); }
 /* Neue Schritte im Look der Designvorlage V10 (Entwurf 3, c01be09; Giannis 19.11.2026 „Design V10, nehmen wir A“).
    Start, Sucher und Galerie folgen seit Testfassung 14 demselben Look über die Token oben. */
 .v10 { --p-bg: #FAFAFA; --p-fg: #0B0C10; --p-mut: #5C626D; --p-line: #DCDDE2; --p-panel: #FFFFFF; --gold: #FFC77C; --v-bad: #B3261E;
@@ -478,7 +481,31 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
 <!-- ICON-SATZ (Andockstelle Paket B): Hier kommen die Symbole hin, je eines als <symbol id="ic-NAME" viewBox="0 0 24 24">…</symbol>.
      Gibt es ein Symbol, setzt die App es von selbst ein (siehe icon() und iconsSetzen() im Skript); ohne Symbol bleibt die Stelle, wie sie ist.
      Namen: schliessen, neu, drehen, passt, trotzdem, tipp, lupe und je Platz platz-<schlüssel> (z. B. platz-titel, platz-cockpit, platz-seite_l). -->
-<svg id="icons" width="0" height="0" aria-hidden="true" style="position:absolute"></svg>
+<svg id="icons" width="0" height="0" aria-hidden="true" style="position:absolute">
+  <symbol id="ic-platz-titel" viewBox="0 0 24 24"><path d="M9 8.6Q9 6 12 6Q15 6 15 8.6V16Q15 18 13 18H11Q9 18 9 16Z"/><path d="M10.3 10.4Q12 9.5 13.7 10.4M10.5 15.2Q12 15.8 13.5 15.2" stroke-width="1.4"/><circle cx="4.4" cy="4.6" r="2.2" fill="var(--gold, #FFC77C)" stroke="none"/></symbol>
+  <symbol id="ic-platz-front" viewBox="0 0 24 24"><path d="M9 8.6Q9 6 12 6Q15 6 15 8.6V16Q15 18 13 18H11Q9 18 9 16Z"/><path d="M10.3 10.4Q12 9.5 13.7 10.4M10.5 15.2Q12 15.8 13.5 15.2" stroke-width="1.4"/><circle cx="12" cy="2.4" r="2.2" fill="var(--gold, #FFC77C)" stroke="none"/></symbol>
+  <symbol id="ic-platz-dreiviertel_vr" viewBox="0 0 24 24"><path d="M9 8.6Q9 6 12 6Q15 6 15 8.6V16Q15 18 13 18H11Q9 18 9 16Z"/><path d="M10.3 10.4Q12 9.5 13.7 10.4M10.5 15.2Q12 15.8 13.5 15.2" stroke-width="1.4"/><circle cx="19.6" cy="4.6" r="2.2" fill="var(--gold, #FFC77C)" stroke="none"/></symbol>
+  <symbol id="ic-platz-dreiviertel_hr" viewBox="0 0 24 24"><path d="M9 8.6Q9 6 12 6Q15 6 15 8.6V16Q15 18 13 18H11Q9 18 9 16Z"/><path d="M10.3 10.4Q12 9.5 13.7 10.4M10.5 15.2Q12 15.8 13.5 15.2" stroke-width="1.4"/><circle cx="19.6" cy="19.4" r="2.2" fill="var(--gold, #FFC77C)" stroke="none"/></symbol>
+  <symbol id="ic-platz-heck" viewBox="0 0 24 24"><path d="M9 8.6Q9 6 12 6Q15 6 15 8.6V16Q15 18 13 18H11Q9 18 9 16Z"/><path d="M10.3 10.4Q12 9.5 13.7 10.4M10.5 15.2Q12 15.8 13.5 15.2" stroke-width="1.4"/><circle cx="12" cy="21.6" r="2.2" fill="var(--gold, #FFC77C)" stroke="none"/></symbol>
+  <symbol id="ic-platz-dreiviertel_hl" viewBox="0 0 24 24"><path d="M9 8.6Q9 6 12 6Q15 6 15 8.6V16Q15 18 13 18H11Q9 18 9 16Z"/><path d="M10.3 10.4Q12 9.5 13.7 10.4M10.5 15.2Q12 15.8 13.5 15.2" stroke-width="1.4"/><circle cx="4.4" cy="19.4" r="2.2" fill="var(--gold, #FFC77C)" stroke="none"/></symbol>
+  <symbol id="ic-platz-seite_l" viewBox="0 0 24 24"><path d="M9 8.6Q9 6 12 6Q15 6 15 8.6V16Q15 18 13 18H11Q9 18 9 16Z"/><path d="M10.3 10.4Q12 9.5 13.7 10.4M10.5 15.2Q12 15.8 13.5 15.2" stroke-width="1.4"/><circle cx="3.6" cy="12" r="2.2" fill="var(--gold, #FFC77C)" stroke="none"/></symbol>
+  <symbol id="ic-platz-seite_r" viewBox="0 0 24 24"><path d="M9 8.6Q9 6 12 6Q15 6 15 8.6V16Q15 18 13 18H11Q9 18 9 16Z"/><path d="M10.3 10.4Q12 9.5 13.7 10.4M10.5 15.2Q12 15.8 13.5 15.2" stroke-width="1.4"/><circle cx="20.4" cy="12" r="2.2" fill="var(--gold, #FFC77C)" stroke="none"/></symbol>
+  <symbol id="ic-platz-seite" viewBox="0 0 24 24"><path d="M9 8.6Q9 6 12 6Q15 6 15 8.6V16Q15 18 13 18H11Q9 18 9 16Z"/><path d="M10.3 10.4Q12 9.5 13.7 10.4M10.5 15.2Q12 15.8 13.5 15.2" stroke-width="1.4"/><circle cx="3.6" cy="12" r="2.2" fill="var(--gold, #FFC77C)" stroke="none"/></symbol>
+  <symbol id="ic-platz-cockpit" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.2"/><path d="M3.8 10.6H10M14 10.6h6.2M12 14.2v6.2"/></symbol>
+  <symbol id="ic-platz-tacho" viewBox="0 0 24 24"><path d="M3.5 17a8.5 8.5 0 1 1 17 0"/><path d="M12 17l4.2-5.6"/><path d="M12 8.6v1.4M6.4 17h1.4M16.2 17h1.4" stroke-width="1.6"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="ic-platz-vordersitze" viewBox="0 0 24 24"><rect x="5.3" y="4" width="3.4" height="2.6" rx="1"/><rect x="3.8" y="8" width="6.4" height="8" rx="2"/><path d="M3.3 19.6h7.4"/><rect x="15.3" y="4" width="3.4" height="2.6" rx="1"/><rect x="13.8" y="8" width="6.4" height="8" rx="2"/><path d="M13.3 19.6h7.4"/></symbol>
+  <symbol id="ic-platz-ruecksitzbank" viewBox="0 0 24 24"><rect x="3.5" y="8.2" width="17" height="7.3" rx="2.2"/><rect x="5.4" y="4.2" width="3.2" height="2.4" rx="1"/><rect x="10.4" y="4.2" width="3.2" height="2.4" rx="1"/><rect x="15.4" y="4.2" width="3.2" height="2.4" rx="1"/><path d="M2.6 19.6h18.8M9.2 8.2v7.3M14.8 8.2v7.3" /></symbol>
+  <symbol id="ic-platz-kofferraum" viewBox="0 0 24 24"><rect x="3.5" y="8" width="17" height="11.5" rx="2.2"/><path d="M9 8V6.2A1.2 1.2 0 0 1 10.2 5h3.6A1.2 1.2 0 0 1 15 6.2V8M3.5 13.2h17"/></symbol>
+  <symbol id="ic-platz-zusatz" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M12 8.6v6.8M8.6 12h6.8"/></symbol>
+  <symbol id="ic-schliessen" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="ic-neu" viewBox="0 0 24 24"><path d="M4 8.2h2.8l1.6-2.4h7.2l1.6 2.4H20a1.2 1.2 0 0 1 1.2 1.2v8.4A1.2 1.2 0 0 1 20 19H4a1.2 1.2 0 0 1-1.2-1.2V9.4A1.2 1.2 0 0 1 4 8.2z"/><circle cx="12" cy="13.4" r="3.3"/></symbol>
+  <symbol id="ic-drehen" viewBox="0 0 24 24"><path d="M20.2 4.6v5h-5"/><path d="M19.4 14.6a8 8 0 1 1-1.9-8.3l2.7 3.3"/></symbol>
+  <symbol id="ic-passt" viewBox="0 0 24 24"><path d="M5 12.6l4.4 4.4L19 7.4"/></symbol>
+  <symbol id="ic-trotzdem" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="ic-zurueck" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
+  <symbol id="ic-tipp" viewBox="0 0 24 24"><path d="M9.2 18h5.6M10.2 21h3.6M12 3a6 6 0 0 0-3.7 10.7c.6.5 1 1.3 1 2.1h5.4c0-.8.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></symbol>
+  <symbol id="ic-lupe" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.6"/><path d="M20 20l-4.4-4.4M10.8 8.2v5.2M8.2 10.8h5.2"/></symbol>
+</svg>
 
 <script>
 (function () {
@@ -487,7 +514,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-17a';
+  var APP = 'foto-app-test-17b';
   var RAD = Math.PI / 180;
   /* =====================================================================
      FREIE KAMERA (Fassung 17). Giannis 23.11.2026: „man öffnet die App, man sieht den ganzen Bildschirm als freie Kamera und wir lassen das mit den Kasten und alles weg.
@@ -1553,22 +1580,20 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   // klein: für leere Kacheln und die Bildleiste (immer auf dunkler Bildkarte): ohne Karte dahinter, ohne Schrift
   function diagSvg(key, klein) {
     var g = diagGeom(key); if (!g) return '';
-    var k = /^seite/.test(key) ? 6.2 : 7.4, X = function (m) { return 50 + m * k; }, Y = function (m) { return 50 + m * k; };
-    var L = LAGEPLAN.autoL * k, B = LAGEPLAN.autoB * k, x0 = 50 - B / 2, y0 = 50 - L / 2;
-    var px = X(g.x), py = Y(g.y), ang = g.ang != null ? g.ang : Math.atan2(50 - py, 50 - px) / RAD;
-    var fy = Y(-(LAGEPLAN.autoL / 2 - 0.9)), ry = Y(LAGEPLAN.autoL / 2 - 1.1);
-    var s = '<svg' + (klein ? ' class="lp"' : '') + ' viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+    var k = /^seite/.test(key) ? 6.2 : 7.4, L = LAGEPLAN.autoL * k, B = LAGEPLAN.autoB * k, x0 = 50 - B / 2, y0 = 50 - L / 2, x1 = x0 + B, y1 = y0 + L;
+    var px = 50 + g.x * k, py = 50 + g.y * k, ang = g.ang != null ? g.ang : Math.atan2(50 - py, 50 - px) / RAD, f = function (v) { return v.toFixed(1); };
+    var linie = 'style="stroke:' + (klein ? '#9CA3AF' : 'var(--t)') + '"';
+    // Auto von oben als Linienbild wie im Icon-Satz (Fassung 17 b): Bug rund, Heck kantiger, Front- und Heckscheibe als Bogen
+    var s = '<svg' + (klein ? ' class="lp"' : '') + ' viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">' +
       (klein ? '' : '<rect x="0" y="0" width="100" height="100" rx="10" style="fill:var(--glass)"/>') +
-      '<rect x="' + x0.toFixed(1) + '" y="' + y0.toFixed(1) + '" width="' + B.toFixed(1) + '" height="' + L.toFixed(1) + '" rx="6" style="fill:' + (klein ? '#9CA3AF' : 'var(--car)') + '"/>' +
-      '<path d="M' + (50 - B * 0.3).toFixed(1) + ' ' + (y0 + L * 0.22).toFixed(1) + ' L' + (50 + B * 0.3).toFixed(1) + ' ' + (y0 + L * 0.22).toFixed(1) + ' L' + (50 + B * 0.36).toFixed(1) + ' ' + (y0 + L * 0.34).toFixed(1) + ' L' + (50 - B * 0.36).toFixed(1) + ' ' + (y0 + L * 0.34).toFixed(1) + ' Z" style="fill:' + (klein ? '#0B0C10' : 'var(--t2)') + ';opacity:.6"/>' +
-      '<path d="M' + (50 - 4.5) + ' ' + y0.toFixed(1) + ' L50 ' + (y0 - 6.5).toFixed(1) + ' L' + (50 + 4.5) + ' ' + y0.toFixed(1) + ' Z" fill="#FFC77C"/>' +
-      (klein ? '' : '<circle cx="' + (50 - B * 0.2).toFixed(1) + '" cy="' + (y0 + L * 0.46).toFixed(1) + '" r="' + Math.max(1.5, B * 0.14).toFixed(1) + '" fill="none" style="stroke:var(--t)" stroke-width="1.1"/>');
-    [fy, ry].forEach(function (wy) { [x0 - 1.4, x0 + B - 1.2].forEach(function (wx) { s += '<rect x="' + wx.toFixed(1) + '" y="' + (wy - 3.6).toFixed(1) + '" width="2.6" height="7.2" rx="1" fill="#111"/>'; }); });
-    // vorn oder hinten: helle Scheinwerfer vorn, rote Rückleuchten hinten, dazu VORN und HINTEN am Rand (auf der Seite ohne Standort)
-    [x0 + 2.4, x0 + B - 2.4].forEach(function (lx) { s += '<circle cx="' + lx.toFixed(1) + '" cy="' + (y0 + 2).toFixed(1) + '" r="1.6" fill="#FFF3C4"/><circle cx="' + lx.toFixed(1) + '" cy="' + (y0 + L - 2).toFixed(1) + '" r="1.6" fill="#E5484D"/>'; });
+      '<path d="M' + f(x0) + ' ' + f(y0 + L * 0.2) + ' Q' + f(x0) + ' ' + f(y0) + ' 50 ' + f(y0) + ' Q' + f(x1) + ' ' + f(y0) + ' ' + f(x1) + ' ' + f(y0 + L * 0.2) + ' V' + f(y1 - L * 0.1) + ' Q' + f(x1) + ' ' + f(y1) + ' ' + f(x1 - B * 0.3) + ' ' + f(y1) +
+        ' H' + f(x0 + B * 0.3) + ' Q' + f(x0) + ' ' + f(y1) + ' ' + f(x0) + ' ' + f(y1 - L * 0.1) + ' Z" ' + linie + ' stroke-width="2.4"/>' +
+      '<path d="M' + f(x0 + B * 0.2) + ' ' + f(y0 + L * 0.36) + ' Q50 ' + f(y0 + L * 0.29) + ' ' + f(x1 - B * 0.2) + ' ' + f(y0 + L * 0.36) + ' M' + f(x0 + B * 0.22) + ' ' + f(y0 + L * 0.78) + ' Q50 ' + f(y0 + L * 0.82) + ' ' + f(x1 - B * 0.22) + ' ' + f(y0 + L * 0.78) + '" ' + linie + ' stroke-width="1.7"/>';
+    // VORN und HINTEN am Rand (auf der Seite ohne Standort)
     var lab = g.x < 0 ? ' x="96" text-anchor="end"' : ' x="4" text-anchor="start"';
     if (!klein) s += '<text' + lab + ' y="11" font-family="Montserrat,sans-serif" font-weight="700" font-size="7.5" style="fill:var(--t2)">VORN</text><text' + lab + ' y="95" font-family="Montserrat,sans-serif" font-weight="700" font-size="7.5" style="fill:var(--t2)">HINTEN</text>';
-    s += '<g transform="translate(' + px.toFixed(1) + ' ' + py.toFixed(1) + ') rotate(' + ang.toFixed(1) + ')"><path d="M4 -6 L17 0 L4 6 Z" fill="#FFC77C" opacity="' + (klein ? '.7' : '.5') + '"/><circle r="' + (klein ? 7.5 : 6) + '" fill="#FFC77C" stroke="#0B0C10" stroke-width="1.5"/></g>';
+    // Standort (Punkt in Gold) mit Blickrichtung (Keil)
+    s += '<g transform="translate(' + f(px) + ' ' + f(py) + ') rotate(' + f(ang) + ')"><path d="M5 -6.5 L18 0 L5 6.5 Z" fill="#FFC77C" opacity=".45"/><circle r="' + (klein ? 7.5 : 6) + '" fill="#FFC77C"/></g>';
     return s + '</svg>';
   }
   function setLabels() {
@@ -1781,14 +1806,26 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   /* =====================================================================
      Ansehen: Passt oder Neu
      ===================================================================== */
-  // Beispielbild („So soll es aussehen“): ein echtes Bild je Platz aus beispiel/<platz>.jpg (die Dateien kommen mit Paket B). Fehlt die Datei oder das Netz,
-  // bleibt die ganze Fläche weg: kein kaputtes Bild, kein Fehler. Ein fehlendes Bild wird erst wieder versucht, wenn das Netz zurückkommt.
-  var BEISPIEL = {};
-  window.addEventListener('online', function () { Object.keys(BEISPIEL).forEach(function (k) { if (BEISPIEL[k] === false) delete BEISPIEL[k]; }); });
+  // Beispielbild („So soll es aussehen“, Fassung 17 b): ein echtes Foto je Platz aus beispiel/<platz>.jpg. Es gibt sie für die vier Innenplätze
+  // (Giannis 23.11.2026 zu seinen A6-Innenfotos: „Ja, nimm sie“); außen, Kofferraum und Zusatzbild haben noch keins, dort bleibt die Fläche weg.
+  // Die App lädt die Bilder beim Start in den Speicher (wie die Raumbilder), damit sie auch ohne Netz erscheinen. Fehlt ein Bild, bleibt die Fläche weg: kein kaputtes Bild.
+  var BEISPIEL_PLAETZE = ['cockpit', 'tacho', 'vordersitze', 'ruecksitzbank'], BEISPIEL = {}, BEISPIEL_VORRAT = {}, beispielLaeuft = {};
+  function beispielVorratLaden() {
+    if (!window.fetch || !window.URL || !URL.createObjectURL) return;
+    BEISPIEL_PLAETZE.forEach(function (k) {
+      if (BEISPIEL_VORRAT[k] || beispielLaeuft[k]) return;
+      beispielLaeuft[k] = true;
+      fetch('beispiel/' + k + '.jpg', { cache: 'force-cache' })
+        .then(function (a) { if (!a.ok) throw new Error('HTTP ' + a.status); return a.blob(); })
+        .then(function (b) { if (!b || !b.size) throw new Error('leer'); BEISPIEL_VORRAT[k] = URL.createObjectURL(b); beispielLaeuft[k] = false; delete BEISPIEL[k]; })
+        .catch(function () { beispielLaeuft[k] = false; });   // kein Netz: beim nächsten „online“ nochmal
+    });
+  }
+  window.addEventListener('online', function () { Object.keys(BEISPIEL).forEach(function (k) { if (BEISPIEL[k] === false) delete BEISPIEL[k]; }); beispielVorratLaden(); });
   function beispielZeigen(key, art) {
     var box = $('exBox'), im = $('exImg'); box.hidden = true;
-    if (!key || (art !== 'aussen' && art !== 'innen') || BEISPIEL[key] === false) return;
-    var src = 'beispiel/' + key + '.jpg', da = function () { return im.getAttribute('src') === src && im.naturalWidth > 0; };
+    if (!key || BEISPIEL_PLAETZE.indexOf(key) < 0 || BEISPIEL[key] === false) return;
+    var src = BEISPIEL_VORRAT[key] || 'beispiel/' + key + '.jpg', da = function () { return im.getAttribute('src') === src && im.naturalWidth > 0; };
     im.onload = function () { if (!da()) return; BEISPIEL[key] = true; if (S.phase === 'review' && S.review && (slotMeta(S.review.slot) || {}).key === key) box.hidden = false; };
     im.onerror = function () { if (im.getAttribute('src') === src) { BEISPIEL[key] = false; box.hidden = true; } };
     if (im.getAttribute('src') !== src) im.setAttribute('src', src); else if (im.complete && da()) box.hidden = false;
@@ -2816,7 +2853,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     buildKar(); applyTheme();
     vehLokalHolen();   // Tab geschlossen oder App weggewischt: das laufende Fahrzeug aus dem localStorage (Befund A3)
     showStart();
-    if (S.cfg && !S.cfg.bad) raumVorratLaden();   // Vorschaubilder für Schritt 5 jetzt laden, solange Netz da ist (16 e)
+    if (S.cfg && !S.cfg.bad) { raumVorratLaden(); beispielVorratLaden(); }   // Vorschaubilder für Schritt 5 jetzt laden, solange Netz da ist (16 e)
     S.restoreP = restoreQueue();
     auftraegeSenden();
   }
