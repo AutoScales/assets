@@ -1506,6 +1506,18 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     try { if (!S.track) return null; var st = S.track.getSettings ? S.track.getSettings() : {}, c = (S.devs || []).filter(function (d) { return d.id === st.deviceId; })[0];
       return { name: S.track.label || null, art: c ? c.kind : null, zoom: st.zoom != null ? +(+st.zoom).toFixed(2) : null }; } catch (e) { return null; }
   }
+  /* ECHTE KAMERAWERTE VOR DEM AUSLÖSEN (Fassung 17 f, Alfred 24.11.2026: „die echten Werte unmittelbar vor dem Auslösen, nicht die Vorgaben“). Am iPhone kamen am
+     24.11.2026 11 von 13 Fotos mit 1080 × 1920 an, obwohl Strom, Fähigkeit und Verlangtes 4032 × 3024 zeigten. Ins Protokoll (kamera_foto.vor) geht darum je Foto, was die
+     Kamera in diesem Moment wirklich meldet: Größe und Bildrate des Stroms (track.getSettings), Größe des Sucherbilds, Zoom, stumm oder beendet, Zeit seit dem Kamerastart,
+     Zeit seit dem letzten Foto und Zahl der Fotos seit dem Kamerastart. Nur Lesen, kein Aufruf, der die Kamera verstellt. */
+  function kameraJetzt() {
+    try {
+      if (!S.track) return null; var st = S.track.getSettings ? S.track.getSettings() : {}, v = $('video'), jetzt = performance.now();
+      return { strom: st.width + 'x' + st.height, rate: st.frameRate != null ? Math.round(st.frameRate * 10) / 10 : null, zoom: st.zoom != null ? +(+st.zoom).toFixed(2) : null, bild: v.videoWidth + 'x' + v.videoHeight,
+        stumm: S.track.muted ? true : undefined, zustand: S.track.readyState !== 'live' ? S.track.readyState : undefined,
+        seit_start_ms: Math.round(jetzt - S.streamOpenedAt), seit_foto_ms: S.letztesFoto ? Math.round(jetzt - S.letztesFoto) : null, fotos_seit_start: S.fotosSeitStart || 0 };
+    } catch (e) { return null; }
+  }
   function closeStream() {
     if (S.stream) S.stream.getTracks().forEach(function (t) { t.stop(); });
     S.stream = null; S.track = null; S.ic = null;
@@ -1540,7 +1552,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     await new Promise(function (res) { if (v.videoWidth) return res(); v.onloadedmetadata = function () { res(); }; setTimeout(res, 3000); });
     S.vw = v.videoWidth || 1; S.vh = v.videoHeight || 1; applyGeom();
     S.ic = ('ImageCapture' in window) ? new ImageCapture(S.track) : null;
-    S.streamOpenedAt = performance.now(); S.shotsSinceOpen = 0;
+    S.streamOpenedAt = performance.now(); S.shotsSinceOpen = 0; S.letztesFoto = 0; S.fotosSeitStart = 0;
     S.track.addEventListener('ended', function () { if (S.track && S.track.readyState === 'ended') { S.stream = null; } });
   }
   // Dreht der Browser das Kamerabild mit dem Handy, ändern sich die Maße; dann Bühne neu ausrichten
@@ -1810,15 +1822,17 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
        CFG.FOTO_VERSUCHE-mal aus, solange es weniger als die Hälfte der verlangten Bildpunkte hat. Bleibt es klein, sagt das Prüfen-Bild es gelb (Code foto_klein);
        nichts geht still durch. Alle gelieferten Größen stehen im Protokoll (kamera_foto.groessen). Ohne Größenangabe (Rückfall) zählt die Größe des Kamerastroms. */
     var ps = await fotoEinstellung(), rueck = false, soll = ps ? ps.imageWidth * ps.imageHeight : (S.vw > 1 && S.vh > 1 ? S.vw * S.vh : 0), verlangt = ps ? ps.imageWidth + 'x' + ps.imageHeight : null, gr = [], klein = false;
+    var vor = kameraJetzt();   // echte Werte der Kamera unmittelbar vor dem Auslösen (nur lesen)
     for (;;) {
       var psJ = gr.length ? await fotoEinstellung() : ps;
       try { blob = await withTimeout(psJ ? withTimeout(S.ic.takePhoto(psJ), CFG.FOTO_MS).catch(function () { rueck = true; S.fotoOhne = true; return S.ic.takePhoto(); }) : S.ic.takePhoto(), 15000); }
       catch (e) { if (my !== S.token) throw CANCEL; problem('Das Foto konnte nicht gemacht werden', errText(e), true); return; }
+      S.letztesFoto = performance.now(); S.fotosSeitStart = (S.fotosSeitStart || 0) + 1;
       var xG = await readExif(blob), px = xG.sofW && xG.sofH ? xG.sofW * xG.sofH : 0; gr.push(px ? xG.sofW + 'x' + xG.sofH : '?');
       klein = !!(soll && px && px < soll * 0.5);
       if (!klein || rueck || !psJ || gr.length >= CFG.FOTO_VERSUCHE || my !== S.token) break;
     }
-    how.foto = { faehig: S.fotoCaps || null, verlangt: verlangt, rueckfall: rueck, zoom_aus: !!S.zoomAus, versuche: gr.length, groessen: (gr.length > 1 || klein) ? gr : undefined, klein: klein || undefined };
+    how.foto = { faehig: S.fotoCaps || null, verlangt: verlangt, rueckfall: rueck, zoom_aus: !!S.zoomAus, versuche: gr.length, groessen: (gr.length > 1 || klein) ? gr : undefined, klein: klein || undefined, vor: vor || undefined, datei: (xG.sofW && xG.sofH) ? xG.sofW + 'x' + xG.sofH : undefined, ausloesen_ms: Math.round(performance.now() - t0) };
     var snapE = snapshot();   // Lage nach der Aufnahme: nur fürs Protokoll (wie weit das Handy während der Aufnahme weiterdreht)
     chk(my);
     flash();
