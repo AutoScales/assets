@@ -535,7 +535,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-17e';
+  var APP = 'foto-app-test-17f';
   var RAD = Math.PI / 180;
   /* =====================================================================
      FREIE KAMERA (Fassung 17). Giannis 23.11.2026: „man öffnet die App, man sieht den ganzen Bildschirm als freie Kamera und wir lassen das mit den Kasten und alles weg.
@@ -1342,7 +1342,9 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     // Lage: nur noch, was am Foto zu sehen ist (hochkant, außen sichtbar schief) und die Brennweite; innen gibt es weder Neigungs- noch Rollziel
     var sensor = !!(o.snap && o.snap.p != null), hoch = o.h > o.w;
     if (aussen && sensor && !o.gerade && Math.abs(o.snap.r) > FUEHRUNG.gerade.max) zeile('warn', 'winkel_rollen', 'Foto ist schief. Bitte Handy gerade halten.');
-    if (o.f35 != null) {
+    // Innen ist 0,5× erlaubt (Fassung 17 f, Giannis 24.11.2026: „Ja, innen 0,5× erlauben“): unter 22 mm kein Hinweis und kein Rot. Außen bleibt 1× Pflicht.
+    if (o.f35 != null && o.art === 'innen' && o.f35 < 22) zahlen.weitwinkel_innen = true;
+    else if (o.f35 != null) {
       if (o.f35 < 20 || o.f35 > 40) { rot = true; zeile('warn', 'nicht_1x', 'Kamera war nicht 1x (' + fmt(o.f35, 0) + ' mm).'); }
       else if (o.f35 < 22 || o.f35 > 30) zeile('warn', 'nicht_1x', 'Kamera weicht von 1x ab (' + fmt(o.f35, 0) + ' mm).');
     }
@@ -2085,41 +2087,68 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
      Hochladen (im Hintergrund, mit Wiederholung)
      ===================================================================== */
   /* Warteschlange: bleibt in IndexedDB erhalten (Funkloch, Seite neu geladen, App vom System beendet) und läuft nach dem Neuladen weiter */
-  var IDB = { db: null, ok: false };
-  function idbOpen() {
+  /* BILDDATEN EINMAL SPEICHERN (Fassung 17 f). Bisher lag das Foto im selben Eintrag wie sein Stand und wurde bei jedem Sendeversuch neu gespeichert. Safari am iPhone
+     kann ein Foto, das aus dem Gerätespeicher gelesen und wieder gespeichert wird, danach nicht mehr lesen (WebKit 235687, 240216). Darum zwei Speicher:
+     fa_bild / bild: das Foto, genau einmal beim Annehmen geschrieben (add), nie überschrieben, gelöscht erst mit dem Foto.
+     fa_queue / items: der Stand ohne Bilddaten (Platz, Pfad, Meldung, abgelehnt, Grund); nur er wird neu geschrieben.
+     Einträge aus älteren Fassungen tragen das Foto noch in items (it.alt): Sie werden gesendet und gelöscht, aber nie neu geschrieben. */
+  var IDB = { db: null, bild: null, ok: false };
+  function dbAuf(name, lager) {
     return new Promise(function (res) {
       try {
-        var r = indexedDB.open('fa_queue', 1);
-        r.onupgradeneeded = function () { r.result.createObjectStore('items', { keyPath: 'id' }); };
-        r.onsuccess = function () { IDB.db = r.result; IDB.ok = true; res(true); };
-        r.onerror = function () { res(false); };
-        r.onblocked = function () { res(false); };
-      } catch (e) { res(false); }
+        var r = indexedDB.open(name, 1);
+        r.onupgradeneeded = function () { r.result.createObjectStore(lager, { keyPath: 'id' }); };
+        r.onsuccess = function () { res(r.result); };
+        r.onerror = function () { res(null); };
+        r.onblocked = function () { res(null); };
+      } catch (e) { res(null); }
     });
   }
-  function idbDo(mode, fn) {
+  function idbOpen() { return Promise.all([dbAuf('fa_queue', 'items'), dbAuf('fa_bild', 'bild')]).then(function (d) { IDB.db = d[0]; IDB.bild = d[1]; IDB.ok = !!(d[0] && d[1]); return IDB.ok; }); }
+  function dbTx(db, lager, mode, fn) {
     return new Promise(function (res) {
-      if (!IDB.ok) { res(null); return; }
-      try { var tx = IDB.db.transaction('items', mode), out = fn(tx.objectStore('items')); tx.oncomplete = function () { res(out && 'result' in out ? out.result : true); }; tx.onerror = tx.onabort = function () { res(null); }; }
+      if (!IDB.ok || !db) { res(null); return; }
+      try { var tx = db.transaction(lager, mode), out = fn(tx.objectStore(lager)); tx.oncomplete = function () { res(out && 'result' in out ? out.result : true); }; tx.onerror = tx.onabort = function () { res(null); }; }
       catch (e) { res(null); }
     });
   }
-  function idbPut(it) { return idbDo('readwrite', function (st) { return st.put({ id: it.id, slot: it.slot, path: it.path, blob: it.blob, meta: it.meta, vehicleId: it.vehicleId, thumb: it.thumb || null, failed: !!it.failed, fileDone: !!it.fileDone, t: it.t || Date.now(), srv: it.srv || null, grund: it.grund || null }); }); }
-  function idbDel(id) { return idbDo('readwrite', function (st) { return st.delete(id); }); }
-  function idbAll() { return idbDo('readonly', function (st) { return st.getAll(); }); }
+  function idbDo(mode, fn) { return dbTx(IDB.db, 'items', mode, fn); }
+  function standVon(it) { return { id: it.id, slot: it.slot, path: it.path, meta: it.meta, vehicleId: it.vehicleId, thumb: it.thumb || null, failed: !!it.failed, fileDone: !!it.fileDone, t: it.t || Date.now(), srv: it.srv || null, grund: it.grund || null }; }
+  // Beim Annehmen, genau einmal: erst das Foto, dann der Stand. Bricht die App dazwischen ab, bleibt ein Foto ohne Stand; idbAll räumt es nach 10 Minuten weg.
+  function idbNeu(it) { return dbTx(IDB.bild, 'bild', 'readwrite', function (st) { return st.add({ id: it.id, blob: it.blob, t: Date.now() }); }).then(function (ok) { return ok == null ? null : idbDo('readwrite', function (st) { return st.put(standVon(it)); }); }); }
+  // Nur der Stand. Ein gelöschtes Foto (blob null) bekommt keinen Stand zurück, ein Eintrag aus einer älteren Fassung (it.alt) wird nie neu geschrieben.
+  function idbPut(it) { if (!it || !it.blob || it.alt) return Promise.resolve(true); return idbDo('readwrite', function (st) { return st.put(standVon(it)); }); }
+  function idbDel(id) { dbTx(IDB.bild, 'bild', 'readwrite', function (st) { return st.delete(id); }); return idbDo('readwrite', function (st) { return st.delete(id); }); }
+  function idbAll() {
+    if (!IDB.ok) return Promise.resolve(null);
+    return Promise.all([idbDo('readonly', function (st) { return st.getAll(); }), dbTx(IDB.bild, 'bild', 'readonly', function (st) { return st.getAll(); })]).then(function (r) {
+      var B = {}, da = {}, jetzt = Date.now(); (r[1] || []).forEach(function (b) { B[b.id] = b; });
+      var alle = (r[0] || []).map(function (x) { da[x.id] = true; if (x.blob) x.alt = true; else x.blob = B[x.id] ? B[x.id].blob : null; return x; });
+      (r[1] || []).forEach(function (b) { if (!da[b.id] && jetzt - (b.t || 0) > 600000) dbTx(IDB.bild, 'bild', 'readwrite', function (st) { return st.delete(b.id); }); });
+      return alle;
+    });
+  }
+  // Lässt sich das Foto noch vom Gerät lesen? Nur ein klarer Lesefehler zählt als „nein“; keine Antwort in 5 s zählt als lesbar (dann entscheidet das Hochladen).
+  function lesbar(blob) { if (!blob) return Promise.resolve(false); return withTimeout(blob.slice(0, 1).arrayBuffer(), 5000).then(function () { return true; }, function (e) { return !!(e && e.message === 'Zeitüberschreitung'); }); }
   /* Sendeschein: Jedes wartende Foto trägt Adresse und Schlüssel des Servers bei sich, aber nie das Zugangswort. Damit sendet die App wartende Fotos auch dann nach,
      wenn sie ohne den Link wieder geöffnet wird (neuer Tab, Home-Bildschirm). Zum Senden genügt die Fahrzeug-ID im Foto; ein neues Fahrzeug braucht weiter den Link.
      Der Schein liegt nur so lange auf dem Gerät wie das Foto selbst und verschwindet mit ihm. */
   function sendeschein() { var c = S.cfg; return c && !c.demo && !c.bad && c.url && c.key ? { u: c.url, k: c.key } : null; }
   function scheinOk(r) { return !!(r && r.srv && SRV_OK.test(r.srv.u || '') && r.srv.k); }
+  /* HINWEIS AUF DER STARTSEITE (Fassung 17 f): Er zeigt immer, was auf diesem Gerät noch wartet, mit und ohne Link, auch nach „Absenden“ und nach „Nächstes Fahrzeug“:
+     wartende Fotos (werden gerade gesendet), Fotos, die der Server noch nicht angenommen hat (die App sendet weiter), und Fotos, die sich nicht mehr lesen lassen.
+     S.nach zählt dazu, was aus den Fotos geworden ist, die beim Öffnen schon auf dem Gerät lagen (it.vorher). */
+  function fehlListe(unlesbar) { return S.restoredFailed.filter(function (it) { return it.failed && (it.grund === 'unlesbar') === !!unlesbar && (unlesbar || it.blob); }); }
+  function nachZahl(it, feld) { if (S.nach && it && it.vorher) S.nach[feld] = (S.nach[feld] || 0) + 1; queueNote(); }
   function queueNote() {
-    var n = $('queueNote'), q = S.nach; if (!n || !q) return;
-    var rest = S.queue.length, t;
-    if (rest) t = (rest === 1 ? 'Auf diesem Gerät wartet noch 1 Foto. Es wird' : 'Auf diesem Gerät warten noch ' + rest + ' Fotos. Sie werden') + ' jetzt gesendet.' + (q.netz ? ' Im Moment besteht keine Verbindung, die App versucht es weiter.' : '');
+    var n = $('queueNote'); if (!n) return;
+    var q = S.nach || {}, rest = S.queue.filter(function (it) { return !(it.fileDone && haltOf(it)); }).length, fehl = fehlListe(false).length, weg = fehlListe(true).length, t;
+    if (rest) t = (rest === 1 ? 'Auf diesem Gerät wartet noch 1 Foto. Es wird' : 'Auf diesem Gerät warten noch ' + rest + ' Fotos. Sie werden') + ' jetzt gesendet.' + (S.netzAus ? ' Im Moment besteht keine Verbindung, die App versucht es weiter.' : '');
     else t = [q.ok ? (q.ok === 1 ? '1 wartendes Foto ist gesendet.' : q.ok + ' wartende Fotos sind gesendet.') : '',
-      q.fehler ? (q.fehler === 1 ? '1 Foto hat der Server noch nicht angenommen.' : q.fehler + ' Fotos hat der Server noch nicht angenommen.') + ' Die App sendet später erneut.' : '',
+      fehl ? (fehl === 1 ? '1 Foto hat der Server noch nicht angenommen.' : fehl + ' Fotos hat der Server noch nicht angenommen.') + ' Die App sendet später erneut.' : '',
       q.geloescht ? (q.geloescht === 1 ? '1 Foto konnte nicht mehr gesendet werden (Fahrzeug abgeschlossen) und ist vom Gerät gelöscht.' : q.geloescht + ' Fotos konnten nicht mehr gesendet werden (Fahrzeug abgeschlossen) und sind vom Gerät gelöscht.') : ''].filter(Boolean).join(' ');
-    n.hidden = !t; n.className = 'note' + (!rest && (q.fehler || q.geloescht) ? ' bad' : ''); n.textContent = t;
+    if (weg) t = (t ? t + ' ' : '') + (weg === 1 ? '1 Foto lässt sich auf diesem Gerät nicht mehr lesen. Bitte neu aufnehmen.' : weg + ' Fotos lassen sich auf diesem Gerät nicht mehr lesen. Bitte neu aufnehmen.');
+    n.hidden = !t; n.className = 'note' + ((!rest && (fehl || q.geloescht)) || weg ? ' bad' : ''); n.textContent = t;
   }
   /* ERSETZTE FOTOS (Fassung 17 e, Giannis 24.11.2026: „wenn ein Foto ersetzt wird, ist das Neue das Bessere … Also ja“). Sobald ein neues Foto für einen Platz angenommen ist,
      verwirft die App ältere Fotos desselben Platzes, die noch nicht beim Server sind (wartend oder abgelehnt). Sonst kämen sie später an und wären dort die neueste Version.
@@ -2134,8 +2163,8 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   }
   function enqueue(item) {
     item.vehicleId = S.vehicle.id; item.thumb = slotState(item.slot).thumb; item.t = Date.now(); item.srv = sendeschein();
-    idbPut(item).then(function (gesichert) { if (!gesichert && IDB.ok) { item.unsicher = true; toast(T('Das Foto ist nicht auf dem Handy gesichert (Speicher voll?). Bitte lass die App offen, bis es gesendet ist.', 'Das Foto ist nicht auf dem Handy gesichert (Speicher voll?). Bitte lassen Sie die App offen, bis es gesendet ist.'), 6000); }   // Befund B4
-      S.queue.push(item); if (item.slot !== 'fahrzeugschein') { haltAuffrischen(item.vehicleId); if (S.vehicle && S.vehicle.id === item.vehicleId && S.vehicle.raumOffen) { var vv = S.vehicle; if (!vv.raumZu && !vv.raumFest && Date.now() - Math.max(vv.angelegt || 0, vv.letztesFoto || 0) >= HALTEN_MAX_MS) vv.raumZu = true; vv.letztesFoto = Date.now(); saveSession(); /* Frist beim Server (raum_frist) schon um: der Raum bleibt zu, auch wenn neue Fotos kommen (Befund A1) */ } } renderGalleryIfShown(); kick(); });
+    idbNeu(item).then(function (gesichert) { if (!gesichert && IDB.ok) { item.unsicher = true; toast(T('Das Foto ist nicht auf dem Handy gesichert (Speicher voll?). Bitte lass die App offen, bis es gesendet ist.', 'Das Foto ist nicht auf dem Handy gesichert (Speicher voll?). Bitte lassen Sie die App offen, bis es gesendet ist.'), 6000); }   // Befund B4
+      S.queue.push(item); if (item.slot !== 'fahrzeugschein') { haltAuffrischen(item.vehicleId); if (S.vehicle && S.vehicle.id === item.vehicleId && S.vehicle.raumOffen) { var vv = S.vehicle; if (!vv.raumZu && !vv.raumFest && Date.now() - Math.max(vv.angelegt || 0, vv.letztesFoto || 0) >= HALTEN_MAX_MS) vv.raumZu = true; vv.letztesFoto = Date.now(); saveSession(); /* Frist beim Server (raum_frist) schon um: der Raum bleibt zu, auch wenn neue Fotos kommen (Befund A1) */ } } renderGalleryIfShown(); queueNote(); kick(); });
   }
   async function restoreQueue() {
     if (S.demo || (!S.api && S.cfg)) return;   // Demo oder ungültiger Link: nichts senden
@@ -2147,15 +2176,20 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     if (!S.api) {   // ohne Link geöffnet: nur wartende Fotos mit Sendeschein nachsenden, alle an denselben Server
       var mit = all.filter(function (r) { return scheinOk(r); }); if (!mit.length) return;   // auch nicht endgültig abgelehnte Fotos (failed) gehen erneut raus
       var s0 = mit[0].srv; all = mit.filter(function (r) { return r.srv.u === s0.u && r.srv.k === s0.k; });
-      S.sendApi = mkRealApi({ url: s0.u, key: s0.k }); S.nach = { ok: 0, fehler: 0, netz: false };
+      S.sendApi = mkRealApi({ url: s0.u, key: s0.k });
     }
+    if (all.length) S.nach = { ok: 0 };   // Bilanz der Fotos, die beim Öffnen schon auf dem Gerät lagen (mit und ohne Link)
     all.forEach(function (r) {
-      var it = { slot: r.slot, id: r.id, path: r.path, blob: r.blob, meta: r.meta, vehicleId: r.vehicleId, thumb: r.thumb, t: r.t, tries: 0, fileDone: !!r.fileDone && !r.failed, failed: !!r.failed, srv: r.srv || null, grund: r.grund || null };   // fileDone: Datei liegt schon beim Server (gehalten, Fassung 16)
+      var it = { slot: r.slot, id: r.id, path: r.path, blob: r.blob, meta: r.meta, vehicleId: r.vehicleId, thumb: r.thumb, t: r.t, tries: 0, fileDone: !!r.fileDone && !r.failed, failed: !!r.failed, srv: r.srv || null, grund: r.grund || null, alt: !!r.alt, vorher: true };   // fileDone: Datei liegt schon beim Server (gehalten, Fassung 16)
+      if (!it.blob) {   // Stand ohne Bilddaten: nichts mehr zu senden. Zwei Tage lang sagt es die App (neu aufnehmen), danach räumt sie den Eintrag weg.
+        if (Date.now() - (it.t || 0) > 2 * 24 * 3600 * 1000) { idbDel(it.id); return; }
+        it.failed = true; it.fileDone = false; it.grund = 'unlesbar';
+      }
       if (it.failed) S.restoredFailed.push(it); else S.queue.push(it);
     });
     queueNote();
     if (S.queue.length) kick();
-    if (S.restoredFailed.length) setTimeout(nachpruefen, 1500);   // beim Öffnen: nicht endgültig abgelehnte Fotos erneut senden
+    if (fehlListe(false).length || fehlListe(true).some(function (it) { return it.blob; })) setTimeout(nachpruefen, 1500);   // beim Öffnen: nicht endgültig abgelehnte Fotos erneut senden
   }
   // Nach „Weitermachen“: Bilder dieses Fahrzeugs, die noch warten oder fehlgeschlagen sind, wieder in der Galerie zeigen
   function markRestored() {
@@ -2180,19 +2214,27 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   function verwerfen(it, st, grund) {
     idbDel(it.id); it.blob = null; it.meta = null; it.failed = true;
     if (st && st.fotoId === it.id) { st.state = st.server ? 'hochgeladen' : 'leer'; st.thumb = st.server ? st.thumb : null; st.item = null; st.err = null; }
-    if (S.nach) { S.nach.geloescht = (S.nach.geloescht || 0) + 1; queueNote(); }
+    nachZahl(it, 'geloescht');
     toast(grund === 'voll' ? 'Ein Foto passt nicht mehr dazu (höchstens 30 je Fahrzeug). Es ist vom Gerät gelöscht.' : 'Ein Foto konnte nicht mehr gesendet werden (Fahrzeug abgeschlossen). Es ist vom Gerät gelöscht.', 4000);
   }
+  /* NEUVERSUCH (Fassung 17 f): Jedes nicht endgültig abgelehnte Foto steht in S.restoredFailed, auch ohne laufendes Fahrzeug (vorher hing es nur an der Kachel und ging
+     ohne Fahrzeug erst beim nächsten Start wieder raus). Es geht erneut raus: beim Öffnen, alle CFG.NACHPRUEFEN_MS und sobald die App wieder in den Vordergrund kommt. */
+  function fehlMerken(it) { if (S.restoredFailed.indexOf(it) < 0) S.restoredFailed.push(it); S.fehlZeit = Date.now(); nachpruefenPlanen(); }
   function nachpruefenPlanen() { clearTimeout(S.nachTimer); S.nachTimer = setTimeout(nachpruefen, CFG.NACHPRUEFEN_MS); }
   function nachpruefen() {
-    var seen = {}, alle = [];
-    S.restoredFailed.splice(0).concat(Object.keys(S.slots).map(function (k) { return S.slots[k].item; })).forEach(function (it) { if (it && it.failed && it.blob && !seen[it.id]) { seen[it.id] = true; alle.push(it); } });
+    var seen = {}, alle = [], bleibt = [];
+    S.restoredFailed.splice(0).concat(Object.keys(S.slots).map(function (k) { return S.slots[k].item; })).forEach(function (it) {
+      if (!it || !it.failed || seen[it.id]) return; seen[it.id] = true;
+      if (it.blob) alle.push(it); else if (it.grund === 'unlesbar') bleibt.push(it);   // ohne Bilddaten gibt es nichts zu senden: bleibt als Hinweis stehen
+    });
+    S.restoredFailed = bleibt;
     alle.forEach(function (it) {
       it.failed = false; it.tries = 0; idbPut(it); S.queue.push(it);
       if (S.vehicle && it.vehicleId === S.vehicle.id) { var s = slotState(it.slot); if (s.fotoId === it.id) { s.item = null; s.state = 'wartet'; /* nur die Kachel dieses Fotos, nach einer Neuaufnahme zeigt der Platz ein anderes (Befund A9) */ } }
     });
-    if (alle.length) { renderGalleryIfShown(); kick(); }
+    if (alle.length) { renderGalleryIfShown(); queueNote(); kick(); }
   }
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && S.restoredFailed.some(function (it) { return it.failed && it.blob; }) && Date.now() - (S.fehlZeit || 0) > 20000) nachpruefen(); });   // zurück in der App: gleich neu senden, nicht erst nach 5 Minuten
   /* Aufträge ohne Foto (Fahrzeugdaten, Absenden): liegen auf dem Gerät (localStorage, ohne Zugangswort, mit Sendeschein wie die Fotos), bis der Server sie angenommen hat,
      und gehen raus, sobald Netz da ist, auch nach dem Schließen der App. Verworfen wird ein Auftrag nur bei einer Antwort {"ok": false} des Servers. */
   function lsLoad(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
@@ -2289,30 +2331,35 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       var api = apiFuer(it), st = kachelVon(it); S.sendet = it;
       try {
         st.state = 'sendet'; renderGalleryIfShown();
-        if (!it.fileDone) { var tU = performance.now(); await api.upload(it.path, it.blob, uploadMs(it)); it.fileDone = true; hochladeZeit(it, performance.now() - tU); }
+        if (!it.fileDone) { if (!(await lesbar(it.blob))) throw new ApiError(0, 'Foto auf dem Gerät nicht lesbar', false, { fehler: 'unlesbar' }); var tU = performance.now(); await api.upload(it.path, it.blob, uploadMs(it)); it.fileDone = true; hochladeZeit(it, performance.now() - tU); }
         st = kachelVon(it);
         if (haltOf(it)) { st.state = 'gehalten'; st.err = null; idbPut(it); renderGalleryIfShown(); continue; }   // Datei liegt beim Server, Meldung nach der Raumwahl (auch nach dem Neuladen: fileDone im Gerätespeicher)
         var rep = await api.report(it.meta);
         st = kachelVon(it);
         ausSchlange(it); st.state = 'hochgeladen'; st.err = null; idbDel(it.id); it.blob = null; it.meta = null;
         if (rep && rep.status) st.server = Object.assign({}, st.server || {}, { status: rep.status });
-        if (S.nach) { S.nach.ok++; S.nach.netz = false; queueNote(); }
+        S.netzAus = false; nachZahl(it, 'ok');
         saveSession(); renderGalleryIfShown(); schedulePoll(1500);
       } catch (e) {
         if (it.ersetzt) { ausSchlange(it); idbDel(it.id); it.blob = null; it.meta = null; renderGalleryIfShown(); continue; }   // inzwischen durch ein neues Foto ersetzt: nicht weiter senden
         if (e && e.fehler === 'zu_gross') { var dZ = it.meta && it.meta.app_details && it.meta.app_details.datei; if (dZ) dZ.zu_gross = (dZ.zu_gross || 0) + 1; }
         it.tries++;
-        if (permanent(e)) {   // Lösch-Regel: erst beim Server nachfragen, ob die Ablehnung endgültig ist
+        if (e && e.fehler === 'unlesbar') {   // 17 f: Das Foto lässt sich nicht mehr vom Gerät lesen. Es bleibt stehen (nichts wird gelöscht), die App sagt es klar und versucht es weiter.
+          st = kachelVon(it); ausSchlange(it); it.fileDone = false; it.failed = true; it.grund = 'unlesbar'; st.state = 'fehler'; st.err = e.message; st.item = it; st.grund = it.grund; idbPut(it); fehlMerken(it);
+          if (!it.gesagt) { it.gesagt = true; toast(T('Ein Foto lässt sich auf dem Handy nicht mehr lesen. Bitte nimm es neu auf.', 'Ein Foto lässt sich auf dem Handy nicht mehr lesen. Bitte nehmen Sie es neu auf.'), 7000); }
+          renderGalleryIfShown(); queueNote();
+        }
+        else if (permanent(e)) {   // Lösch-Regel: erst beim Server nachfragen, ob die Ablehnung endgültig ist
           var ende = await abgelehnt(api, it, e);
           st = kachelVon(it); ausSchlange(it);
           if (ende) verwerfen(it, st, ende);
           else { it.fileDone = false; st.state = 'fehler'; st.err = e.message; st.item = it; it.failed = true; it.grund = e.fehler === 'zu_gross' ? 'zu_gross' : null; st.grund = it.grund; idbPut(it);
-            if (it.grund && !it.gesagt) { it.gesagt = true; toast('Der Server nimmt dieses Foto noch nicht an: Es ist zu groß (' + (it.blob.size / 1048576).toFixed(1).replace('.', ',') + ' MB). Es bleibt auf dem Handy und wird weiter gesendet.', 7000); } if (S.nach) { S.nach.fehler++; queueNote(); } nachpruefenPlanen(); }
+            if (it.grund && !it.gesagt) { it.gesagt = true; toast('Der Server nimmt dieses Foto noch nicht an: Es ist zu groß (' + (it.blob.size / 1048576).toFixed(1).replace('.', ',') + ' MB). Es bleibt auf dem Handy und wird weiter gesendet.', 7000); } fehlMerken(it); queueNote(); }
           renderGalleryIfShown();
         }
         else {
           if (e && e.message === 'Zeitüberschreitung') it.zeitAus = (it.zeitAus || 0) + 1;
-          st = kachelVon(it); st.state = 'retry'; st.err = e.message; renderGalleryIfShown(); if (S.nach) { S.nach.netz = true; queueNote(); }
+          st = kachelVon(it); st.state = 'retry'; st.err = e.message; renderGalleryIfShown(); S.netzAus = true; queueNote();
           var wait = Math.min(30000, 2000 * Math.pow(2, Math.min(it.tries, 4)));
           await new Promise(function (res) { var t = setTimeout(res, wait); onlineWake = function () { clearTimeout(t); res(); }; });
           onlineWake = null;
@@ -2342,7 +2389,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     if (!s || (s.state === 'leer' && !s.server)) return { t: 'noch offen', c: '' };
     if (s.state === 'wartet' || s.state === 'sendet') return { t: 'wird hochgeladen', c: 'busy' };
     if (s.state === 'retry') return { t: 'wartet auf Netz', c: 'warn' };
-    if (s.state === 'fehler') return { t: s.grund === 'zu_gross' ? 'Foto zu groß für den Server, wird weiter gesendet' : 'Senden fehlgeschlagen', c: 'bad' };
+    if (s.state === 'fehler') return { t: s.grund === 'zu_gross' ? 'Foto zu groß für den Server, wird weiter gesendet' : s.grund === 'unlesbar' ? 'Foto auf dem Handy nicht lesbar, bitte neu aufnehmen' : 'Senden fehlgeschlagen', c: 'bad' };
     if (s.state === 'gehalten') return { t: 'hochgeladen, Showroom nach der Raumwahl', c: 'ok' };
     var sv = s.server && s.server.status;
     if (sv === 'wartet_raum') return { t: 'bei AutoScales, Showroom nach der Raumwahl', c: 'ok' };   // 16 b: der Server parkt das Foto bis zur Raumwahl
@@ -2370,7 +2417,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       if (s && s.thumb) img = '<img alt="" src="' + s.thumb + '">';
       else img = platzBild(id) || '+';
       var sv = s && s.server ? s.server : null, a1 = s && s.ampelHandy, a2 = sv && sv.ampel_showroom;
-      var retry = s && s.state === 'fehler' && s.item && s.item.blob ? ' · <u>nochmal senden</u>' : '';
+      var retry = s && s.state === 'fehler' && s.item && s.item.blob && s.grund !== 'unlesbar' ? ' · <u>nochmal senden</u>' : '';
       return '<button class="glass tile" type="button" data-id="' + id + '"><div class="im' + (taken ? '' : ' empty') + '">' + img + (m.nr ? '<span class="nr">' + m.nr + '</span>' : '') + '</div><b>' + esc(m.name) + (m.frei ? ' · freiwillig' : '') + (m.art === 'zusatz' && s && s.zusatz_art ? ' · ' + esc((ZUSATZ_ARTEN.filter(function (z) { return z[0] === s.zusatz_art; })[0] || [0, ''])[1]) : '') + '</b>' +
         '<span class="st"><span><i class="dot ' + ti.c + '"></i>' + esc(ti.t) + retry + '</span>' + amp(a1, 'Handy') + ampSrv(sv) + '</span>' + gruendeTile(sv) + '</button>';
     }).join('');
@@ -2383,7 +2430,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   // Abschluss nach dem letzten Pflichtbild
   $('gGrid').addEventListener('click', function (ev) {
     var b = ev.target.closest('.tile'); if (!b) return; var id = b.getAttribute('data-id'), s = S.slots[id];
-    if (s && s.state === 'fehler' && s.item && s.item.blob && /nochmal/.test(ev.target.textContent || '')) { var it = s.item; s.item = null; it.tries = 0; it.failed = false; idbPut(it); s.state = 'wartet'; S.queue.push(it); renderGallery(); kick(); return; }
+    if (s && s.state === 'fehler' && s.item && s.item.blob && /nochmal/.test(ev.target.textContent || '')) { var it = s.item; s.item = null; it.tries = 0; it.failed = false; S.restoredFailed = S.restoredFailed.filter(function (x) { return x !== it; }); idbPut(it); s.state = 'wartet'; S.queue.push(it); renderGallery(); kick(); return; }
     if (id === 'ruecksitzbank' && ohneRueck() && !hasPhoto(id)) {   // Kachel „kein Rücksitz“ antippen = rückgängig
       if (confirm('Doch eine Rücksitzbank aufnehmen? Sie zählt dann wieder als Pflichtbild.')) { S.vehicle.keineRueck = false; S.vehicle.flagTries = 0; saveSession(); syncFlag(); renderGallery(); }
       return;
@@ -2409,6 +2456,8 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   };
   function newVehicle() {
     if (S.queue.length && (!IDB.ok || S.queue.some(function (q) { return q.unsicher; })) && !confirm('Es werden noch Fotos hochgeladen. Trotzdem beenden? Nicht hochgeladene Fotos gehen verloren.')) return;
+    var v = S.vehicle, abg = v ? Object.keys(S.slots).filter(function (k) { return S.slots[k].state === 'fehler'; }).length : 0;   // 17 f: nach dem Wechsel lässt sich für dieses Fahrzeug nichts mehr neu aufnehmen
+    if (abg && !confirm((abg === 1 ? '1 Foto dieses Fahrzeugs ist' : abg + ' Fotos dieses Fahrzeugs sind') + ' noch nicht angekommen. Die App sendet weiter, neu aufnehmen geht danach aber nicht mehr. Trotzdem ein neues Fahrzeug beginnen?')) return;
     resetVehicle(); showStart();
   }
   $('gNew').onclick = function () { if (S.vehicle && !S.vehicle.abgesendet) zeigeSchritt(S.vehicle.preisGesehen ? 'pruefen' : 'preis'); else newVehicle(); };
@@ -2510,6 +2559,12 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     var ids = Object.keys(S.slots).filter(hasPhoto), unterwegs = ids.filter(function (k) { return /^(wartet|sendet|retry|fehler|gehalten)$/.test(S.slots[k].state); }).length;
     return { alle: ids.length, an: ids.length - unterwegs, unterwegs: unterwegs };
   }
+  // Je Pflichtbild eine Zeile, wenn es fehlt, noch nicht angekommen ist oder sich nicht mehr lesen lässt (Seiten „Prüfen“ und „Gesendet“)
+  function fotoZeilen(PF) {
+    return PF.map(function (p) { var s = S.slots[p.key]; return !hasPhoto(p.key) ? zeile('offen', '<b>' + esc(p.name) + '</b> fehlt noch') : s.state !== 'fehler' ? '' : s.grund === 'unlesbar' ? zeile('warn', '<b>' + esc(p.name) + '</b> lässt sich auf dem Handy nicht mehr lesen, bitte neu aufnehmen') : zeile('warn', '<b>' + esc(p.name) + '</b> ist noch nicht angekommen, die App sendet erneut'); }).join('');
+  }
+  // Fehlt dem laufenden Fahrzeug noch etwas? Ein Pflichtbild fehlt, oder ein Foto ist noch nicht beim Server (wartet, wird gesendet, abgelehnt, gehalten).
+  function fotosOffen() { return !!S.vehicle && (pflicht().some(function (p) { return !hasPhoto(p.key); }) || Object.keys(S.slots).some(function (k) { return /^(wartet|sendet|retry|fehler|gehalten)$/.test(S.slots[k].state); })); }
   var NOTIZ_MAX = 1800;   // Weitere Notizen: daten_weitere ist beim Server auf 4000 Zeichen begrenzt (jsonb als Text, Zeilenumbrüche zählen doppelt)
   // Fahrzeug-Kachel oben in Schritt 1 (Giannis 22.11.2026): Überschrift mit den Daten aus dem Anlegen, darunter Kilometer und Motorisierung
   function fzKachel(v) {
@@ -2547,7 +2602,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
         var s = S.slots[p.key], k = !hasPhoto(p.key) ? 'offen' : s.state === 'fehler' ? 'warn' : /^(wartet|sendet|retry|gehalten)$/.test(s.state) ? 'offen' : 'ok';
         return '<div class="kachel" data-id="' + p.key + '">' + (s && s.thumb && hasPhoto(p.key) ? '<img alt="" src="' + s.thumb + '">' : hasPhoto(p.key) ? kachelUmriss(p.key) : V10.leer) + '<span>' + V10[k] + esc(KURZ[p.key] || p.name) + '</span></div>';
       }).join('');
-      PF.forEach(function (p) { if (!hasPhoto(p.key)) z += zeile('offen', '<b>' + esc(p.name) + '</b> fehlt noch'); else if (S.slots[p.key].state === 'fehler') z += zeile('warn', '<b>' + esc(p.name) + '</b> ist noch nicht angekommen, die App sendet erneut'); });
+      z += fotoZeilen(PF);
       if (fz.unterwegs) z += zeile('offen', '<b>' + fz.unterwegs + (fz.unterwegs === 1 ? ' Foto wird' : ' Fotos werden') + '</b> noch gesendet');
       if (d.km == null) fehlt.push('Kilometer'); if (!d.motorisierung) fehlt.push('Motorisierung');
       z += zeile(fehlt.length ? 'offen' : 'ok', fehlt.length ? 'Fahrzeugdaten: <b>' + fehlt.join(', ') + '</b> ' + (fehlt.length === 1 ? 'fehlt' : 'fehlen') : 'Fahrzeugdaten vollständig');
@@ -2559,10 +2614,12 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
         (fehlt.length || !d.ok_zustand || d.preis_brutto == null ? '<p>Fehlende Angaben lassen sich im Portal nachholen.</p>' : '') +
         '<div class="sp"></div><button class="btn pr" id="sAbsenden" type="button">Absenden</button><button class="link" id="sGalerie" type="button">Zur Galerie</button>';
     }
-    var f = fotoZahlen(), warten = f.unterwegs > 0;   // gesendet
+    // gesendet. Ab 17 f sagt die Seite auch, welches Pflichtbild fehlt oder noch nicht angekommen ist; das Fahrzeug bleibt dafür erreichbar (vehLokal).
+    var f = fotoZahlen(), warten = f.unterwegs > 0, abg = Object.keys(S.slots).filter(function (k) { return S.slots[k].state === 'fehler'; }).length;
     return '<div class="schritt"><span>Fertig</span><span>' + esc(v.marke + ' ' + v.modell) + '</span></div><div class="karte">' + V10.gesendet + '</div><h4>' + (warten ? 'Wird gesendet' : 'Gesendet') + '</h4>' +
-      '<p>' + (warten ? T('Die letzten Fotos gehen raus, sobald Netz da ist. Du kannst schon das nächste Fahrzeug anlegen.', 'Die letzten Fotos gehen raus, sobald Netz da ist. Sie können schon das nächste Fahrzeug anlegen.') : T('Deine Fotos sind bei AutoScales.', 'Ihre Fotos sind bei AutoScales.')) + '</p>' +
-      zeile(warten ? 'offen' : 'ok', '<b>' + f.an + ' von ' + f.alle + '</b> Fotos angekommen') + (v.raum === 'kein' ? '' : zeile('offen', '<b>Showroom-Bilder</b> in Arbeit')) +
+      '<p>' + (abg ? T('Nicht alle Fotos sind angekommen. Die App sendet sie weiter, alle 5 Minuten und bei jedem Öffnen. Bitte öffne die App später noch einmal.', 'Nicht alle Fotos sind angekommen. Die App sendet sie weiter, alle 5 Minuten und bei jedem Öffnen. Bitte öffnen Sie die App später noch einmal.')
+        : warten ? T('Die letzten Fotos gehen raus, sobald Netz da ist. Du kannst schon das nächste Fahrzeug anlegen.', 'Die letzten Fotos gehen raus, sobald Netz da ist. Sie können schon das nächste Fahrzeug anlegen.') : T('Deine Fotos sind bei AutoScales.', 'Ihre Fotos sind bei AutoScales.')) + '</p>' +
+      zeile(warten ? 'offen' : 'ok', '<b>' + f.an + ' von ' + f.alle + '</b> Fotos angekommen') + fotoZeilen(pflicht()) + (v.raum === 'kein' ? '' : zeile('offen', '<b>Showroom-Bilder</b> in Arbeit')) +
       '<div class="sp"></div><button class="btn pr" id="sNeu" type="button">Nächstes Fahrzeug</button><button class="link" id="sGalerie" type="button">Galerie ansehen</button>';
   }
   // Angekommenes Foto ohne Vorschau (nach „Weitermachen“ liegen keine Vorschaubilder vor): Bild des Platzes wie in der Galerie, nicht das Leer-Bild (Befund A14 b)
@@ -2741,24 +2798,29 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     var rs = load('fa_veh');
     if (rs && rs.vehicle && S.cfg && !S.cfg.bad) {
       $('resumeBox').hidden = false;
-      $('resumeTxt').textContent = 'Es läuft noch ein Fahrzeug: ' + rs.vehicle.marke + ' ' + rs.vehicle.modell + ' (' + rs.vehicle.baujahr + '). Weitermachen? Bilder, die noch auf das Hochladen warten, werden weiter gesendet.';
+      var name = rs.vehicle.marke + ' ' + rs.vehicle.modell + ' (' + rs.vehicle.baujahr + ')';
+      $('resumeTxt').textContent = rs.vehicle.abgesendet && rs.offen ? name + ' ist abgesendet, aber es fehlen noch Fotos oder sie sind noch nicht angekommen. Weitermachen zeigt den Stand, dort lassen sich Fotos auch neu aufnehmen.'
+        : 'Es läuft noch ein Fahrzeug: ' + name + '. Weitermachen? Bilder, die noch auf das Hochladen warten, werden weiter gesendet.';
     } else $('resumeBox').hidden = true;
+    queueNote();
   }
   function saveSession() {
     if (!S.vehicle) return;
     var sl = {}; Object.keys(S.slots).forEach(function (k) { var s = S.slots[k]; if (s.state === 'hochgeladen') sl[k] = { zusatz_art: s.zusatz_art, ampelHandy: s.ampelHandy }; });
-    store('fa_veh', { vehicle: S.vehicle, slots: sl }); vehLokal({ vehicle: S.vehicle, slots: sl });
+    var offen = fotosOffen(); store('fa_veh', { vehicle: S.vehicle, slots: sl, offen: offen }); vehLokal({ vehicle: S.vehicle, slots: sl, offen: offen });
   }
   /* Laufendes Fahrzeug zusätzlich im localStorage (Befund A3, 23.11.2026): sessionStorage endet mit dem Tab. Wird der Tab geschlossen oder die App vom Home-Bildschirm
      weggewischt, bietet die App beim nächsten Öffnen „Weitermachen“ an. Übernommen wird es nur, wenn kein offener Tab es führt (Lebenszeichen älter als 8 s), es höchstens
-     24 h alt und nicht abgesendet ist und zu Server und Zugang des Links passt (gespeichert wird nur die Kennung des Zugangs, nie das Zugangswort). */
+     24 h alt ist und zu Server und Zugang des Links passt (gespeichert wird nur die Kennung des Zugangs, nie das Zugangswort).
+     Ab 17 f bleibt auch ein abgesendetes Fahrzeug erreichbar, solange ihm ein Pflichtbild fehlt oder ein Foto noch nicht beim Server ist (rs.offen). Giannis 24.11.2026:
+     „nur 10 von 12 Fotos angekommen“, nach „Absenden“ gab es nur noch „Neues Fahrzeug“. Sind alle Fotos angekommen, verschwindet der Eintrag wie bisher. */
   var VEH_LOKAL_MS = 24 * 3600 * 1000, VEH_HB_MS = 8000;
   function zugangKennung() { return S.cfg && S.cfg.zugang ? String(S.cfg.zugang).split('-')[0] : ''; }
-  function vehLokal(rs) { if (S.demo || !S.cfg || !S.cfg.url || !rs.vehicle) return; lsStore('fa_veh_l', rs.vehicle.abgesendet ? null : { rs: rs, t: Date.now(), hb: Date.now(), u: S.cfg.url, z: zugangKennung() }); }
+  function vehLokal(rs) { if (S.demo || !S.cfg || !S.cfg.url || !rs.vehicle) return; lsStore('fa_veh_l', rs.vehicle.abgesendet && !rs.offen ? null : { rs: rs, t: Date.now(), hb: Date.now(), u: S.cfg.url, z: zugangKennung() }); }
   function vehLokalHolen() {
     if (S.demo || !S.cfg || S.cfg.bad || !S.cfg.url || load('fa_veh')) return;
     var m = lsLoad('fa_veh_l'), now = Date.now();
-    if (!m || !m.rs || !m.rs.vehicle || m.rs.vehicle.abgesendet || now - (m.rs.vehicle.angelegt || m.t) > VEH_LOKAL_MS || now - (m.hb || 0) < VEH_HB_MS || m.u !== S.cfg.url || m.z !== zugangKennung()) return;
+    if (!m || !m.rs || !m.rs.vehicle || (m.rs.vehicle.abgesendet && !m.rs.offen) || now - (m.rs.vehicle.angelegt || m.t) > VEH_LOKAL_MS || now - (m.hb || 0) < VEH_HB_MS || m.u !== S.cfg.url || m.z !== zugangKennung()) return;
     store('fa_veh', m.rs);
   }
   function vehLokalWeg(id) { var m = lsLoad('fa_veh_l'); if (m && m.rs && m.rs.vehicle && m.rs.vehicle.id === id) lsStore('fa_veh_l', null); }
