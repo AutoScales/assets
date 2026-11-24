@@ -514,7 +514,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-17c';
+  var APP = 'foto-app-test-17d';
   var RAD = Math.PI / 180;
   /* =====================================================================
      FREIE KAMERA (Fassung 17). Giannis 23.11.2026: „man öffnet die App, man sieht den ganzen Bildschirm als freie Kamera und wir lassen das mit den Kasten und alles weg.
@@ -980,6 +980,10 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   }
   function zusatzIds() { return Object.keys(S.slots).filter(function (k) { return /^zusatz\d$/.test(k) && S.slots[k].state !== 'leer'; }).sort(); }
   function hasPhoto(id) { var s = S.slots[id]; return !!(s && (s.state !== 'leer' || s.server)); }
+  /* Fahrzeugschein ab Fassung 17 d (Giannis 24.11.2026: „Foto bleibt am Gerät“): Das Foto wird nicht hochgeladen und nicht gemeldet. Die App liest die Daten am Gerät,
+     nur die Daten gehen hoch (die FIN über fahrzeug_daten). Am Fahrzeug steht nur, dass ein Foto gemacht wurde (scheinLokal). hasPhoto('fahrzeugschein') gilt weiter
+     für Scheine, die eine ältere Fassung hochgeladen hat. */
+  function hatSchein() { return !!(S.vehicle && S.vehicle.scheinLokal) || hasPhoto('fahrzeugschein'); }
 
   /* =====================================================================
      Lagesensor (aus Probe 4: Schwerkraft, Ruhe, frischer Wert). Seit Fassung 17 läuft er nur noch still mit: Er dreht die Oberfläche, richtet Außenfotos gerade
@@ -1917,7 +1921,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       id: st.fotoId, fahrzeug_id: S.vehicle.id, platz: m.key, zusatz_nr: m.zusatz_nr, zusatz_art: m.art === 'zusatz' ? S.zusatzArt : null,
       ampel_handy: P.ampel, ampel_handy_gruende: P.zeilen.map(function (z) { return z.text; }).join('; '), geraet: dev(), brennweite_kb: (r.gerade && r.f35 != null) ? +(r.f35 * r.gerade.faktor).toFixed(1) : r.f35, neigung: r.snap ? +r.snap.p.toFixed(1) : null, rollen: r.gerade ? 0 : (r.snap ? +r.snap.r.toFixed(1) : null),
       drehung: r.drehung, breite: r.w, hoehe: r.h, bytes: r.blob.size,
-      app_details: { app: APP, quelle: r.quelle, selbstausloeser: false, ausloeser: { art: 'manuell', freigabe: kam ? 'frei' : 'kamera_app', frei_nach_ms: r.how.freiMs != null ? r.how.freiMs : null, tipp_nach_ms: r.how.tippMs != null ? r.how.tippMs : null, nachstabil_ms: r.how.nach ? r.how.nach.ms : null, nachstabil_ruhig: r.how.nach ? r.how.nach.ruhig : null },
+      app_details: { app: APP, schein: (S.vehicle && S.vehicle.scheinLese) || undefined, quelle: r.quelle, selbstausloeser: false, ausloeser: { art: 'manuell', freigabe: kam ? 'frei' : 'kamera_app', frei_nach_ms: r.how.freiMs != null ? r.how.freiMs : null, tipp_nach_ms: r.how.tippMs != null ? r.how.tippMs : null, nachstabil_ms: r.how.nach ? r.how.nach.ms : null, nachstabil_ruhig: r.how.nach ? r.how.nach.ruhig : null },
         ohne_sensor: !(r.snap && r.snap.p != null), haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, brennweite_quelle: r.f35q || null,
         datei: { roh: r.srcW + 'x' + r.srcH, roh_bytes: r.rohBytes || null, hochgeladen: r.w + 'x' + r.h, bytes: r.blob.size, hochladen_ms: null },
         klasse: (S.vehicle && S.vehicle.klasse && KLASSE_NAME[S.vehicle.klasse]) || null, cabrio: klasseOf() === 'cabrio',
@@ -2072,6 +2076,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     haltStart();
     if (!(await idbOpen())) return;
     var all = (await idbAll()) || [];
+    all = all.filter(function (r) { if (r.slot !== 'fahrzeugschein') return true; idbDel(r.id); return false; });   // ab 17 d: ein wartendes Schein-Foto aus einer älteren Fassung wird nicht mehr gesendet, sondern verworfen
     all.sort(function (a, b) { return a.t - b.t; });
     if (!S.api) {   // ohne Link geöffnet: nur wartende Fotos mit Sendeschein nachsenden, alle an denselben Server
       var mit = all.filter(function (r) { return scheinOk(r); }); if (!mit.length) return;   // auch nicht endgültig abgelehnte Fotos (failed) gehen erneut raus
@@ -2449,11 +2454,11 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       '<label class="fld"><span>Weitere Notizen</span><textarea id="sNotiz" rows="4" maxlength="' + NOTIZ_MAX + '" autocapitalize="sentences" autocorrect="on" spellcheck="true" placeholder="z. B. zweiter Schlüssel vorhanden, Winterräder auf Alu">' + esc(d.notizEntwurf != null ? d.notizEntwurf : (d.notizen || '')) + '</textarea>' +
       '<small class="tipp">' + T('Tipp: Tipp aufs Mikrofon der Tastatur und sprich die Notiz einfach ein.', 'Tipp: Tippen Sie auf das Mikrofon der Tastatur und sprechen Sie die Notiz ein.') + '</small></label>' + schrittFuss('Später im Portal ausfüllen');
     if (name === 'schein') {
-      var hatS = hasPhoto('fahrzeugschein'), su = hatS ? scheinUrl() : null;
+      var hatS = hatSchein(), su = hatS ? scheinUrl() : null;
       return schrittKopf('schein') + '<div class="karte">' + (su ? '<button class="scheinbild" id="sScheinGross" type="button" aria-label="Fahrzeugschein groß ansehen"><img alt="Fahrzeugschein" src="' + su + '"><span class="lupe">' + icon('lupe') + 'Tippen vergrößert</span></button>' : V10.daten) + '</div>' +
         '<p class="msg" id="scheinStatus" role="status" aria-live="polite"' + (hatS ? '' : ' hidden') + '>' + (hatS ? esc(S.scheinStatus || 'Foto gespeichert.') : '') + '</p>' +
         '<h4>Fahrzeugschein</h4>' +
-        '<p>' + T('Fotografiere die Vorderseite (Zulassungsbescheinigung Teil I). Das Foto reicht. Die FIN kannst du zusätzlich von Hand eintragen, das ist keine Pflicht.', 'Fotografieren Sie die Vorderseite (Zulassungsbescheinigung Teil I). Das Foto reicht. Die FIN können Sie zusätzlich von Hand eintragen, das ist keine Pflicht.') + ' Testphase: nur bei eigenen Autos.</p>' +
+        '<p>' + T('Fotografiere die Vorderseite (Zulassungsbescheinigung Teil I). Die App liest die FIN aus dem Foto. Das Foto bleibt auf deinem Gerät und wird nicht hochgeladen. Bitte vergleiche die FIN oder trage sie von Hand ein.', 'Fotografieren Sie die Vorderseite (Zulassungsbescheinigung Teil I). Die App liest die FIN aus dem Foto. Das Foto bleibt auf Ihrem Gerät und wird nicht hochgeladen. Bitte vergleichen Sie die FIN oder tragen Sie sie von Hand ein.') + ' Testphase: nur bei eigenen Autos.</p>' +
         '<label class="btn" id="sScheinLbl" style="position:relative">' + (hatS ? 'Neu fotografieren' : 'Fahrzeugschein fotografieren') + '<input type="file" id="sScheinIn" accept="image/*" capture="environment" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;font-size:0"></label>' +
         '<label class="fld"><span>FIN (Feld E, 17 Zeichen), freiwillig</span><input id="sFin" type="text" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="z. B. WVWZZZ1KZAW000000" value="' + esc(d.fin || S.scheinFin || '') + '"></label>' + schrittFuss('Später im Portal nachreichen');
     }
@@ -2474,7 +2479,8 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       if (d.km == null) fehlt.push('Kilometer'); if (!d.motorisierung) fehlt.push('Motorisierung');
       z += zeile(fehlt.length ? 'offen' : 'ok', fehlt.length ? 'Fahrzeugdaten: <b>' + fehlt.join(', ') + '</b> ' + (fehlt.length === 1 ? 'fehlt' : 'fehlen') : 'Fahrzeugdaten vollständig');
       z += zeile(d.ok_zustand ? 'ok' : 'offen', d.ok_zustand ? 'Zustand und Unterlagen angegeben' : '<b>Zustand und Unterlagen</b> fehlen');
-      z += zeile(hasPhoto('fahrzeugschein') ? 'ok' : 'offen', (hasPhoto('fahrzeugschein') ? 'Fahrzeugschein fotografiert' : '<b>Fahrzeugschein</b> fehlt') + (d.fin ? ', FIN <b>' + esc(d.fin) + '</b>' : ''));   // die FIN ist freiwillig: ohne FIN bleibt kein offener Punkt
+      var hs = hatSchein();   // ab 17 d geht vom Schein nur die FIN hoch: ohne FIN ist der Punkt offen (sperrt nichts)
+      z += zeile(d.fin ? 'ok' : 'offen', d.fin ? (hs ? 'Fahrzeugschein fotografiert, ' : '') + 'FIN <b>' + esc(d.fin) + '</b>' : hs ? 'Fahrzeugschein fotografiert, <b>FIN</b> fehlt noch' : '<b>Fahrzeugschein</b> fehlt');
       z += zeile(d.preis_brutto != null ? 'ok' : 'offen', d.preis_brutto != null ? 'Preis: <b>' + euroText(d.preis_brutto) + '</b> brutto' + (d.verhandlungsbasis ? ', Verhandlungsbasis' : '') : '<b>Preis</b> fehlt');
       return schrittKopf('pruefen') + '<h4>Alles beisammen?</h4><p><b>' + da + ' von ' + PF.length + '</b> Pflichtbildern · ' + titel + '</p><div class="grid">' + kacheln + '</div>' + z +
         (fehlt.length || !d.ok_zustand || d.preis_brutto == null ? '<p>Fehlende Angaben lassen sich im Portal nachholen.</p>' : '') +
@@ -2493,7 +2499,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     S.schritt = name; S.vehicle.schritt = name; saveSession();
     $('pSchritt').innerHTML = schrittHtml(name); showPage('pSchritt');
     if (name === 'preis' && S.vehicle.raumOffen && !S.vehicle.raumZu && !S.vehicle.raumFest && !S.demo) raumNochOffen(S.vehicle);
-    if (name === 'schein' && hasPhoto('fahrzeugschein') && !scheinUrl()) scheinLaden();   // nach dem Neuladen: Vorschau aus dem Gerätespeicher
+    if (name === 'schein' && hatSchein() && !scheinUrl()) scheinLaden();   // nach dem Neuladen: Vorschau aus dem Gerätespeicher
   }
   /* Schritt 5 (Befund A1): beim Server nachfragen, ob der Raum noch offen ist. Hat die Frist (raum_frist) die Fotos schon freigegeben, antwortet fahrzeug_raum_offen
      „schon_fotos“; dann zeigt Schritt 5 den festen Raum statt einer Wahl, die nichts mehr bewirkt. Ohne Antwort (Netz) bleibt die Anzeige, wie sie ist. */
@@ -2528,7 +2534,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   async function scheinLaden() {
     if (!S.vehicle || scheinUrl() || S.scheinLaedt) return; S.scheinLaedt = true;
     var r = await scheinDb('readonly', function (st) { return st.get('schein'); }); S.scheinLaedt = false;
-    if (!r || !r.blob || !S.vehicle || r.id !== S.vehicle.id || scheinUrl() || !hasPhoto('fahrzeugschein')) return;
+    if (!r || !r.blob || !S.vehicle || r.id !== S.vehicle.id || scheinUrl() || !hatSchein()) return;
     S.schein = { id: r.id, url: URL.createObjectURL(r.blob) }; scheinNeuZeichnen();
   }
   /* Großansicht: das Bild über die ganze Seite. Tippen aufs Bild vergrößert in Stufen (1, 2, 3, dann wieder 1), verschoben wird mit dem Finger;
@@ -2554,12 +2560,9 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       var exif = await readExif(f), img = await decodeImage(f), orient = exif.orientation || 1, extra = 0;
       if (exif.sofW && (orient === 6 || orient === 8) && exif.sofW !== exif.sofH && img.w === exif.sofW && img.h === exif.sofH) extra = orient === 6 ? 90 : 270;
       var res = await renderUpright(img, extra, null, CFG.LONG_EDGE_SCHEIN); URL.revokeObjectURL(img.url); res.klein.width = 1; res.klein.height = 1;
-      var st = slotState('fahrzeugschein'); st.thumb = res.thumb; st.state = 'wartet'; st.err = null; st.fotoId = uuid(); st.server = null;
-      var meta = { id: st.fotoId, fahrzeug_id: S.vehicle.id, platz: 'fahrzeugschein', zusatz_nr: null, zusatz_art: null, ampel_handy: null, ampel_handy_gruende: '', geraet: dev(),
-        brennweite_kb: exif.focal35 != null ? exif.focal35 : null, neigung: null, rollen: null, drehung: extra, breite: res.w, hoehe: res.h, bytes: res.blob.size,
-        app_details: { app: APP, quelle: 'kamera-app', dokument: true, datei: { roh: img.w + 'x' + img.h, roh_bytes: f.size || null, hochgeladen: res.w + 'x' + res.h, bytes: res.blob.size, hochladen_ms: null } } };
+      // Ab 17 d: kein Hochladen, keine Meldung an den Server. Das Foto liegt nur im Gerätespeicher (fa_schein), bis das Fahrzeug abgesendet oder ein neues begonnen ist.
+      S.vehicle.scheinLokal = Date.now(); S.vehicle.scheinLese = null;
       scheinMerken(S.vehicle.id, res.blob); S.scheinStatus = 'Foto gespeichert.'; S.scheinFin = '';
-      enqueue({ slot: 'fahrzeugschein', id: st.fotoId, path: S.vehicle.id + '/fahrzeugschein_' + st.fotoId + '.jpg', blob: res.blob, meta: meta, tries: 0, fileDone: false, state: 'wartet' });
       saveSession(); scheinNeuZeichnen();
       scheinLesen(res.blob);
     } catch (e) { smsg('Das Foto ließ sich nicht lesen. Bitte noch einmal fotografieren.'); }
@@ -2575,6 +2578,8 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   // ergebnis: { fin: '…' } (nur Fahrzeugfelder, kein Rohtext) oder null, wenn nichts lesbar war. Eine gelesene FIN füllt das leere Feld vor; an den Server geht sie erst mit „Weiter“.
   function scheinGelesen(ergebnis) {
     var fin = ergebnis && typeof ergebnis.fin === 'string' ? ergebnis.fin.toUpperCase().replace(/[\s.-]/g, '') : '';
+    // Nur Messwerte fürs Protokoll (keine FIN, kein Text): Sie reisen in app_details der nächsten Fahrzeugfotos mit.
+    try { var L = window.ScheinLesen; S.vehicle.scheinLese = { gelesen: /^[A-HJ-NPR-Z0-9]{17}$/.test(fin), ms: ergebnis && ergebnis.ms != null ? ergebnis.ms : null, grund: ergebnis && ergebnis.grund ? String(ergebnis.grund).slice(0, 60) : '', weg: L && typeof L.weg === 'function' ? L.weg() : '' }; saveSession(); } catch (e) { /* nur Protokoll */ }
     if (/^[A-HJ-NPR-Z0-9]{17}$/.test(fin)) { S.scheinFin = fin; var f = $('sFin'); if (f && !f.value.trim()) f.value = fin; scheinStatus('FIN gelesen: ' + fin + ', bitte vergleichen.'); }
     else { S.scheinFin = ''; scheinStatus('Foto gespeichert. FIN nicht lesbar, bitte eintippen.'); }
   }
