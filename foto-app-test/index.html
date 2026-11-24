@@ -557,7 +557,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     // die die Kamera liefert, höchstens LONG_EDGE an der langen Kante (4032 = 12 Megapixel). Grund der Grenze: Safari zeichnet höchstens rund 16,7 Millionen Bildpunkte,
     // 48 Megapixel sprengten den Speicher. Der Fahrzeugschein bleibt bei LONG_EDGE_SCHEIN.
     LONG_EDGE: 4032, LONG_EDGE_SCHEIN: 2560, QUALITY: 0.85,
-    FOTO_VERSUCHE: 3,           // liefert die Kamera trotz Größenangabe nur ein kleines Foto, löst die App so oft aus (das erste Mal mitgezählt)
+    FOTO_VERSUCHE: 2,           // kleines Foto trotz Größenangabe: Kamera neu starten und noch einmal auslösen, höchstens so viele Aufnahmen (17 f)
     FOTO_MS: 6000,              // takePhoto mit Größenangabe: antwortet die Kamera nicht in dieser Zeit, gilt der Rückfall ohne Angaben (danach für diesen Kamerastart immer)
     SETTLE_MS: 1500,            // Einschwingzeit nach Kamerastart
     NACH_MAX_MS: 900, NACH_FENSTER_MS: 220, NACH_RUHIG_MS: 120,   // nach dem Tipp kurz nachstabilisieren (der Tipp wackelt), höchstens so lange
@@ -1263,7 +1263,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     S.vw = cv.width; S.vh = cv.height; S.camNote = 'Demo-Kamera'; applyGeom();
     clearInterval(S.simT); S.simT = setInterval(function () { if (!$('stage').hidden && S.stream) simScene(); }, 400);   // neue Bilder, damit der Strom Bildfläche liefert
     S.ic = { takePhoto: function () { return toBlob(S.simCv, .9); } };
-    S.streamOpenedAt = performance.now(); S.shotsSinceOpen = 0;
+    S.streamOpenedAt = performance.now(); S.shotsSinceOpen = 0; S.kameraAlt = false; S.drehungen = 0; clearTimeout(S.drehT);
   }
 
   /* =====================================================================
@@ -1515,9 +1515,26 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       if (!S.track) return null; var st = S.track.getSettings ? S.track.getSettings() : {}, v = $('video'), jetzt = performance.now();
       return { strom: st.width + 'x' + st.height, rate: st.frameRate != null ? Math.round(st.frameRate * 10) / 10 : null, zoom: st.zoom != null ? +(+st.zoom).toFixed(2) : null, bild: v.videoWidth + 'x' + v.videoHeight,
         stumm: S.track.muted ? true : undefined, zustand: S.track.readyState !== 'live' ? S.track.readyState : undefined,
-        seit_start_ms: Math.round(jetzt - S.streamOpenedAt), seit_foto_ms: S.letztesFoto ? Math.round(jetzt - S.letztesFoto) : null, fotos_seit_start: S.fotosSeitStart || 0 };
+        seit_start_ms: Math.round(jetzt - S.streamOpenedAt), seit_foto_ms: S.letztesFoto ? Math.round(jetzt - S.letztesFoto) : null, fotos_seit_start: S.fotosSeitStart || 0, drehungen: S.drehungen || 0 };
     } catch (e) { return null; }
   }
+  /* DREHEN BEI LAUFENDER KAMERA (Fassung 17 f). Gemessen am 24.11.2026 an Giannis' iPhone (Kamera-Testseite Fassung 5, Weg D): Wird das Handy bei laufender Kamera
+     hochkant und wieder quer gedreht, liefert takePhoto danach nur noch 1920 × 1080 (4 von 4), obwohl getSettings weiter 4032 × 3024 meldet. Ohne Drehen kamen
+     10 von 10 Fotos groß, auch über 60 s und mit der Seite „Passt das Foto?“ dazwischen. Der Händler senkt und dreht das Handy zwischen den Plätzen; so entstanden
+     am 24.11. 11 von 13 kleine Fotos. Die Kamerawerte verraten es nicht, erkennbar ist es nur am Ereignis.
+     Behebung: Ändert sich die Lage der Seite, das Fenster (quer gegen hochkant) oder die Form des Sucherbilds bei laufender Kamera, gilt die Kamera als verstellt
+     (S.kameraAlt). Vor dem nächsten Foto startet die App sie neu (stop, getUserMedia mit derselben Kamera und denselben Vorgaben): sofort, wenn gerade der Sucher
+     offen ist, sonst beim nächsten Platz (runShot). Sicherung für alles, was kein Ereignis meldet (Drehsperre): siehe shoot(), kleines Foto. */
+  function kameraGedreht() {
+    if (!S.stream || !S.track || S.track.readyState !== 'live') return;
+    S.kameraAlt = true; S.drehungen = (S.drehungen || 0) + 1;
+    clearTimeout(S.drehT);
+    S.drehT = setTimeout(function () { if (S.kameraAlt && !$('stage').hidden && (S.phase === 'still' || S.phase === 'settle') && $('vRev').hidden && $('vBet').hidden) runShot(); }, 700);   // Sucher offen: gleich neu starten (runShot wartet auf die Querlage)
+  }
+  var fensterQuerAlt = window.innerWidth > window.innerHeight;
+  window.addEventListener('orientationchange', kameraGedreht);
+  try { if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', kameraGedreht); } catch (e) { /* ohne das Ereignis weiter */ }
+  window.addEventListener('resize', function () { var q = window.innerWidth > window.innerHeight; if (q !== fensterQuerAlt) { fensterQuerAlt = q; kameraGedreht(); } });
   function closeStream() {
     if (S.stream) S.stream.getTracks().forEach(function (t) { t.stop(); });
     S.stream = null; S.track = null; S.ic = null;
@@ -1552,11 +1569,11 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     await new Promise(function (res) { if (v.videoWidth) return res(); v.onloadedmetadata = function () { res(); }; setTimeout(res, 3000); });
     S.vw = v.videoWidth || 1; S.vh = v.videoHeight || 1; applyGeom();
     S.ic = ('ImageCapture' in window) ? new ImageCapture(S.track) : null;
-    S.streamOpenedAt = performance.now(); S.shotsSinceOpen = 0; S.letztesFoto = 0; S.fotosSeitStart = 0;
+    S.streamOpenedAt = performance.now(); S.shotsSinceOpen = 0; S.letztesFoto = 0; S.fotosSeitStart = 0; S.kameraAlt = false; S.drehungen = 0; clearTimeout(S.drehT);
     S.track.addEventListener('ended', function () { if (S.track && S.track.readyState === 'ended') { S.stream = null; } });
   }
   // Dreht der Browser das Kamerabild mit dem Handy, ändern sich die Maße; dann Bühne neu ausrichten
-  $('video').addEventListener('resize', function () { var v = $('video'); if (v.videoWidth) { S.vw = v.videoWidth; S.vh = v.videoHeight; applyGeom(); } });
+  $('video').addEventListener('resize', function () { var v = $('video'); if (v.videoWidth) { var gedreht = S.vw > 1 && S.vh > 1 && (S.vw > S.vh) !== (v.videoWidth > v.videoHeight); S.vw = v.videoWidth; S.vh = v.videoHeight; applyGeom(); if (gedreht) kameraGedreht(); } });
   // Hauptkamera sicher wählen: unter Android nennt der Browser die Kameras nur „camera N“. Wir lesen die Kleinbild-Brennweite aus einem Probefoto.
   async function chooseCamera() {
     if (S.camChoice !== null) return;
@@ -1686,6 +1703,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       await waitLandscape(my);
       // 2) Kamera
       paneShow('vCam', true); setLabels(); $('shotBtn').disabled = true; $('shotBtn').onclick = null;
+      if (S.kameraAlt && S.stream) closeStream();   // seit dem Kamerastart gedreht: neu starten, sonst liefert das iPhone nur kleine Fotos (17 f)
       if (!S.stream || !S.track || S.track.readyState !== 'live') {
         say('Kamera startet …');
         if (S.cfg && S.cfg.sim) { await openSim(); chk(my); }
@@ -1818,10 +1836,11 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     var live = null; try { live = smallOf($('video'), S.vw, S.vh); } catch (e) { /* ohne Vergleich weiter */ }
     // Volle Fotoauflösung: mit der größten Stufe bis CFG.LONG_EDGE auslösen; scheitert das oder bleibt die Antwort aus, ohne Angaben (Rückfall, siehe fotoEinstellung)
     /* IMMER DAS ECHTE GROSSE FOTO (Fassung 17 e, Giannis 24.11.2026: „immer das echte große Bild nehmen … Immer.“; nie ein Standbild aus dem Sucher). Befund am iPhone:
-       Trotz Größenangabe liefert takePhoto oft nur 1080 × 1920 (24.11.: 11 von 13 Aufnahmen). Die App liest darum die Größe des gelieferten Fotos und löst bis zu
-       CFG.FOTO_VERSUCHE-mal aus, solange es weniger als die Hälfte der verlangten Bildpunkte hat. Bleibt es klein, sagt das Prüfen-Bild es gelb (Code foto_klein);
-       nichts geht still durch. Alle gelieferten Größen stehen im Protokoll (kamera_foto.groessen). Ohne Größenangabe (Rückfall) zählt die Größe des Kamerastroms. */
-    var ps = await fotoEinstellung(), rueck = false, soll = ps ? ps.imageWidth * ps.imageHeight : (S.vw > 1 && S.vh > 1 ? S.vw * S.vh : 0), verlangt = ps ? ps.imageWidth + 'x' + ps.imageHeight : null, gr = [], klein = false;
+       Trotz Größenangabe liefert takePhoto oft nur 1080 × 1920 (24.11.: 11 von 13 Aufnahmen; Ursache: Drehen bei laufender Kamera, siehe kameraGedreht).
+       Sicherung (17 f): Die App liest die Größe des gelieferten Fotos. Hat es weniger als die Hälfte der verlangten Bildpunkte, startet sie die Kamera neu und löst
+       still noch einmal aus (höchstens CFG.FOTO_VERSUCHE Aufnahmen). Bleibt es klein, sagt das Prüfen-Bild es gelb (Code foto_klein); nichts geht still durch.
+       Alle gelieferten Größen und der Neustart stehen im Protokoll (kamera_foto.groessen, neustart). Ohne Größenangabe (Rückfall) zählt die Größe des Kamerastroms. */
+    var ps = await fotoEinstellung(), rueck = false, soll = ps ? ps.imageWidth * ps.imageHeight : (S.vw > 1 && S.vh > 1 ? S.vw * S.vh : 0), verlangt = ps ? ps.imageWidth + 'x' + ps.imageHeight : null, gr = [], klein = false, neustart = false;
     var vor = kameraJetzt();   // echte Werte der Kamera unmittelbar vor dem Auslösen (nur lesen)
     for (;;) {
       var psJ = gr.length ? await fotoEinstellung() : ps;
@@ -1831,8 +1850,12 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       var xG = await readExif(blob), px = xG.sofW && xG.sofH ? xG.sofW * xG.sofH : 0; gr.push(px ? xG.sofW + 'x' + xG.sofH : '?');
       klein = !!(soll && px && px < soll * 0.5);
       if (!klein || rueck || !psJ || gr.length >= CFG.FOTO_VERSUCHE || my !== S.token) break;
+      neustart = true;   // kleines Foto: Kamera neu starten (stop, getUserMedia wie beim Start), dann noch einmal auslösen
+      try { if (S.cfg && S.cfg.sim) await openSim(); else await openStream(S.camChoice || null, my); } catch (e) { if (e === CANCEL) throw e; break; }
+      if (!S.ic) break;
+      await sleepC(my, 300);
     }
-    how.foto = { faehig: S.fotoCaps || null, verlangt: verlangt, rueckfall: rueck, zoom_aus: !!S.zoomAus, versuche: gr.length, groessen: (gr.length > 1 || klein) ? gr : undefined, klein: klein || undefined, vor: vor || undefined, datei: (xG.sofW && xG.sofH) ? xG.sofW + 'x' + xG.sofH : undefined, ausloesen_ms: Math.round(performance.now() - t0) };
+    how.foto = { faehig: S.fotoCaps || null, verlangt: verlangt, rueckfall: rueck, zoom_aus: !!S.zoomAus, versuche: gr.length, groessen: (gr.length > 1 || klein) ? gr : undefined, klein: klein || undefined, neustart: neustart || undefined, vor: vor || undefined, datei: (xG.sofW && xG.sofH) ? xG.sofW + 'x' + xG.sofH : undefined, ausloesen_ms: Math.round(performance.now() - t0) };
     var snapE = snapshot();   // Lage nach der Aufnahme: nur fürs Protokoll (wie weit das Handy während der Aufnahme weiterdreht)
     chk(my);
     flash();
