@@ -514,7 +514,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-17d';
+  var APP = 'foto-app-test-17e';
   var RAD = Math.PI / 180;
   /* =====================================================================
      FREIE KAMERA (Fassung 17). Giannis 23.11.2026: „man öffnet die App, man sieht den ganzen Bildschirm als freie Kamera und wir lassen das mit den Kasten und alles weg.
@@ -536,6 +536,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     // die die Kamera liefert, höchstens LONG_EDGE an der langen Kante (4032 = 12 Megapixel). Grund der Grenze: Safari zeichnet höchstens rund 16,7 Millionen Bildpunkte,
     // 48 Megapixel sprengten den Speicher. Der Fahrzeugschein bleibt bei LONG_EDGE_SCHEIN.
     LONG_EDGE: 4032, LONG_EDGE_SCHEIN: 2560, QUALITY: 0.85,
+    KLEIN_BYTES: 2900000,       // Auffangnetz (17 e): lehnt der Server ein Foto als zu groß ab, rechnet die App es höchstens auf diese Größe (unter der alten Speichergrenze von 3 MB)
     FOTO_MS: 6000,              // takePhoto mit Größenangabe: antwortet die Kamera nicht in dieser Zeit, gilt der Rückfall ohne Angaben (danach für diesen Kamerastart immer)
     SETTLE_MS: 1500,            // Einschwingzeit nach Kamerastart
     NACH_MAX_MS: 900, NACH_FENSTER_MS: 220, NACH_RUHIG_MS: 120,   // nach dem Tipp kurz nachstabilisieren (der Tipp wackelt), höchstens so lange
@@ -905,7 +906,8 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
         if (r.ok) return true;
         var dup = r.status === 409 || (r.json && String(r.json.statusCode) === '409');
         if (dup) return true;   // Datei liegt schon (Wiederholung nach Abbruch)
-        throw new ApiError(r.status, msgOf(r), false);
+        var gross = r.status === 413 || (r.json && String(r.json.statusCode) === '413') || /too large|maximum allowed size/i.test(msgOf(r));   // Speichergrenze des Servers (17 e): kommt als HTTP 400 mit statusCode 413
+        throw new ApiError(r.status, msgOf(r), false, gross ? { fehler: 'zu_gross' } : null);
       },
       report: function (meta) { return rpc('foto_melden', { p: meta }); },
       status: function (id) { return rpc('foto_status', { p_fahrzeug_id: id }); },
@@ -2208,6 +2210,25 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   }
   // Zeitgrenze je Upload nach Größe: 30 s plus 8 KB je Sekunde, mindestens 90 s; nach jeder Zeitüberschreitung doppelt so lang, höchstens 15 Minuten (Befund A5)
   function uploadMs(it) { var b = it.blob ? it.blob.size || 0 : 0; return Math.min(900000, Math.max(90000, 30000 + b / 8) * Math.pow(2, Math.min(it.zeitAus || 0, 3))); }
+  /* AUFFANGNETZ ZU GROSSE DATEI (Fassung 17 e, Befund vom 24.11.2026: zwei Fotos in voller Auflösung mit 4,2 und 5,5 MB hingen an der Speichergrenze von 3 MB fest).
+     Lehnt der Server ein Foto als zu groß ab, rechnet die App es kleiner (erst die JPEG-Qualität, dann die Maße) und sendet es sofort neu. Das Ziel ist höchstens CFG.KLEIN_BYTES
+     und höchstens 60 % der abgelehnten Größe; bis zum Neuladen gehen größere Fotos gleich so klein raus (S.grenze). Der Server erfährt es in app_details.datei.verkleinert. */
+  async function verkleinern(it, ziel) {
+    var img = await decodeImage(it.blob), c = document.createElement('canvas'), b = null, q = 0, f = 1, w = img.w, h = img.h, von = it.blob.size;
+    var stufen = [[1, .8], [1, .7], [1, .6], [1, .5], [1, .4], [.85, .6], [.72, .6], [.6, .6], [.5, .6], [.4, .55], [.3, .5]];
+    try {
+      for (var i = 0; i < stufen.length && !b; i++) {
+        f = stufen[i][0]; q = stufen[i][1]; w = Math.max(1, Math.round(img.w * f)); h = Math.max(1, Math.round(img.h * f));
+        c.width = w; c.height = h; var x = c.getContext('2d'); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; x.drawImage(img.el, 0, 0, w, h);
+        var k = await toBlob(c, q); if (k && k.size && k.size <= ziel) b = k;
+      }
+    } finally { URL.revokeObjectURL(img.url); c.width = 1; c.height = 1; }
+    if (!b) return false;
+    it.blob = b; var m = it.meta, d = m && m.app_details && m.app_details.datei;
+    if (m) { m.bytes = b.size; m.breite = w; m.hoehe = h; }
+    if (d) { d.bytes = b.size; d.hochgeladen = w + 'x' + h; d.verkleinert = { von_bytes: von, qualitaet: q, massstab: f, grund: 'server_zu_gross' }; }
+    await idbPut(it); return true;
+  }
   function ausSchlange(it) { var i = S.queue.indexOf(it); if (i >= 0) S.queue.splice(i, 1); }
   // Hochladezeit des geglückten Versuchs je Foto ins Protokoll (app_details.datei), bevor das Foto gemeldet wird; versuche: nur, wenn es mehr als einen brauchte
   function hochladeZeit(it, ms) { var d = it.meta && it.meta.app_details && it.meta.app_details.datei; if (!d) return; d.hochladen_ms = Math.round(ms); if (it.tries) d.hochladen_versuche = it.tries + 1; }
@@ -2219,6 +2240,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       var api = apiFuer(it), st = kachelVon(it);
       try {
         st.state = 'sendet'; renderGalleryIfShown();
+        if (!it.fileDone && S.grenze && it.blob && it.blob.size > S.grenze) { try { await verkleinern(it, S.grenze); } catch (x) { /* dann in voller Größe versuchen */ } }   // der Server hat in dieser Sitzung schon ein Foto als zu groß abgelehnt
         if (!it.fileDone) { var tU = performance.now(); await api.upload(it.path, it.blob, uploadMs(it)); it.fileDone = true; hochladeZeit(it, performance.now() - tU); }
         st = kachelVon(it);
         if (haltOf(it)) { st.state = 'gehalten'; st.err = null; idbPut(it); renderGalleryIfShown(); continue; }   // Datei liegt beim Server, Meldung nach der Raumwahl (auch nach dem Neuladen: fileDone im Gerätespeicher)
@@ -2229,6 +2251,11 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
         if (S.nach) { S.nach.ok++; S.nach.netz = false; queueNote(); }
         saveSession(); renderGalleryIfShown(); schedulePoll(1500);
       } catch (e) {
+        if (e && e.fehler === 'zu_gross' && !it.fileDone && it.blob && (it.klein || 0) < 3) {   // Auffangnetz: kleiner rechnen und sofort neu senden (höchstens dreimal je Foto)
+          var zielK = Math.min(CFG.KLEIN_BYTES, Math.floor(it.blob.size * 0.6)), okK = false;
+          try { okK = await verkleinern(it, zielK); } catch (x) { okK = false; }
+          if (okK) { it.klein = (it.klein || 0) + 1; S.grenze = S.grenze ? Math.min(S.grenze, zielK) : zielK; continue; }
+        }
         it.tries++;
         if (permanent(e)) {   // Lösch-Regel: erst beim Server nachfragen, ob die Ablehnung endgültig ist
           var ende = await abgelehnt(api, it, e);
