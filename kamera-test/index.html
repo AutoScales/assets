@@ -24,7 +24,7 @@
 </head>
 <body>
 <h1>Kamera-Test</h1>
-<p>Diese Seite misst, wie groß die Fotos sind, die das Handy dem Browser auf verschiedenen Wegen liefert. <b>Es wird nichts hochgeladen und nichts gespeichert.</b> Bitte das Handy quer halten, auf irgendetwas richten und „Test starten“ tippen. Der Test läuft etwa 2 Minuten von selbst. Fassung 2: zuerst mit derselben Kamera wie die App („Rückkamera“).</p>
+<p>Diese Seite misst, wie groß die Fotos sind, die das Handy dem Browser auf verschiedenen Wegen liefert. <b>Es wird nichts hochgeladen und nichts gespeichert.</b> Bitte das Handy quer halten, auf irgendetwas richten und „Test starten“ tippen. Der Test läuft etwa 2 Minuten von selbst. Fassung 3: zuerst mit derselben Kamera wie die App („Rückkamera“), je Foto mit Brennweite.</p>
 <video id="v" playsinline muted autoplay></video>
 <button id="los" type="button">Test starten</button>
 <p id="stand"></p>
@@ -34,7 +34,7 @@
 <script>
 (function () {
   'use strict';
-  var STAND = 'kamera-test-2', N = 5;
+  var STAND = 'kamera-test-3', N = 5;
   function $(i) { return document.getElementById(i); }
   var zeilen = [];
   function schreib(t) { zeilen.push(t); $('aus').value = zeilen.join('\n'); }
@@ -59,6 +59,21 @@
       }
     } catch (e) { /* unten */ }
     return '?';
+  }
+  // Kleinbild-Brennweite aus dem EXIF (Feld A405), sonst die echte Brennweite (920A); zeigt, welche Linse das Foto gemacht hat
+  async function brennweite(blob) {
+    try {
+      var u8 = new Uint8Array(await blob.slice(0, 131072).arrayBuffer()), b = -1;
+      for (var i = 0; i < u8.length - 10; i++) if (u8[i] === 0x45 && u8[i + 1] === 0x78 && u8[i + 2] === 0x69 && u8[i + 3] === 0x66 && u8[i + 4] === 0 && u8[i + 5] === 0) { b = i + 6; break; }
+      if (b < 0) return 'ohne EXIF';
+      var dv = new DataView(u8.buffer), le = dv.getUint16(b) === 0x4949;
+      function feld(off, tag) { var n = dv.getUint16(b + off, le); for (var k = 0; k < n; k++) { var e = b + off + 2 + k * 12; if (e + 12 > dv.byteLength) return null; if (dv.getUint16(e, le) === tag) return e; } return null; }
+      var ex = feld(dv.getUint32(b + 4, le), 0x8769); if (ex == null) return 'ohne EXIF-Block';
+      var eo = dv.getUint32(ex + 8, le), kb = feld(eo, 0xA405), fl = feld(eo, 0x920A), t = [];
+      if (kb != null) t.push(dv.getUint16(kb + 8, le) + 'mmKB');
+      if (fl != null) { var o = b + dv.getUint32(fl + 8, le), d = dv.getUint32(o + 4, le); if (d) t.push((dv.getUint32(o, le) / d).toFixed(2) + 'mm'); }
+      return t.join('/') || 'Brennweite fehlt';
+    } catch (e) { return 'EXIF?'; }
   }
   var strom = null, spur = null, ic = null;
   function zu() { if (strom) strom.getTracks().forEach(function (t) { t.stop(); }); strom = null; spur = null; ic = null; $('v').srcObject = null; }
@@ -88,7 +103,7 @@
   }
   async function einFoto(ps) {
     var t0 = performance.now();
-    try { var b = await mitZeit(ps ? ic.takePhoto(ps) : ic.takePhoto(), 12000); return (await groesse(b)) + ' ' + (b.size / 1048576).toFixed(1).replace('.', ',') + 'MB ' + Math.round(performance.now() - t0) + 'ms'; }
+    try { var b = await mitZeit(ps ? ic.takePhoto(ps) : ic.takePhoto(), 12000); var ms = Math.round(performance.now() - t0); return (await groesse(b)) + ' ' + (b.size / 1048576).toFixed(1).replace('.', ',') + 'MB ' + ms + 'ms ' + (await brennweite(b)); }
     catch (e) { return 'FEHLER ' + (e && (e.name + ' ' + e.message) || e); }
   }
   async function reihe(titel, ps, pause, n) {
