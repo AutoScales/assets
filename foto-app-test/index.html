@@ -2214,7 +2214,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   function verwerfen(it, st, grund) {
     idbDel(it.id); it.blob = null; it.meta = null; it.failed = true;
     if (st && st.fotoId === it.id) { st.state = st.server ? 'hochgeladen' : 'leer'; st.thumb = st.server ? st.thumb : null; st.item = null; st.err = null; }
-    nachZahl(it, 'geloescht');
+    nachZahl(it, 'geloescht'); startStand(it.vehicleId, null);
     toast(grund === 'voll' ? 'Ein Foto passt nicht mehr dazu (höchstens 30 je Fahrzeug). Es ist vom Gerät gelöscht.' : 'Ein Foto konnte nicht mehr gesendet werden (Fahrzeug abgeschlossen). Es ist vom Gerät gelöscht.', 4000);
   }
   /* NEUVERSUCH (Fassung 17 f): Jedes nicht endgültig abgelehnte Foto steht in S.restoredFailed, auch ohne laufendes Fahrzeug (vorher hing es nur an der Kachel und ging
@@ -2338,7 +2338,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
         st = kachelVon(it);
         ausSchlange(it); st.state = 'hochgeladen'; st.err = null; idbDel(it.id); it.blob = null; it.meta = null;
         if (rep && rep.status) st.server = Object.assign({}, st.server || {}, { status: rep.status });
-        S.netzAus = false; nachZahl(it, 'ok');
+        S.netzAus = false; nachZahl(it, 'ok'); startStand(it.vehicleId, it.slot);
         saveSession(); renderGalleryIfShown(); schedulePoll(1500);
       } catch (e) {
         if (it.ersetzt) { ausSchlange(it); idbDel(it.id); it.blob = null; it.meta = null; renderGalleryIfShown(); continue; }   // inzwischen durch ein neues Foto ersetzt: nicht weiter senden
@@ -2795,14 +2795,26 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
      ===================================================================== */
   function showStart() {
     showPage('pStart'); $('fMsg').textContent = ''; $('fMsg').className = 'msg';
+    startBox(); queueNote();
+  }
+  function startBox() {
     var rs = load('fa_veh');
     if (rs && rs.vehicle && S.cfg && !S.cfg.bad) {
       $('resumeBox').hidden = false;
       var name = rs.vehicle.marke + ' ' + rs.vehicle.modell + ' (' + rs.vehicle.baujahr + ')';
-      $('resumeTxt').textContent = rs.vehicle.abgesendet && rs.offen ? name + ' ist abgesendet, aber es fehlen noch Fotos oder sie sind noch nicht angekommen. Weitermachen zeigt den Stand, dort lassen sich Fotos auch neu aufnehmen.'
-        : 'Es läuft noch ein Fahrzeug: ' + name + '. Weitermachen? Bilder, die noch auf das Hochladen warten, werden weiter gesendet.';
+      $('resumeTxt').textContent = !rs.vehicle.abgesendet ? 'Es läuft noch ein Fahrzeug: ' + name + '. Weitermachen? Bilder, die noch auf das Hochladen warten, werden weiter gesendet.'
+        : rs.offen ? name + ' ist abgesendet, aber es fehlen noch Fotos oder sie sind noch nicht angekommen. Weitermachen zeigt den Stand, dort lassen sich Fotos auch neu aufnehmen.'
+        : name + ' ist abgesendet. Weitermachen zeigt die Galerie.';
     } else $('resumeBox').hidden = true;
-    queueNote();
+  }
+  // Ein Foto ist angekommen oder verworfen, während kein Fahrzeug läuft (Startseite): den gemerkten Stand dieses Fahrzeugs nachziehen, damit der Kasten oben stimmt (17 f)
+  function startStand(vid, slot) {
+    var rs = load('fa_veh'); if (S.vehicle || !rs || !rs.vehicle || rs.vehicle.id !== vid) return;
+    rs.slots = rs.slots || {}; if (slot && !rs.slots[slot]) rs.slots[slot] = {};
+    rs.offen = S.queue.concat(S.restoredFailed).some(function (it) { return it.vehicleId === vid; }) || PLAETZE.some(function (p) { return !(p.key === 'ruecksitzbank' && rs.vehicle.keineRueck) && !rs.slots[p.key]; });
+    store('fa_veh', rs);
+    var m = lsLoad('fa_veh_l'); if (m && m.rs && m.rs.vehicle && m.rs.vehicle.id === vid) { if (rs.vehicle.abgesendet && !rs.offen) m = null; else m.rs = rs; lsStore('fa_veh_l', m); }
+    if (!$('pStart').hidden) startBox();
   }
   function saveSession() {
     if (!S.vehicle) return;
