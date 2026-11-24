@@ -24,7 +24,7 @@
 </head>
 <body>
 <h1>Kamera-Test</h1>
-<p>Diese Seite misst, wie groß die Fotos sind, die das Handy dem Browser auf verschiedenen Wegen liefert. <b>Es wird nichts hochgeladen und nichts gespeichert.</b> Bitte das Handy quer halten, auf irgendetwas richten und „Test starten“ tippen. Der Test läuft etwa 2 Minuten von selbst.</p>
+<p>Diese Seite misst, wie groß die Fotos sind, die das Handy dem Browser auf verschiedenen Wegen liefert. <b>Es wird nichts hochgeladen und nichts gespeichert.</b> Bitte das Handy quer halten, auf irgendetwas richten und „Test starten“ tippen. Der Test läuft etwa 2 Minuten von selbst. Fassung 2: zuerst mit derselben Kamera wie die App („Rückkamera“).</p>
 <video id="v" playsinline muted autoplay></video>
 <button id="los" type="button">Test starten</button>
 <p id="stand"></p>
@@ -34,7 +34,7 @@
 <script>
 (function () {
   'use strict';
-  var STAND = 'kamera-test-1', N = 5;
+  var STAND = 'kamera-test-2', N = 5;
   function $(i) { return document.getElementById(i); }
   var zeilen = [];
   function schreib(t) { zeilen.push(t); $('aus').value = zeilen.join('\n'); }
@@ -64,7 +64,7 @@
   function zu() { if (strom) strom.getTracks().forEach(function (t) { t.stop(); }); strom = null; spur = null; ic = null; $('v').srcObject = null; }
   async function auf(video, name) {
     zu();
-    video.facingMode = { ideal: 'environment' };
+    if (video.geraet) { video.deviceId = { exact: video.geraet }; delete video.geraet; } else video.facingMode = { ideal: 'environment' };
     // wie die App: geht die feste Größe nicht, erst hochkant fest, dann als Wunsch, zuletzt ohne „zoom“
     var W = video.width && video.width.exact, H = video.height && video.height.exact, wege = [video];
     if (W && H) { wege.push(Object.assign({}, video, { width: { exact: H }, height: { exact: W } })); wege.push(Object.assign({}, video, { width: { ideal: W }, height: { ideal: H } })); }
@@ -76,6 +76,7 @@
     await new Promise(function (r) { if ($('v').videoWidth) return r(); $('v').onloadedmetadata = function () { r(); }; setTimeout(r, 3000); });
     ic = ('ImageCapture' in window) ? new ImageCapture(spur) : null;
     var st = spur.getSettings ? spur.getSettings() : {};
+    schreib('  Lage der Seite: ' + ((screen.orientation && screen.orientation.type) || '?') + ', Fenster ' + innerWidth + '×' + innerHeight);
     schreib('  Strom ' + name + ': Bild ' + $('v').videoWidth + '×' + $('v').videoHeight + ' · Einstellung ' + st.width + '×' + st.height + ' · ' + (st.frameRate != null ? Math.round(st.frameRate) + ' Bilder/s' : 'Rate ?') + ' · Zoom ' + (st.zoom != null ? st.zoom : '?') + ' · „' + spur.label + '“' + (spur.muted ? ' · stumm' : ''));
   }
   var faehig = null;
@@ -99,9 +100,38 @@
     try { await auf(video, name); if (!ic) { schreib('  ImageCapture fehlt in diesem Browser.'); return; } await tun(); }
     catch (e) { schreib('  FEHLER ' + (e && (e.name + ' ' + e.message) || e)); }
   }
+  // Einordnung der Kameras nach ihrem Namen, wörtlich wie in der App (classify)
+  function art(label) {
+    var l = (label || '').toLowerCase();
+    if (/front|vorder|selfie|facetime|user/.test(l)) return 'front';
+    if (/ultra/.test(l)) return 'ultra';
+    if (/tele/.test(l)) return 'tele';
+    if (/dual|triple|dreifach|zweifach|virtual/.test(l)) return 'multi';
+    if (/back|rück|rear|arrière|trasera|posteriore|environment|hinten/.test(l)) return 'wide';
+    return 'other';
+  }
+  // Wie die App: erst die Erlaubnis holen (kurzer Strom, gleich wieder zu), dann die Kameras auflisten; die App nimmt die einzige Kamera der Art „wide“ per Geräte-ID
+  async function appKamera() {
+    try { var s0 = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' } } }); s0.getTracks().forEach(function (t) { t.stop(); }); } catch (e) { schreib('Erlaubnis: FEHLER ' + (e && (e.name + ' ' + e.message) || e)); return null; }
+    var devs = []; try { devs = (await navigator.mediaDevices.enumerateDevices()).filter(function (d) { return d.kind === 'videoinput'; }); } catch (e) { /* ohne Liste */ }
+    schreib(''); schreib('Kameras (' + devs.length + '): ' + devs.map(function (d) { return '„' + (d.label || '?') + '“ = ' + art(d.label); }).join(' | '));
+    var wide = devs.filter(function (d) { return art(d.label) === 'wide'; });
+    schreib('Die App nähme: ' + (wide.length === 1 ? '„' + wide[0].label + '“ per Geräte-ID' : wide.length === 0 ? 'keine Kamera der Art wide gefunden (dann die erste der Art multi oder die Standardkamera)' : wide.length + ' Kameras der Art wide (die App macht dann Probefotos); hier die erste'));
+    return wide[0] ? wide[0].deviceId : null;
+  }
   async function test() {
     $('los').disabled = true;
     var GROSS = { width: { exact: 4032 }, height: { exact: 3024 }, frameRate: { ideal: 30 }, zoom: false };
+    var gid = await appKamera();
+    if (gid) {
+      // A genau wie die App: Rückkamera per Geräte-ID, Strom 4032 × 3024, 30 Bilder/s, zoom: false, Foto mit Größenangabe
+      await weg('A', 'GENAU WIE DIE APP: Rückkamera per Geräte-ID, Strom 4032×3024, 30 Bilder/s, „zoom: false“', Object.assign({ geraet: gid }, GROSS), async function () { var ps = await stufe(); await reihe('mit Angabe', ps, 400, 8); await reihe('mit Angabe, 1,5 s Pause', ps, 1500, 4); await reihe('ohne Angabe', null, 400, 3); });
+      // B dieselbe Kamera ohne „zoom: false“
+      await weg('B', 'Rückkamera per Geräte-ID, ohne „zoom: false“', { geraet: gid, width: { exact: 4032 }, height: { exact: 3024 }, frameRate: { ideal: 30 } }, async function () { var ps = await stufe(); await reihe('mit Angabe', ps); });
+      // C dieselbe Kamera, vor jedem Foto neu gestartet (die App startet die Kamera je Platz oder nach „Neu aufnehmen“ teils neu)
+      schreib(''); schreib('Weg C: Rückkamera per Geräte-ID, Kamera vor jedem Foto neu gestartet');
+      for (var c = 0; c < 4; c++) { try { sag('Weg C: Start ' + (c + 1) + ' von 4'); await auf(Object.assign({ geraet: gid }, GROSS), 'Start ' + (c + 1)); var psC = await stufe(); schreib('  erstes Foto: ' + await einFoto(psC) + ' | zweites: ' + await einFoto(psC)); await warte(800); } catch (e) { schreib('  FEHLER ' + (e && e.message || e)); } }
+    }
     // 1 wie die App: Strom 4032 × 3024 mit 30 Bildern/s, Foto mit Größenangabe
     await weg(1, 'wie die App (Strom 4032×3024, 30 Bilder/s, Foto mit Größenangabe)', Object.assign({}, GROSS), async function () { var ps = await stufe(); await reihe('mit Angabe', ps); });
     // 2 derselbe Strom, Foto ohne Angabe; danach mit Angabe und langer Pause
