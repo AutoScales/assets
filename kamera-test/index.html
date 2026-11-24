@@ -20,13 +20,16 @@
   video { width: 100%; max-height: 30vh; background: #000; border-radius: 12px; object-fit: contain; }
   textarea { width: 100%; min-height: 300px; margin-top: 12px; padding: 10px; border-radius: 12px; border: 1px solid var(--grau); background: #15171d; color: var(--fg); font: 12px/1.4 ui-monospace, Menlo, monospace; }
   #stand { color: var(--gold); min-height: 1.4em; }
+  #stand.laut { font-size: 26px; font-weight: 700; line-height: 1.25; padding: 14px; border: 2px solid var(--gold); border-radius: 12px; }
 </style>
 </head>
 <body>
 <h1>Kamera-Test</h1>
-<p>Diese Seite misst, wie groß die Fotos sind, die das Handy dem Browser auf verschiedenen Wegen liefert. <b>Es wird nichts hochgeladen und nichts gespeichert.</b> Bitte das Handy quer halten, auf irgendetwas richten und „Test starten“ tippen. Der Test läuft etwa 2 Minuten von selbst.</p>
+<p>Diese Seite misst, wie groß die Fotos sind, die das Handy dem Browser auf verschiedenen Wegen liefert. <b>Es wird nichts hochgeladen und nichts gespeichert.</b> Bitte das Handy quer halten, auf irgendetwas richten und „Test starten“ tippen. Fassung 5: Der Test spielt den Ablauf der App nach, 10 Fotos nacheinander mit der Seite „Passt das Foto?“ dazwischen. <b>Einmal bittet die Seite in großer Schrift, das Handy zu drehen und wieder zurückzudrehen.</b> Dauer etwa 4 Minuten, sonst nichts antippen.</p>
 <video id="v" playsinline muted autoplay></video>
-<button id="los" type="button">Test starten</button>
+<button id="los" type="button">Test starten (Ablauf der App)</button>
+<button id="alle" type="button" style="background:transparent;color:var(--fg);border:1px solid var(--grau)">Übrige Wege (weitere 3 Minuten)</button>
+<div id="rev" hidden style="position:fixed;inset:0;z-index:5;background:#0B0C10;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:12px"><b id="revT">Passt das Foto?</b><img id="revI" alt="" style="max-width:100%;max-height:78%;object-fit:contain;border-radius:10px"></div>
 <p id="stand"></p>
 <button id="kopieren" type="button">Ergebnis kopieren</button>
 <textarea id="aus" readonly></textarea>
@@ -34,7 +37,7 @@
 <script>
 (function () {
   'use strict';
-  var STAND = 'kamera-test-1', N = 5;
+  var STAND = 'kamera-test-5', N = 5;
   function $(i) { return document.getElementById(i); }
   var zeilen = [];
   function schreib(t) { zeilen.push(t); $('aus').value = zeilen.join('\n'); }
@@ -60,11 +63,27 @@
     } catch (e) { /* unten */ }
     return '?';
   }
+  // Kleinbild-Brennweite aus dem EXIF (Feld A405), sonst die echte Brennweite (920A); zeigt, welche Linse das Foto gemacht hat
+  async function brennweite(blob) {
+    try {
+      var u8 = new Uint8Array(await blob.slice(0, 131072).arrayBuffer()), b = -1;
+      for (var i = 0; i < u8.length - 10; i++) if (u8[i] === 0x45 && u8[i + 1] === 0x78 && u8[i + 2] === 0x69 && u8[i + 3] === 0x66 && u8[i + 4] === 0 && u8[i + 5] === 0) { b = i + 6; break; }
+      if (b < 0) return 'ohne EXIF';
+      var dv = new DataView(u8.buffer), le = dv.getUint16(b) === 0x4949;
+      function feld(off, tag) { var n = dv.getUint16(b + off, le); for (var k = 0; k < n; k++) { var e = b + off + 2 + k * 12; if (e + 12 > dv.byteLength) return null; if (dv.getUint16(e, le) === tag) return e; } return null; }
+      var i0 = dv.getUint32(b + 4, le), ex = feld(i0, 0x8769), au = feld(i0, 0x0112); if (ex == null) return 'ohne EXIF-Block';
+      var eo = dv.getUint32(ex + 8, le), kb = feld(eo, 0xA405), fl = feld(eo, 0x920A), t = [];
+      if (au != null) t.push('A' + dv.getUint16(au + 8, le));
+      if (kb != null) t.push(dv.getUint16(kb + 8, le) + 'mmKB');
+      if (fl != null) { var o = b + dv.getUint32(fl + 8, le), d = dv.getUint32(o + 4, le); if (d) t.push((dv.getUint32(o, le) / d).toFixed(2) + 'mm'); }
+      return t.join('/') || 'Brennweite fehlt';
+    } catch (e) { return 'EXIF?'; }
+  }
   var strom = null, spur = null, ic = null;
   function zu() { if (strom) strom.getTracks().forEach(function (t) { t.stop(); }); strom = null; spur = null; ic = null; $('v').srcObject = null; }
   async function auf(video, name) {
     zu();
-    video.facingMode = { ideal: 'environment' };
+    if (video.geraet) { video.deviceId = { exact: video.geraet }; delete video.geraet; } else video.facingMode = { ideal: 'environment' };
     // wie die App: geht die feste Größe nicht, erst hochkant fest, dann als Wunsch, zuletzt ohne „zoom“
     var W = video.width && video.width.exact, H = video.height && video.height.exact, wege = [video];
     if (W && H) { wege.push(Object.assign({}, video, { width: { exact: H }, height: { exact: W } })); wege.push(Object.assign({}, video, { width: { ideal: W }, height: { ideal: H } })); }
@@ -76,6 +95,7 @@
     await new Promise(function (r) { if ($('v').videoWidth) return r(); $('v').onloadedmetadata = function () { r(); }; setTimeout(r, 3000); });
     ic = ('ImageCapture' in window) ? new ImageCapture(spur) : null;
     var st = spur.getSettings ? spur.getSettings() : {};
+    schreib('  Lage der Seite: ' + ((screen.orientation && screen.orientation.type) || '?') + ', Fenster ' + innerWidth + '×' + innerHeight);
     schreib('  Strom ' + name + ': Bild ' + $('v').videoWidth + '×' + $('v').videoHeight + ' · Einstellung ' + st.width + '×' + st.height + ' · ' + (st.frameRate != null ? Math.round(st.frameRate) + ' Bilder/s' : 'Rate ?') + ' · Zoom ' + (st.zoom != null ? st.zoom : '?') + ' · „' + spur.label + '“' + (spur.muted ? ' · stumm' : ''));
   }
   var faehig = null;
@@ -87,21 +107,177 @@
   }
   async function einFoto(ps) {
     var t0 = performance.now();
-    try { var b = await mitZeit(ps ? ic.takePhoto(ps) : ic.takePhoto(), 12000); return (await groesse(b)) + ' ' + (b.size / 1048576).toFixed(1).replace('.', ',') + 'MB ' + Math.round(performance.now() - t0) + 'ms'; }
+    try { var b = await mitZeit(ps ? ic.takePhoto(ps) : ic.takePhoto(), 12000); var ms = Math.round(performance.now() - t0); return (await groesse(b)) + ' ' + (b.size / 1048576).toFixed(1).replace('.', ',') + 'MB ' + ms + 'ms ' + (await brennweite(b)); }
     catch (e) { return 'FEHLER ' + (e && (e.name + ' ' + e.message) || e); }
   }
   async function reihe(titel, ps, pause, n) {
     var L = []; for (var i = 0; i < (n || N); i++) { sag(titel + ': Foto ' + (i + 1) + ' von ' + (n || N)); L.push(await einFoto(ps)); await warte(pause || 400); }
     schreib('  ' + titel + ': ' + L.join(' | '));
   }
+  // ---- Ablauf der App, Aufruf für Aufruf (index.html der Foto-App, Fassung 17 d: openStream, runShot, shoot, processAndReview, showReview) ----
+  // Echte Werte der Kamera unmittelbar vor dem Auslösen: track.getSettings() ohne die Geräte-Kennungen
+  function einst() { try { var st = spur.getSettings ? spur.getSettings() : {}, o = {}; Object.keys(st).forEach(function (k) { if (k !== 'deviceId' && k !== 'groupId') o[k] = typeof st[k] === 'number' ? Math.round(st[k] * 100) / 100 : st[k]; }); return JSON.stringify(o).replace(/"/g, '') + ' Bild ' + $('v').videoWidth + '×' + $('v').videoHeight + (spur.muted ? ' STUMM' : '') + (spur.readyState !== 'live' ? ' ' + spur.readyState : ''); } catch (e) { return 'Einstellung: ' + (e && e.message || e); } }
+  async function fahig() {
+    try { var pc = await mitZeit(ic.getPhotoCapabilities(), 3000), t = 'Fähigkeit ' + pc.imageWidth.max + '×' + pc.imageHeight.max + ' (min ' + pc.imageWidth.min + '×' + pc.imageHeight.min + ', Schritt ' + pc.imageWidth.step + ')';
+      if (typeof ic.getPhotoSettings === 'function') { try { var e1 = await mitZeit(ic.getPhotoSettings(), 3000); t += ', Foto-Einstellung ' + e1.imageWidth + '×' + e1.imageHeight; } catch (e) { t += ', Foto-Einstellung: ' + (e && e.message || e); } }
+      return { text: t, pc: pc }; } catch (e) { return { text: 'Fähigkeit: FEHLER ' + (e && e.message || e), pc: null }; }
+  }
+  // wie die App (fotoStufe): größte Stufe mit langer Kante bis 4032, im Bereich und Raster der Fähigkeiten
+  function fotoStufe(pc) {
+    var W = pc && pc.imageWidth, H = pc && pc.imageHeight; if (!W || !H || !(W.max > 0) || !(H.max > 0)) return null;
+    var k = Math.min(1, 4032 / Math.max(W.max, H.max));
+    function raster(c) { var st = c.step > 0 ? c.step : 1, mn = c.min > 0 ? c.min : 0, v = mn + Math.floor((c.max * k - mn) / st + 1e-6) * st; return Math.round(Math.max(mn || 1, Math.min(c.max, v))); }
+    return { imageWidth: raster(W), imageHeight: raster(H) };
+  }
+  // wie die App (smallOf): das Sucherbild in eine 64 Bildpunkte breite Zeichenfläche lesen
+  function sucherLesen() { try { var c = document.createElement('canvas'); c.width = 64; c.height = 48; var x = c.getContext('2d', { willReadFrequently: true }); x.drawImage($('v'), 0, 0, 64, 48); x.getImageData(0, 0, 64, 48); c.width = 1; c.height = 1; return ''; } catch (e) { return ' Sucher lesen: ' + (e && e.message || e); } }
+  // wie die App (warmUp): einmal eine große Zeichenfläche als JPEG speichern
+  async function aufwaermen() { try { var c = document.createElement('canvas'); c.width = 2560; c.height = 1920; var x = c.getContext('2d'); x.fillStyle = '#345'; x.fillRect(0, 0, 2560, 1920); x.drawImage(c, 100, 100, 2000, 1500, 0, 0, 1600, 1200); await new Promise(function (ok) { c.toBlob(ok, 'image/jpeg', 0.85); }); c.width = 1; c.height = 1; } catch (e) { /* egal */ } }
+  // wie die App (decodeImage, renderUpright, pruefBild, Vorschau): Foto öffnen, quer auf höchstens 4032 zeichnen, als JPEG 0,85 speichern, Prüfbild 1280 und Vorschau 320 rechnen
+  async function umrechnen(b) {
+    var url = URL.createObjectURL(b), im = new Image(); await new Promise(function (ok, nein) { im.onload = ok; im.onerror = function () { nein(new Error('Bild nicht lesbar')); }; im.src = url; });
+    try { await Promise.race([im.decode(), warte(500)]); } catch (e) { /* zeichnen entschlüsselt selbst */ }
+    var w = im.naturalWidth, h = im.naturalHeight, hoch = h > w, ow = hoch ? h : w, oh = hoch ? w : h, k = Math.min(1, 4032 / Math.max(ow, oh));
+    var c = document.createElement('canvas'); c.width = Math.max(1, Math.round(ow * k)); c.height = Math.max(1, Math.round(oh * k));
+    var x = c.getContext('2d'); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; x.translate(c.width / 2, c.height / 2); if (hoch) x.rotate(-Math.PI / 2); x.drawImage(im, -w * k / 2, -h * k / 2, w * k, h * k);
+    var nb = await new Promise(function (ok) { c.toBlob(ok, 'image/jpeg', 0.85); });
+    var p = document.createElement('canvas'), pk = 1280 / Math.max(c.width, c.height); p.width = Math.round(c.width * pk); p.height = Math.round(c.height * pk); var px = p.getContext('2d', { willReadFrequently: true }); px.drawImage(c, 0, 0, p.width, p.height); px.getImageData(0, 0, p.width, p.height);
+    var t = document.createElement('canvas'); t.width = 320; t.height = Math.round(320 * p.height / p.width); t.getContext('2d').drawImage(p, 0, 0, t.width, t.height); t.toDataURL('image/jpeg', 0.7);
+    var maße = c.width + '×' + c.height; c.width = 1; c.height = 1; p.width = 1; p.height = 1; t.width = 1; t.height = 1; URL.revokeObjectURL(url);
+    return { blob: nb, text: 'Bild ' + w + '×' + h + ' → neu ' + maße + ' ' + (nb ? (nb.size / 1048576).toFixed(1).replace('.', ',') + 'MB' : 'ohne Ergebnis') };
+  }
+  // Seite „Passt das Foto?“: deckt den Sucher zu und zeigt das umgerechnete Foto, wie in der App (der Sucher läuft darunter weiter)
+  async function pruefSeite(blob, titel, ms) {
+    var u = blob ? URL.createObjectURL(blob) : ''; $('revT').textContent = titel; if (u) $('revI').src = u;
+    $('rev').hidden = false; $('rev').style.display = 'flex'; await warte(ms); $('rev').hidden = true; $('rev').style.display = 'none'; $('revI').removeAttribute('src'); if (u) URL.revokeObjectURL(u);
+  }
+  // Eine Aufnahme wie in der App: Sucherbild lesen, auslösen mit der Größenangabe (6 s Zeit, sonst ohne Angabe), Größe lesen, umrechnen
+  async function appFoto(ps, t0Strom, jedesMalLesen) {
+    var z = 't=' + ((performance.now() - t0Strom) / 1000).toFixed(1).replace('.', ',') + 's | vor: ' + einst();
+    if (jedesMalLesen) { var f = await fahig(); z += ' | ' + f.text; ps = fotoStufe(f.pc) || ps; }
+    z += sucherLesen();
+    var t0 = performance.now(), b = null, rueck = false;
+    try { b = await mitZeit(ps ? mitZeit(ic.takePhoto(ps), 6000).catch(function () { rueck = true; return ic.takePhoto(); }) : ic.takePhoto(), 15000); } catch (e) { return { text: z + ' | Foto: FEHLER ' + (e && (e.name + ' ' + e.message) || e), blob: null }; }
+    var ms = Math.round(performance.now() - t0);
+    z += ' | Foto ' + (await groesse(b)) + ' ' + (b.size / 1048576).toFixed(1).replace('.', ',') + 'MB ' + ms + 'ms ' + (await brennweite(b)) + (rueck ? ' RÜCKFALL ohne Angabe' : '');
+    var u = null; try { u = await umrechnen(b); z += ' | ' + u.text; } catch (e) { z += ' | Umrechnen: FEHLER ' + (e && e.message || e); }
+    return { text: z, blob: u && u.blob };
+  }
+  // Der Ablauf: Kamera einmal starten wie die App, 1,5 s einschwingen, dann n Runden: Sucher zeigen, auslösen, „Passt das Foto?“ zeigen, nächster Platz. Zwischen den Plätzen startet die App die Kamera nicht neu.
+  async function appAblauf(nr, name, gid, n, jedesMalLesen) {
+    schreib(''); schreib('Weg ' + nr + ': ' + name);
+    try {
+      await auf({ geraet: gid, width: { exact: 4032 }, height: { exact: 3024 }, frameRate: { ideal: 30 }, zoom: false }, name); if (!ic) { schreib('  ImageCapture fehlt in diesem Browser.'); return; }
+      var t0 = performance.now(), wach = 'nein'; try { if (navigator.wakeLock) { await navigator.wakeLock.request('screen'); wach = 'ja'; } } catch (e) { wach = 'abgelehnt'; }
+      await aufwaermen(); await warte(Math.max(0, 1500 - (performance.now() - t0)));
+      var f = await fahig(), ps = fotoStufe(f.pc); schreib('  einmal nach dem Start (wie die App): ' + f.text + ' · verlangt ' + (ps ? ps.imageWidth + '×' + ps.imageHeight : 'nichts') + ' · Bildschirm wach halten: ' + wach);
+      for (var i = 1; i <= n; i++) {
+        sag('Weg ' + nr + ': Platz ' + i + ' von ' + n + ' – Sucher'); await warte(2200);
+        var r = await appFoto(ps, t0, jedesMalLesen); schreib('  Platz ' + i + ': ' + r.text);
+        sag('Weg ' + nr + ': Platz ' + i + ' von ' + n + ' – Passt das Foto?'); await pruefSeite(r.blob, 'Passt das Foto? (Platz ' + i + ' von ' + n + ')', 2800);
+      }
+    } catch (e) { schreib('  FEHLER ' + (e && (e.name + ' ' + e.message) || e)); }
+  }
+  // Bittet in großer Schrift ums Drehen und wartet, bis sich das Fenster oder das Bild des Stroms dreht (höchstens 25 s). Meldet, was sich geändert hat.
+  function lageJetzt() { var st = spur && spur.getSettings ? spur.getSettings() : {}; return 'Seite ' + ((screen.orientation && screen.orientation.type) || '?') + ', Fenster ' + innerWidth + '×' + innerHeight + ', Strombild ' + $('v').videoWidth + '×' + $('v').videoHeight + ', Einstellung ' + st.width + '×' + st.height; }
+  async function drehen(text) {
+    var quer0 = innerWidth > innerHeight, vw0 = $('v').videoWidth, lage0 = (screen.orientation && screen.orientation.type) || '', t0 = Date.now(), was = [];
+    $('stand').classList.add('laut'); try { $('stand').scrollIntoView({ block: 'center' }); } catch (e) { /* egal */ }
+    for (;;) {
+      var rest = Math.ceil((25000 - (Date.now() - t0)) / 1000); sag(text + ' (' + rest + ' s)');
+      if ((innerWidth > innerHeight) !== quer0 || $('v').videoWidth !== vw0 || ((screen.orientation && screen.orientation.type) || '') !== lage0 || rest <= 0) break;
+      await warte(150);
+    }
+    await warte(1800);   // dem System Zeit lassen, Seite und Kamerabild fertig zu drehen
+    if ((innerWidth > innerHeight) !== quer0) was.push('Fenster gedreht'); if ($('v').videoWidth !== vw0) was.push('Strombild gedreht'); if (((screen.orientation && screen.orientation.type) || '') !== lage0) was.push('Lage der Seite geändert');
+    $('stand').classList.remove('laut'); sag('Danke. Bitte so halten.');
+    return 'Drehen nach ' + ((Date.now() - t0) / 1000).toFixed(1).replace('.', ',') + ' s: ' + (was.join(', ') || 'KEINE Drehung erkannt (Drehsperre an?)') + ' · jetzt: ' + lageJetzt();
+  }
   async function weg(nr, name, video, tun) {
     schreib(''); schreib('Weg ' + nr + ': ' + name);
     try { await auf(video, name); if (!ic) { schreib('  ImageCapture fehlt in diesem Browser.'); return; } await tun(); }
     catch (e) { schreib('  FEHLER ' + (e && (e.name + ' ' + e.message) || e)); }
   }
-  async function test() {
-    $('los').disabled = true;
+  // Einordnung der Kameras nach ihrem Namen, wörtlich wie in der App (classify)
+  function art(label) {
+    var l = (label || '').toLowerCase();
+    if (/front|vorder|selfie|facetime|user/.test(l)) return 'front';
+    if (/ultra/.test(l)) return 'ultra';
+    if (/tele/.test(l)) return 'tele';
+    if (/dual|triple|dreifach|zweifach|virtual/.test(l)) return 'multi';
+    if (/back|rück|rear|arrière|trasera|posteriore|environment|hinten/.test(l)) return 'wide';
+    return 'other';
+  }
+  // Wie die App: erst die Erlaubnis holen (kurzer Strom, gleich wieder zu), dann die Kameras auflisten; die App nimmt die einzige Kamera der Art „wide“ per Geräte-ID
+  async function appKamera() {
+    try { var s0 = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' } } }); s0.getTracks().forEach(function (t) { t.stop(); }); } catch (e) { schreib('Erlaubnis: FEHLER ' + (e && (e.name + ' ' + e.message) || e)); return null; }
+    var devs = []; try { devs = (await navigator.mediaDevices.enumerateDevices()).filter(function (d) { return d.kind === 'videoinput'; }); } catch (e) { /* ohne Liste */ }
+    schreib(''); schreib('Kameras (' + devs.length + '): ' + devs.map(function (d) { return '„' + (d.label || '?') + '“ = ' + art(d.label); }).join(' | '));
+    var wide = devs.filter(function (d) { return art(d.label) === 'wide'; });
+    schreib('Die App nähme: ' + (wide.length === 1 ? '„' + wide[0].label + '“ per Geräte-ID' : wide.length === 0 ? 'keine Kamera der Art wide gefunden (dann die erste der Art multi oder die Standardkamera)' : wide.length + ' Kameras der Art wide (die App macht dann Probefotos); hier die erste'));
+    return wide[0] ? wide[0].deviceId : null;
+  }
+  async function test(alles) {
+    $('los').disabled = true; $('alle').disabled = true;
     var GROSS = { width: { exact: 4032 }, height: { exact: 3024 }, frameRate: { ideal: 30 }, zoom: false };
+    var gid = await appKamera();
+    if (gid && !alles) {
+      var APPK = function () { return Object.assign({ geraet: gid }, GROSS); };
+      // H der Ablauf der App 1:1, 10 Plätze auf einem Kamerastart (die App liest die Foto-Fähigkeit nur einmal je Kamerastart)
+      await appAblauf('H', 'ABLAUF DER APP 1:1, 10 Plätze: Sucher, auslösen, „Passt das Foto?“, nächster Platz (Kamera bleibt an, Fähigkeit einmal gelesen)', gid, 10, false);
+      // D Drehen bei laufender Kamera
+      await weg('D', 'ABLAUF DER APP: Handy bei laufender Kamera drehen und zurückdrehen', APPK(), async function () {
+        var ps = await stufe(); await reihe('vor dem Drehen', ps, 400, 3);
+        schreib('  ' + await drehen('JETZT das Handy um eine Vierteldrehung drehen (quer wird hochkant, hochkant wird quer) und so halten'));
+        await reihe('nach dem Drehen', ps, 400, 3);
+        schreib('  ' + await drehen('JETZT das Handy wieder zurückdrehen und so halten'));
+        await reihe('nach dem Zurückdrehen', ps, 400, 4);
+      });
+      // Z nur die Zeit: ein Kamerastart, sonst nichts, Fotos nach 0, 10, 20, 30, 45 und 60 s
+      await weg('Z', 'NUR DIE ZEIT: ein Kamerastart, Fotos 0, 10, 20, 30, 45 und 60 s nach dem ersten', APPK(), async function () {
+        var ps = await stufe(), t0 = performance.now(), P = [0, 10, 20, 30, 45, 60];
+        for (var i = 0; i < P.length; i++) { while ((performance.now() - t0) / 1000 < P[i]) { sag('Weg Z: nächstes Foto in ' + Math.ceil(P[i] - (performance.now() - t0) / 1000) + ' s. Bitte nichts tun.'); await warte(500); } var v = einst(); schreib('  nach ' + P[i] + ' s: vor: ' + v + ' | ' + await einFoto(ps)); }
+      });
+      // I wie H, aber vor jedem Auslösen die Foto-Fähigkeit neu lesen (zeigt, ob sie sich ändert, und ob das Lesen selbst etwas ändert)
+      await appAblauf('I', 'WIE H, aber vor jedem Auslösen die Foto-Fähigkeit und die Foto-Einstellung neu gelesen', gid, 10, true);
+    }
+    if (gid && alles) {
+      var APP = function () { return Object.assign({ geraet: gid }, GROSS); };
+      // A genau wie die App: Rückkamera per Geräte-ID, Strom 4032 × 3024, 30 Bilder/s, zoom: false, Foto mit Größenangabe
+      await weg('A', 'GENAU WIE DIE APP: Rückkamera per Geräte-ID, Strom 4032×3024, 30 Bilder/s, „zoom: false“', Object.assign({ geraet: gid }, GROSS), async function () { var ps = await stufe(); await reihe('mit Angabe', ps, 400, 8); await reihe('mit Angabe, 1,5 s Pause', ps, 1500, 4); await reihe('ohne Angabe', null, 400, 3); });
+      // E vor jedem Foto das Sucherbild lesen (die App vergleicht Foto und Livebild)
+      await weg('E', 'ABLAUF DER APP: vor jedem Foto das Sucherbild in eine kleine Zeichenfläche lesen', APP(), async function () {
+        var ps = await stufe(), L = [];
+        for (var i = 0; i < 5; i++) { sag('Weg E: Foto ' + (i + 1) + ' von 5'); try { var c = document.createElement('canvas'); c.width = 64; c.height = 48; var x = c.getContext('2d', { willReadFrequently: true }); x.drawImage($('v'), 0, 0, 64, 48); x.getImageData(0, 0, 64, 48); c.width = 1; c.height = 1; } catch (e) { L.push('Lesen: ' + (e && e.message || e)); } L.push(await einFoto(ps)); await warte(400); }
+        schreib('  mit Lesen des Sucherbilds: ' + L.join(' | '));
+      });
+      // F Pausen wie beim Fotografieren: die Kamera läuft, zwischen zwei Fotos vergehen Sekunden
+      await weg('F', 'ABLAUF DER APP: lange Pausen zwischen den Fotos (5, 10 und 20 s)', APP(), async function () {
+        var ps = await stufe(), L = [await einFoto(ps)], P = [5, 10, 20];
+        for (var i = 0; i < P.length; i++) { for (var r = P[i]; r > 0; r--) { sag('Weg F: Pause, noch ' + r + ' s. Bitte nichts tun.'); await warte(1000); } L.push('nach ' + P[i] + ' s: ' + await einFoto(ps)); }
+        schreib('  ' + L.join(' | '));
+      });
+      // G nach jedem Foto rechnen wie die App: Foto öffnen, auf 4032 × 3024 zeichnen, als JPEG 0,85 speichern, 3 s zeigen
+      await weg('G', 'ABLAUF DER APP: nach jedem Foto umrechnen wie die App (öffnen, zeichnen, neu speichern), dann 3 s warten', APP(), async function () {
+        var ps = await stufe(), L = [];
+        for (var i = 0; i < 4; i++) {
+          sag('Weg G: Foto ' + (i + 1) + ' von 4'); var t0 = performance.now(), b = null, z = '';
+          try { b = await mitZeit(ps ? ic.takePhoto(ps) : ic.takePhoto(), 12000); z = (await groesse(b)) + ' ' + Math.round(performance.now() - t0) + 'ms'; } catch (e) { z = 'FEHLER ' + (e && (e.name + ' ' + e.message) || e); }
+          if (b) { try { var t1 = performance.now(), url = URL.createObjectURL(b), im = new Image(); await new Promise(function (ok, nein) { im.onload = ok; im.onerror = nein; im.src = url; });
+            var q = im.naturalWidth >= im.naturalHeight, c2 = document.createElement('canvas'); c2.width = q ? 4032 : 3024; c2.height = q ? 3024 : 4032; c2.getContext('2d').drawImage(im, 0, 0, c2.width, c2.height);
+            var nb = await new Promise(function (ok) { c2.toBlob(ok, 'image/jpeg', 0.85); }); URL.revokeObjectURL(url); c2.width = 1; c2.height = 1;
+            z += ', umgerechnet ' + (nb ? (nb.size / 1048576).toFixed(1).replace('.', ',') + 'MB' : 'ohne Ergebnis') + ' in ' + Math.round(performance.now() - t1) + 'ms'; } catch (e) { z += ', Umrechnen: FEHLER ' + (e && e.message || e); } }
+          L.push(z); await warte(3000);
+        }
+        schreib('  ' + L.join(' | '));
+      });
+      // B dieselbe Kamera ohne „zoom: false“
+      await weg('B', 'Rückkamera per Geräte-ID, ohne „zoom: false“', { geraet: gid, width: { exact: 4032 }, height: { exact: 3024 }, frameRate: { ideal: 30 } }, async function () { var ps = await stufe(); await reihe('mit Angabe', ps); });
+      // C dieselbe Kamera, vor jedem Foto neu gestartet (die App startet die Kamera je Platz oder nach „Neu aufnehmen“ teils neu)
+      schreib(''); schreib('Weg C: Rückkamera per Geräte-ID, Kamera vor jedem Foto neu gestartet');
+      for (var c = 0; c < 4; c++) { try { sag('Weg C: Start ' + (c + 1) + ' von 4'); await auf(Object.assign({ geraet: gid }, GROSS), 'Start ' + (c + 1)); var psC = await stufe(); schreib('  erstes Foto: ' + await einFoto(psC) + ' | zweites: ' + await einFoto(psC)); await warte(800); } catch (e) { schreib('  FEHLER ' + (e && e.message || e)); } }
+    }
+    if (alles) {
     // 1 wie die App: Strom 4032 × 3024 mit 30 Bildern/s, Foto mit Größenangabe
     await weg(1, 'wie die App (Strom 4032×3024, 30 Bilder/s, Foto mit Größenangabe)', Object.assign({}, GROSS), async function () { var ps = await stufe(); await reihe('mit Angabe', ps); });
     // 2 derselbe Strom, Foto ohne Angabe; danach mit Angabe und langer Pause
@@ -119,10 +295,13 @@
     for (var i = 0; i < 4; i++) { try { sag('Weg 7: Start ' + (i + 1) + ' von 4'); await auf(Object.assign({}, GROSS), 'Start ' + (i + 1)); var ps7 = await stufe(); schreib('  erstes Foto: ' + await einFoto(ps7) + ' | zweites: ' + await einFoto(ps7)); await warte(800); } catch (e) { schreib('  FEHLER ' + (e && e.message || e)); } }
     // 8 ohne zoom: false (Standardkamera des Systems)
     await weg(8, 'Strom 4032×3024, 30 Bilder/s, ohne „zoom: false“', { width: { exact: 4032 }, height: { exact: 3024 }, frameRate: { ideal: 30 } }, async function () { var ps = await stufe(); await reihe('mit Angabe', ps); });
+    }
     zu(); schreib(''); schreib('Ende ' + new Date().toLocaleTimeString('de-DE'));
-    sag('Fertig. Bitte „Ergebnis kopieren“ tippen und den Text an Alfred geben.'); $('los').disabled = false;
+    sag('Fertig. Bitte „Ergebnis kopieren“ tippen und den Text an Alfred geben.'); $('los').disabled = false; $('alle').disabled = false;
   }
-  $('los').onclick = function () { zeilen.length = 2; schreib('Start ' + new Date().toLocaleTimeString('de-DE')); test().catch(function (e) { schreib('ABBRUCH ' + (e && e.message || e)); sag('Abgebrochen.'); $('los').disabled = false; }); };
+  function start(alles) { zeilen.length = 2; schreib((alles ? 'Übrige Wege' : 'Ablauf der App') + ', Start ' + new Date().toLocaleTimeString('de-DE')); test(alles).catch(function (e) { schreib('ABBRUCH ' + (e && e.message || e)); sag('Abgebrochen.'); zu(); $('los').disabled = false; $('alle').disabled = false; }); }
+  $('los').onclick = function () { start(false); };
+  $('alle').onclick = function () { start(true); };
   $('kopieren').onclick = async function () {
     var t = $('aus').value;
     try { await navigator.clipboard.writeText(t); sag('Kopiert.'); }
