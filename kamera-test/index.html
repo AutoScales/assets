@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src blob:; media-src blob: mediastream:">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kamera-Test">
+<meta name="robots" content="noindex">
+<title>Kamera-Test</title>
+<style>
+  :root { --bg: #0B0C10; --fg: #FAFAFA; --grau: #9CA3AF; --gold: #FFC77C; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; padding-bottom: 48px; background: var(--bg); color: var(--fg); font: 16px/1.45 -apple-system, system-ui, sans-serif; }
+  h1 { font-size: 20px; margin: 0 0 6px; }
+  p { margin: 6px 0; color: var(--grau); }
+  button { display: block; width: 100%; margin: 12px 0; padding: 14px 16px; border: 0; border-radius: 12px; background: var(--gold); color: #0B0C10; font: inherit; font-weight: 600; }
+  button[disabled] { opacity: .5; }
+  video { width: 100%; max-height: 30vh; background: #000; border-radius: 12px; object-fit: contain; }
+  textarea { width: 100%; min-height: 300px; margin-top: 12px; padding: 10px; border-radius: 12px; border: 1px solid var(--grau); background: #15171d; color: var(--fg); font: 12px/1.4 ui-monospace, Menlo, monospace; }
+  #stand { color: var(--gold); min-height: 1.4em; }
+</style>
+</head>
+<body>
+<h1>Kamera-Test</h1>
+<p>Diese Seite misst, wie groß die Fotos sind, die das Handy dem Browser auf verschiedenen Wegen liefert. <b>Es wird nichts hochgeladen und nichts gespeichert.</b> Bitte das Handy quer halten, auf irgendetwas richten und „Test starten“ tippen. Der Test läuft etwa 2 Minuten von selbst.</p>
+<video id="v" playsinline muted autoplay></video>
+<button id="los" type="button">Test starten</button>
+<p id="stand"></p>
+<button id="kopieren" type="button">Ergebnis kopieren</button>
+<textarea id="aus" readonly></textarea>
+
+<script>
+(function () {
+  'use strict';
+  var STAND = 'kamera-test-1', N = 5;
+  function $(i) { return document.getElementById(i); }
+  var zeilen = [];
+  function schreib(t) { zeilen.push(t); $('aus').value = zeilen.join('\n'); }
+  function sag(t) { $('stand').textContent = t; }
+  function warte(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function mitZeit(p, ms) { return Promise.race([p, new Promise(function (_, n) { setTimeout(function () { n(new Error('keine Antwort nach ' + ms + ' ms')); }, ms); })]); }
+  var allein = (navigator.standalone === true) || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+  schreib(STAND + ' · ' + (allein ? 'Home-Bildschirm-App' : 'Browser') + ' · ' + navigator.userAgent);
+  schreib('Bildschirm ' + screen.width + '×' + screen.height + ' · Fenster ' + innerWidth + '×' + innerHeight + ' · ' + ((screen.orientation && screen.orientation.type) || 'Lage unbekannt'));
+
+  // Größe eines JPEG aus seinen ersten Bytes (SOF-Marke), ohne das Bild zu öffnen
+  async function groesse(blob) {
+    try {
+      var dv = new DataView(await blob.slice(0, 524288).arrayBuffer()); if (dv.getUint16(0) !== 0xFFD8) return blob.type || 'kein JPEG';
+      var off = 2;
+      while (off + 9 < dv.byteLength) {
+        if (dv.getUint8(off) !== 0xFF) { off++; continue; }
+        var mk = dv.getUint8(off + 1); if (mk === 0xD8 || (mk >= 0xD0 && mk <= 0xD7) || mk === 0xFF) { off += mk === 0xFF ? 1 : 2; continue; }
+        if (mk >= 0xC0 && mk <= 0xCF && mk !== 0xC4 && mk !== 0xC8 && mk !== 0xCC) return dv.getUint16(off + 7) + 'x' + dv.getUint16(off + 5);
+        if (mk === 0xDA) break;
+        off += 2 + dv.getUint16(off + 2);
+      }
+    } catch (e) { /* unten */ }
+    return '?';
+  }
+  var strom = null, spur = null, ic = null;
+  function zu() { if (strom) strom.getTracks().forEach(function (t) { t.stop(); }); strom = null; spur = null; ic = null; $('v').srcObject = null; }
+  async function auf(video, name) {
+    zu();
+    video.facingMode = { ideal: 'environment' };
+    // wie die App: geht die feste Größe nicht, erst hochkant fest, dann als Wunsch, zuletzt ohne „zoom“
+    var W = video.width && video.width.exact, H = video.height && video.height.exact, wege = [video];
+    if (W && H) { wege.push(Object.assign({}, video, { width: { exact: H }, height: { exact: W } })); wege.push(Object.assign({}, video, { width: { ideal: W }, height: { ideal: H } })); }
+    if ('zoom' in video) { var oz = Object.assign({}, wege[wege.length - 1]); delete oz.zoom; wege.push(oz); }
+    var fe = null;
+    for (var i = 0; i < wege.length && !strom; i++) { try { strom = await navigator.mediaDevices.getUserMedia({ audio: false, video: wege[i] }); if (i) name += ' (Ausweichweg ' + i + ')'; } catch (e) { fe = e; } }
+    if (!strom) throw fe || new Error('Kamera startet nicht');
+    spur = strom.getVideoTracks()[0]; $('v').srcObject = strom; try { await $('v').play(); } catch (e) { /* stumm */ }
+    await new Promise(function (r) { if ($('v').videoWidth) return r(); $('v').onloadedmetadata = function () { r(); }; setTimeout(r, 3000); });
+    ic = ('ImageCapture' in window) ? new ImageCapture(spur) : null;
+    var st = spur.getSettings ? spur.getSettings() : {};
+    schreib('  Strom ' + name + ': Bild ' + $('v').videoWidth + '×' + $('v').videoHeight + ' · Einstellung ' + st.width + '×' + st.height + ' · ' + (st.frameRate != null ? Math.round(st.frameRate) + ' Bilder/s' : 'Rate ?') + ' · Zoom ' + (st.zoom != null ? st.zoom : '?') + ' · „' + spur.label + '“' + (spur.muted ? ' · stumm' : ''));
+  }
+  var faehig = null;
+  async function stufe() {
+    faehig = null;
+    try { var pc = await mitZeit(ic.getPhotoCapabilities(), 3000); if (pc && pc.imageWidth && pc.imageHeight) { faehig = { imageWidth: Math.min(4032, pc.imageWidth.max), imageHeight: Math.min(3024, pc.imageHeight.max) }; schreib('  Foto-Fähigkeit: höchstens ' + pc.imageWidth.max + '×' + pc.imageHeight.max + (pc.imageWidth.min != null ? ', mindestens ' + pc.imageWidth.min + '×' + pc.imageHeight.min : '')); } }
+    catch (e) { schreib('  Foto-Fähigkeit: nicht lesbar (' + (e && e.message || e) + ')'); }
+    return faehig;
+  }
+  async function einFoto(ps) {
+    var t0 = performance.now();
+    try { var b = await mitZeit(ps ? ic.takePhoto(ps) : ic.takePhoto(), 12000); return (await groesse(b)) + ' ' + (b.size / 1048576).toFixed(1).replace('.', ',') + 'MB ' + Math.round(performance.now() - t0) + 'ms'; }
+    catch (e) { return 'FEHLER ' + (e && (e.name + ' ' + e.message) || e); }
+  }
+  async function reihe(titel, ps, pause, n) {
+    var L = []; for (var i = 0; i < (n || N); i++) { sag(titel + ': Foto ' + (i + 1) + ' von ' + (n || N)); L.push(await einFoto(ps)); await warte(pause || 400); }
+    schreib('  ' + titel + ': ' + L.join(' | '));
+  }
+  async function weg(nr, name, video, tun) {
+    schreib(''); schreib('Weg ' + nr + ': ' + name);
+    try { await auf(video, name); if (!ic) { schreib('  ImageCapture fehlt in diesem Browser.'); return; } await tun(); }
+    catch (e) { schreib('  FEHLER ' + (e && (e.name + ' ' + e.message) || e)); }
+  }
+  async function test() {
+    $('los').disabled = true;
+    var GROSS = { width: { exact: 4032 }, height: { exact: 3024 }, frameRate: { ideal: 30 }, zoom: false };
+    // 1 wie die App: Strom 4032 × 3024 mit 30 Bildern/s, Foto mit Größenangabe
+    await weg(1, 'wie die App (Strom 4032×3024, 30 Bilder/s, Foto mit Größenangabe)', Object.assign({}, GROSS), async function () { var ps = await stufe(); await reihe('mit Angabe', ps); });
+    // 2 derselbe Strom, Foto ohne Angabe; danach mit Angabe und langer Pause
+    await weg(2, 'Strom wie 1, Foto ohne Angabe; danach mit Angabe und 1,5 s Pause', Object.assign({}, GROSS), async function () { var ps = await stufe(); await reihe('ohne Angabe', null); await reihe('mit Angabe, 1,5 s Pause', ps, 1500); });
+    // 3 dreimal direkt hintereinander je Aufnahme: hilft sofortiges Wiederholen?
+    await weg(3, 'Strom wie 1, je Aufnahme drei Fotos direkt hintereinander', Object.assign({}, GROSS), async function () { var ps = await stufe(); for (var k = 0; k < 4; k++) { var L = []; sag('Weg 3: Aufnahme ' + (k + 1) + ' von 4'); for (var j = 0; j < 3; j++) L.push(await einFoto(ps)); schreib('  Aufnahme ' + (k + 1) + ': ' + L.join(' | ')); await warte(1200); } });
+    // 4 ohne Bildrate
+    await weg(4, 'Strom 4032×3024 ohne Vorgabe der Bildrate', { width: { exact: 4032 }, height: { exact: 3024 }, zoom: false }, async function () { var ps = await stufe(); await reihe('mit Angabe', ps); });
+    // 5 kleiner Strom 16:9, großes Foto verlangt
+    await weg(5, 'kleiner Strom 1920×1080, großes Foto verlangt', { width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30 }, zoom: false }, async function () { var ps = await stufe(); await reihe('mit Angabe', ps); await reihe('ohne Angabe', null, 400, 3); });
+    // 6 kleiner Strom 4:3, großes Foto verlangt
+    await weg(6, 'kleiner Strom 1920×1440, großes Foto verlangt', { width: { ideal: 1920 }, height: { ideal: 1440 }, frameRate: { ideal: 30 }, zoom: false }, async function () { var ps = await stufe(); await reihe('mit Angabe', ps); });
+    // 7 Kamera vor jedem Foto neu starten
+    schreib(''); schreib('Weg 7: Kamera vor jedem Foto neu starten (Strom wie 1)');
+    for (var i = 0; i < 4; i++) { try { sag('Weg 7: Start ' + (i + 1) + ' von 4'); await auf(Object.assign({}, GROSS), 'Start ' + (i + 1)); var ps7 = await stufe(); schreib('  erstes Foto: ' + await einFoto(ps7) + ' | zweites: ' + await einFoto(ps7)); await warte(800); } catch (e) { schreib('  FEHLER ' + (e && e.message || e)); } }
+    // 8 ohne zoom: false (Standardkamera des Systems)
+    await weg(8, 'Strom 4032×3024, 30 Bilder/s, ohne „zoom: false“', { width: { exact: 4032 }, height: { exact: 3024 }, frameRate: { ideal: 30 } }, async function () { var ps = await stufe(); await reihe('mit Angabe', ps); });
+    zu(); schreib(''); schreib('Ende ' + new Date().toLocaleTimeString('de-DE'));
+    sag('Fertig. Bitte „Ergebnis kopieren“ tippen und den Text an Alfred geben.'); $('los').disabled = false;
+  }
+  $('los').onclick = function () { zeilen.length = 2; schreib('Start ' + new Date().toLocaleTimeString('de-DE')); test().catch(function (e) { schreib('ABBRUCH ' + (e && e.message || e)); sag('Abgebrochen.'); $('los').disabled = false; }); };
+  $('kopieren').onclick = async function () {
+    var t = $('aus').value;
+    try { await navigator.clipboard.writeText(t); sag('Kopiert.'); }
+    catch (e) { $('aus').focus(); $('aus').select(); try { document.execCommand('copy'); sag('Kopiert.'); } catch (e2) { sag('Bitte den Text von Hand markieren und kopieren.'); } }
+  };
+})();
+</script>
+</body>
+</html>

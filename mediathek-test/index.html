@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src blob:">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mediathek-Test">
+<meta name="robots" content="noindex">
+<title>Mediathek-Test</title>
+<style>
+  :root { --bg: #0B0C10; --fg: #FAFAFA; --grau: #9CA3AF; --gold: #FFC77C; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; padding-bottom: 48px; background: var(--bg); color: var(--fg); font: 16px/1.45 -apple-system, system-ui, sans-serif; }
+  h1 { font-size: 20px; margin: 0 0 6px; }
+  p { margin: 6px 0; color: var(--grau); }
+  .knopf { position: relative; display: block; margin: 12px 0; padding: 14px 16px; border-radius: 12px; background: var(--gold); color: #0B0C10; font-weight: 600; text-align: center; overflow: hidden; }
+  .knopf.zwei { background: transparent; color: var(--fg); border: 1px solid var(--grau); }
+  .knopf input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; font-size: 0; }
+  textarea { width: 100%; min-height: 260px; margin-top: 12px; padding: 10px; border-radius: 12px; border: 1px solid var(--grau); background: #15171d; color: var(--fg); font: 12px/1.4 ui-monospace, Menlo, monospace; }
+  #stand { color: var(--gold); min-height: 1.4em; }
+</style>
+</head>
+<body>
+<h1>Mediathek-Test</h1>
+<p>Diese Seite zeigt, was ein Browser bekommt, wenn Fotos aus der Mediathek gewählt werden. <b>Es wird nichts hochgeladen.</b> Die Seite rechnet nur auf diesem Gerät. Der Standort wird nie angezeigt, nur „ja“ oder „nein“.</p>
+<p id="umgebung"></p>
+
+<label class="knopf">A · Fotos wählen (wie in der App)<input type="file" id="inA" accept="image/*" multiple></label>
+<label class="knopf zwei">B · Fotos wählen (HEIC erlaubt)<input type="file" id="inB" accept="image/heic,image/heif,image/jpeg,image/png" multiple></label>
+<label class="knopf zwei">C · Dateien wählen (ohne Filter)<input type="file" id="inC" multiple></label>
+
+<p id="stand"></p>
+<button class="knopf" id="kopieren" type="button" style="border:0;width:100%;font:inherit;font-weight:600">Ergebnis kopieren</button>
+<textarea id="aus" readonly></textarea>
+
+<script>
+(function () {
+  'use strict';
+  var STAND = 'mediathek-test-1';
+  function $(i) { return document.getElementById(i); }
+  var zeilen = [];
+  function schreib(t) { zeilen.push(t); $('aus').value = zeilen.join('\n'); }
+  function wo() {
+    var allein = (navigator.standalone === true) || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+    return (allein ? 'Home-Bildschirm-App' : 'Browser') + ' · ' + navigator.userAgent;
+  }
+  $('umgebung').textContent = wo();
+  schreib(STAND + ' · ' + wo());
+
+  /* ---------- Bytes lesen ---------- */
+  function sucheExif(u8) {   // Anfang der TIFF-Daten hinter „Exif\0\0“ (JPEG und HEIC), sonst -1
+    for (var i = 0, n = u8.length - 10; i < n; i++) {
+      if (u8[i] !== 0x45 || u8[i + 1] !== 0x78 || u8[i + 2] !== 0x69 || u8[i + 3] !== 0x66 || u8[i + 4] !== 0 || u8[i + 5] !== 0) continue;
+      var a = u8[i + 6], b = u8[i + 7], c = u8[i + 8], d = u8[i + 9];
+      if ((a === 0x4D && b === 0x4D && c === 0 && d === 0x2A) || (a === 0x49 && b === 0x49 && c === 0x2A && d === 0)) return i + 6;
+    }
+    return -1;
+  }
+  var GROESSE = [0, 1, 1, 2, 4, 8, 1, 1, 2, 4, 8, 4, 8];
+  function ifd(dv, base, off, le) {   // Feld → { typ, anzahl, ort }
+    var m = {}; if (base + off + 2 > dv.byteLength) return m;
+    var n = dv.getUint16(base + off, le);
+    for (var i = 0; i < n; i++) {
+      var e = base + off + 2 + i * 12; if (e + 12 > dv.byteLength) break;
+      var typ = dv.getUint16(e + 2, le), anz = dv.getUint32(e + 4, le), ges = (GROESSE[typ] || 1) * anz;
+      var ort = ges <= 4 ? e + 8 : base + dv.getUint32(e + 8, le);
+      if (ort + ges > dv.byteLength) continue;
+      m[dv.getUint16(e, le)] = { typ: typ, anzahl: anz, ort: ort, bytes: ges };
+    }
+    return m;
+  }
+  function zahl(dv, f, le) {
+    if (!f) return null;
+    if (f.typ === 3) return dv.getUint16(f.ort, le);
+    if (f.typ === 4) return dv.getUint32(f.ort, le);
+    if (f.typ === 5) { var d = dv.getUint32(f.ort + 4, le); return d ? dv.getUint32(f.ort, le) / d : null; }
+    if (f.typ === 10) { var e = dv.getInt32(f.ort + 4, le); return e ? dv.getInt32(f.ort, le) / e : null; }
+    return null;
+  }
+  function text(dv, f) { if (!f || f.typ !== 2) return null; var s = ''; for (var k = 0; k < f.anzahl; k++) { var c = dv.getUint8(f.ort + k); if (!c) break; s += String.fromCharCode(c); } return s.trim(); }
+  function lage(dv, mn) {   // Apple-MakerNote, Feld 8 = Schwerkraft (drei Brüche mit Vorzeichen); wie werkzeuge/referenz/heic_lage.py
+    if (!mn || mn.bytes < 20) return { apple: false };
+    var kopf = ''; for (var k = 0; k < 9; k++) kopf += String.fromCharCode(dv.getUint8(mn.ort + k));
+    if (kopf !== 'Apple iOS') return { apple: false };
+    var le = dv.getUint16(mn.ort + 12) === 0x4949, n = dv.getUint16(mn.ort + 14, le);
+    for (var i = 0; i < n; i++) {
+      var e = mn.ort + 16 + i * 12; if (e + 12 > dv.byteLength) break;
+      if (dv.getUint16(e, le) === 8 && dv.getUint16(e + 2, le) === 10 && dv.getUint32(e + 4, le) === 3) {
+        var o = mn.ort + dv.getUint32(e + 8, le), v = [];
+        if (o + 24 > dv.byteLength) break;
+        for (var j = 0; j < 3; j++) { var d = dv.getInt32(o + 8 * j + 4, le); v.push(d ? +(dv.getInt32(o + 8 * j, le) / d).toFixed(4) : null); }
+        return { apple: true, felder: n, vektor: v };
+      }
+    }
+    return { apple: true, felder: n, vektor: null };
+  }
+  function exif(u8) {
+    var base = sucheExif(u8); if (base < 0) return null;
+    var dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), le = dv.getUint16(base) === 0x4949;
+    var i0 = ifd(dv, base, dv.getUint32(base + 4, le), le), ex = i0[0x8769] ? ifd(dv, base, zahl(dv, i0[0x8769], le), le) : {}, gps = i0[0x8825] ? ifd(dv, base, zahl(dv, i0[0x8825], le), le) : null;
+    var mn = ex[0x927C] || null;
+    return { hersteller: text(dv, i0[0x010F]), modell: text(dv, i0[0x0110]), ausrichtung: zahl(dv, i0[0x0112], le), zeit: !!text(dv, ex[0x9003]), brennweite: zahl(dv, ex[0x920A], le), kb: zahl(dv, ex[0xA405], le),
+      gps: gps ? Object.keys(gps).length : 0, gpsOrt: !!(gps && gps[2] && gps[4]), makernote: mn ? mn.bytes : 0, lage: lage(dv, mn) };
+  }
+  function inhalt(u8) {   // was die Bytes wirklich sind, unabhängig von Name und Typ
+    if (u8[0] === 0xFF && u8[1] === 0xD8) return 'JPEG';
+    if (u8[0] === 0x89 && u8[1] === 0x50) return 'PNG';
+    if (u8[4] === 0x66 && u8[5] === 0x74 && u8[6] === 0x79 && u8[7] === 0x70) { var m = String.fromCharCode(u8[8], u8[9], u8[10], u8[11]); return /hei|mif1|msf1|hev/.test(m) ? 'HEIC (' + m + ')' : 'ISO-Datei (' + m + ')'; }
+    if (u8[0] === 0x62 && u8[1] === 0x70 && u8[2] === 0x6C) return 'bplist (kein Bild, bekannter iOS-Fehler)';
+    return 'unbekannt';
+  }
+  function masse(u8, art) {   // Pixelmaße aus der Datei selbst
+    if (art === 'JPEG') {
+      var dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), off = 2;
+      while (off + 9 < dv.byteLength) {
+        if (dv.getUint8(off) !== 0xFF) { off++; continue; }
+        var mk = dv.getUint8(off + 1); if (mk === 0xD8 || (mk >= 0xD0 && mk <= 0xD7) || mk === 0xFF) { off += mk === 0xFF ? 1 : 2; continue; }
+        var len = dv.getUint16(off + 2);
+        if (mk >= 0xC0 && mk <= 0xCF && mk !== 0xC4 && mk !== 0xC8 && mk !== 0xCC) return { w: dv.getUint16(off + 7), h: dv.getUint16(off + 5) };
+        if (mk === 0xDA) break;
+        off += 2 + len;
+      }
+      return null;
+    }
+    if (/^HEIC/.test(art)) {   // größtes „ispe“ (Bildmaße) in den ersten 2 MB
+      var best = null, n = Math.min(u8.length - 16, 2097152), d2 = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+      for (var i = 4; i < n; i++) if (u8[i] === 0x69 && u8[i + 1] === 0x73 && u8[i + 2] === 0x70 && u8[i + 3] === 0x65) { var w = d2.getUint32(i + 8), h = d2.getUint32(i + 12); if (w < 65536 && h < 65536 && (!best || w * h > best.w * best.h)) best = { w: w, h: h }; }
+      return best;
+    }
+    return null;
+  }
+  function zeigbar(datei) {   // kann dieser Browser das Bild öffnen, und mit welchen Maßen?
+    return new Promise(function (fertig) {
+      var url = URL.createObjectURL(datei), im = new Image(), zu = setTimeout(function () { URL.revokeObjectURL(url); fertig(null); }, 15000);
+      im.onload = function () { clearTimeout(zu); var r = { w: im.naturalWidth, h: im.naturalHeight }; URL.revokeObjectURL(url); fertig(r); };
+      im.onerror = function () { clearTimeout(zu); URL.revokeObjectURL(url); fertig(null); };
+      im.src = url;
+    });
+  }
+  function mp(m) { return m ? m.w + '×' + m.h + ' (' + (m.w * m.h / 1e6).toFixed(1).replace('.', ',') + ' MP)' : 'unbekannt'; }
+  function r2(x) { return x == null ? 'fehlt' : String(Math.round(x * 100) / 100).replace('.', ','); }
+
+  async function pruefe(knopf, dateien) {
+    $('stand').textContent = 'Prüfe ' + dateien.length + ' Datei(en) …';
+    schreib(''); schreib('Knopf ' + knopf + ': ' + dateien.length + ' Datei(en)');
+    for (var i = 0; i < dateien.length; i++) {
+      var f = dateien[i], z = knopf + (i + 1) + ' ';
+      try {
+        var u8 = new Uint8Array(await f.arrayBuffer()), art = inhalt(u8), x = exif(u8), m = masse(u8, art), b = await zeigbar(f);
+        schreib(z + 'Name ' + f.name + ' · Typ ' + (f.type || 'leer') + ' · ' + (f.size / 1048576).toFixed(2).replace('.', ',') + ' MB · Inhalt ' + art);
+        schreib(z + 'Maße Datei ' + mp(m) + ' · im Browser ' + (b ? b.w + '×' + b.h : 'nicht darstellbar'));
+        if (!x) schreib(z + 'EXIF: fehlt ganz');
+        else {
+          schreib(z + 'EXIF: Gerät ' + (x.modell || 'fehlt') + ' · Ausrichtung ' + (x.ausrichtung == null ? 'fehlt' : x.ausrichtung) + ' · Zeit ' + (x.zeit ? 'ja' : 'nein') + ' · Brennweite ' + r2(x.brennweite) + ' mm · Kleinbild ' + r2(x.kb) + ' mm');
+          schreib(z + 'Standort (GPS): ' + (x.gpsOrt ? 'JA, enthalten' : x.gps ? 'Felder da (' + x.gps + '), aber kein Ort' : 'nein'));
+          schreib(z + 'Hersteller-Daten: ' + (x.makernote ? x.makernote + ' Bytes' + (x.lage.apple ? ', Apple, ' + x.lage.felder + ' Felder' : ', nicht Apple') : 'fehlen') + ' · Lage (Schwerkraft): ' + (x.lage.vektor ? x.lage.vektor.join(' / ') : 'fehlt'));
+        }
+      } catch (e) { schreib(z + 'Fehler: ' + (e && e.message || e)); }
+    }
+    $('stand').textContent = 'Fertig. Bitte „Ergebnis kopieren“ tippen oder ein Bildschirmfoto machen.';
+  }
+  ['A', 'B', 'C'].forEach(function (k) {
+    var el = $('in' + k);
+    el.onchange = function () { var d = Array.prototype.slice.call(el.files || []); el.value = ''; if (d.length) pruefe(k, d); };
+  });
+  $('kopieren').onclick = async function () {
+    var t = $('aus').value;
+    try { await navigator.clipboard.writeText(t); $('stand').textContent = 'Kopiert.'; }
+    catch (e) { $('aus').focus(); $('aus').select(); try { document.execCommand('copy'); $('stand').textContent = 'Kopiert.'; } catch (e2) { $('stand').textContent = 'Bitte den Text von Hand markieren und kopieren.'; } }
+  };
+  window.MediathekTest = { exif: exif, inhalt: inhalt, masse: masse, stand: STAND };
+})();
+</script>
+</body>
+</html>
