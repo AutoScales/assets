@@ -260,9 +260,9 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .ex { display: flex; flex-direction: column; gap: 4px; flex: 1; min-height: 0; }
 .exw { flex: 1; min-height: 0; position: relative; }
 .exw img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: var(--rs); border: 1px solid var(--gb); display: block; }
-.rv-btns { display: grid; grid-template-columns: 1fr 52px 1.3fr; gap: 8px; margin-top: auto; padding-top: 4px; }
+.rv-btns { display: grid; grid-template-columns: minmax(0, 1fr) 52px minmax(0, 1.3fr); gap: 8px; margin-top: auto; padding-top: 4px; }
 .rv-btns .btn { min-height: 48px; font-size: 15px; padding: 0 10px; border-radius: var(--rs); }
-.rv-btns.two { grid-template-columns: 1fr 1.3fr; }
+.rv-btns.two { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); }
 .rv-btns .btn[hidden] { display: none; }
 /* Prüfzeilen (Fassung 17): Ergebnis der Prüfung am fertigen Foto. Grün „Foto passt.“, gelb mit einem einfachen Satz, grau, wenn die App etwas nicht prüfen konnte. */
 .rv-zeilen { display: grid; gap: 7px; } .rv-zeilen:empty { display: none; }
@@ -270,7 +270,26 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .pz .dot { width: 16px; height: 16px; margin-top: 1px; vertical-align: 0; }
 .pz.info { color: var(--t2); font-weight: 500; }
 /* Bei Gelb steht „Neu aufnehmen“ oben über die ganze Breite (Hauptknopf), darunter Drehen und „Trotzdem nehmen“ */
-.rv-btns.warn { grid-template-columns: 52px 1fr; } .rv-btns.warn #revNeu { grid-column: 1 / -1; }
+.rv-btns.warn { grid-template-columns: 52px minmax(0, 1fr); } .rv-btns.warn #revNeu { grid-column: 1 / -1; }
+/* PRÜFBILD AUF EINEM BILDSCHIRM (Fassung 17 e, Giannis 24.11.2026 am iPhone Duo, Fenster 594 × 466: „Passt“ war abgeschnitten, die rechte Spalte ließ sich seitlich wischen,
+   das Foto füllte nur rund 40 % der Höhe). rvLage() wählt die Lage mit dem größeren Foto: „seite“ (Foto links, Bedienung rechts) oder „unten“ (Foto über die ganze Breite,
+   Bedienung in einem Band darunter, Höhe --rvb). Ist die Bedienung schmal (.eng), stehen „Neu“ und Drehen in einer Zeile und „Passt“ darunter. Nichts ragt seitlich hinaus. */
+.rv-panel { overflow-x: hidden; } .rv-btns .btn { min-width: 0; }
+#vRev.eng .rv-btns:not(.warn) { grid-template-columns: minmax(0, 1fr) 48px; } #vRev.eng .rv-btns:not(.warn) #revOk { grid-column: 1 / -1; }
+#vRev.eng .rv-btns.two { grid-template-columns: minmax(0, 1fr); }
+#vRev.eng .rv-btns .btn { min-height: 44px; font-size: 14px; padding: 0 8px; gap: 6px; }
+.rv-text { display: contents; }
+#vRev[data-lage="unten"] .rv-photo { width: calc(var(--fw) - var(--sl, 0px) - var(--sr, 0px)); height: calc(var(--fh) - var(--rvb)); }
+#vRev[data-lage="unten"] .rv-checks { bottom: calc(var(--rvb) + 8px); max-width: calc(var(--fw) - var(--sl, 0px) - var(--sr, 0px) - 20px); }
+#vRev[data-lage="unten"] .rv-panel { left: calc(var(--sl, 0px) + 8px); right: calc(var(--sr, 0px) + 8px); top: auto; bottom: 8px; height: calc(var(--rvb) - 14px); padding: 10px 12px; }
+/* breites Band (ab 480 px): Text links, Beispielbild in der Mitte, Knöpfe rechts */
+#vRev[data-lage="unten"]:not(.schmal) .rv-panel { display: grid; grid-template-columns: minmax(0, 1fr) auto 200px; grid-template-rows: minmax(0, 1fr); column-gap: 12px; overflow: hidden; }
+#vRev[data-lage="unten"]:not(.schmal) .rv-text { display: flex; flex-direction: column; gap: 6px; grid-column: 1; min-height: 0; overflow-y: auto; }
+#vRev[data-lage="unten"]:not(.schmal) .ex { grid-column: 2; flex: none; width: calc((var(--rvb) - 48px) * 1.5); min-height: 0; }
+#vRev[data-lage="unten"]:not(.schmal) .ex .lbl { white-space: nowrap; overflow: hidden; font-size: 9.5px; letter-spacing: .06em; }
+#vRev[data-lage="unten"]:not(.schmal) .rv-btns { grid-column: 3; margin-top: 0; padding-top: 0; align-self: end; }
+/* schmales Band (Oberfläche gedreht bei Drehsperre, Fenster hochkant): alles untereinander wie in der Spalte, das Beispielbild nimmt den freien Platz */
+#vRev[data-lage="unten"].schmal .ex { min-height: 56px; }
 /* Andockstelle für den Icon-Satz (Paket B): <svg class="ic"><use href="#ic-NAME"/></svg>, Linien in der Textfarbe; siehe icon() */
 svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; vertical-align: -0.22em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 /* Symbol eines Platzes ohne Foto: in der Bildleiste, in der Galerie und im Prüfen-Schritt immer auf der dunklen Bildkarte */
@@ -446,9 +465,11 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       <div class="chip rv-cap"><i class="dot go"></i><span id="revLbl"></span></div>
       <div class="checks rv-checks" id="revInfo"></div>
       <div class="glass rv-panel">
-        <h2 id="revTitle">Passt das Foto?</h2>
-        <div class="rv-zeilen" id="revPruef" role="status" aria-live="polite"></div>
-        <span id="revDbg" hidden></span>
+        <div class="rv-text">
+          <h2 id="revTitle">Passt das Foto?</h2>
+          <div class="rv-zeilen" id="revPruef" role="status" aria-live="polite"></div>
+          <span id="revDbg" hidden></span>
+        </div>
         <div class="ex" id="exBox" hidden><span class="lbl">So soll es aussehen</span><div class="exw"><img id="exImg" alt="Beispiel für diesen Platz"></div></div>
         <div class="rv-btns" id="revBtns">
           <button class="btn" id="revNeu" type="button" data-ic="neu">Neu</button>
@@ -1143,6 +1164,19 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     $('ui').setAttribute('data-form', LAY.form);
     var u = $('ui').style;
     ['fw', 'fh', 'ix', 'iy', 'iw', 'ih', 'vx', 'vy', 'vw', 'vh', 'sl', 'sr', 'rw'].forEach(function (k) { u.setProperty('--' + k, LAY[k] + 'px'); });
+    rvLage();
+  }
+  // Lage des Prüfbilds (17 e): die Anordnung, in der das Foto größer ist. a = Seitenverhältnis des gezeigten Fotos (Prüfen: das fertige Foto; Ansehen: das Vorschaubild).
+  function rvLage() {
+    var L = LAY, el = $('vRev'), im = $('revImg'); if (!L || !L.fw || !el) return;
+    var r = S.phase === 'review' ? S.review : null, a = (r && r.w > 0 && r.h > 0) ? r.w / r.h : (im && im.complete && im.naturalWidth > 0) ? im.naturalWidth / im.naturalHeight : 4 / 3;
+    var breit = L.fw - L.sl - L.sr, schmal = breit < 480, fl = function (bw, bh) { var w = Math.max(0, Math.min(bw, bh * a)); return w * w / a; };
+    // Höhe des Bands unten: breit ein flaches Band; schmal bekommt das Foto genau seinen Platz, das Band den Rest (mindestens 220 px, höchstens 60 % der Höhe)
+    var rvb = schmal ? Math.round(Math.min(L.fh * 0.6, Math.max(220, L.fh - breit / a - 8))) : Math.round(Math.min(160, Math.max(148, L.fh * 0.3)));
+    var unten = fl(breit, L.fh - rvb) > fl(L.rw, L.fh) * 1.05;
+    el.setAttribute('data-lage', unten ? 'unten' : 'seite'); $('ui').style.setProperty('--rvb', rvb + 'px');
+    el.classList.toggle('schmal', unten && schmal);
+    el.classList.toggle('eng', unten ? !schmal || breit - 16 - 24 < 250 : breit - L.rw - 20 - 28 < 250);   // Knöpfe gestapelt: im breiten Band (200 px für die Knöpfe) und überall, wo die Bedienung innen unter 250 px breit ist
   }
   function applyGeom() {
     geom($('ui'), S.textRot);
@@ -1196,6 +1230,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     $('revInfo').innerHTML = '<span class="chip"><i class="dot ' + (ti.c || '') + '"></i>' + esc(ti.t) + '</span>' + amp(s.ampelHandy, 'Handy') + ampSrv(s.server) + gruendeChips(s.server);
     $('revPruef').innerHTML = ''; $('revDbg').hidden = true; $('exBox').hidden = true; $('revRot').hidden = true; $('revBtns').className = 'rv-btns two';
     knopfText($('revNeu'), 'Zurück', 'zurueck'); knopfText($('revOk'), 'Neu aufnehmen', 'neu'); $('revNeu').className = 'btn'; $('revOk').className = 'btn primary'; $('revOk').disabled = false;
+    rvLage(); $('revImg').onload = rvLage;
     paneShow('vCam', false); paneShow('vTurn', false); paneShow('vRev', true);
   }
   $('camGal').addEventListener('click', function (ev) {
@@ -1541,7 +1576,11 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   function say(t) { if (!$('stage').hidden) { var b = $('camBig'); if (t) { b.textContent = t; b.hidden = false; } else b.hidden = true; $('camHint').style.visibility = t ? 'hidden' : ''; } }
   function toast(t, ms) { var el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(function () { el.hidden = true; }, ms || 1800); }
 
+  // Die Seite unter der Kamera wird ausgeblendet und nach oben gesetzt (17 e, Giannis 24.11.2026: Neuaufnahme aus der gescrollten Galerie, „in die Galerie, so wie sie war,
+  // oben einen Ausschnitt der Kamera geöffnet, aber die Kamera hat nicht funktioniert“). Unter der Bühne liegt dann nichts mehr, das durchscheinen oder verschoben sein kann.
+  var SEITEN_IDS = ['pStart', 'pGallery', 'pSchritt', 'pTest'];
   function enterStage() {
+    if ($('stage').hidden) { S.unterBuehne = SEITEN_IDS.filter(function (p) { return !$(p).hidden; })[0] || null; if (S.unterBuehne) $(S.unterBuehne).hidden = true; window.scrollTo(0, 0); }
     $('stage').hidden = false; document.body.style.overflow = 'hidden';
     paneShow('vCam', false); paneShow('vRev', false); paneShow('vBet', false); paneShow('vTurn', false);
     sensorsAttach(); updateLayout(); applyGeom();
@@ -1550,6 +1589,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   async function leaveStage() {
     S.token++; S.phase = ''; closeStream(); sensorsDetach();
     $('stage').hidden = true; document.body.style.overflow = ''; releaseAwake();
+    if (S.unterBuehne) { if (SEITEN_IDS.every(function (p) { return $(p).hidden; })) { $(S.unterBuehne).hidden = false; renderGalleryIfShown(); } S.unterBuehne = null; }   // die Seite von vorher wieder zeigen (der Aufrufer wechselt danach meist selbst)
     if (S.review && S.review.url) { URL.revokeObjectURL(S.review.url); } S.review = null;
   }
   async function keepAwake() { try { if (navigator.wakeLock && !S.wake) { S.wake = await navigator.wakeLock.request('screen'); S.wake.addEventListener('release', function () { S.wake = null; }); } } catch (e) { /* egal */ } }
@@ -1862,6 +1902,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     $('revTitle').textContent = 'Passt das Foto?';
     pruefZeigen(r);
     $('revRot').hidden = false; $('vRev').classList.toggle('dbg', !!VAR.debug);
+    $('revImg').onload = null; rvLage();
     paneShow('vCam', false); paneShow('vTurn', false); paneShow('vRev', true); say('');
     beispielZeigen(m.key, m.art);
     $('revOk').disabled = false;
@@ -1875,7 +1916,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       if (!res || !res.blob) throw new Error('leer');
       if (S.review === r) {
         var alt = r.url; r.blob = res.blob; r.w = res.w; r.h = res.h; r.thumb = res.thumb; r.hand = (r.hand + 90) % 360; r.drehung = (r.drehung + 90) % 360; r.url = URL.createObjectURL(r.blob); $('revImg').src = r.url; if (alt) URL.revokeObjectURL(alt);
-        var mR = slotMeta(r.slot) || {}; r.pruef = fotoPruefen(res.klein, { art: mR.art, key: mR.key, w: res.w, h: res.h, snap: r.snap, gerade: !!r.gerade, f35: r.f35, quelle: r.quelle }); pruefZeigen(r);   // das gedrehte Foto neu prüfen (Befund B3: Ampel und Hinweis zur neuen Lage)
+        var mR = slotMeta(r.slot) || {}; r.pruef = fotoPruefen(res.klein, { art: mR.art, key: mR.key, w: res.w, h: res.h, snap: r.snap, gerade: !!r.gerade, f35: r.f35, quelle: r.quelle }); pruefZeigen(r); rvLage();   // das gedrehte Foto neu prüfen (Befund B3: Ampel und Hinweis zur neuen Lage); die Lage des Prüfbilds folgt dem neuen Seitenverhältnis
       }
       res.klein.width = 1; res.klein.height = 1;
     } catch (e) { toast('Drehen nicht möglich'); }
