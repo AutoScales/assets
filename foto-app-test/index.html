@@ -395,7 +395,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     <summary>Mehr Hinweise</summary>
     <ul class="hints">
       <li data-du="<b>Freie Kamera:</b> Abstand, Höhe und Blickwinkel wählst du selbst. Im Sucher liegt nichts über dem Bild." data-sie="<b>Freie Kamera:</b> Abstand, Höhe und Blickwinkel wählen Sie selbst. Im Sucher liegt nichts über dem Bild."></li>
-      <li data-du="Nach jedem Foto zeigt die App, ob es passt. Bei einem Hinweis nimmst du das Foto neu auf oder trotzdem. Ist das Auto angeschnitten oder zu nah, nimmt die App das Foto nicht an. Erst danach geht es hoch." data-sie="Nach jedem Foto zeigt die App, ob es passt. Bei einem Hinweis nehmen Sie das Foto neu auf oder trotzdem. Ist das Auto angeschnitten oder zu nah, nimmt die App das Foto nicht an. Erst danach wird hochgeladen."></li>
+      <li data-du="Nach jedem Foto zeigt die App, ob es passt. Bei einem Hinweis nimmst du das Foto neu auf oder trotzdem. Ist das Auto angeschnitten oder zu nah, nimmt die App das Foto erst beim dritten Versuch an. Erst danach geht es hoch." data-sie="Nach jedem Foto zeigt die App, ob es passt. Bei einem Hinweis nehmen Sie das Foto neu auf oder trotzdem. Ist das Auto angeschnitten oder zu nah, nimmt die App das Foto erst beim dritten Versuch an. Erst danach wird hochgeladen."></li>
       <li>Die Seiten (Fahrerseite und Beifahrerseite) und Zusatzbilder sind freiwillig; die Seiten bietet die App nach dem letzten Außenbild an, alle sind auch in der Galerie.</li>
       <li>Die Karosserie braucht AutoScales für das Showroom-Bild.</li>
     </ul>
@@ -594,6 +594,9 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     // sperren (Giannis 25.11.2026, Pop-up: „Klare Fälle sperren (Empfohlen)“: Auto nicht ganz im Bild, Räder verdeckt, zu nah, außen nicht 1×; dunkel und unscharf bleiben Hinweise
     // mit „Trotzdem nehmen“): Bei diesen Codes nimmt die App das Foto nicht an und bittet um ein neues. Räder prüft der Arbeiter (das Modell auf dem Gerät kennt keine Räder).
     sperren: ['angeschnitten', 'zu_nah', 'nicht_1x'],
+    // sperreFrei (Giannis 25.11.2026, Pop-up: „Nach 3 Versuchen freigeben (Empfohlen)“): Ab dem dritten gesperrten Versuch am selben Platz erscheint „Trotzdem nehmen“ wieder,
+    // damit niemand feststeckt, wenn die Erkennung irrt (z. B. Nachbarauto am Bildrand). Der Arbeiter prüft das Foto dann selbst und meldet im Zweifel „neu fotografieren“.
+    sperreFrei: 3,
     // unscharf: Schärfemaß (schaerfeMessen: Laplace-Varianz geteilt durch den Kontrast des Bilds) unter diesem Wert heißt „Foto ist unscharf“. Gemessen an den 19 Fotos: scharfe Originale 0,25 bis 0,97
     // (kleinster Wert ein Seitenfoto, Tacho 0,91). Künstlich verwackelt: 20 px schräg 0,02 bis 0,14, 20 px waagerecht 0,06 bis 0,33; unscharf gestellt (auf 1/8 verkleinert und
     // wieder vergrößert) höchstens 0,05. 0,12 ist die Hälfte des kleinsten Originals: Kein echtes Foto schlägt an, im Zweifel gibt es keinen Hinweis (leichtes Verwackeln bleibt ohne).
@@ -698,6 +701,8 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   }
   // Nimmt die App ein Foto mit diesem Code nicht an? Nur Außenfotos, nur die Codes aus PRUEF.sperren.
   function sperrCode(code, aussen) { return !!aussen && PRUEF.sperren.indexOf(code) >= 0; }
+  // n: gesperrte Versuche an diesem Platz, der gerade gezeigte mitgezählt. Ab PRUEF.sperreFrei ist „Trotzdem nehmen“ wieder da.
+  function sperreFrei(n) { return n >= PRUEF.sperreFrei; }
   // PRUEF-ENDE
   // Vorgaben aus dem Link: &a=du|sie (Anrede), &debug (Messwerte in der Ansicht). Die Anrede landet in app_details.variante.
   var VAR = { anrede: 'sie', debug: false };
@@ -1957,10 +1962,14 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   // daneben „Trotzdem nehmen“. Graue Zeilen (die App konnte etwas nicht prüfen) sind kein Vorwurf: Knöpfe wie bei Grün.
   function pruefZeigen(r) {
     var P = r.pruef, Z = P.zeilen.length ? P.zeilen : [{ art: 'ok', text: 'Foto passt.' }], gelb = !!P.gelb, zu = !!P.sperre;
+    // Sperre (17 g): kein „Trotzdem nehmen“, nur „Neu aufnehmen“ (und Drehen). Gezählt wird je Platz, das Protokoll des nächsten Fotos nennt die Zahl (aufnahme.gesperrt).
+    // Ab dem dritten gesperrten Versuch am selben Platz ist „Trotzdem nehmen“ wieder da (PRUEF.sperreFrei); das Protokoll des Fotos trägt dann pruefung.sperre_frei.
+    if (zu && !r.sperreGezaehlt) { r.sperreGezaehlt = true; var az = aufnZaehler(); az.s = (az.s || 0) + 1; }
+    r.sperreFrei = zu && sperreFrei(aufnZaehler().s || 0);
+    if (r.sperreFrei) { P.zahlen.sperre_frei = true; zu = false; Z = Z.concat([{ art: 'info', code: 'sperre_frei', text: 'Dritter Versuch: „Trotzdem nehmen“ ist frei. Das Foto wird danach geprüft.' }]); } else delete P.zahlen.sperre_frei;
     $('revPruef').innerHTML = Z.map(function (z) { return '<div class="pz ' + z.art + '" data-code="' + esc(z.code || 'passt') + '"><i class="dot' + (z.art === 'ok' ? ' ok' : z.art === 'warn' ? ' warn' : z.art === 'sperre' ? ' bad' : '') + '"></i><span>' + esc(z.text) + '</span></div>'; }).join('');
     $('revInfo').innerHTML = '';
-    // Sperre (17 g): kein „Trotzdem nehmen“, nur „Neu aufnehmen“ (und Drehen). Gezählt wird je Platz, das Protokoll des nächsten Fotos nennt die Zahl (aufnahme.gesperrt).
-    $('revOk').hidden = zu; if (zu && !r.sperreGezaehlt) { r.sperreGezaehlt = true; var az = aufnZaehler(); az.s = (az.s || 0) + 1; }
+    $('revOk').hidden = zu;
     $('revBtns').className = 'rv-btns' + (gelb ? ' warn' : '') + (zu ? ' zu' : '');
     knopfText($('revNeu'), gelb ? 'Neu aufnehmen' : 'Neu', 'neu'); $('revNeu').className = 'btn' + (gelb ? ' primary' : '');
     knopfText($('revOk'), gelb ? 'Trotzdem nehmen' : 'Passt', gelb ? 'trotzdem' : 'passt'); $('revOk').className = 'btn' + (gelb ? '' : ' primary');
@@ -2028,7 +2037,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   function discardReview() { var r = S.review; if (r && r.url) URL.revokeObjectURL(r.url); S.review = null; }
   $('revOk').onclick = async function () {
     if (S.phase === 'view') { var vid = S.viewId; paneShow('vRev', false); S.seq = [vid]; S.idx = 0; S.mode = 'single'; nextShot(); return; }
-    var r = S.review; if (!r) return; if (r.pruef && r.pruef.sperre) return;   // gesperrtes Foto wird nie angenommen (17 g), auch wenn der Knopf einmal sichtbar wäre
+    var r = S.review; if (!r) return; if (r.pruef && r.pruef.sperre && !r.sperreFrei) return;   // gesperrtes Foto wird nicht angenommen (17 g), auch wenn der Knopf einmal sichtbar wäre; frei erst ab dem dritten gesperrten Versuch
     $('revOk').disabled = true;
     var fov = null; if (r.fovP) { try { fov = await Promise.race([r.fovP, sleep(1500).then(function () { return null; })]); } catch (e) { fov = null; } }
     if (S.review !== r) return;
