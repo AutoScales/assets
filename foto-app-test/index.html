@@ -269,6 +269,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .pz { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; align-items: start; font: 600 13px/1.35 var(--font-body); color: var(--t); }
 .pz .dot { width: 16px; height: 16px; margin-top: 1px; vertical-align: 0; }
 .pz.info { color: var(--t2); font-weight: 500; }
+.pz.sperre { color: var(--bad); }   /* 17 g: klarer Fall, die App nimmt das Foto nicht an */
 /* Bei Gelb steht „Neu aufnehmen“ oben über die ganze Breite (Hauptknopf), darunter Drehen und „Trotzdem nehmen“ */
 .rv-btns.warn { grid-template-columns: 52px minmax(0, 1fr); } .rv-btns.warn #revNeu { grid-column: 1 / -1; }
 /* PRÜFBILD AUF EINEM BILDSCHIRM (Fassung 17 e, Giannis 24.11.2026 am iPhone Duo, Fenster 594 × 466: „Passt“ war abgeschnitten, die rechte Spalte ließ sich seitlich wischen,
@@ -394,7 +395,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     <summary>Mehr Hinweise</summary>
     <ul class="hints">
       <li data-du="<b>Freie Kamera:</b> Abstand, Höhe und Blickwinkel wählst du selbst. Im Sucher liegt nichts über dem Bild." data-sie="<b>Freie Kamera:</b> Abstand, Höhe und Blickwinkel wählen Sie selbst. Im Sucher liegt nichts über dem Bild."></li>
-      <li data-du="Nach jedem Foto zeigt die App, ob es passt. Bei einem Hinweis nimmst du das Foto neu auf oder trotzdem. Erst danach geht es hoch." data-sie="Nach jedem Foto zeigt die App, ob es passt. Bei einem Hinweis nehmen Sie das Foto neu auf oder trotzdem. Erst danach wird hochgeladen."></li>
+      <li data-du="Nach jedem Foto zeigt die App, ob es passt. Bei einem Hinweis nimmst du das Foto neu auf oder trotzdem. Ist das Auto angeschnitten oder zu nah, nimmt die App das Foto nicht an. Erst danach geht es hoch." data-sie="Nach jedem Foto zeigt die App, ob es passt. Bei einem Hinweis nehmen Sie das Foto neu auf oder trotzdem. Ist das Auto angeschnitten oder zu nah, nimmt die App das Foto nicht an. Erst danach wird hochgeladen."></li>
       <li>Die Seiten (Fahrerseite und Beifahrerseite) und Zusatzbilder sind freiwillig; die Seiten bietet die App nach dem letzten Außenbild an, alle sind auch in der Galerie.</li>
       <li>Die Karosserie braucht AutoScales für das Showroom-Bild.</li>
     </ul>
@@ -535,7 +536,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-17f';
+  var APP = 'foto-app-test-17g';
   var RAD = Math.PI / 180;
   /* =====================================================================
      FREIE KAMERA (Fassung 17). Giannis 23.11.2026: „man öffnet die App, man sieht den ganzen Bildschirm als freie Kamera und wir lassen das mit den Kasten und alles weg.
@@ -582,6 +583,17 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     // autoPxMin: darunter (Breite kleiner als autoPx × autoPxMin) kommt „Auto ist klein im Bild“. Quelle: Fable 21 (Arbeiter), 23.11.2026, gemessen an den A6-Fotos:
     // dort lag das Verhältnis bei 0,91 bis 1,09 und war gerade genug.
     autoPx: { front: 800, heck: 800, schraeg: 1100, seite: 1250 }, autoPxMin: 0.9,
+    // nah (Fassung 17 g): „zu nah“ am Außenfoto. hoehe = Höhe des erkannten Rahmens als Anteil eines 4:3-Bilds gleicher Breite, breite = Breite des Rahmens als Anteil der
+    // Bildbreite (zählt nur bei Front und Heck); beides auf 1× umgerechnet (× f35 ÷ Brennweite des Fotos, nur zwischen 20 und 40 mm). Bei 26 mm und 4:3 ist die Höhe im Bild
+    // gleich der scheinbaren Höhe des Autos in Metern geteilt durch den Abstand in Metern: Wer nah und von oben fotografiert, füllt die Bildhöhe.
+    // Herkunft: Rahmen und Kameraabstand des Arbeiters an Giannis' Händlerfotos (iPhone, 26 mm) und den A6-Fotos aus der App, Prüfsatz r6 vom 24.11.2026:
+    // TT Front (Giannis: „das Bild ist schlecht“, Kamera 3,2 m vor der Automitte, 19,5° nach unten) Höhe 0,87, Breite 0,81. Die übrigen nahen (3,4 bis 3,6 m): Höhe 0,58 bis 0,64,
+    // Front 0,57 breit. Alle 13 Fotos ab 4,0 m (abgenommene A6- und RS6-Bilder): Höhe höchstens 0,53, Front und Heck höchstens 0,49 breit.
+    // sperre: klarer Fall, die App nimmt das Foto nicht an. hinweis: „Trotzdem nehmen“ bleibt. Wenige Beispiele: Die Zahlen sind eine erste Fassung.
+    nah: { f35: 26, hoehe: { hinweis: 0.57, sperre: 0.70 }, breite: { hinweis: 0.55, sperre: 0.70 } },
+    // sperren (Giannis 25.11.2026, Pop-up: „Klare Fälle sperren (Empfohlen)“: Auto nicht ganz im Bild, Räder verdeckt, zu nah, außen nicht 1×; dunkel und unscharf bleiben Hinweise
+    // mit „Trotzdem nehmen“): Bei diesen Codes nimmt die App das Foto nicht an und bittet um ein neues. Räder prüft der Arbeiter (das Modell auf dem Gerät kennt keine Räder).
+    sperren: ['angeschnitten', 'zu_nah', 'nicht_1x'],
     // unscharf: Schärfemaß (schaerfeMessen: Laplace-Varianz geteilt durch den Kontrast des Bilds) unter diesem Wert heißt „Foto ist unscharf“. Gemessen an den 19 Fotos: scharfe Originale 0,25 bis 0,97
     // (kleinster Wert ein Seitenfoto, Tacho 0,91). Künstlich verwackelt: 20 px schräg 0,02 bis 0,14, 20 px waagerecht 0,06 bis 0,33; unscharf gestellt (auf 1/8 verkleinert und
     // wieder vergrößert) höchstens 0,05. 0,12 ist die Hälfte des kleinsten Originals: Kein echtes Foto schlägt an, im Zweifel gibt es keinen Hinweis (leichtes Verwackeln bleibt ohne).
@@ -672,11 +684,20 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   // Auto im Foto. b: Rahmen des erkannten Autos (Anteile des Fotos), w: Breite des hochgeladenen Fotos in Bildpunkten, key: Platz.
   // an: Seiten, an denen das Auto den Rand berührt; breitePx: Breite des Autos im hochgeladenen Foto; klein: schmaler, als das Showroom-Bild braucht.
   function autoSollPx(key) { var A = PRUEF.autoPx; return /^seite/.test(key) ? A.seite : key === 'front' ? A.front : key === 'heck' ? A.heck : A.schraeg; }
-  function autoBefund(b, w, key) {
-    var R = PRUEF.rand, an = [], px = Math.round((b.x1 - b.x0) * w), soll = autoSollPx(key);
+  // h und f35 (Höhe des Fotos, Brennweite in Kleinbild) sind für „zu nah“ nötig; ohne h (oder bei einem Hochkant-Foto) wird das nicht geprüft.
+  // nah: null | 'hinweis' | 'sperre'; nahHoehe und nahBreite: die verglichenen Anteile (siehe PRUEF.nah). Ein angeschnittenes Auto gilt nicht zugleich als zu nah (ein Rat genügt).
+  function autoBefund(b, w, key, h, f35) {
+    var R = PRUEF.rand, an = [], px = Math.round((b.x1 - b.x0) * w), soll = autoSollPx(key), N = PRUEF.nah, nah = null, nh = null, nb = null;
     if (b.x0 < R) an.push('links'); if (b.x1 > 1 - R) an.push('rechts'); if (b.y0 < R) an.push('oben'); if (b.y1 > 1 - R) an.push('unten');
-    return { an: an, breitePx: px, sollPx: soll, klein: !an.length && px < soll * PRUEF.autoPxMin };
+    if (h && w && h <= w) {
+      var k = f35 >= 20 && f35 <= 40 ? N.f35 / f35 : 1, fh = key === 'front' || key === 'heck';
+      nh = (b.y1 - b.y0) * (h / w) * (4 / 3) * k; nb = (b.x1 - b.x0) * k;
+      if (!an.length) nah = nh >= N.hoehe.sperre || (fh && nb >= N.breite.sperre) ? 'sperre' : nh >= N.hoehe.hinweis || (fh && nb >= N.breite.hinweis) ? 'hinweis' : null;
+    }
+    return { an: an, breitePx: px, sollPx: soll, klein: !an.length && !nah && px < soll * PRUEF.autoPxMin, nah: nah, nahHoehe: nh, nahBreite: nb };
   }
+  // Nimmt die App ein Foto mit diesem Code nicht an? Nur Außenfotos, nur die Codes aus PRUEF.sperren.
+  function sperrCode(code, aussen) { return !!aussen && PRUEF.sperren.indexOf(code) >= 0; }
   // PRUEF-ENDE
   // Vorgaben aus dem Link: &a=du|sie (Anrede), &debug (Messwerte in der Ansicht). Die Anrede landet in app_details.variante.
   var VAR = { anrede: 'sie', debug: false };
@@ -1228,7 +1249,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     S.token++; S.phase = 'view'; S.viewId = id; say('');
     $('revImg').src = s.thumb; $('revLbl').textContent = (m.nr ? m.nr + ' von ' + pflicht().length + ' · ' : '') + m.name; $('revTitle').textContent = 'Foto ansehen';
     $('revInfo').innerHTML = '<span class="chip"><i class="dot ' + (ti.c || '') + '"></i>' + esc(ti.t) + '</span>' + amp(s.ampelHandy, 'Handy') + ampSrv(s.server) + gruendeChips(s.server);
-    $('revPruef').innerHTML = ''; $('revDbg').hidden = true; $('exBox').hidden = true; $('revRot').hidden = true; $('revBtns').className = 'rv-btns two';
+    $('revPruef').innerHTML = ''; $('revDbg').hidden = true; $('exBox').hidden = true; $('revRot').hidden = true; $('revOk').hidden = false; $('revBtns').className = 'rv-btns two';
     knopfText($('revNeu'), 'Zurück', 'zurueck'); knopfText($('revOk'), 'Neu aufnehmen', 'neu'); $('revNeu').className = 'btn'; $('revOk').className = 'btn primary'; $('revOk').disabled = false;
     rvLage(); $('revImg').onload = rvLage;
     paneShow('vCam', false); paneShow('vTurn', false); paneShow('vRev', true);
@@ -1315,17 +1336,22 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   /* PRÜFUNG EINES FOTOS (Fassung 17). kl: Prüfbild (Canvas, lange Kante PRUEF.kante) des fertigen, hochzuladenden Fotos. o: { art, key, w, h (Größe des hochgeladenen Fotos),
      snap (Lagesensor oder null), gerade (wurde gerade gerichtet), f35, quelle }. Ergebnis: zeilen (für das Prüfen-Bild: art ok | warn | info, code, text), ampel (ampel_handy),
      codes (für nicht_geprueft_grund) und zahlen (Messwerte fürs Protokoll). Reihenfolge der Zeilen: Auto, Licht, Schärfe, Lage.
-     Codes: foto_klein, angeschnitten, auto_klein, kein_auto, erkennung_fehlt, erkennung_zeit, licht_an, zu_dunkel, unscharf, winkel_rollen, nicht_quer, nicht_1x, kein_sensor, kamera_app. */
+     sperre (17 g): Liste der Codes, bei denen die App das Foto nicht annimmt (PRUEF.sperren), sonst null; Zeilen dazu haben art 'sperre'.
+     Codes: foto_klein, angeschnitten, zu_nah, auto_klein, kein_auto, erkennung_fehlt, erkennung_zeit, licht_an, zu_dunkel, unscharf, winkel_rollen, nicht_quer, nicht_1x, kein_sensor, kamera_app. */
   function fotoPruefen(kl, o) {
     var Z = [], rot = false, zahlen = {}, t0 = performance.now(), aussen = o.art === 'aussen', box = null, r3 = function (x) { return x == null ? null : Math.round(x * 1000) / 1000; };
     function zeile(art, code, text) { Z.push({ art: art, code: code, text: text }); }
+    function sperre(code, text) { zeile(sperrCode(code, aussen) ? 'sperre' : 'warn', code, text); }   // klarer Fall (17 g): Die App nimmt das Foto nicht an
     if (o.klein) zeile('warn', 'foto_klein', 'Das Handy hat nur ein kleines Foto geliefert (' + o.klein + '). Bitte neu aufnehmen.');   // 17 e: nie still durchgehen lassen
     if (aussen) {
       var E = autoErkennen(kl); zahlen.auto = E.stand; if (E.ms != null) zahlen.auto_ms = E.ms; if (E.warum) zahlen.auto_warum = String(E.warum).slice(0, 60);
       if (E.stand === 'erkannt') {
-        box = E.box; var B = autoBefund(box, o.w, o.key);
+        box = E.box; var B = autoBefund(box, o.w, o.key, o.h, o.f35);
         zahlen.box = [r3(box.x0), r3(box.y0), r3(box.x1), r3(box.y1)]; zahlen.score = Math.round(box.score * 100) / 100; zahlen.breite_px = B.breitePx; zahlen.soll_px = B.sollPx;
-        if (B.an.length) zeile('warn', 'angeschnitten', 'Auto ist ' + B.an.join(' und ') + ' angeschnitten. Bitte mit etwas mehr Abstand neu aufnehmen. Sonst kann das Foto abgelehnt werden.');   // der Arbeiter lehnt ein Foto ab, wenn das Auto den Rand berührt (unter 0,4 %)
+        if (B.nahHoehe != null) { zahlen.nah_hoehe = r3(B.nahHoehe); zahlen.nah_breite = r3(B.nahBreite); }
+        if (B.an.length) sperre('angeschnitten', 'Auto ist ' + B.an.join(' und ') + ' angeschnitten. Bitte mit mehr Abstand neu aufnehmen.');   // der Arbeiter lehnt ein Foto ab, wenn das Auto den Rand berührt (unter 0,4 %)
+        else if (B.nah === 'sperre') sperre('zu_nah', 'Zu nah am Auto. Bitte zwei bis drei Schritte zurück und neu aufnehmen.');
+        else if (B.nah === 'hinweis') zeile('warn', 'zu_nah', 'Auto ist sehr groß im Bild. Mit einem Schritt mehr Abstand wird das Ergebnis besser.');
         else if (B.klein) zeile('warn', 'auto_klein', 'Auto ist klein im Bild. Bitte näher ran.');
       } else zeile('info', E.stand === 'kein' ? 'kein_auto' : E.stand === 'zeit' ? 'erkennung_zeit' : 'erkennung_fehlt', 'Auto nicht erkannt, bitte selbst prüfen.');
     }
@@ -1345,15 +1371,16 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     // Innen ist 0,5× erlaubt (Fassung 17 f, Giannis 24.11.2026: „Ja, innen 0,5× erlauben“): unter 22 mm kein Hinweis und kein Rot. Außen bleibt 1× Pflicht.
     if (o.f35 != null && o.art === 'innen' && o.f35 < 22) zahlen.weitwinkel_innen = true;
     else if (o.f35 != null) {
-      if (o.f35 < 20 || o.f35 > 40) { rot = true; zeile('warn', 'nicht_1x', 'Kamera war nicht 1x (' + fmt(o.f35, 0) + ' mm).'); }
+      if (o.f35 < 20 || o.f35 > 40) { rot = true; sperre('nicht_1x', 'Kamera war nicht 1x (' + fmt(o.f35, 0) + ' mm).' + (aussen ? ' Bitte mit 1x neu aufnehmen.' : '')); }
       else if (o.f35 < 22 || o.f35 > 30) zeile('warn', 'nicht_1x', 'Kamera weicht von 1x ab (' + fmt(o.f35, 0) + ' mm).');
     }
     if (hoch && sensor) { rot = true; zeile('warn', 'nicht_quer', 'Foto ist hochkant (Handy war nicht quer).'); }
     else if (hoch) zeile('warn', 'nicht_quer', 'Ohne Lagesensor aufgenommen, Foto hochkant. Steht es falsch herum: ↻.');
     if (!sensor) { if (o.quelle !== 'kamera') zeile('info', 'kamera_app', 'Mit der Kamera-App aufgenommen, ohne Lagesensor.'); else if (!hoch) zeile('info', 'kein_sensor', 'Ohne Lagesensor aufgenommen.'); else Z.push({ art: 'still', code: 'kein_sensor', text: '' }); }
-    var warn = Z.some(function (z) { return z.art === 'warn'; }), info = Z.some(function (z) { return z.art !== 'warn'; });
+    var gesperrt = Z.filter(function (z) { return z.art === 'sperre'; }).map(function (z) { return z.code; });
+    var warn = Z.some(function (z) { return z.art === 'warn' || z.art === 'sperre'; }), info = Z.some(function (z) { return z.art !== 'warn' && z.art !== 'sperre'; });
     zahlen.ms = Math.round(performance.now() - t0);
-    return { zeilen: Z.filter(function (z) { return z.art !== 'still'; }), codes: Z.map(function (z) { return z.code; }).filter(function (c, i, a) { return a.indexOf(c) === i; }), ampel: rot ? 'rot' : warn ? 'gelb' : info ? null : 'gruen', gelb: warn, zahlen: zahlen, lack: aussen && box ? lackRot() : undefined };
+    return { zeilen: Z.filter(function (z) { return z.art !== 'still'; }), codes: Z.map(function (z) { return z.code; }).filter(function (c, i, a) { return a.indexOf(c) === i; }), ampel: rot || gesperrt.length ? 'rot' : warn ? 'gelb' : info ? null : 'gruen', gelb: warn, sperre: gesperrt.length ? gesperrt : null, zahlen: zahlen, lack: aussen && box ? lackRot() : undefined };
   }
 
   // Muss die App ihre Oberfläche selbst drehen? Nur beim Handy mit Drehsperre (quer gehalten, Bildschirm bleibt hochkant): wie bisher.
@@ -1830,7 +1857,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     how.sens = sensorsOn ? sensWin(t0, CFG.NACH_FENSTER_MS) : null; how.linse = linseJetzt();   // Lage nach dem Ruhig-Werden, Linse und Zoom (Protokoll)
     var r3 = function (x) { return Math.round(x * 1000) / 1000; };
     how.sucher = { form: LAY.form || null, fenster: window.innerWidth + 'x' + window.innerHeight, sichtbar: LAY.vis ? [r3(LAY.vis.x0), r3(LAY.vis.y0), r3(LAY.vis.x1), r3(LAY.vis.y1)] : null, gedreht: !!LAY.gedreht };   // Sucher beim Auslösen (Prüfbefund 12)
-    var auf = aufnZaehler(), aufn = { zeit: Date.now(), nr: ++auf.n, verworfen: auf.v };   // Aufnahme-Protokoll: wann ausgelöst, die wievielte Aufnahme an diesem Platz, wie viele davor mit „Neu“ verworfen
+    var auf = aufnZaehler(), aufn = { zeit: Date.now(), nr: ++auf.n, verworfen: auf.v, gesperrt: auf.s || 0 };   // Aufnahme-Protokoll: wann ausgelöst, die wievielte Aufnahme an diesem Platz, wie viele davor mit „Neu“ verworfen
     if (snap && snap.age > 800) snap = null;
     S.phase = 'shoot'; say('Foto wird gemacht …');
     var live = null; try { live = smallOf($('video'), S.vw, S.vh); } catch (e) { /* ohne Vergleich weiter */ }
@@ -1929,10 +1956,12 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   // Prüfzeilen und Knöpfe im Prüfen-Bild. Ist nichts auffällig: eine grüne Zeile „Foto passt.“ mit „Passt“ als Hauptknopf. Bei Gelb zuerst „Neu aufnehmen“ (Hauptknopf),
   // daneben „Trotzdem nehmen“. Graue Zeilen (die App konnte etwas nicht prüfen) sind kein Vorwurf: Knöpfe wie bei Grün.
   function pruefZeigen(r) {
-    var P = r.pruef, Z = P.zeilen.length ? P.zeilen : [{ art: 'ok', text: 'Foto passt.' }], gelb = !!P.gelb;
-    $('revPruef').innerHTML = Z.map(function (z) { return '<div class="pz ' + z.art + '" data-code="' + esc(z.code || 'passt') + '"><i class="dot' + (z.art === 'ok' ? ' ok' : z.art === 'warn' ? ' warn' : '') + '"></i><span>' + esc(z.text) + '</span></div>'; }).join('');
+    var P = r.pruef, Z = P.zeilen.length ? P.zeilen : [{ art: 'ok', text: 'Foto passt.' }], gelb = !!P.gelb, zu = !!P.sperre;
+    $('revPruef').innerHTML = Z.map(function (z) { return '<div class="pz ' + z.art + '" data-code="' + esc(z.code || 'passt') + '"><i class="dot' + (z.art === 'ok' ? ' ok' : z.art === 'warn' ? ' warn' : z.art === 'sperre' ? ' bad' : '') + '"></i><span>' + esc(z.text) + '</span></div>'; }).join('');
     $('revInfo').innerHTML = '';
-    $('revBtns').className = 'rv-btns' + (gelb ? ' warn' : '');
+    // Sperre (17 g): kein „Trotzdem nehmen“, nur „Neu aufnehmen“ (und Drehen). Gezählt wird je Platz, das Protokoll des nächsten Fotos nennt die Zahl (aufnahme.gesperrt).
+    $('revOk').hidden = zu; if (zu && !r.sperreGezaehlt) { r.sperreGezaehlt = true; var az = aufnZaehler(); az.s = (az.s || 0) + 1; }
+    $('revBtns').className = 'rv-btns' + (gelb ? ' warn' : '') + (zu ? ' zu' : '');
     knopfText($('revNeu'), gelb ? 'Neu aufnehmen' : 'Neu', 'neu'); $('revNeu').className = 'btn' + (gelb ? ' primary' : '');
     knopfText($('revOk'), gelb ? 'Trotzdem nehmen' : 'Passt', gelb ? 'trotzdem' : 'passt'); $('revOk').className = 'btn' + (gelb ? '' : ' primary');
     var dbg = $('revDbg'); dbg.hidden = !VAR.debug;
@@ -1999,12 +2028,13 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   function discardReview() { var r = S.review; if (r && r.url) URL.revokeObjectURL(r.url); S.review = null; }
   $('revOk').onclick = async function () {
     if (S.phase === 'view') { var vid = S.viewId; paneShow('vRev', false); S.seq = [vid]; S.idx = 0; S.mode = 'single'; nextShot(); return; }
-    var r = S.review; if (!r) return; $('revOk').disabled = true;
+    var r = S.review; if (!r) return; if (r.pruef && r.pruef.sperre) return;   // gesperrtes Foto wird nie angenommen (17 g), auch wenn der Knopf einmal sichtbar wäre
+    $('revOk').disabled = true;
     var fov = null; if (r.fovP) { try { fov = await Promise.race([r.fovP, sleep(1500).then(function () { return null; })]); } catch (e) { fov = null; } }
     if (S.review !== r) return;
     var st = slotState(r.slot), m = slotMeta(r.slot), P = r.pruef, kam = r.quelle === 'kamera';
     if (r.ohneDreh != null && r.hand) S.handOhne = { id: S.vehicle.id, grad: (r.ohneDreh + r.hand) % 360 };   // ohne Lagesensor: die Drehung von Hand gilt für die nächsten Hochkant-Fotos dieses Fahrzeugs (Befund B3)
-    st.thumb = r.thumb; st.state = 'wartet'; st.err = null; st.fotoId = uuid(); st.ampelHandy = P.ampel; st.server = null; aufnZaehler().v = 0;
+    st.thumb = r.thumb; st.state = 'wartet'; st.err = null; st.fotoId = uuid(); st.ampelHandy = P.ampel; st.server = null; var azOk = aufnZaehler(); azOk.v = 0; azOk.s = 0;
     if (m.art === 'zusatz') st.zusatz_art = S.zusatzArt;
     /* WAS DER SERVER BEKOMMT (Vertrag mit dem Arbeiter, Fassung 17). Spalten wie bisher: platz, neigung, rollen (nach dem Gerade-Richten 0), brennweite_kb, ampel_handy mit Gründen.
        app_details: klasse und cabrio, aufnahme, gerade, nicht_geprueft mit nicht_geprueft_grund (Codes aus fotoPruefen, mit Komma getrennt), fuehrung.stand = 'v17-frei',
@@ -2022,7 +2052,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
         nicht_geprueft: P.codes.length > 0, nicht_geprueft_grund: P.codes.join(','),
         fuehrung: { stand: FUEHRUNG.stand, licht: P.lack !== undefined ? { lack_rot: P.lack } : undefined },
         pruefung: P.zahlen,
-        ruecksitzbank: rueckPflicht() ? 'pflicht' : 'keine', design: 'v4', aufnahme_ms: r.takeMs, aufnahme: r.aufn ? { zeit: new Date(r.aufn.zeit).toISOString(), nr: r.aufn.nr, verworfen: r.aufn.verworfen } : undefined, kamera: S.camNote, kamera_foto: r.how.foto || undefined, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), fenster: (r.how && r.how.sucher && r.how.sucher.fenster) || window.innerWidth + 'x' + window.innerHeight, sucher_sichtbar: (r.how && r.how.sucher && r.how.sucher.sichtbar) || undefined, schirm: screen.width + 'x' + screen.height, form: (r.how && r.how.sucher && r.how.sucher.form) || LAY.form || null, buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null,
+        ruecksitzbank: rueckPflicht() ? 'pflicht' : 'keine', design: 'v4', aufnahme_ms: r.takeMs, aufnahme: r.aufn ? { zeit: new Date(r.aufn.zeit).toISOString(), nr: r.aufn.nr, verworfen: r.aufn.verworfen, gesperrt: r.aufn.gesperrt || 0 } : undefined, kamera: S.camNote, kamera_foto: r.how.foto || undefined, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), fenster: (r.how && r.how.sucher && r.how.sucher.fenster) || window.innerWidth + 'x' + window.innerHeight, sucher_sichtbar: (r.how && r.how.sucher && r.how.sucher.sichtbar) || undefined, schirm: screen.width + 'x' + screen.height, form: (r.how && r.how.sucher && r.how.sucher.form) || LAY.form || null, buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null,
         // Lage beim Tippen und nach dem Ruhig-Werden mit Spanne und Rohwerten (Fable (Studio) 18, 22.11.2026), Zuschnitt gegenüber dem Ausgangsbild, Linse und Zoom.
         // brennweite_kb oben gilt für das ausgelieferte Bild (nach Zuschnitt und Gerade-Richten). sichtfeld ist kein Winkel, sondern Foto gegen Live-Bild (Lehre 9).
         sensor: kam ? { fenster_ms: CFG.NACH_FENSTER_MS, tipp: (r.how.nach && r.how.nach.tipp) || null, ruhig: r.how.sens || null } : null,   // Zeit vom Tipp bis zum Foto: ausloeser.nachstabil_ms
