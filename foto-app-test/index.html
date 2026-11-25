@@ -2543,21 +2543,34 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     var ids = Object.keys(S.slots).filter(function (k) { return hasPhoto(k); });
     return ids.length > 0 && ids.every(function (k) { var s = S.slots[k]; return srvEnde(s.server) && s.state !== 'sendet' && s.state !== 'wartet' && s.state !== 'retry'; });
   }
-  function schedulePoll(ms) { clearTimeout(S.pollTimer); if ($('pGallery').hidden || !S.vehicle) return; S.pollTimer = setTimeout(poll, ms); }
+  /* 17 g: Der Server-Stand wird auch bei offener Kamera abgefragt. Der Arbeiter prüft jedes Foto seit 25.11.2026 schon vor der Raumwahl
+     (Giannis 25.11.2026: „Fotos sofort rechnen, Raum zum Schluss“, „Klare Fälle sperren“) und lehnt klare Fälle sofort ab. Die Ablehnung
+     soll ankommen, solange man am Auto steht: rotes Zeichen in der Leiste der Kamera, dazu ein kurzer Hinweis. */
+  function pollSichtbar() { return !$('pGallery').hidden || !$('stage').hidden; }
+  function schedulePoll(ms) { clearTimeout(S.pollTimer); if (!pollSichtbar() || !S.vehicle) return; S.pollTimer = setTimeout(poll, ms); }
+  // Vom Server abgelehnt und neu aufzunehmen? Nicht bei einer technischen Störung (dort hilft ein neues Foto nicht, AutoScales kümmert sich).
+  function abgelehnt(k) { var s = S.slots[k], sv = s && s.server; return !!sv && sv.status === 'fehler' && !/^(wartet|sendet|retry)$/.test(s.state) && !/^Technische Störung/.test(sv.fehler_grund || ''); }
+  // Raum beim Server geschlossen? Ein Außenfoto ist freigegeben (nicht mehr wartet_raum). Abgelehnte Fotos und Innenfotos sagen darüber nichts:
+  // Der Arbeiter lehnt klare Fälle schon bei offenem Raum ab und stellt Innenfotos sofort fertig (17 g; bis 17 f zählte jeder andere Status).
+  function raumGeschlossen(list) {
+    return (list || []).some(function (r) { var m = r.platz === 'zusatz' ? null : slotMeta(r.platz); return !!m && m.art === 'aussen' && !!r.status && r.status !== 'wartet_raum' && r.status !== 'fehler'; });
+  }
   async function poll() {
-    if ($('pGallery').hidden || !S.vehicle) return;
+    if (!pollSichtbar() || !S.vehicle) return;
     syncFlag();
     try {
       var vid = S.vehicle.id, list = await S.api.status(vid);
       if (!S.vehicle || S.vehicle.id !== vid) return;   // inzwischen ein anderes Fahrzeug
-      var vz = S.vehicle; if (vz.raumOffen && !vz.raumZu && (list || []).some(function (r) { return r.platz !== 'fahrzeugschein' && r.status && r.status !== 'wartet_raum'; })) { vz.raumZu = true; saveSession(); }   // Server hat den Raum geschlossen (Frist): Raumwahl nicht mehr anbieten (Befund A1)
+      var vz = S.vehicle, neuAb = []; if (vz.raumOffen && !vz.raumZu && raumGeschlossen(list)) { vz.raumZu = true; saveSession(); }   // Server hat den Raum geschlossen (Frist): Raumwahl nicht mehr anbieten (Befund A1)
       (list || []).forEach(function (r) {
         var id = r.platz === 'zusatz' ? 'zusatz' + r.zusatz_nr : r.platz, s = slotState(id);
         if (s.state === 'sendet' || s.state === 'wartet') return;
         if (s.state === 'leer') s.state = 'hochgeladen';
-        s.server = r;
+        var warAb = abgelehnt(id); s.server = r;
+        if (!warAb && abgelehnt(id)) neuAb.push(slotMeta(id).name);
       });
-      renderGallery();
+      renderGalleryIfShown();
+      if (neuAb.length && !$('stage').hidden) toast(neuAb.join(', ') + ': bitte neu aufnehmen', 6000);
     } catch (e) { /* bei Netzfehler später nochmal */ }
     if (!allFinal() || S.queue.length) schedulePoll(4000);
   }
@@ -2637,7 +2650,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   }
   // Je Pflichtbild eine Zeile, wenn es fehlt, noch nicht angekommen ist oder sich nicht mehr lesen lässt (Seiten „Prüfen“ und „Gesendet“)
   function fotoZeilen(PF) {
-    return PF.map(function (p) { var s = S.slots[p.key]; return !hasPhoto(p.key) ? zeile('offen', '<b>' + esc(p.name) + '</b> fehlt noch') : s.state !== 'fehler' ? '' : s.grund === 'unlesbar' ? zeile('warn', '<b>' + esc(p.name) + '</b> lässt sich auf dem Handy nicht mehr lesen, bitte neu aufnehmen') : zeile('warn', '<b>' + esc(p.name) + '</b> ist noch nicht angekommen, die App sendet erneut'); }).join('');
+    return PF.map(function (p) { var s = S.slots[p.key]; return !hasPhoto(p.key) ? zeile('offen', '<b>' + esc(p.name) + '</b> fehlt noch') : abgelehnt(p.key) ? zeile('warn', '<b>' + esc(p.name) + '</b>: ' + esc(s.server.fehler_grund || 'bitte neu aufnehmen')) : s.state !== 'fehler' ? '' : s.grund === 'unlesbar' ? zeile('warn', '<b>' + esc(p.name) + '</b> lässt sich auf dem Handy nicht mehr lesen, bitte neu aufnehmen') : zeile('warn', '<b>' + esc(p.name) + '</b> ist noch nicht angekommen, die App sendet erneut'); }).join('');
   }
   // Fehlt dem laufenden Fahrzeug noch etwas? Ein Pflichtbild fehlt, oder ein Foto ist noch nicht beim Server (wartet, wird gesendet, abgelehnt, gehalten).
   function fotosOffen() { return !!S.vehicle && (pflicht().some(function (p) { return !hasPhoto(p.key); }) || Object.keys(S.slots).some(function (k) { return /^(wartet|sendet|retry|fehler|gehalten)$/.test(S.slots[k].state); })); }
