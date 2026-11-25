@@ -13,4 +13,4 @@ Die Bilder zeigen dem Händler vor jedem Foto, wie das Auto im Bild stehen soll 
 - `limousine/`, `kleinwagen/`, `coupe/`: je 8 Außenansichten. Die Dateinamen sind die Platz-Schlüssel der App: titel, front, dreiviertel_vr, dreiviertel_hr, heck, dreiviertel_hl, seite_l, seite_r.
 - `innen/`: cockpit, tacho, vordersitze, ruecksitzbank, kofferraum. Sie gelten für alle Klassen.
 - Andere Klassen bekommen die Bilder der nächsten Form: Kompakt nimmt Kleinwagen, SUV nimmt Limousine, Cabrio nimmt Coupé.
-- Jedes Bild ist ein JPEG mit 800 × 600 Pixeln (4:3) und unter 100 KB. Umgerechnet mit `sips` in Qualität 72, das Tacho-Bild in 62. Zusammen 29 Dateien mit 1.502.285 Byte.
+- Jedes Bild ist ein JPEG mit 800 × 600 Pixeln (4:3) und unter 100 KB. Umgerechnet mit `sips` in Qualität 72, das Tacho-Bild in 62. Zusammen 29 Dateien mit 1.460.596 Byte. Das Coupé ist zweitürig (Giannis: „Coupé zweitürig“).
