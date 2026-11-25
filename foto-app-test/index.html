@@ -289,6 +289,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 #vRev.eng .rv-btns:not(.warn) { grid-template-columns: minmax(0, 1fr) 48px; } #vRev.eng .rv-btns:not(.warn) #revOk { grid-column: 1 / -1; }
 #vRev.eng .rv-btns.two { grid-template-columns: minmax(0, 1fr); }
 #vRev.eng .rv-btns .btn { min-height: 44px; font-size: 14px; padding: 0 8px; gap: 6px; }
+/* 17 g: Außen gibt es jetzt auch ein Beispiel im Prüfbild; am kleinen iPhone quer (667 × 375) muss „Passt“ trotzdem ganz ins Feld: engere Abstände, Beispiel nimmt nur den Rest */
+#vRev.eng[data-lage="seite"] .rv-panel { padding: 8px 10px; gap: 5px; } #vRev.eng[data-lage="seite"] .rv-panel h2 { font-size: 14px; } #vRev.eng[data-lage="seite"] .ex .lbl { font-size: 9.5px; } #vRev.eng[data-lage="seite"] .rv-btns { gap: 6px; padding-top: 2px; }
 .rv-text { display: contents; }
 #vRev[data-lage="unten"] .rv-photo { width: calc(var(--fw) - var(--sl, 0px) - var(--sr, 0px)); height: calc(var(--fh) - var(--rvb)); }
 #vRev[data-lage="unten"] .rv-checks { bottom: calc(var(--rvb) + 8px); max-width: calc(var(--fw) - var(--sl, 0px) - var(--sr, 0px) - 20px); }
