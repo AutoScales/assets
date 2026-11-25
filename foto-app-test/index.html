@@ -189,6 +189,11 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .mini { width: 100%; max-width: 92px; aspect-ratio: 1; border-radius: var(--rs); overflow: hidden; border: 1px solid var(--gb); background: var(--glass); flex: none; }
 .mini svg { width: 100%; height: 100%; display: block; }
 .mini:empty { display: none; }
+/* Beispielbild im Sucher (17 g, Giannis 25.11.2026: „Vorschaubilder gab es nicht. Bei keinem der Außenbilder“): klein über dem Lageplan, Tippen zeigt es groß */
+.exmini { position: relative; aspect-ratio: 4 / 3; max-width: 112px; padding: 0; cursor: pointer; background: #EEF0F3; }
+.exmini[hidden] { display: none; }
+.exmini img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.exmini span { position: absolute; left: 4px; bottom: 4px; font: 700 9px/1 var(--font-body); letter-spacing: .06em; text-transform: uppercase; color: #0B0C10; background: rgba(250,250,250,.88); padding: 3px 5px; border-radius: 4px; }
 .tile .st .dot { margin-right: 5px; }
 .form .msg:empty { display: none; }
 /* Auslöser (Fassung 17, freie Kamera): neutral, weißer Ring mit weißer Scheibe, kein Text und keine Ampelfarbe. Beim Drücken wird die Scheibe kleiner;
@@ -223,6 +228,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 #ui[data-form="voll"] .rail.R { right: 0; padding-right: calc(var(--sr, 0px) + 10px); padding-left: 0; align-items: flex-end; justify-content: center; }
 #ui[data-form="voll"] .rail.L .railtitle { order: 1; }
 #ui[data-form="voll"] .rail.L .mini { order: 2; margin-top: auto; width: 64px; max-width: 64px; opacity: .92; background: var(--ovbg); border-color: var(--ovline); }
+#ui[data-form="voll"] .rail.L .exmini { width: 104px; max-width: 104px; opacity: 1; background: #EEF0F3; }
+#ui[data-form="voll"] .rail.L .exmini:not([hidden]) + #camDiag { order: 3; margin-top: 0; }
 #ui[data-form="voll"] .round { width: 44px; height: 44px; font-size: 18px; background: var(--ovbg); border-color: var(--ovline); }
 #ui[data-form="voll"] .railtitle { width: auto; max-width: 168px; text-align: left; padding: 6px 10px; background: var(--ovbg); border-color: var(--ovline); }
 #ui[data-form="voll"] .shut { width: 72px; height: 72px; }
@@ -262,7 +269,7 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .checks .chip { font-size: 11.5px; }
 .ex { display: flex; flex-direction: column; gap: 4px; flex: 1; min-height: 0; }
 .exw { flex: 1; min-height: 0; position: relative; }
-.exw img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: var(--rs); border: 1px solid var(--gb); display: block; }
+.exw img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #EEF0F3; border-radius: var(--rs); border: 1px solid var(--gb); display: block; }
 .rv-btns { display: grid; grid-template-columns: minmax(0, 1fr) 52px minmax(0, 1.3fr); gap: 8px; margin-top: auto; padding-top: 4px; }
 .rv-btns .btn { min-height: 48px; font-size: 15px; padding: 0 10px; border-radius: var(--rs); }
 .rv-btns.two { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); }
@@ -327,6 +334,8 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
 .v10 .kachel span { font: 600 10.5px/1.25 var(--v-ui); padding: 6px 7px 7px; display: flex; gap: 5px; align-items: center; overflow-wrap: anywhere; hyphens: auto; }
 .v10 .st { width: 14px; height: 14px; flex: none; }
 .v10 .zeile { display: flex; gap: 10px; align-items: center; padding: 11px 12px; border: 1px solid var(--p-line); border-radius: 12px; background: var(--p-panel); font: 500 13.5px/1.35 var(--v-ui); }
+.v10 button.zeile { width: 100%; text-align: left; color: inherit; cursor: pointer; min-height: 44px; } .v10 .zeile .aend { margin-left: auto; padding-left: 10px; color: var(--gold); font-weight: 600; white-space: nowrap; }   /* 17 g: Zeilen auf „Prüfen“ öffnen ihren Schritt */
+.v10 .zur, .link.zur { align-self: flex-start; text-align: left; text-decoration: none; padding: 0; }   /* 17 g: „Zurück“ oben in jedem Schritt und in der Galerie */
 .v10 .zeile .st { width: 18px; height: 18px; } .v10 .zeile b { font-weight: 700; }
 .v10 .msg { color: var(--p-mut); } .v10 .msg.bad { color: var(--v-bad); }
 .v10 .il .l { fill: none; stroke: var(--il-line); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
@@ -415,6 +424,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
 <!-- Seite 2: Galerie -->
 <main class="page" id="pGallery" hidden>
   <header class="brand"><span class="logo"><img class="l" src="logo.png" alt="AutoScales"><img class="d" src="logo-dunkel.png" alt="AutoScales"></span><span class="chip" id="gChip"></span></header>
+  <button class="link zur" id="gZurueck" type="button" hidden>‹ Zurück zum Fahrzeugschein</button>
   <div><span class="lbl">Fahrzeug</span><h1 id="gTitle" style="margin-top:6px;font-size:clamp(18px,5vw,22px)">Fahrzeug</h1></div>
   <p id="gSum" class="msg" style="color:var(--t);font-weight:600"></p>
   <div class="prog" id="gProg" aria-hidden="true"></div>
@@ -453,6 +463,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       <button class="cglass" id="noRueck" type="button" hidden>Kein Rücksitz (Zweisitzer)</button>
       <div class="rail L">
         <button class="round" id="camX" type="button" aria-label="Kamera schließen" data-ic="schliessen">×</button>
+        <button class="mini exmini" id="camEx" type="button" aria-label="Beispielbild groß ansehen" hidden><img id="camExImg" alt=""><span>Beispiel</span></button>
         <div class="mini" id="camDiag" aria-hidden="true"></div>
         <button class="railtitle" id="camChip" type="button" aria-expanded="false" aria-label="Hinweis zur Position ein- oder ausklappen"><span class="nr" id="camNr"></span><b id="camLbl"></b><span class="more">Hinweis ▾</span></button>
       </div>
@@ -1717,6 +1728,8 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     $('camRad').hidden = m.art !== 'aussen';   // vor jedem Außenfoto (Pflicht und freiwillige Seite), nie innen, Zusatz oder Fahrzeugschein
     $('noRueck').hidden = !(S.cur === 'ruecksitzbank' && !hasPhoto('ruecksitzbank'));
     $('camDiag').innerHTML = diagSvg(m.key);
+    var bu = beispielUrl(m.key, m.art); $('camEx').hidden = !bu; if (bu) { if ($('camExImg').getAttribute('src') !== bu) $('camExImg').setAttribute('src', bu); } else $('camExImg').removeAttribute('src');   // Beispiel vor dem Foto (17 g)
+    $('camEx').setAttribute('aria-label', 'Beispielbild ' + m.name + ' groß ansehen');
     hintOpen(false);   // der Tipp liegt nicht über dem Bild: nur auf Tipp (Platz-Anzeige links), standardmäßig zu
     renderStrip();
     if (S.cfg && S.cfg.sim) simScene();
@@ -1938,28 +1951,162 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   /* =====================================================================
      Ansehen: Passt oder Neu
      ===================================================================== */
-  // Beispielbild („So soll es aussehen“, Fassung 17 b): ein echtes Foto je Platz aus beispiel/<platz>.jpg. Es gibt sie für die vier Innenplätze
-  // (Giannis 23.11.2026 zu seinen A6-Innenfotos: „Ja, nimm sie“); außen, Kofferraum und Zusatzbild haben noch keins, dort bleibt die Fläche weg.
-  // Die App lädt die Bilder beim Start in den Speicher (wie die Raumbilder), damit sie auch ohne Netz erscheinen. Fehlt ein Bild, bleibt die Fläche weg: kein kaputtes Bild.
-  var BEISPIEL_PLAETZE = ['cockpit', 'tacho', 'vordersitze', 'ruecksitzbank'], BEISPIEL = {}, BEISPIEL_VORRAT = {}, beispielLaeuft = {};
-  function beispielVorratLaden() {
-    if (!window.fetch || !window.URL || !URL.createObjectURL) return;
-    BEISPIEL_PLAETZE.forEach(function (k) {
-      if (BEISPIEL_VORRAT[k] || beispielLaeuft[k]) return;
-      beispielLaeuft[k] = true;
-      fetch('beispiel/' + k + '.jpg', { cache: 'force-cache' })
-        .then(function (a) { if (!a.ok) throw new Error('HTTP ' + a.status); return a.blob(); })
-        .then(function (b) { if (!b || !b.size) throw new Error('leer'); BEISPIEL_VORRAT[k] = URL.createObjectURL(b); beispielLaeuft[k] = false; delete BEISPIEL[k]; })
-        .catch(function () { beispielLaeuft[k] = false; });   // kein Netz: beim nächsten „online“ nochmal
-    });
+  /* BEISPIELGRAFIK (17 g, Giannis 25.11.2026 nach dem Abnahmelauf: außen „Vorschaubilder gab es nicht“, innen „Da müssen Beispielbilder von Grafiken, die wir selbst
+     erstellt haben, rein“). Übergang, bis Giannis über die endgültigen Grafiken entscheidet: Die App zeichnet das Beispiel selbst, ohne Foto, ohne echtes Auto, ohne Kennzeichen.
+     Außen: ein neutrales Auto der gewählten Klasse, flach schattiert, aus der Sicht des Platzes mit einer Kamera wie am iPhone (1×, 26 mm, 4:3, Augenhöhe 1,2 m) im Abstand,
+     den die Prüfung als gut kennt (Front und Heck 4,6 m, schräg 5,6 m, Seite 6,2 m zur Automitte; Höhe im Bild unter 0,53, Front und Heck unter 0,49 breit, siehe PRUEF.nah).
+     Innen: schlichte Linienbilder je Platz. Ergebnis ist ein SVG-Text (4:3, 400 × 300); beispielUrl() macht daraus eine Bildadresse, die ohne Netz geht. */
+  var BSP = (function () {
+    var KL = {   // Maße in Metern (gerundet, Klassenmittel): Länge, Breite, Höhe, Gürtellinie, Unterkante, Rad, Achsen, Scheibenfuß vorn, Dach vorn, Dach hinten, Scheibenfuß hinten
+      kleinwagen: { L: 3.95, W: 1.74, H: 1.48, belt: 0.98, sill: 0.30, R: 0.31, ax: [0.62, 3.12], gf: 2.95, rf: 2.42, rr: 0.42, gr: 0.10 },
+      kompakt: { L: 4.30, W: 1.80, H: 1.46, belt: 0.98, sill: 0.30, R: 0.32, ax: [0.72, 3.38], gf: 3.18, rf: 2.62, rr: 0.62, gr: 0.12 },
+      limousine: { L: 4.90, W: 1.88, H: 1.45, belt: 0.98, sill: 0.30, R: 0.34, ax: [0.98, 3.90], gf: 3.62, rf: 3.00, rr: 1.70, gr: 1.02 },
+      suv: { L: 4.70, W: 1.90, H: 1.68, belt: 1.10, sill: 0.40, R: 0.37, ax: [0.88, 3.70], gf: 3.55, rf: 3.02, rr: 0.48, gr: 0.12 },
+      coupe: { L: 4.50, W: 1.86, H: 1.30, belt: 0.90, sill: 0.26, R: 0.33, ax: [0.92, 3.55], gf: 3.25, rf: 2.50, rr: 1.55, gr: 0.80 },
+      cabrio: { L: 4.40, W: 1.82, H: 1.30, belt: 0.90, sill: 0.26, R: 0.33, ax: [0.90, 3.45], gf: 3.15, rf: 2.55, rr: 1.45, gr: 0.95 }
+    };
+    // Standort je Platz: Winkel um das Auto (0 = vorn, 90 = Fahrerseite links, 180 = hinten, 270 = Beifahrerseite), Abstand zur Automitte in Metern
+    var SICHT = { titel: [38, 5.6], front: [0, 4.6], dreiviertel_vr: [-38, 5.6], dreiviertel_hr: [218, 5.6], heck: [180, 4.6], dreiviertel_hl: [142, 5.6], seite_l: [90, 6.2], seite_r: [270, 6.2], seite: [90, 6.2] };
+    var BW = 400, BH = 300, FOK = BW / 2 / Math.tan(33.5 * Math.PI / 180);   // 26 mm, 4:3: rund 67° waagerecht
+    function sub(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
+    function dot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+    function crs(a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
+    function nrm(a) { var l = Math.sqrt(dot(a, a)) || 1; return [a[0] / l, a[1] / l, a[2] / l]; }
+    function hex(c, k) { return '#' + c.map(function (v) { return ('0' + Math.max(0, Math.min(255, Math.round(v * k))).toString(16)).slice(-2); }).join(''); }
+    function f1(v) { return (Math.round(v * 10) / 10).toString(); }
+    function huelle(P) {   // konvexe Hülle (Monotone Chain), für Reifen
+      P = P.slice().sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
+      var k = function (o, a, b) { return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]); }, lo = [], hi = [];
+      P.forEach(function (p) { while (lo.length >= 2 && k(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); });
+      P.slice().reverse().forEach(function (p) { while (hi.length >= 2 && k(hi[hi.length - 2], hi[hi.length - 1], p) <= 0) hi.pop(); hi.push(p); });
+      return lo.slice(0, -1).concat(hi.slice(0, -1));
+    }
+    function profil(k) {   // Seitenlinie (x von hinten 0 nach vorn L, z nach oben), gegen den Uhrzeigersinn: unten nach vorn, vorn hoch, oben nach hinten, hinten runter
+      var L = k.L, b = k.belt, s = k.sill, hf = b - 0.13, stufe = k.gr > 0.5;
+      var unten = [[0.30, s], [L - 0.38, s], [L - 0.12, s + 0.10]];
+      var vorn = [[L - 0.01, s + 0.24], [L, s + 0.34], [L - 0.02, hf - 0.06], [L - 0.14, hf + 0.01], [L - 0.55, hf + 0.07], [k.gf, b]];
+      var hinten = stufe ? [[k.gr, b], [0.30, b - 0.02], [0.05, b - 0.08], [0.0, s + 0.32], [0.10, s + 0.12]] : [[0.06, b + 0.02], [0.0, b - 0.12], [0.0, s + 0.32], [0.10, s + 0.12]];
+      var glas = [[k.gr + (stufe ? 0 : 0.04), b], [k.gf, b], [k.rf + 0.10, k.H - 0.03], [k.rf, k.H], [k.rr, k.H], [k.rr - 0.10, k.H - 0.03]];
+      return { body: unten.concat(vorn, hinten), glas: glas };
+    }
+    function aussen(key, klasse) {
+      var k = KL[klasse] || KL.limousine, sicht = SICHT[key] || SICHT.titel, pr = profil(k), W = k.W, cx = k.L / 2;
+      var a = sicht[0] * Math.PI / 180, cam = [cx + sicht[1] * Math.cos(a), sicht[1] * Math.sin(a), 1.2], ziel = [cx, 0, k.H * 0.45];
+      var fw = nrm(sub(ziel, cam)), rt = nrm(crs(fw, [0, 0, 1])), up = crs(rt, fw);
+      function pj(p) { var d = sub(p, cam), z = Math.max(0.05, dot(d, fw)); return [BW / 2 + FOK * dot(d, rt) / z, BH / 2 - FOK * dot(d, up) / z, z]; }
+      var licht = nrm([0.35, 0.45, 1]), LACK = [205, 209, 215], GLAS = [52, 58, 68], faces = [];
+      function face(pts, farbe, n, extra) {
+        var c = [0, 0, 0]; pts.forEach(function (p) { c[0] += p[0] / pts.length; c[1] += p[1] / pts.length; c[2] += p[2] / pts.length; });
+        if (n && dot(n, sub(cam, c)) <= 0) return null;
+        var hell = n ? 0.70 + 0.34 * Math.max(0, dot(n, licht)) : 1, P = pts.map(pj), t = 0; P.forEach(function (q) { t += q[2]; });
+        var f = { P: P, z: t / P.length, farbe: hex(farbe, hell), extra: extra || [] }; faces.push(f); return f;
+      }
+      function ring(loop) {   // gegen den Uhrzeigersinn sicherstellen
+        var A = 0; loop.forEach(function (p, i) { var q = loop[(i + 1) % loop.length]; A += p[0] * q[1] - q[0] * p[1]; }); return A < 0 ? loop.slice().reverse() : loop;
+      }
+      // Ecken von oben gesehen gerundet: vorn und hinten wird die Karosserie schmaler, die Räder stehen außen (sonst verdeckt der Bug die Reifen)
+      var ecke = function (x) { var v = Math.max(0, 1 - (k.L - x) / 0.8), h = Math.max(0, 1 - x / 0.7); return 0.18 * v * v + 0.15 * h * h; };
+      function band(loop, w0, w1, z0, z1, farbeFn, rund) {   // Profil quer ausziehen; Breite hängt an der Höhe (Dach schmaler)
+        var wz0 = function (z) { return z1 > z0 ? w0 + (w1 - w0) * Math.max(0, Math.min(1, (z - z0) / (z1 - z0))) : w0; }, wz = function (z, x) { return wz0(z) - (rund ? 2 * ecke(x) : 0); };
+        loop.forEach(function (p, i) {
+          var q = loop[(i + 1) % loop.length], dx = q[0] - p[0], dz = q[1] - p[1], n = nrm([dz, 0, -dx]);
+          var wp = wz(p[1], p[0]) / 2, wq = wz(q[1], q[0]) / 2;
+          face([[p[0], -wp, p[1]], [q[0], -wq, q[1]], [q[0], wq, q[1]], [p[0], wp, p[1]]], farbeFn(p, q, n), n);
+        });
+      }
+      var body = ring(pr.body), glas = ring(pr.glas), gw0 = W - 0.12, gw1 = W - 0.46;
+      band(body, W, W, 0, 1, function () { return LACK; }, true);
+      band(glas, gw0, gw1, k.belt, k.H, function (p, q, n) { return Math.abs(n[2]) > 0.93 ? LACK : GLAS; });
+      // Seitenflächen mit Details: Radhäuser, Türfugen, B-Säule
+      var seite = cam[1] > W / 2 ? 1 : cam[1] < -W / 2 ? -1 : 0;
+      function rad(x, sg) {   // Reifen als Zylinder (Hülle zweier Kreise), Felge auf der Außenseite
+        var y0 = sg * (W / 2 - 0.02), y1 = sg * (W / 2 - 0.25), C0 = [], C1 = [], FL = [];
+        for (var i = 0; i < 28; i++) { var t = i / 28 * 2 * Math.PI, xx = x + k.R * Math.cos(t), zz = k.R + k.R * Math.sin(t); C0.push(pj([xx, y0, zz])); C1.push(pj([xx, y1, zz])); FL.push(pj([x + k.R * 0.62 * Math.cos(t), y0 + sg * 0.004, k.R + k.R * 0.62 * Math.sin(t)])); }
+        var aussenSicht = dot([0, sg, 0], sub(cam, [x, y0, k.R])) > 0;
+        return { reifen: huelle(C0.concat(C1)), felge: aussenSicht ? FL : null };
+      }
+      var raeder = [];
+      k.ax.forEach(function (x) { [1, -1].forEach(function (sg) { var r = rad(x, sg); r.sg = sg; r.z = pj([x, sg * W / 2, k.R])[2]; raeder.push(r); }); });
+      [1, -1].forEach(function (sg) {
+        var n = [0, sg, 0], y = sg * W / 2, extra = [];
+        var bogen = k.ax.map(function (x) { var B = []; for (var i = 0; i <= 18; i++) { var t = Math.PI * i / 18; B.push(pj([x + (k.R + 0.07) * Math.cos(t), y + sg * 0.003, k.R + (k.R + 0.07) * Math.sin(t)])); } return B; });
+        bogen.forEach(function (B) { extra.push({ P: B.concat([B[B.length - 1], B[0]]), farbe: '#3A3F48' }); });
+        var tv = k.gf - 0.05, tm = (k.rf + k.rr) / 2 + 0.25, th = Math.max(k.ax[0] + k.R + 0.12, k.rr - 0.05);
+        [tv, tm, th].forEach(function (x) { extra.push({ L: [pj([x, y + sg * 0.003, k.sill + 0.05]), pj([x, y + sg * 0.003, k.belt - 0.03])] }); });
+        extra.push({ L: [pj([tv, y + sg * 0.003, k.belt - 0.16]), pj([th, y + sg * 0.003, k.belt - 0.16])], dick: 0.5 });
+        if (seite === sg) raeder.filter(function (r) { return r.sg === sg; }).forEach(function (r) { extra.push({ rad: r }); });
+        face(body.map(function (p) { return [p[0], sg * (W / 2 - ecke(p[0])), p[1]]; }), LACK, n, extra);
+        var gy = sg * gw0 / 2, gs = face(glas.map(function (p) { var w = gw0 + (gw1 - gw0) * (p[1] - k.belt) / (k.H - k.belt); return [p[0], sg * w / 2, p[1]]; }), GLAS, nrm([0, sg, 0.18]));
+        if (gs) gs.extra.push({ L: [pj([tm, gy, k.belt]), pj([tm + 0.04, sg * gw1 / 2, k.H - 0.02])], farbe: hex(LACK, 0.92), dick: 5 });
+      });
+      // Lichter und Grill vorn, Leuchten hinten
+      var hf = k.belt - 0.13, xv = k.L - 0.012, xh = 0.012, Wv = W - 2 * ecke(k.L - 0.05), Wh = W - 2 * ecke(0.05);
+      [1, -1].forEach(function (sg) {
+        face([[xv, sg * (Wv / 2 - 0.04), hf - 0.13], [xv, sg * (Wv / 2 - 0.36), hf - 0.11], [xv, sg * (Wv / 2 - 0.36), hf - 0.05], [xv, sg * (Wv / 2 - 0.05), hf - 0.07]].map(function (p, i, A) { return sg > 0 ? A[A.length - 1 - i] : p; }), [235, 238, 242], [1, 0, 0]);
+        face([[xh, sg * (Wh / 2 - 0.03), k.belt - 0.20], [xh, sg * (Wh / 2 - 0.03), k.belt - 0.08], [xh, sg * (Wh / 2 - 0.38), k.belt - 0.08], [xh, sg * (Wh / 2 - 0.38), k.belt - 0.16]].map(function (p, i, A) { return sg > 0 ? A[A.length - 1 - i] : p; }), [178, 58, 52], [-1, 0, 0]);
+      });
+      face([[xv - 0.02, -0.40, k.sill + 0.12], [xv - 0.02, 0.40, k.sill + 0.12], [xv, 0.36, hf - 0.16], [xv, -0.36, hf - 0.16]], [70, 75, 84], [1, 0, 0]);
+      face([[xh, -0.26, k.sill + 0.30], [xh, 0.26, k.sill + 0.30], [xh, 0.26, k.sill + 0.42], [xh, -0.26, k.sill + 0.42]], [238, 240, 243], [-1, 0, 0]);   // Kennzeichenfeld leer
+      // Zeichnen: Boden, Schatten, ferne Räder, Flächen von hinten nach vorn, nahe Räder an ihrer Seitenfläche
+      var hor = pj([cx + 400 * Math.cos(a + Math.PI), 400 * Math.sin(a + Math.PI), 1.2])[1];
+      var schatten = [[0.05, -W / 2 + 0.02], [k.L - 0.05, -W / 2 + 0.02], [k.L - 0.05, W / 2 - 0.02], [0.05, W / 2 - 0.02]].map(function (p) { return pj([p[0], p[1], 0]); });
+      var poly = function (P) { return P.map(function (q) { return f1(q[0]) + ',' + f1(q[1]); }).join(' '); };
+      var s = '<svg xmlns="http://www.w3.org/2000/svg" width="' + BW + '" height="' + BH + '" viewBox="0 0 ' + BW + ' ' + BH + '">' +
+        '<defs><linearGradient id="h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9ECF0"/><stop offset="1" stop-color="#F6F7F9"/></linearGradient>' +
+        '<linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D5D8DD"/><stop offset="1" stop-color="#C3C7CD"/></linearGradient>' +
+        '<filter id="w" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="4"/></filter></defs>' +
+        '<rect width="' + BW + '" height="' + BH + '" fill="url(#h)"/><rect y="' + f1(hor) + '" width="' + BW + '" height="' + f1(BH - hor) + '" fill="url(#b)"/>' +
+        '<polygon points="' + poly(schatten) + '" fill="#1B1E24" opacity=".34" filter="url(#w)"/>';
+      var ferne = seite ? raeder.filter(function (r) { return r.sg !== seite; }) : [];
+      var radSvg = function (r) { return '<polygon points="' + poly(r.reifen) + '" fill="#1E2127" stroke="#16181C" stroke-width=".6" stroke-linejoin="round"/>' + (r.felge ? '<polygon points="' + poly(r.felge) + '" fill="#9AA0A8" stroke="#5C626D" stroke-width=".7"/>' : ''); };
+      ferne.forEach(function (r) { s += radSvg(r); });
+      var liste = faces.slice(); if (!seite) raeder.forEach(function (r) { liste.push({ rad: r, z: r.z }); });
+      liste.sort(function (p, q) { return q.z - p.z; });
+      liste.forEach(function (f) {
+        if (f.rad) { s += radSvg(f.rad); return; }
+        s += '<polygon points="' + poly(f.P) + '" fill="' + f.farbe + '" stroke="' + f.farbe + '" stroke-width=".8" stroke-linejoin="round"/>';
+        f.extra.forEach(function (e) {
+          if (e.rad) s += radSvg(e.rad);
+          else if (e.P) s += '<polygon points="' + poly(e.P) + '" fill="' + e.farbe + '"/>';
+          else if (e.L) s += '<polyline points="' + poly(e.L) + '" fill="none" stroke="' + (e.farbe || '#8C929B') + '" stroke-width="' + (e.dick || 0.9) + '" stroke-linecap="round"/>';
+        });
+      });
+      return s + '</svg>';
+    }
+    // Innen: schlichte Linienbilder (grau, eine Linie in Gold für das Wichtige)
+    var INNEN = {
+      cockpit: '<path d="M20 70 Q200 30 380 70" class="d"/><path d="M0 150 Q200 112 400 150 L400 205 Q200 178 0 205 Z" class="f"/><circle cx="135" cy="196" r="62" class="s"/><circle cx="135" cy="196" r="15" class="s"/><path d="M75 190 H120 M150 190 H195 M135 211 V256" class="s"/><rect x="88" y="132" width="94" height="30" rx="10" class="s"/><rect x="226" y="128" width="92" height="56" rx="6" class="g"/><path d="M226 206 H318 M240 222 H304" class="d"/>',
+      tacho: '<rect x="40" y="60" width="320" height="180" rx="40" class="f"/><circle cx="130" cy="150" r="66" class="s"/><circle cx="270" cy="150" r="66" class="s"/><path d="M130 150 L168 118 M270 150 L236 116" class="s"/><path d="M84 196 A66 66 0 0 1 82 104 M318 104 A66 66 0 0 1 316 196" class="d"/><rect x="160" y="200" width="80" height="26" rx="5" class="g"/><path d="M172 213 H228" class="g"/>',
+      vordersitze: '<path d="M0 250 H400" class="d"/><path d="M70 250 V150 Q70 128 92 126 L102 70 Q106 50 126 50 H150 Q170 50 168 72 L158 126 Q182 130 182 152 V250" class="s"/><path d="M110 36 H156 V50 H110 Z" class="s"/><path d="M218 250 V150 Q218 128 240 126 L250 70 Q254 50 274 50 H298 Q318 50 316 72 L306 126 Q330 130 330 152 V250" class="s"/><path d="M258 36 H304 V50 H258 Z" class="s"/><path d="M186 250 V178 H214 V250" class="g"/>',
+      ruecksitzbank: '<path d="M0 250 H400" class="d"/><path d="M50 250 V176 Q50 160 66 160 H334 Q350 160 350 176 V250" class="s"/><path d="M62 160 L74 92 Q78 76 96 76 H304 Q322 76 326 92 L338 160" class="s"/><path d="M200 82 V160 M134 80 V160 M266 80 V160" class="d"/><path d="M100 54 H150 V74 H100 Z M175 54 H225 V74 H175 Z M250 54 H300 V74 H250 Z" class="s"/><path d="M60 206 H340" class="g"/>',
+      kofferraum: '<path d="M60 40 H340 L370 120 V250 H30 V120 Z" class="s"/><path d="M30 120 H370" class="d"/><path d="M70 140 H330 V232 H70 Z" class="f"/><path d="M70 232 H330" class="g"/><path d="M60 40 L30 120 M340 40 L370 120" class="d"/>'
+    };
+    function innen(key) {
+      var inh = INNEN[key]; if (!inh) return '';
+      return '<svg xmlns="http://www.w3.org/2000/svg" width="' + BW + '" height="' + BH + '" viewBox="0 0 ' + BW + ' ' + BH + '"><style>.s{fill:none;stroke:#5C626D;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.d{fill:none;stroke:#A3A8B0;stroke-width:3;stroke-linecap:round}.f{fill:#DADDE2;stroke:#A3A8B0;stroke-width:3}.g{fill:none;stroke:#C9962E;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}</style>' +
+        '<rect width="' + BW + '" height="' + BH + '" fill="#EEF0F3"/>' + inh + '</svg>';
+    }
+    return {
+      svg: function (key, art, klasse) { return art === 'aussen' || SICHT[key] && art !== 'innen' ? aussen(key, klasse) : innen(key); },
+      plaetze: Object.keys(SICHT).concat(Object.keys(INNEN))
+    };
+  })();
+  // Beispielbild („So soll es aussehen“): seit 17 g die eigene Grafik je Platz (BSP), ohne Datei und ohne Netz, im Sucher (#camEx) vor dem Foto und im Prüfen-Bild.
+  // Es gibt sie für alle Außenplätze (Klasse des Fahrzeugs), die vier Innenplätze und den Kofferraum; Zusatzbild und Fahrzeugschein haben keins.
+  // Bis 17 f lagen hier echte Fotos (beispiel/*.jpg, nur innen); die sind raus (Giannis 25.11.2026: keine echten Autos als Beispiel).
+  var BEISPIEL_URL = {};
+  function beispielUrl(key, art) {
+    if (!key || (art !== 'aussen' && art !== 'innen')) return null;
+    var kl = klasseOf() || 'limousine', id = key + '|' + (art === 'aussen' ? kl : '');
+    if (!(id in BEISPIEL_URL)) { var t = ''; try { t = BSP.svg(key, art, kl); } catch (e) { t = ''; } BEISPIEL_URL[id] = t ? 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(t) : null; }
+    return BEISPIEL_URL[id];
   }
-  window.addEventListener('online', function () { Object.keys(BEISPIEL).forEach(function (k) { if (BEISPIEL[k] === false) delete BEISPIEL[k]; }); beispielVorratLaden(); });
   function beispielZeigen(key, art) {
-    var box = $('exBox'), im = $('exImg'); box.hidden = true;
-    if (!key || BEISPIEL_PLAETZE.indexOf(key) < 0 || BEISPIEL[key] === false) return;
-    var src = BEISPIEL_VORRAT[key] || 'beispiel/' + key + '.jpg', da = function () { return im.getAttribute('src') === src && im.naturalWidth > 0; };
-    im.onload = function () { if (!da()) return; BEISPIEL[key] = true; if (S.phase === 'review' && S.review && (slotMeta(S.review.slot) || {}).key === key) box.hidden = false; };
-    im.onerror = function () { if (im.getAttribute('src') === src) { BEISPIEL[key] = false; box.hidden = true; } };
+    var box = $('exBox'), im = $('exImg'), src = beispielUrl(key, art); box.hidden = true;
+    if (!src) { im.removeAttribute('src'); return; }
+    var da = function () { return im.getAttribute('src') === src && im.naturalWidth > 0; };
+    im.onload = function () { if (da() && S.phase === 'review' && S.review && (slotMeta(S.review.slot) || {}).key === key) box.hidden = false; };
+    im.onerror = function () { box.hidden = true; };
     if (im.getAttribute('src') !== src) im.setAttribute('src', src); else if (im.complete && da()) box.hidden = false;
   }
   // Prüfzeilen und Knöpfe im Prüfen-Bild. Ist nichts auffällig: eine grüne Zeile „Foto passt.“ mit „Passt“ als Hauptknopf. Bei Gelb zuerst „Neu aufnehmen“ (Hauptknopf),
@@ -2379,7 +2526,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     catch (e) { return e && (e.fehler || (e.status >= 400 && e.status < 500 && e.status !== 408 && e.status !== 429)) ? 'nein' : 'unklar'; }
   }
   // 16 b: Verlässt der Händler ein Fahrzeug mit offenem Raum ohne Schritt 5 (neues Fahrzeug), gilt die Vorgabe; der Server gibt die geparkten Fotos gleich frei (sonst nach Frist)
-  function raumOffenFrei(id) { var alt = (load('fa_veh') || {}).vehicle; if (!alt || alt.id !== id || !(alt.raumOffen || alt.raumOffenUnklar) || alt.raumFest || alt.raumZu) return; /* auch bei unklarer Antwort beim Anlegen (Befund A7) */ auftrag({ art: 'raum', id: id, raum: alt.raumAnlage || alt.raum || raumVorgabe(), still: true }); }
+  function raumOffenFrei(id) { var alt = (load('fa_veh') || {}).vehicle; if (!alt || alt.id !== id || !(alt.raumOffen || alt.raumOffenUnklar) || alt.raumFest || alt.raumZu) return; /* auch bei unklarer Antwort beim Anlegen (Befund A7) */ auftrag({ art: 'raum', id: id, raum: (alt.preisGesehen && alt.raumWahl) || alt.raumAnlage || alt.raum || raumVorgabe(), still: true }); }   // 17 g: Wahl aus Schritt 5 gilt, auch ohne Absenden
   function raumFrei(id) { raumOffenFrei(id); if (!id || !gehalten(id)) return; if ((lsLoad('fa_auftraege') || []).some(function (a) { return a.freigabe === id; })) return; halten(id, false); }
   function freigabeOffen(id) { return !!id && (lsLoad('fa_auftraege') || []).some(function (a) { return a.freigabe === id; }); }   // Raum-Auftrag aus Schritt 5 liegt noch: erst danach melden, auch wenn die Haltezeit um ist (Befund A6)
   function haltOf(it) { return it.slot !== 'fahrzeugschein' && (gehalten(it.vehicleId) || freigabeOffen(it.vehicleId)); }
@@ -2491,7 +2638,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     var pending = S.queue.filter(function (it) { return it.vehicleId === v.id && !(it.fileDone && haltOf(it)); }).length, haltWarte = raumWaehlbar(v) && !v.raumFest;   // gehaltene Fotos sind hochgeladen, nicht „noch hochzuladen“
     $('gSum').textContent = done + ' von ' + NP + ' Pflichtbildern aufgenommen' + (zusatzIds().length ? ', ' + zusatzIds().length + ' Zusatzbild' + (zusatzIds().length > 1 ? 'er' : '') : '') + (pending ? ' · ' + pending + (pending === 1 ? ' wird' : ' werden') + ' noch hochgeladen' : '');
     $('gProg').innerHTML = PF.map(function (p, i) { return '<i' + (i < done ? ' class="on"' : '') + '></i>'; }).join('');
-    var nG = $('gNote'); if (nG) { if (!S.noteStd) S.noteStd = nG.textContent; var anyOhne = ids.some(function (k) { return S.slots[k] && S.slots[k].server && S.slots[k].server.status === ST_OHNE; }); var nt = haltWarte && v.raumOffen ? T('Die Fotos sind bei AutoScales. Bearbeitet werden sie, sobald du in Schritt 5 den Showroom wählst.', 'Die Fotos sind bei AutoScales. Bearbeitet werden sie, sobald Sie in Schritt 5 den Showroom wählen.') : haltWarte ? T('Die Fotos sind hochgeladen. Sie gehen an AutoScales, sobald du in Schritt 5 den Showroom wählst. Danach aktualisiert sich diese Seite selbst.', 'Die Fotos sind hochgeladen. Sie gehen an AutoScales, sobald Sie in Schritt 5 den Showroom wählen. Danach aktualisiert sich diese Seite selbst.') : v.raum === 'kein' ? 'Dieses Fahrzeug ist ohne Showroom angelegt. Diese Seite aktualisiert sich selbst.' : anyOhne ? 'Einige Außenbilder wurden nur geprüft: Die Ampel zeigt das Ergebnis am Originalfoto, ein Showroom-Bild entsteht dabei nicht. Innenbilder bleiben Original. Diese Seite aktualisiert sich selbst.' : S.noteStd; if (nG.textContent !== nt) nG.textContent = nt; }
+    var nG = $('gNote'); if (nG) { if (!S.noteStd) S.noteStd = nG.textContent; var anyOhne = ids.some(function (k) { return S.slots[k] && S.slots[k].server && S.slots[k].server.status === ST_OHNE; }); var nt = haltWarte && v.raumOffen ? T('Die Fotos sind bei AutoScales. Bearbeitet werden sie, sobald du absendest; bis dahin lässt sich der Showroom in Schritt 5 ändern.', 'Die Fotos sind bei AutoScales. Bearbeitet werden sie, sobald Sie absenden; bis dahin lässt sich der Showroom in Schritt 5 ändern.') : haltWarte ? T('Die Fotos sind hochgeladen. Sie gehen an AutoScales, sobald du absendest. Danach aktualisiert sich diese Seite selbst.', 'Die Fotos sind hochgeladen. Sie gehen an AutoScales, sobald Sie absenden. Danach aktualisiert sich diese Seite selbst.') : v.raum === 'kein' ? 'Dieses Fahrzeug ist ohne Showroom angelegt. Diese Seite aktualisiert sich selbst.' : anyOhne ? 'Einige Außenbilder wurden nur geprüft: Die Ampel zeigt das Ergebnis am Originalfoto, ein Showroom-Bild entsteht dabei nicht. Innenbilder bleiben Original. Diese Seite aktualisiert sich selbst.' : S.noteStd; if (nG.textContent !== nt) nG.textContent = nt; }
     $('gGrid').innerHTML = ids.map(function (id) {
       var s = S.slots[id], m = slotMeta(id), ti = tileInfo(id), taken = hasPhoto(id), img;
       if (s && s.thumb) img = '<img alt="" src="' + s.thumb + '">';
@@ -2506,6 +2653,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     $('gZusatz').hidden = done < NP || zusatzIds().length >= CFG.ZUSATZ_MAX;
     $('gZusatz').textContent = 'Zusatzbild aufnehmen (' + zusatzIds().length + ' von ' + CFG.ZUSATZ_MAX + ')';
     $('gNew').textContent = v.abgesendet ? 'Neues Fahrzeug' : 'Fertig: prüfen und absenden';
+    $('gZurueck').hidden = !!v.abgesendet;   // 17 g: bis zum Absenden zurück zu den Angaben
   }
   // Abschluss nach dem letzten Pflichtbild
   $('gGrid').addEventListener('click', function (ev) {
@@ -2541,6 +2689,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     resetVehicle(); showStart();
   }
   $('gNew').onclick = function () { if (S.vehicle && !S.vehicle.abgesendet) zeigeSchritt(S.vehicle.preisGesehen ? 'pruefen' : 'preis'); else newVehicle(); };
+  $('gZurueck').onclick = function () { if (S.vehicle && !S.vehicle.abgesendet) zeigeSchritt('schein'); };
   function showGallery() { showPage('pGallery'); renderGallery(); schedulePoll(200); }
 
   function allFinal() {
@@ -2633,10 +2782,16 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   function schrittKopf(name) {
     var i = SCHRITTE.map(function (x) { return x[0]; }).indexOf(name), p = '';
     SCHRITTE.forEach(function (x, j) { p += '<i class="' + (j <= i ? 'on' : '') + '"></i>'; });
-    return '<div class="schritt"><span>Schritt ' + (i + 1) + ' von ' + SCHRITTE.length + '</span><span>' + SCHRITTE[i][1] + '</span></div><div class="prog">' + p + '</div>';
+    /* 17 g (Giannis 25.11.2026, Abnahmelauf: Preis vergessen, kein Weg zurück): Jeder frühere Schritt lässt sich bis zum Absenden wieder öffnen und ändern.
+       „Zurück“ führt einen Schritt zurück (Preis → Galerie → Fahrzeugschein → Zustand → Fahrzeugdaten). Wer von „Prüfen“ aus eine Zeile antippt (v.rueck), kommt nach
+       „Weiter“ oder „Zurück“ wieder zu „Prüfen“. Gültige Eingaben des Schritts werden dabei gespeichert wie bei „Weiter“. */
+    var zur = S.vehicle && S.vehicle.rueck && name !== 'pruefen' ? 'Zurück zu „Prüfen“' : name === 'daten' ? '' : 'Zurück';
+    return (zur ? '<button class="link zur" id="sZurueck" type="button">‹ ' + zur + '</button>' : '') +
+      '<div class="schritt"><span>Schritt ' + (i + 1) + ' von ' + SCHRITTE.length + '</span><span>' + SCHRITTE[i][1] + '</span></div><div class="prog">' + p + '</div>';
   }
   function chip(k, text, on) { return '<button class="chip" type="button" data-k="' + k + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + text + '</button>'; }
   function zeile(icon, html) { return '<div class="zeile">' + V10[icon] + '<span>' + html + '</span></div>'; }
+  function zeileZiel(ziel, icon, html) { return '<button class="zeile" type="button" data-ziel="' + ziel + '">' + V10[icon] + '<span>' + html + '</span><span class="aend">Ändern</span></button>'; }   // 17 g: Zeile auf „Prüfen“, die ihren Schritt öffnet
   function schrittFuss(spaeter) { return '<p class="msg" id="sMsg" role="status" aria-live="polite"></p><div class="sp"></div><button class="btn pr" id="sWeiter" type="button">Weiter</button><button class="link" id="sSpaeter" type="button">' + spaeter + '</button>'; }
   function vDaten() { var v = S.vehicle; if (!v.daten) v.daten = {}; return v.daten; }
   function tausender(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
@@ -2698,11 +2853,13 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       z += fotoZeilen(PF);
       if (fz.unterwegs) z += zeile('offen', '<b>' + fz.unterwegs + (fz.unterwegs === 1 ? ' Foto wird' : ' Fotos werden') + '</b> noch gesendet');
       if (d.km == null) fehlt.push('Kilometer'); if (!d.motorisierung) fehlt.push('Motorisierung');
-      z += zeile(fehlt.length ? 'offen' : 'ok', fehlt.length ? 'Fahrzeugdaten: <b>' + fehlt.join(', ') + '</b> ' + (fehlt.length === 1 ? 'fehlt' : 'fehlen') : 'Fahrzeugdaten vollständig');
-      z += zeile(d.ok_zustand ? 'ok' : 'offen', d.ok_zustand ? 'Zustand und Unterlagen angegeben' : '<b>Zustand und Unterlagen</b> fehlen');
+      z += zeileZiel('daten', fehlt.length ? 'offen' : 'ok', fehlt.length ? 'Fahrzeugdaten: <b>' + fehlt.join(', ') + '</b> ' + (fehlt.length === 1 ? 'fehlt' : 'fehlen') : 'Fahrzeugdaten vollständig');
+      z += zeileZiel('zustand', d.ok_zustand ? 'ok' : 'offen', d.ok_zustand ? 'Zustand und Unterlagen angegeben' : '<b>Zustand und Unterlagen</b> fehlen');
       var hs = hatSchein();   // ab 17 d geht vom Schein nur die FIN hoch: ohne FIN ist der Punkt offen (sperrt nichts)
-      z += zeile(d.fin ? 'ok' : 'offen', d.fin ? (hs ? 'Fahrzeugschein fotografiert, ' : '') + 'FIN <b>' + esc(d.fin) + '</b>' : hs ? 'Fahrzeugschein fotografiert, <b>FIN</b> fehlt noch' : '<b>Fahrzeugschein</b> fehlt');
-      z += zeile(d.preis_brutto != null ? 'ok' : 'offen', d.preis_brutto != null ? 'Preis: <b>' + euroText(d.preis_brutto) + '</b> brutto' + (d.verhandlungsbasis ? ', Verhandlungsbasis' : '') : '<b>Preis</b> fehlt');
+      z += zeileZiel('schein', d.fin ? 'ok' : 'offen', d.fin ? (hs ? 'Fahrzeugschein fotografiert, ' : '') + 'FIN <b>' + esc(d.fin) + '</b>' : hs ? 'Fahrzeugschein fotografiert, <b>FIN</b> fehlt noch' : '<b>Fahrzeugschein</b> fehlt');
+      var rwz = v.raumFest || !(raumWaehlbar(v) || S.demo) ? null : v.raumWahl || v.raum || raumVorgabe();   // 17 g: Showroom bis zum Absenden änderbar
+      z += rwz ? zeileZiel('preis', 'ok', 'Showroom: <b>' + esc(raumName(rwz)) + '</b>') : zeile('ok', 'Showroom: <b>' + esc(raumName(v.raum || raumVorgabe())) + '</b> (steht fest)');
+      z += zeileZiel('preis', d.preis_brutto != null ? 'ok' : 'offen', d.preis_brutto != null ? 'Preis: <b>' + euroText(d.preis_brutto) + '</b> brutto' + (d.verhandlungsbasis ? ', Verhandlungsbasis' : '') : '<b>Preis</b> fehlt');
       return schrittKopf('pruefen') + '<h4>Alles beisammen?</h4><p><b>' + da + ' von ' + PF.length + '</b> Pflichtbildern · ' + titel + '</p><div class="grid">' + kacheln + '</div>' + z +
         (fehlt.length || !d.ok_zustand || d.preis_brutto == null ? '<p>Fehlende Angaben lassen sich im Portal nachholen.</p>' : '') +
         '<div class="sp"></div><button class="btn pr" id="sAbsenden" type="button">Absenden</button><button class="link" id="sGalerie" type="button">Zur Galerie</button>';
@@ -2719,6 +2876,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   function kachelUmriss(key) { return platzBild(key) || V10.leer; }
   function zeigeSchritt(name) {
     if (!S.vehicle) { showStart(); return; }
+    if (name === 'pruefen' || name === 'gesendet') delete S.vehicle.rueck;   // 17 g: der Rückweg von „Prüfen“ ist hier zu Ende
     S.schritt = name; S.vehicle.schritt = name; saveSession();
     $('pSchritt').innerHTML = schrittHtml(name); showPage('pSchritt');
     if (name === 'preis' && S.vehicle.raumOffen && !S.vehicle.raumZu && !S.vehicle.raumFest && !S.demo) raumNochOffen(S.vehicle);
@@ -2769,6 +2927,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   }
   function grossZu() { var g = $('gross'); if (!g || g.hidden) return; g.hidden = true; $('grossImg').removeAttribute('src'); document.body.style.overflow = S.grossVorher || ''; }
   $('grossX').onclick = grossZu;
+  $('camEx').onclick = function () { var u = $('camExImg').getAttribute('src'); if (u) grossAuf(u, 'Beispielbild, groß'); };   // Beispiel im Sucher groß ansehen (17 g)
   $('grossSc').onclick = function (ev) { if (ev.target === $('grossSc')) grossZu(); };   // Tipp neben das Bild schließt
   $('grossImg').onclick = function (ev) {
     var g = $('gross'), sc = $('grossSc'), im = $('grossImg'), z = +g.getAttribute('data-z') || 1, r = im.getBoundingClientRect(), fx = r.width ? (ev.clientX - r.left) / r.width : .5, fy = r.height ? (ev.clientY - r.top) / r.height : .5;
@@ -2811,8 +2970,13 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   function smsg(t) { var m = $('sMsg'); if (m) { m.textContent = t; m.className = 'msg bad'; } }
   // Entwurf der Notiz bei jeder Eingabe sichern (Neuladen im Hintergrund, „Weitermachen“ bringt ihn zurück)
   document.addEventListener('input', function (e) { if (e.target && e.target.id === 'sNotiz' && S.vehicle) { vDaten().notizEntwurf = String(e.target.value || '').slice(0, NOTIZ_MAX); clearTimeout(S.notizT); S.notizT = setTimeout(saveSession, 300); } });
-  function schrittWeiter(speichern) {
+  function schrittWeiter(speichern, zurueck) {
     var v = S.vehicle, n = S.schritt, d = vDaten(), p = null;
+    if (zurueck) {   // 17 g „Zurück“: speichert wie „Weiter“, aber nur, wenn in dem Schritt etwas steht (ein leerer Schritt gilt nicht als ausgefüllt)
+      if (n === 'daten' && !$('sKm').value.trim() && !$('sMotor').value.trim() && d.km == null && !d.motorisierung) speichern = false;
+      else if (n === 'zustand' && !d.ok_zustand && !['unfallfrei', 'schaden', 'scheckheft', 'garantie', 'hu_neu'].some(schrittAn)) speichern = false;
+      else if (n === 'preis' && !$('sPreis').value.trim() && d.preis_brutto == null && !['mwst_ausweisbar', 'verhandlungsbasis'].some(schrittAn)) speichern = false;
+    }
     if (!speichern && n === 'zustand' && $('sNotiz')) {   // „Später“: eine diktierte Notiz nicht wegwerfen (die Knöpfe bleiben offen)
       var no0 = ($('sNotiz').value || '').trim().slice(0, NOTIZ_MAX);
       if (no0 && no0 !== (d.notizen || '')) { p = { weitere: { notizen: no0 } }; d.notizen = no0; }
@@ -2839,14 +3003,17 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       if (pr === undefined) { smsg('Bitte den Preis in Euro eintragen, z. B. 38.900.'); return; }
       p = { preis_brutto: pr, mwst_ausweisbar: schrittAn('mwst_ausweisbar'), verhandlungsbasis: schrittAn('verhandlungsbasis') };
     }
-    if (n === 'preis') {   // Raum immer festhalten (auch bei „später“): erst dieser Auftrag, dann werden die gehaltenen Fotos gemeldet
-      if (raumWaehlbar(v) || S.demo) { var rw = v.raumWahl || v.raum || raumVorgabe(); v.raum = rw; v.raumFest = true; if (v.raumOffen) auftrag({ art: 'raum', id: v.id, raum: rw });   // 16 b: fahrzeug_raum setzt den Raum und gibt die geparkten Fotos frei
-        else { auftrag({ art: 'daten', id: v.id, p: { raum: rw }, freigabe: v.id }); if (v.raumOffenUnklar) auftrag({ art: 'raum', id: v.id, raum: rw, still: true }); } }
-      else { if (!S.demo && $('pSchritt').querySelector('[data-raum]') && v.raumWahl && v.raumWahl !== v.raum) toast(T('Der Showroom steht inzwischen fest (' + raumName(v.raum) + '): Die Fotos waren schon bei AutoScales.', 'Der Showroom steht inzwischen fest (' + raumName(v.raum) + '): Die Fotos waren schon bei AutoScales.'), 6000); v.raumWahl = v.raum; v.raumFest = true; }   // schon gemeldet: der Raum vom Anlegen gilt (Befund A14: sagen, wenn die angezeigte Wahl nicht mehr gilt)
-    }
+    // Der Raum wird seit 17 g erst beim Absenden festgemacht (raumFesthalten): Bis dahin lassen sich Showroom ja oder nein und der Raum in Schritt 5 noch ändern
+    // (Giannis 25.11.2026: jeder Schritt bis zum Absenden). Der Server nimmt den Raum nur einmal an (fahrzeug_raum), danach gibt er die geparkten Fotos frei.
     if (p) { Object.keys(p).forEach(function (k) { if (k !== 'weitere') d[k] = p[k]; }); auftrag({ art: 'daten', id: v.id, p: p }); }
-    if (n === 'preis') v.preisGesehen = true;
+    if (n === 'preis' && !zurueck) v.preisGesehen = true;
     saveSession();
+    if (v.rueck) { zeigeSchritt('pruefen'); return; }   // 17 g: von „Prüfen“ aus geöffnet, also dorthin zurück
+    if (zurueck) {
+      if (n === 'preis') { v.schritt = 'fotos'; S.schritt = 'fotos'; saveSession(); showGallery(); }
+      else if (n === 'schein' || n === 'zustand') zeigeSchritt(n === 'schein' ? 'zustand' : 'daten');
+      return;
+    }
     if (n === 'daten') zeigeSchritt('zustand');
     else if (n === 'zustand') zeigeSchritt('schein');
     else if (n === 'preis') zeigeSchritt('pruefen');
@@ -2857,10 +3024,17 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       sensorsNachholen().then(function () { startSequence(rest, 'seq'); });   // Sensor-Erlaubnis direkt aus dem Tipp (iPhone)
     }
   }
+  // Raum festmachen (bis 17 f beim Verlassen von Schritt 5, seit 17 g beim Absenden): erst dieser Auftrag, dann werden die gehaltenen Fotos gemeldet bzw. freigegeben.
+  function raumFesthalten(v) {
+    if (!v || v.raumFest) return;
+    if (raumWaehlbar(v) || S.demo) { var rw = v.raumWahl || v.raum || raumVorgabe(); v.raum = rw; v.raumFest = true; if (v.raumOffen) auftrag({ art: 'raum', id: v.id, raum: rw });   // 16 b: fahrzeug_raum setzt den Raum und gibt die geparkten Fotos frei
+      else { auftrag({ art: 'daten', id: v.id, p: { raum: rw }, freigabe: v.id }); if (v.raumOffenUnklar) auftrag({ art: 'raum', id: v.id, raum: rw, still: true }); } }
+    else { if (!S.demo && v.raumWahl && v.raum && v.raumWahl !== v.raum) toast(T('Der Showroom steht inzwischen fest (' + raumName(v.raum) + '): Die Fotos waren schon bei AutoScales.', 'Der Showroom steht inzwischen fest (' + raumName(v.raum) + '): Die Fotos waren schon bei AutoScales.'), 6000); v.raumWahl = v.raum; v.raumFest = true; }   // schon gemeldet: der Raum vom Anlegen gilt (Befund A14: sagen, wenn die angezeigte Wahl nicht mehr gilt)
+  }
   function absenden() {
     var v = S.vehicle, fehlen = pflicht().filter(function (p) { return !hasPhoto(p.key); });
     if (fehlen.length && !confirm((fehlen.length === 1 ? 'Es fehlt noch 1 Pflichtbild' : 'Es fehlen noch ' + fehlen.length + ' Pflichtbilder') + ' (' + fehlen.map(function (p) { return p.name; }).join(', ') + '). Trotzdem absenden?')) return;
-    if (!v.abgesendet) { v.abgesendet = Date.now(); auftrag({ art: 'absenden', id: v.id }); scheinWeg(); }   // geht raus, sobald Netz da ist; das Fahrzeug bleibt offen, wartende Fotos kommen weiter an
+    if (!v.abgesendet) { raumFesthalten(v); v.abgesendet = Date.now(); auftrag({ art: 'absenden', id: v.id }); scheinWeg(); }   // geht raus, sobald Netz da ist; das Fahrzeug bleibt offen, wartende Fotos kommen weiter an
     zeigeSchritt('gesendet');
   }
   $('pSchritt').addEventListener('change', function (ev) { if (ev.target && ev.target.id === 'sScheinIn') { var f = ev.target.files && ev.target.files[0]; ev.target.value = ''; scheinFoto(f); } });
@@ -2876,6 +3050,9 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       if (k === 'unfallfrei' || k === 'schaden') b.parentNode.querySelectorAll('.chip').forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });   // entweder oder (keins = offen)
       b.setAttribute('aria-pressed', an ? 'true' : 'false'); return;
     }
+    var zl = b.getAttribute('data-ziel');
+    if (zl) { if (S.schritt === 'pruefen' && !S.vehicle.abgesendet) { S.vehicle.rueck = 'pruefen'; zeigeSchritt(zl); } return; }
+    if (b.id === 'sZurueck') { if (S.schritt === 'pruefen') zeigeSchritt('preis'); else if (/^(daten|zustand|schein|preis)$/.test(S.schritt)) schrittWeiter(true, true); return; }
     if (b.id === 'sWeiter') schrittWeiter(true);
     else if (b.id === 'sSpaeter') schrittWeiter(false);
     else if (b.id === 'sAbsenden') absenden();
@@ -3098,7 +3275,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     buildKar(); applyTheme();
     vehLokalHolen();   // Tab geschlossen oder App weggewischt: das laufende Fahrzeug aus dem localStorage (Befund A3)
     showStart();
-    if (S.cfg && !S.cfg.bad) { raumVorratLaden(); beispielVorratLaden(); }   // Vorschaubilder für Schritt 5 jetzt laden, solange Netz da ist (16 e)
+    if (S.cfg && !S.cfg.bad) raumVorratLaden();   // Vorschaubilder für Schritt 5 jetzt laden, solange Netz da ist (16 e); Beispielbilder zeichnet die App selbst (17 g)
     S.restoreP = restoreQueue();
     auftraegeSenden();
   }
