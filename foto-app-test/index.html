@@ -553,7 +553,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-17g';
+  var APP = 'foto-app-test-17h';
   var RAD = Math.PI / 180;
   /* =====================================================================
      FREIE KAMERA (Fassung 17). Giannis 23.11.2026: „man öffnet die App, man sieht den ganzen Bildschirm als freie Kamera und wir lassen das mit den Kasten und alles weg.
@@ -1731,7 +1731,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     $('camRad').hidden = m.art !== 'aussen';   // vor jedem Außenfoto (Pflicht und freiwillige Seite), nie innen, Zusatz oder Fahrzeugschein
     $('noRueck').hidden = !(S.cur === 'ruecksitzbank' && !hasPhoto('ruecksitzbank'));
     $('camDiag').innerHTML = diagSvg(m.key);
-    var bu = beispielUrl(m.key, m.art); $('camEx').hidden = !bu; if (bu) { if ($('camExImg').getAttribute('src') !== bu) $('camExImg').setAttribute('src', bu); } else $('camExImg').removeAttribute('src');   // Beispiel vor dem Foto (17 g)
+    beispielVorratLaden(); var bu = beispielUrl(m.key, m.art); $('camEx').hidden = !bu; if (bu) { if ($('camExImg').getAttribute('src') !== bu) $('camExImg').setAttribute('src', bu); } else $('camExImg').removeAttribute('src');   // Beispiel vor dem Foto (17 g)
     $('camEx').setAttribute('aria-label', 'Beispielbild ' + m.name + ' groß ansehen');
     hintOpen(false);   // der Tipp liegt nicht über dem Bild: nur auf Tipp (Platz-Anzeige links), standardmäßig zu
     renderStrip();
@@ -1954,156 +1954,33 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   /* =====================================================================
      Ansehen: Passt oder Neu
      ===================================================================== */
-  /* BEISPIELGRAFIK (17 g, Giannis 25.11.2026 nach dem Abnahmelauf: außen „Vorschaubilder gab es nicht“, innen „Da müssen Beispielbilder von Grafiken, die wir selbst
-     erstellt haben, rein“). Übergang, bis Giannis über die endgültigen Grafiken entscheidet: Die App zeichnet das Beispiel selbst, ohne Foto, ohne echtes Auto, ohne Kennzeichen.
-     Außen: ein neutrales Auto der gewählten Klasse, flach schattiert, aus der Sicht des Platzes mit einer Kamera wie am iPhone (1×, 26 mm, 4:3, Augenhöhe 1,2 m) im Abstand,
-     den die Prüfung als gut kennt (Front und Heck 4,6 m, schräg 5,6 m, Seite 6,2 m zur Automitte; Höhe im Bild unter 0,53, Front und Heck unter 0,49 breit, siehe PRUEF.nah).
-     Innen: schlichte Linienbilder je Platz. Ergebnis ist ein SVG-Text (4:3, 400 × 300); beispielUrl() macht daraus eine Bildadresse, die ohne Netz geht. */
-  var BSP = (function () {
-    var KL = {   // Maße in Metern (gerundet, Klassenmittel): Länge, Breite, Höhe, Gürtellinie, Unterkante, Rad, Achsen, Scheibenfuß vorn, Dach vorn, Dach hinten, Scheibenfuß hinten
-      kleinwagen: { L: 3.95, W: 1.74, H: 1.48, belt: 0.98, sill: 0.30, R: 0.31, ax: [0.62, 3.12], gf: 2.95, rf: 2.42, rr: 0.42, gr: 0.10 },
-      kompakt: { L: 4.30, W: 1.80, H: 1.46, belt: 0.98, sill: 0.30, R: 0.32, ax: [0.72, 3.38], gf: 3.18, rf: 2.62, rr: 0.62, gr: 0.12 },
-      limousine: { L: 4.90, W: 1.88, H: 1.45, belt: 0.98, sill: 0.30, R: 0.34, ax: [0.98, 3.90], gf: 3.62, rf: 3.00, rr: 1.70, gr: 1.02 },
-      suv: { L: 4.70, W: 1.90, H: 1.68, belt: 1.10, sill: 0.40, R: 0.37, ax: [0.88, 3.70], gf: 3.55, rf: 3.02, rr: 0.48, gr: 0.12 },
-      coupe: { L: 4.50, W: 1.86, H: 1.30, belt: 0.90, sill: 0.26, R: 0.33, ax: [0.92, 3.55], gf: 3.25, rf: 2.50, rr: 1.55, gr: 0.80 },
-      cabrio: { L: 4.40, W: 1.82, H: 1.30, belt: 0.90, sill: 0.26, R: 0.33, ax: [0.90, 3.45], gf: 3.15, rf: 2.55, rr: 1.45, gr: 0.95 }
-    };
-    // Standort je Platz: Winkel um das Auto (0 = vorn, 90 = Fahrerseite links, 180 = hinten, 270 = Beifahrerseite), Abstand zur Automitte in Metern
-    var SICHT = { titel: [38, 5.6], front: [0, 4.6], dreiviertel_vr: [-38, 5.6], dreiviertel_hr: [218, 5.6], heck: [180, 4.6], dreiviertel_hl: [142, 5.6], seite_l: [90, 6.2], seite_r: [270, 6.2], seite: [90, 6.2] };
-    var BW = 400, BH = 300, FOK = BW / 2 / Math.tan(33.5 * Math.PI / 180);   // 26 mm, 4:3: rund 67° waagerecht
-    function sub(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
-    function dot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
-    function crs(a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
-    function nrm(a) { var l = Math.sqrt(dot(a, a)) || 1; return [a[0] / l, a[1] / l, a[2] / l]; }
-    function hex(c, k) { return '#' + c.map(function (v) { return ('0' + Math.max(0, Math.min(255, Math.round(v * k))).toString(16)).slice(-2); }).join(''); }
-    function f1(v) { return (Math.round(v * 10) / 10).toString(); }
-    function huelle(P) {   // konvexe Hülle (Monotone Chain), für Reifen
-      P = P.slice().sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
-      var k = function (o, a, b) { return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]); }, lo = [], hi = [];
-      P.forEach(function (p) { while (lo.length >= 2 && k(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); });
-      P.slice().reverse().forEach(function (p) { while (hi.length >= 2 && k(hi[hi.length - 2], hi[hi.length - 1], p) <= 0) hi.pop(); hi.push(p); });
-      return lo.slice(0, -1).concat(hi.slice(0, -1));
-    }
-    function profil(k) {   // Seitenlinie (x von hinten 0 nach vorn L, z nach oben), gegen den Uhrzeigersinn: unten nach vorn, vorn hoch, oben nach hinten, hinten runter
-      var L = k.L, b = k.belt, s = k.sill, hf = b - 0.13, stufe = k.gr > 0.5;
-      var unten = [[0.30, s], [L - 0.38, s], [L - 0.12, s + 0.10]];
-      var vorn = [[L - 0.01, s + 0.24], [L, s + 0.34], [L - 0.02, hf - 0.06], [L - 0.14, hf + 0.01], [L - 0.55, hf + 0.07], [k.gf, b]];
-      var hinten = stufe ? [[k.gr, b], [0.30, b - 0.02], [0.05, b - 0.08], [0.0, s + 0.32], [0.10, s + 0.12]] : [[0.06, b + 0.02], [0.0, b - 0.12], [0.0, s + 0.32], [0.10, s + 0.12]];
-      var glas = [[k.gr + (stufe ? 0 : 0.04), b], [k.gf, b], [k.rf + 0.10, k.H - 0.03], [k.rf, k.H], [k.rr, k.H], [k.rr - 0.10, k.H - 0.03]];
-      return { body: unten.concat(vorn, hinten), glas: glas };
-    }
-    function aussen(key, klasse) {
-      var k = KL[klasse] || KL.limousine, sicht = SICHT[key] || SICHT.titel, pr = profil(k), W = k.W, cx = k.L / 2;
-      var a = sicht[0] * Math.PI / 180, cam = [cx + sicht[1] * Math.cos(a), sicht[1] * Math.sin(a), 1.2], ziel = [cx, 0, k.H * 0.45];
-      var fw = nrm(sub(ziel, cam)), rt = nrm(crs(fw, [0, 0, 1])), up = crs(rt, fw);
-      function pj(p) { var d = sub(p, cam), z = Math.max(0.05, dot(d, fw)); return [BW / 2 + FOK * dot(d, rt) / z, BH / 2 - FOK * dot(d, up) / z, z]; }
-      var licht = nrm([0.35, 0.45, 1]), LACK = [205, 209, 215], GLAS = [52, 58, 68], faces = [];
-      function face(pts, farbe, n, extra) {
-        var c = [0, 0, 0]; pts.forEach(function (p) { c[0] += p[0] / pts.length; c[1] += p[1] / pts.length; c[2] += p[2] / pts.length; });
-        if (n && dot(n, sub(cam, c)) <= 0) return null;
-        var hell = n ? 0.70 + 0.34 * Math.max(0, dot(n, licht)) : 1, P = pts.map(pj), t = 0; P.forEach(function (q) { t += q[2]; });
-        var f = { P: P, z: t / P.length, farbe: hex(farbe, hell), extra: extra || [] }; faces.push(f); return f;
-      }
-      function ring(loop) {   // gegen den Uhrzeigersinn sicherstellen
-        var A = 0; loop.forEach(function (p, i) { var q = loop[(i + 1) % loop.length]; A += p[0] * q[1] - q[0] * p[1]; }); return A < 0 ? loop.slice().reverse() : loop;
-      }
-      // Ecken von oben gesehen gerundet: vorn und hinten wird die Karosserie schmaler, die Räder stehen außen (sonst verdeckt der Bug die Reifen)
-      var ecke = function (x) { var v = Math.max(0, 1 - (k.L - x) / 0.8), h = Math.max(0, 1 - x / 0.7); return 0.18 * v * v + 0.15 * h * h; };
-      function band(loop, w0, w1, z0, z1, farbeFn, rund) {   // Profil quer ausziehen; Breite hängt an der Höhe (Dach schmaler)
-        var wz0 = function (z) { return z1 > z0 ? w0 + (w1 - w0) * Math.max(0, Math.min(1, (z - z0) / (z1 - z0))) : w0; }, wz = function (z, x) { return wz0(z) - (rund ? 2 * ecke(x) : 0); };
-        loop.forEach(function (p, i) {
-          var q = loop[(i + 1) % loop.length], dx = q[0] - p[0], dz = q[1] - p[1], n = nrm([dz, 0, -dx]);
-          var wp = wz(p[1], p[0]) / 2, wq = wz(q[1], q[0]) / 2;
-          face([[p[0], -wp, p[1]], [q[0], -wq, q[1]], [q[0], wq, q[1]], [p[0], wp, p[1]]], farbeFn(p, q, n), n);
-        });
-      }
-      var body = ring(pr.body), glas = ring(pr.glas), gw0 = W - 0.12, gw1 = W - 0.46;
-      band(body, W, W, 0, 1, function () { return LACK; }, true);
-      band(glas, gw0, gw1, k.belt, k.H, function (p, q, n) { return Math.abs(n[2]) > 0.93 ? LACK : GLAS; });
-      // Seitenflächen mit Details: Radhäuser, Türfugen, B-Säule
-      var seite = cam[1] > W / 2 ? 1 : cam[1] < -W / 2 ? -1 : 0;
-      function rad(x, sg) {   // Reifen als Zylinder (Hülle zweier Kreise), Felge auf der Außenseite
-        var y0 = sg * (W / 2 - 0.02), y1 = sg * (W / 2 - 0.25), C0 = [], C1 = [], FL = [];
-        for (var i = 0; i < 28; i++) { var t = i / 28 * 2 * Math.PI, xx = x + k.R * Math.cos(t), zz = k.R + k.R * Math.sin(t); C0.push(pj([xx, y0, zz])); C1.push(pj([xx, y1, zz])); FL.push(pj([x + k.R * 0.62 * Math.cos(t), y0 + sg * 0.004, k.R + k.R * 0.62 * Math.sin(t)])); }
-        var aussenSicht = dot([0, sg, 0], sub(cam, [x, y0, k.R])) > 0;
-        return { reifen: huelle(C0.concat(C1)), felge: aussenSicht ? FL : null };
-      }
-      var raeder = [];
-      k.ax.forEach(function (x) { [1, -1].forEach(function (sg) { var r = rad(x, sg); r.sg = sg; r.z = pj([x, sg * W / 2, k.R])[2]; raeder.push(r); }); });
-      [1, -1].forEach(function (sg) {
-        var n = [0, sg, 0], y = sg * W / 2, extra = [];
-        var bogen = k.ax.map(function (x) { var B = []; for (var i = 0; i <= 18; i++) { var t = Math.PI * i / 18; B.push(pj([x + (k.R + 0.07) * Math.cos(t), y + sg * 0.003, k.R + (k.R + 0.07) * Math.sin(t)])); } return B; });
-        bogen.forEach(function (B) { extra.push({ P: B.concat([B[B.length - 1], B[0]]), farbe: '#3A3F48' }); });
-        var tv = k.gf - 0.05, tm = (k.rf + k.rr) / 2 + 0.25, th = Math.max(k.ax[0] + k.R + 0.12, k.rr - 0.05);
-        [tv, tm, th].forEach(function (x) { extra.push({ L: [pj([x, y + sg * 0.003, k.sill + 0.05]), pj([x, y + sg * 0.003, k.belt - 0.03])] }); });
-        extra.push({ L: [pj([tv, y + sg * 0.003, k.belt - 0.16]), pj([th, y + sg * 0.003, k.belt - 0.16])], dick: 0.5 });
-        if (seite === sg) raeder.filter(function (r) { return r.sg === sg; }).forEach(function (r) { extra.push({ rad: r }); });
-        face(body.map(function (p) { return [p[0], sg * (W / 2 - ecke(p[0])), p[1]]; }), LACK, n, extra);
-        var gy = sg * gw0 / 2, gs = face(glas.map(function (p) { var w = gw0 + (gw1 - gw0) * (p[1] - k.belt) / (k.H - k.belt); return [p[0], sg * w / 2, p[1]]; }), GLAS, nrm([0, sg, 0.18]));
-        if (gs) gs.extra.push({ L: [pj([tm, gy, k.belt]), pj([tm + 0.04, sg * gw1 / 2, k.H - 0.02])], farbe: hex(LACK, 0.92), dick: 5 });
-      });
-      // Lichter und Grill vorn, Leuchten hinten
-      var hf = k.belt - 0.13, xv = k.L - 0.012, xh = 0.012, Wv = W - 2 * ecke(k.L - 0.05), Wh = W - 2 * ecke(0.05);
-      [1, -1].forEach(function (sg) {
-        face([[xv, sg * (Wv / 2 - 0.04), hf - 0.13], [xv, sg * (Wv / 2 - 0.36), hf - 0.11], [xv, sg * (Wv / 2 - 0.36), hf - 0.05], [xv, sg * (Wv / 2 - 0.05), hf - 0.07]].map(function (p, i, A) { return sg > 0 ? A[A.length - 1 - i] : p; }), [235, 238, 242], [1, 0, 0]);
-        face([[xh, sg * (Wh / 2 - 0.03), k.belt - 0.20], [xh, sg * (Wh / 2 - 0.03), k.belt - 0.08], [xh, sg * (Wh / 2 - 0.38), k.belt - 0.08], [xh, sg * (Wh / 2 - 0.38), k.belt - 0.16]].map(function (p, i, A) { return sg > 0 ? A[A.length - 1 - i] : p; }), [178, 58, 52], [-1, 0, 0]);
-      });
-      face([[xv - 0.02, -0.40, k.sill + 0.12], [xv - 0.02, 0.40, k.sill + 0.12], [xv, 0.36, hf - 0.16], [xv, -0.36, hf - 0.16]], [70, 75, 84], [1, 0, 0]);
-      face([[xh, -0.26, k.sill + 0.30], [xh, 0.26, k.sill + 0.30], [xh, 0.26, k.sill + 0.42], [xh, -0.26, k.sill + 0.42]], [238, 240, 243], [-1, 0, 0]);   // Kennzeichenfeld leer
-      // Zeichnen: Boden, Schatten, ferne Räder, Flächen von hinten nach vorn, nahe Räder an ihrer Seitenfläche
-      var hor = pj([cx + 400 * Math.cos(a + Math.PI), 400 * Math.sin(a + Math.PI), 1.2])[1];
-      var schatten = [[0.05, -W / 2 + 0.02], [k.L - 0.05, -W / 2 + 0.02], [k.L - 0.05, W / 2 - 0.02], [0.05, W / 2 - 0.02]].map(function (p) { return pj([p[0], p[1], 0]); });
-      var poly = function (P) { return P.map(function (q) { return f1(q[0]) + ',' + f1(q[1]); }).join(' '); };
-      var s = '<svg xmlns="http://www.w3.org/2000/svg" width="' + BW + '" height="' + BH + '" viewBox="0 0 ' + BW + ' ' + BH + '">' +
-        '<defs><linearGradient id="h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9ECF0"/><stop offset="1" stop-color="#F6F7F9"/></linearGradient>' +
-        '<linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D5D8DD"/><stop offset="1" stop-color="#C3C7CD"/></linearGradient>' +
-        '<filter id="w" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="4"/></filter></defs>' +
-        '<rect width="' + BW + '" height="' + BH + '" fill="url(#h)"/><rect y="' + f1(hor) + '" width="' + BW + '" height="' + f1(BH - hor) + '" fill="url(#b)"/>' +
-        '<polygon points="' + poly(schatten) + '" fill="#1B1E24" opacity=".34" filter="url(#w)"/>';
-      var ferne = seite ? raeder.filter(function (r) { return r.sg !== seite; }) : [];
-      var radSvg = function (r) { return '<polygon points="' + poly(r.reifen) + '" fill="#1E2127" stroke="#16181C" stroke-width=".6" stroke-linejoin="round"/>' + (r.felge ? '<polygon points="' + poly(r.felge) + '" fill="#9AA0A8" stroke="#5C626D" stroke-width=".7"/>' : ''); };
-      ferne.forEach(function (r) { s += radSvg(r); });
-      var liste = faces.slice(); if (!seite) raeder.forEach(function (r) { liste.push({ rad: r, z: r.z }); });
-      liste.sort(function (p, q) { return q.z - p.z; });
-      liste.forEach(function (f) {
-        if (f.rad) { s += radSvg(f.rad); return; }
-        s += '<polygon points="' + poly(f.P) + '" fill="' + f.farbe + '" stroke="' + f.farbe + '" stroke-width=".8" stroke-linejoin="round"/>';
-        f.extra.forEach(function (e) {
-          if (e.rad) s += radSvg(e.rad);
-          else if (e.P) s += '<polygon points="' + poly(e.P) + '" fill="' + e.farbe + '"/>';
-          else if (e.L) s += '<polyline points="' + poly(e.L) + '" fill="none" stroke="' + (e.farbe || '#8C929B') + '" stroke-width="' + (e.dick || 0.9) + '" stroke-linecap="round"/>';
-        });
-      });
-      return s + '</svg>';
-    }
-    // Innen: schlichte Linienbilder (grau, eine Linie in Gold für das Wichtige)
-    var INNEN = {
-      cockpit: '<path d="M20 70 Q200 30 380 70" class="d"/><path d="M0 150 Q200 112 400 150 L400 205 Q200 178 0 205 Z" class="f"/><circle cx="135" cy="196" r="62" class="s"/><circle cx="135" cy="196" r="15" class="s"/><path d="M75 190 H120 M150 190 H195 M135 211 V256" class="s"/><rect x="88" y="132" width="94" height="30" rx="10" class="s"/><rect x="226" y="128" width="92" height="56" rx="6" class="g"/><path d="M226 206 H318 M240 222 H304" class="d"/>',
-      tacho: '<rect x="40" y="60" width="320" height="180" rx="40" class="f"/><circle cx="130" cy="150" r="66" class="s"/><circle cx="270" cy="150" r="66" class="s"/><path d="M130 150 L168 118 M270 150 L236 116" class="s"/><path d="M84 196 A66 66 0 0 1 82 104 M318 104 A66 66 0 0 1 316 196" class="d"/><rect x="160" y="200" width="80" height="26" rx="5" class="g"/><path d="M172 213 H228" class="g"/>',
-      vordersitze: '<path d="M0 250 H400" class="d"/><path d="M70 250 V150 Q70 128 92 126 L102 70 Q106 50 126 50 H150 Q170 50 168 72 L158 126 Q182 130 182 152 V250" class="s"/><path d="M110 36 H156 V50 H110 Z" class="s"/><path d="M218 250 V150 Q218 128 240 126 L250 70 Q254 50 274 50 H298 Q318 50 316 72 L306 126 Q330 130 330 152 V250" class="s"/><path d="M258 36 H304 V50 H258 Z" class="s"/><path d="M186 250 V178 H214 V250" class="g"/>',
-      ruecksitzbank: '<path d="M0 250 H400" class="d"/><path d="M50 250 V176 Q50 160 66 160 H334 Q350 160 350 176 V250" class="s"/><path d="M62 160 L74 92 Q78 76 96 76 H304 Q322 76 326 92 L338 160" class="s"/><path d="M200 82 V160 M134 80 V160 M266 80 V160" class="d"/><path d="M100 54 H150 V74 H100 Z M175 54 H225 V74 H175 Z M250 54 H300 V74 H250 Z" class="s"/><path d="M60 206 H340" class="g"/>',
-      kofferraum: '<path d="M60 40 H340 L370 120 V250 H30 V120 Z" class="s"/><path d="M30 120 H370" class="d"/><path d="M70 140 H330 V232 H70 Z" class="f"/><path d="M70 232 H330" class="g"/><path d="M60 40 L30 120 M340 40 L370 120" class="d"/>'
-    };
-    function innen(key) {
-      var inh = INNEN[key]; if (!inh) return '';
-      return '<svg xmlns="http://www.w3.org/2000/svg" width="' + BW + '" height="' + BH + '" viewBox="0 0 ' + BW + ' ' + BH + '"><style>.s{fill:none;stroke:#5C626D;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.d{fill:none;stroke:#A3A8B0;stroke-width:3;stroke-linecap:round}.f{fill:#DADDE2;stroke:#A3A8B0;stroke-width:3}.g{fill:none;stroke:#C9962E;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}</style>' +
-        '<rect width="' + BW + '" height="' + BH + '" fill="#EEF0F3"/>' + inh + '</svg>';
-    }
-    return {
-      svg: function (key, art, klasse) { return art === 'aussen' || SICHT[key] && art !== 'innen' ? aussen(key, klasse) : innen(key); },
-      plaetze: Object.keys(SICHT).concat(Object.keys(INNEN))
-    };
-  })();
-  // Beispielbild („So soll es aussehen“): seit 17 g die eigene Grafik je Platz (BSP), ohne Datei und ohne Netz, im Sucher (#camEx) vor dem Foto und im Prüfen-Bild.
-  // Es gibt sie für alle Außenplätze (Klasse des Fahrzeugs), die vier Innenplätze und den Kofferraum; Zusatzbild und Fahrzeugschein haben keins.
-  // Bis 17 f lagen hier echte Fotos (beispiel/*.jpg, nur innen); die sind raus (Giannis 25.11.2026: keine echten Autos als Beispiel).
-  var BEISPIEL_URL = {};
-  function beispielUrl(key, art) {
-    if (!key || (art !== 'aussen' && art !== 'innen')) return null;
-    var kl = klasseOf() || 'limousine', id = key + '|' + (art === 'aussen' ? kl : '');
-    if (!(id in BEISPIEL_URL)) { var t = ''; try { t = BSP.svg(key, art, kl); } catch (e) { t = ''; } BEISPIEL_URL[id] = t ? 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(t) : null; }
-    return BEISPIEL_URL[id];
+  /* BEISPIELBILD („So soll es aussehen“, 17 h): Bilder aus Canva-KI je Platz, ohne Logo, ohne Marke, ohne Kennzeichen (Giannis 25.11.2026: „ich hätte gerne realistik grafiken
+     wie dem angehängten beispielen“, „Ja, alle erzeugen“; Herkunft in beispiel/README.md). Außen je Klasse acht Ansichten, innen fünf Plätze für alle Klassen gleich.
+     Gezeigt im Sucher (#camEx) vor dem Foto und im Prüfen-Bild. Zusatzbild und Fahrzeugschein haben keins. Bis 17 g zeichnete die App die Beispiele selbst (SVG); das ist raus.
+     Ohne Netz: Beim Öffnen der Kamera lädt die App die 13 Bilder der Klasse in einen Vorrat (wie die Raumbilder), danach gehen sie auch im Keller. */
+  var BEISPIEL_AUSSEN = ['titel', 'front', 'dreiviertel_vr', 'dreiviertel_hr', 'heck', 'dreiviertel_hl', 'seite_l', 'seite_r'], BEISPIEL_INNEN = ['cockpit', 'tacho', 'vordersitze', 'ruecksitzbank', 'kofferraum'];
+  var BEISPIEL_ORDNER = { kleinwagen: 'kleinwagen', kompakt: 'kleinwagen', limousine: 'limousine', suv: 'limousine', coupe: 'coupe', cabrio: 'coupe' };   // Bilder gibt es für drei Klassen; die übrigen nehmen die nächste Form
+  var BEISPIEL_VORRAT = {}, beispielLaeuft = {};
+  function beispielPfad(key, art) {
+    if (key === 'seite') key = 'seite_l';
+    if (art === 'aussen' && BEISPIEL_AUSSEN.indexOf(key) >= 0) return 'beispiel/' + (BEISPIEL_ORDNER[klasseOf() || 'limousine'] || 'limousine') + '/' + key + '.jpg';
+    if (art === 'innen' && BEISPIEL_INNEN.indexOf(key) >= 0) return 'beispiel/innen/' + key + '.jpg';
+    return null;
   }
+  function beispielVorratLaden() {
+    if (typeof fetch !== 'function' || !S.cfg || S.cfg.bad) return;
+    var ordner = BEISPIEL_ORDNER[klasseOf() || 'limousine'] || 'limousine';
+    BEISPIEL_AUSSEN.map(function (k) { return 'beispiel/' + ordner + '/' + k + '.jpg'; }).concat(BEISPIEL_INNEN.map(function (k) { return 'beispiel/innen/' + k + '.jpg'; })).forEach(function (pf) {
+      if (BEISPIEL_VORRAT[pf] || beispielLaeuft[pf]) return;
+      beispielLaeuft[pf] = true;
+      fetch(pf, { cache: 'force-cache' })
+        .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.blob(); })
+        .then(function (b) { if (!b || !b.size) throw new Error('leer'); BEISPIEL_VORRAT[pf] = URL.createObjectURL(b); beispielLaeuft[pf] = false; })
+        .catch(function () { beispielLaeuft[pf] = false; });   // kein Netz: beim nächsten Öffnen der Kamera oder bei „online“ nochmal
+    });
+  }
+  window.addEventListener('online', function () { beispielVorratLaden(); });
+  function beispielUrl(key, art) { var pf = beispielPfad(key, art); return pf ? BEISPIEL_VORRAT[pf] || pf : null; }
   function beispielZeigen(key, art) {
     var box = $('exBox'), im = $('exImg'), src = beispielUrl(key, art); box.hidden = true;
     if (!src) { im.removeAttribute('src'); return; }
@@ -2931,6 +2808,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   function grossZu() { var g = $('gross'); if (!g || g.hidden) return; g.hidden = true; g.style.cssText = ''; g.classList.remove('bsp'); $('grossImg').removeAttribute('src'); document.body.style.overflow = S.grossVorher || ''; }
   $('grossX').onclick = grossZu;
   // Beispiel im Sucher groß ansehen (17 g). Ist die Kamera-Oberfläche gedreht (Drehsperre, Handy quer), dreht die Großansicht mit, sonst stünde das Bild seitlich.
+  $('camExImg').onerror = function () { $('camEx').hidden = true; };   // Bild nicht da (kein Netz, kein Vorrat): kein leerer Knopf
   $('camEx').onclick = function () { var u = $('camExImg').getAttribute('src'); if (!u) return; grossAuf(u, 'Beispielbild, groß'); $('gross').classList.add('bsp'); if (S.textRot) geom($('gross'), S.textRot); };
   $('grossSc').onclick = function (ev) { if (ev.target === $('grossSc')) grossZu(); };   // Tipp neben das Bild schließt
   $('grossImg').onclick = function (ev) {
@@ -3279,7 +3157,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     buildKar(); applyTheme();
     vehLokalHolen();   // Tab geschlossen oder App weggewischt: das laufende Fahrzeug aus dem localStorage (Befund A3)
     showStart();
-    if (S.cfg && !S.cfg.bad) raumVorratLaden();   // Vorschaubilder für Schritt 5 jetzt laden, solange Netz da ist (16 e); Beispielbilder zeichnet die App selbst (17 g)
+    if (S.cfg && !S.cfg.bad) raumVorratLaden();   // Vorschaubilder für Schritt 5 jetzt laden, solange Netz da ist (16 e); die Beispielbilder lädt die Kamera (17 h)
     S.restoreP = restoreQueue();
     auftraegeSenden();
   }
