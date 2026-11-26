@@ -2597,7 +2597,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   /* 17 g: Der Server-Stand wird auch bei offener Kamera abgefragt. Der Arbeiter prüft jedes Foto seit 25.11.2026 schon vor der Raumwahl
      (Giannis 25.11.2026: „Fotos sofort rechnen, Raum zum Schluss“, „Klare Fälle sperren“) und lehnt klare Fälle sofort ab. Die Ablehnung
      soll ankommen, solange man am Auto steht: rotes Zeichen in der Leiste der Kamera, dazu ein kurzer Hinweis. */
-  function pollSichtbar() { return !$('pGallery').hidden || !$('stage').hidden; }
+  function pollSichtbar() { return !$('pGallery').hidden || !$('stage').hidden || (!$('pSchritt').hidden && /^(pruefen|gesendet)$/.test(S.schritt || '')); }   // 17 i (Knopf-Prüfung A1): auch auf „Prüfen“ den Stand abfragen, sonst erscheint eine Ablehnung des Servers dort nie
   function schedulePoll(ms) { clearTimeout(S.pollTimer); if (!pollSichtbar() || !S.vehicle) return; S.pollTimer = setTimeout(poll, ms); }
   // Vom Server abgelehnt und neu aufzunehmen? Nicht bei einer technischen Störung (dort hilft ein neues Foto nicht, AutoScales kümmert sich).
   function vomServerAbgelehnt(k) { var s = S.slots[k], sv = s && s.server; return !!sv && sv.status === 'fehler' && !/^(wartet|sendet|retry)$/.test(s.state) && !/^Technische Störung/.test(sv.fehler_grund || ''); }
@@ -2780,7 +2780,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     if (!S.vehicle) { showStart(); return; }
     if (name === 'pruefen' || name === 'gesendet') delete S.vehicle.rueck;   // 17 g: der Rückweg von „Prüfen“ ist hier zu Ende
     S.schritt = name; S.vehicle.schritt = name; saveSession();
-    $('pSchritt').innerHTML = schrittHtml(name); showPage('pSchritt');
+    $('pSchritt').innerHTML = S.schrittLetzt = schrittHtml(name); showPage('pSchritt'); if (/^(pruefen|gesendet)$/.test(name)) schedulePoll(300);
     if (name === 'preis' && S.vehicle.raumOffen && !S.vehicle.raumZu && !S.vehicle.raumFest && !S.demo) raumNochOffen(S.vehicle);
     if (name === 'schein' && hatSchein() && !scheinUrl()) scheinLaden();   // nach dem Neuladen: Vorschau aus dem Gerätespeicher
   }
@@ -2804,7 +2804,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     $('pSchritt').innerHTML = schrittHtml('preis'); if (pv != null && $('sPreis')) $('sPreis').value = pv;
     an0.forEach(function (x) { var c = $('pSchritt').querySelector('[data-k="' + x + '"]'); if (c) c.setAttribute('aria-pressed', 'true'); }); window.scrollTo(0, y);
   }
-  function schrittNeu() { if (!$('pSchritt').hidden && S.vehicle && /^(pruefen|gesendet)$/.test(S.schritt)) $('pSchritt').innerHTML = schrittHtml(S.schritt); }   // Stand der Fotos nachziehen
+  function schrittNeu() { if (!$('pSchritt').hidden && S.vehicle && /^(pruefen|gesendet)$/.test(S.schritt)) { var h = schrittHtml(S.schritt); if (h !== S.schrittLetzt) { $('pSchritt').innerHTML = h; S.schrittLetzt = h; } } }   // 17 i: nur bei geändertem Stand neu zeichnen (Abfrage alle 4 s auf „Prüfen“; Fokus und Tipp bleiben sonst erhalten)   // Stand der Fotos nachziehen
   /* VORSCHAU DES FAHRZEUGSCHEINS (Fassung 17, Befund Giannis 23.11.2026: die Vorschau war verpixelt, 320 px auf volle Breite gezogen). Gezeigt wird das hochgeladene Bild selbst
      (bis CFG.LONG_EDGE_SCHEIN). Es bleibt auf dem Gerät (eigener Speicher fa_schein, ein Bild), bis das Fahrzeug abgesendet oder ein neues begonnen ist, damit die Vorschau auch
      nach dem Neuladen scharf ist. Ohne Gerätespeicher gibt es die Vorschau nur bis zum Neuladen. Tippen öffnet die Großansicht. */
