@@ -2855,7 +2855,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     // Nur Messwerte fürs Protokoll (keine FIN, kein Text): Sie reisen in app_details der nächsten Fahrzeugfotos mit.
     try { var L = window.ScheinLesen; S.vehicle.scheinLese = { gelesen: /^[A-HJ-NPR-Z0-9]{17}$/.test(fin), ms: ergebnis && ergebnis.ms != null ? ergebnis.ms : null, grund: ergebnis && ergebnis.grund ? String(ergebnis.grund).slice(0, 60) : '', weg: L && typeof L.weg === 'function' ? L.weg() : '' }; saveSession(); } catch (e) { /* nur Protokoll */ }
     if (/^[A-HJ-NPR-Z0-9]{17}$/.test(fin)) {
-      S.scheinFin = fin; var f = $('sFin'), d = vDaten();
+      S.scheinFin = fin; var f = S.schritt === 'schein' && !$('pSchritt').hidden ? $('sFin') : null, d = vDaten();   // Schritt 3 nur ausgeblendet: das Feld steht noch im DOM, zählt aber nicht
       if (f) { if (!f.value.trim()) f.value = fin; scheinStatus('FIN gelesen: ' + fin + ', bitte vergleichen.'); }
       else if (!d.fin) {   // 17 i: Schritt schon verlassen („Weiter“ vor dem Ende des Lesens): die gelesene FIN trotzdem speichern (Giannis 26.11.: „Fin fehlt aber noch“)
         d.fin = fin; auftrag({ art: 'daten', id: S.vehicle.id, p: { fin: fin } }); saveSession(); scheinStatus('FIN gelesen: ' + fin + '.'); schrittNeu();
