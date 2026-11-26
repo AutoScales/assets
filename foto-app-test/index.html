@@ -499,6 +499,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     </div>
     <div class="pane" id="vBet" hidden><div class="glass card" id="betBox"></div></div>
     <div class="pane" id="vTurn" hidden>
+      <button class="round" id="turnX" type="button" aria-label="Kamera schließen" data-ic="schliessen" style="position:absolute;top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));z-index:2">×</button>
       <div class="glass card">
         <div class="rot" aria-hidden="true"><div class="ph"></div></div>
         <h1 data-du="Dreh dein Handy quer" data-sie="Drehen Sie Ihr Handy quer">Dreh dein Handy quer</h1>
@@ -2179,6 +2180,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     $('betEnd').onclick = function () { paneShow('vBet', false); endSequence(); };
   }
   $('camX').onclick = function () { S.token++; leaveStage().then(function () { if (!nachKamera()) showGallery(); }); };
+  $('turnX').onclick = function () { $('camX').onclick(); };   // 17 i (Knopf-Prüfung A2): Der Drehen-Hinweis liegt über dem Sucher und verdeckt dessen X; er hat ein eigenes
 
   // Rückfall ohne ImageCapture: Kamera-App des Handys öffnen
   async function fallbackShot(my) {
@@ -2689,8 +2691,11 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     return { alle: ids.length, an: ids.length - unterwegs, unterwegs: unterwegs };
   }
   // Je Pflichtbild eine Zeile, wenn es fehlt, noch nicht angekommen ist oder sich nicht mehr lesen lässt (Seiten „Prüfen“ und „Gesendet“)
+  // 17 i (Knopf-Prüfung A1): Ein Platz braucht ein Foto, wenn es fehlt, der Server es abgelehnt hat oder es nicht ankam bzw. nicht lesbar war (Zustand fehler).
+  function brauchtFoto(k) { var s = S.slots[k]; return !hasPhoto(k) || vomServerAbgelehnt(k) || (!!s && s.state === 'fehler'); }
+  function zeileFoto(k, icon, html) { return S.vehicle && !S.vehicle.abgesendet ? '<button class="zeile" type="button" data-foto="' + k + '">' + V10[icon] + '<span>' + html + '</span><span class="aend">Aufnehmen</span></button>' : zeile(icon, html); }
   function fotoZeilen(PF) {
-    return PF.map(function (p) { var s = S.slots[p.key]; return !hasPhoto(p.key) ? zeile('offen', '<b>' + esc(p.name) + '</b> fehlt noch') : vomServerAbgelehnt(p.key) ? zeile('warn', '<b>' + esc(p.name) + '</b>: ' + esc(s.server.fehler_grund || 'bitte neu aufnehmen')) : s.state !== 'fehler' ? '' : s.grund === 'unlesbar' ? zeile('warn', '<b>' + esc(p.name) + '</b> lässt sich auf dem Handy nicht mehr lesen, bitte neu aufnehmen') : zeile('warn', '<b>' + esc(p.name) + '</b> ist noch nicht angekommen, die App sendet erneut'); }).join('');
+    return PF.map(function (p) { var s = S.slots[p.key]; return !hasPhoto(p.key) ? zeileFoto(p.key, 'offen', '<b>' + esc(p.name) + '</b> fehlt noch') : vomServerAbgelehnt(p.key) ? zeileFoto(p.key, 'warn', '<b>' + esc(p.name) + '</b>: ' + esc(s.server.fehler_grund || 'bitte neu aufnehmen')) : s.state !== 'fehler' ? '' : s.grund === 'unlesbar' ? zeileFoto(p.key, 'warn', '<b>' + esc(p.name) + '</b> lässt sich auf dem Handy nicht mehr lesen, bitte neu aufnehmen') : zeileFoto(p.key, 'warn', '<b>' + esc(p.name) + '</b> ist noch nicht angekommen, die App sendet erneut'); }).join('');
   }
   // Fehlt dem laufenden Fahrzeug noch etwas? Ein Pflichtbild fehlt, oder ein Foto ist noch nicht beim Server (wartet, wird gesendet, abgelehnt, gehalten).
   function fotosOffen() { return !!S.vehicle && (pflicht().some(function (p) { return !hasPhoto(p.key); }) || Object.keys(S.slots).some(function (k) { return /^(wartet|sendet|retry|fehler|gehalten)$/.test(S.slots[k].state); })); }
@@ -2729,8 +2734,8 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       var PF = pflicht(), da = PF.filter(function (p) { return hasPhoto(p.key); }).length, z = '', fz = fotoZahlen(), fehlt = [];
       var kacheln = PF.map(function (p) {
         var s = S.slots[p.key], k = !hasPhoto(p.key) ? 'offen' : s.state === 'fehler' ? 'warn' : /^(wartet|sendet|retry|gehalten)$/.test(s.state) ? 'offen' : 'ok';
-        var leer = !hasPhoto(p.key) && !S.vehicle.abgesendet;   // 17 i: leere Kachel antippen = Kamera für diesen Platz (Giannis 26.11.: „Wenn ich darauf tippe, passiert leider nichts.“)
-        return '<div class="kachel' + (leer ? ' nachholen' : '') + '" data-id="' + p.key + '"' + (leer ? ' data-foto="' + p.key + '" role="button" tabindex="0" aria-label="' + esc(p.name) + ' fotografieren"' : '') + '>' + (s && s.thumb && hasPhoto(p.key) ? '<img alt="" src="' + s.thumb + '">' : hasPhoto(p.key) ? kachelUmriss(p.key) : V10.leer) + '<span>' + V10[k] + esc(KURZ[p.key] || p.name) + '</span></div>';
+        var leer = brauchtFoto(p.key) && !S.vehicle.abgesendet, neu = leer && hasPhoto(p.key);   // 17 i: leere Kachel antippen = Kamera für diesen Platz (Giannis 26.11.: „Wenn ich darauf tippe, passiert leider nichts.“)
+        return '<div class="kachel' + (leer ? ' nachholen' : '') + '" data-id="' + p.key + '"' + (leer ? ' data-foto="' + p.key + '" role="button" tabindex="0" aria-label="' + esc(p.name) + (neu ? ' neu aufnehmen' : ' fotografieren') + '"' : '') + '>' + (s && s.thumb && hasPhoto(p.key) ? '<img alt="" src="' + s.thumb + '">' : hasPhoto(p.key) ? kachelUmriss(p.key) : V10.leer) + '<span>' + V10[k] + esc(KURZ[p.key] || p.name) + '</span></div>';
       }).join('');
       z += fotoZeilen(PF);
       if (fz.unterwegs) z += zeile('offen', '<b>' + fz.unterwegs + (fz.unterwegs === 1 ? ' Foto wird' : ' Fotos werden') + '</b> noch gesendet');
@@ -2943,7 +2948,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   $('pSchritt').addEventListener('change', function (ev) { if (ev.target && ev.target.id === 'sScheinIn') { var f = ev.target.files && ev.target.files[0]; ev.target.value = ''; scheinFoto(f); } });
   // 17 i: Tipp auf eine leere Kachel in „Prüfen“ öffnet die Kamera für diesen Platz; nach dem Foto (oder Schließen) geht es zurück zu „Prüfen“.
   function fotoNachholen(id) {
-    if (!S.vehicle || S.vehicle.abgesendet || S.schritt !== 'pruefen' || hasPhoto(id) || !slotMeta(id)) return;
+    if (!S.vehicle || S.vehicle.abgesendet || S.schritt !== 'pruefen' || !brauchtFoto(id) || !slotMeta(id)) return;
     var sp = sensorsNachholen();   // noch direkt im Tipp (Sensor-Erlaubnis)
     S.nachFoto = 'pruefen'; sp.then(function () { startSequence([id], 'single'); });
   }
