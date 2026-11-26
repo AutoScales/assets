@@ -332,6 +332,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
 .v10 .chip[aria-pressed="true"] { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); }
 .v10 .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .v10 .kachel { border: 1px solid var(--p-line); border-radius: 10px; overflow: hidden; background: var(--p-panel); display: grid; }
+.v10 .kachel.nachholen { cursor: pointer; } .v10 .kachel.nachholen:active { opacity: .7; }
 .v10 .kachel img, .v10 .kachel .il { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; background: var(--il-bg); }
 .v10 .kachel span { font: 600 10.5px/1.25 var(--v-ui); padding: 6px 7px 7px; display: flex; gap: 5px; align-items: center; overflow-wrap: anywhere; hyphens: auto; }
 .v10 .st { width: 14px; height: 14px; flex: none; }
@@ -553,7 +554,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-17h';
+  var APP = 'foto-app-test-17i';
   var RAD = Math.PI / 180;
   /* =====================================================================
      FREIE KAMERA (Fassung 17). Giannis 23.11.2026: „man öffnet die App, man sieht den ganzen Bildschirm als freie Kamera und wir lassen das mit den Kasten und alles weg.
@@ -1688,7 +1689,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   }
   function endSequence() {
     var wasSeq = S.mode === 'seq';
-    leaveStage().then(function () { if (wasSeq && pflicht().every(function (p) { return hasPhoto(p.key); })) zeigeSchritt(nachDenFotos()); else showGallery(); });
+    leaveStage().then(function () { if (nachKamera()) return; if (wasSeq && pflicht().every(function (p) { return hasPhoto(p.key); })) zeigeSchritt(nachDenFotos()); else showGallery(); });
   }
   // Lageplan: Skizze von oben mit Auto (Front oben), Standort und Blickrichtung. Sie zeigt nur, an welcher Ecke man steht; Abstände gibt es seit Fassung 16 nicht mehr
   // (keine feste Fotoposition, Giannis 22.11.2026). Standorte aus LAGEPLAN gerechnet (Winkel zur Längsachse, Zeichenabstand zur Automitte), nicht von Hand gesetzt.
@@ -2177,7 +2178,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     if (kamera) $('betReload').onclick = function () { location.reload(); };
     $('betEnd').onclick = function () { paneShow('vBet', false); endSequence(); };
   }
-  $('camX').onclick = function () { S.token++; leaveStage().then(showGallery); };
+  $('camX').onclick = function () { S.token++; leaveStage().then(function () { if (!nachKamera()) showGallery(); }); };
 
   // Rückfall ohne ImageCapture: Kamera-App des Handys öffnen
   async function fallbackShot(my) {
@@ -2546,7 +2547,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     var m = slotMeta(id), isNew = !hasPhoto(id), sp = sensorsNachholen();   // vor der Rückfrage, noch direkt im Tipp
     if (!isNew && !confirm('„' + m.name + '“ neu aufnehmen? Das neue Foto ersetzt das alte (das alte bleibt als frühere Version gespeichert).')) return;
     if (m.art === 'zusatz') S.zusatzArt = (s && s.zusatz_art) || 'sonstiges';
-    sp.then(function () { startSequence([id], 'single'); });
+    S.nachFoto = null; sp.then(function () { startSequence([id], 'single'); });
   });
   $('gNext').onclick = function () {
     var rest = pflicht().filter(function (p) { return !hasPhoto(p.key); }).map(function (p) { return p.key; });
@@ -2728,7 +2729,8 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       var PF = pflicht(), da = PF.filter(function (p) { return hasPhoto(p.key); }).length, z = '', fz = fotoZahlen(), fehlt = [];
       var kacheln = PF.map(function (p) {
         var s = S.slots[p.key], k = !hasPhoto(p.key) ? 'offen' : s.state === 'fehler' ? 'warn' : /^(wartet|sendet|retry|gehalten)$/.test(s.state) ? 'offen' : 'ok';
-        return '<div class="kachel" data-id="' + p.key + '">' + (s && s.thumb && hasPhoto(p.key) ? '<img alt="" src="' + s.thumb + '">' : hasPhoto(p.key) ? kachelUmriss(p.key) : V10.leer) + '<span>' + V10[k] + esc(KURZ[p.key] || p.name) + '</span></div>';
+        var leer = !hasPhoto(p.key) && !S.vehicle.abgesendet;   // 17 i: leere Kachel antippen = Kamera für diesen Platz (Giannis 26.11.: „Wenn ich darauf tippe, passiert leider nichts.“)
+        return '<div class="kachel' + (leer ? ' nachholen' : '') + '" data-id="' + p.key + '"' + (leer ? ' data-foto="' + p.key + '" role="button" tabindex="0" aria-label="' + esc(p.name) + ' fotografieren"' : '') + '>' + (s && s.thumb && hasPhoto(p.key) ? '<img alt="" src="' + s.thumb + '">' : hasPhoto(p.key) ? kachelUmriss(p.key) : V10.leer) + '<span>' + V10[k] + esc(KURZ[p.key] || p.name) + '</span></div>';
       }).join('');
       z += fotoZeilen(PF);
       if (fz.unterwegs) z += zeile('offen', '<b>' + fz.unterwegs + (fz.unterwegs === 1 ? ' Foto wird' : ' Fotos werden') + '</b> noch gesendet');
@@ -2844,7 +2846,13 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     var fin = ergebnis && typeof ergebnis.fin === 'string' ? ergebnis.fin.toUpperCase().replace(/[\s.-]/g, '') : '';
     // Nur Messwerte fürs Protokoll (keine FIN, kein Text): Sie reisen in app_details der nächsten Fahrzeugfotos mit.
     try { var L = window.ScheinLesen; S.vehicle.scheinLese = { gelesen: /^[A-HJ-NPR-Z0-9]{17}$/.test(fin), ms: ergebnis && ergebnis.ms != null ? ergebnis.ms : null, grund: ergebnis && ergebnis.grund ? String(ergebnis.grund).slice(0, 60) : '', weg: L && typeof L.weg === 'function' ? L.weg() : '' }; saveSession(); } catch (e) { /* nur Protokoll */ }
-    if (/^[A-HJ-NPR-Z0-9]{17}$/.test(fin)) { S.scheinFin = fin; var f = $('sFin'); if (f && !f.value.trim()) f.value = fin; scheinStatus('FIN gelesen: ' + fin + ', bitte vergleichen.'); }
+    if (/^[A-HJ-NPR-Z0-9]{17}$/.test(fin)) {
+      S.scheinFin = fin; var f = $('sFin'), d = vDaten();
+      if (f) { if (!f.value.trim()) f.value = fin; scheinStatus('FIN gelesen: ' + fin + ', bitte vergleichen.'); }
+      else if (!d.fin) {   // 17 i: Schritt schon verlassen („Weiter“ vor dem Ende des Lesens): die gelesene FIN trotzdem speichern (Giannis 26.11.: „Fin fehlt aber noch“)
+        d.fin = fin; auftrag({ art: 'daten', id: S.vehicle.id, p: { fin: fin } }); saveSession(); scheinStatus('FIN gelesen: ' + fin + '.'); schrittNeu();
+      }
+    }
     else { S.scheinFin = ''; scheinStatus('Foto gespeichert. FIN nicht lesbar, bitte eintippen.'); }
   }
   function nachDenFotos() { return S.vehicle.abgesendet ? 'gesendet' : S.vehicle.preisGesehen ? 'pruefen' : 'preis'; }
@@ -2880,6 +2888,9 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       if (fin.length === 17 && /[IOQ]/.test(fin)) { smsg('Eine FIN mit 17 Zeichen enthält kein I, O oder Q (meist ist 1 oder 0 gemeint). Bitte prüfen.'); return; }
       if (fin && fin.length !== 17 && !(v.baujahr < 1981)) { smsg('Die FIN hat 17 Zeichen (Feld E im Fahrzeugschein). Bitte prüfen.'); return; }
       if (fin || d.fin) p = { fin: fin || null };
+    } else if (!speichern && n === 'schein' && $('sFin')) {   // 17 i: „Später“ nimmt eine vollständige FIN (gelesen oder getippt) trotzdem mit
+      var fs = $('sFin').value.toUpperCase().replace(/[\s.-]/g, '');
+      if (/^[A-HJ-NPR-Z0-9]{17}$/.test(fs) && fs !== d.fin) p = { fin: fs };
     } else if (speichern && n === 'preis') {
       var pr = euro($('sPreis').value);
       if (pr === undefined) { smsg('Bitte den Preis in Euro eintragen, z. B. 38.900.'); return; }
@@ -2920,7 +2931,16 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     zeigeSchritt('gesendet');
   }
   $('pSchritt').addEventListener('change', function (ev) { if (ev.target && ev.target.id === 'sScheinIn') { var f = ev.target.files && ev.target.files[0]; ev.target.value = ''; scheinFoto(f); } });
+  // 17 i: Tipp auf eine leere Kachel in „Prüfen“ öffnet die Kamera für diesen Platz; nach dem Foto (oder Schließen) geht es zurück zu „Prüfen“.
+  function fotoNachholen(id) {
+    if (!S.vehicle || S.vehicle.abgesendet || S.schritt !== 'pruefen' || hasPhoto(id) || !slotMeta(id)) return;
+    var sp = sensorsNachholen();   // noch direkt im Tipp (Sensor-Erlaubnis)
+    S.nachFoto = 'pruefen'; sp.then(function () { startSequence([id], 'single'); });
+  }
+  function nachKamera() { var zu = S.nachFoto; S.nachFoto = null; if (zu === 'pruefen' && S.vehicle && !S.vehicle.abgesendet) { zeigeSchritt('pruefen'); return true; } return false; }
+  $('pSchritt').addEventListener('keydown', function (ev) { var kf = ev.target.closest && ev.target.closest('[data-foto]'); if (kf && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); fotoNachholen(kf.getAttribute('data-foto')); } });
   $('pSchritt').addEventListener('click', function (ev) {
+    var kf = ev.target.closest('[data-foto]'); if (kf) { fotoNachholen(kf.getAttribute('data-foto')); return; }
     var b = ev.target.closest('button'); if (!b || !S.vehicle) return;
     if (b.id === 'sScheinGross') { grossAuf(scheinUrl(), 'Fahrzeugschein, groß'); return; }
     var rk = b.getAttribute('data-raum');
