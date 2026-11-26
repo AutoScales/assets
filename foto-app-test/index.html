@@ -2211,7 +2211,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
      (keine Drehung, kein Zuschnitt, keine neue Kodierung) und trägt app_details.original = true: der Arbeiter reicht es byte-gleich durch (Fable Finish 4, e8449f3).
      AUFNAHMEORT RAUS, KAMERADATEN BLEIBEN (Giannis 14:1x: „Kamera Daten, ja Aufnahmeort, sonst egal. Die Kamera Daten brauchen wir ja für den Raum“), fest, ohne Schalter:
      im EXIF wird das GPS-Verzeichnis geleert (Einträge und ihre Werte mit Nullen überschrieben, Länge des Blocks bleibt, alle Verweise stimmen weiter); ein XMP-Block mit
-     Orts- oder Adressangaben fällt ganz weg (die Kameradaten stehen im EXIF), ebenso IPTC (APP13, dort stehen Ort, Stadt, Land). Alles andere bleibt Byte für Byte,
+     Orts- oder Adressangaben fällt ganz weg (die Kameradaten stehen im EXIF), ebenso ein IPTC-Block (APP13) mit Ortsangaben (Datensätze 2:26, 27, 90, 92, 95, 100, 101). Alles andere bleibt Byte für Byte,
      auch Brennweite, Gerät, Drehung und die Bilddaten. Nur JPEG (iPhone wandelt HEIC bei der Auswahl selbst um). */
   var TIFF_GROESSE = [0, 1, 1, 2, 4, 8, 1, 1, 2, 4, 8, 4, 8];
   function gpsLeeren(u, t, e) {   // u: Kopie der Datei, t: Anfang des TIFF-Kopfs im EXIF-Block, e: Ende des Blocks. Gibt zurück, ob ein GPS-Verzeichnis geleert wurde.
@@ -2240,7 +2240,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       var len = (u[i + 2] << 8) | u[i + 3], ende = i + 2 + len, weg = false;
       if (m === 0xE1 && u[i + 4] === 0x45 && u[i + 5] === 0x78 && u[i + 6] === 0x69 && u[i + 7] === 0x66) { if (gpsLeeren(u, i + 10, ende)) info.gps = true; }
       else if (m === 0xE1) { var x = new TextDecoder('latin1').decode(u.subarray(i + 4, ende)); if (/GPS|Location|City|State|Country|Sublocation|Address/i.test(x)) { weg = true; info.xmp_weg = true; } }
-      else if (m === 0xED) { weg = true; info.iptc_weg = true; }
+      else if (m === 0xED) { for (var q = i + 4; q + 2 < ende; q++) if (u[q] === 0x1C && u[q + 1] === 0x02 && [26, 27, 90, 92, 95, 100, 101].indexOf(u[q + 2]) >= 0) { weg = true; info.iptc_weg = true; break; } }   // IPTC nur mit Ortsangaben (Ort, Stadt, Region, Land) entfernen
       if (!weg) teile.push(u.subarray(i, ende));
       i = ende;
     }
