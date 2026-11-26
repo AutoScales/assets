@@ -420,7 +420,6 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   </details>
   <div class="glass set" id="setBox">
     <div class="row"><label class="sw"><input type="checkbox" id="chkMess"> Messwerte anzeigen (für den Testplan)</label></div>
-    <div class="row"><label class="sw"><input type="checkbox" id="chkExif"> Standort und Kameradaten aus eigenen Fotos entfernen</label></div>
     <p class="hs-tip" id="hsTip" hidden></p>
   </div>
   <p class="priv"><b>Testfassung:</b> bitte nur Testfotos, keine Kundenfahrzeuge mit Personen oder Papieren; den Fahrzeugschein nur von eigenen Autos. Die App schickt Fotos nur an den eingetragenen Test-Server der AutoScales GmbH i.G. (EU, Irland). Auf dem Handy bleiben nur Fotos, die noch nicht hochgeladen sind, bis sie gesendet wurden; vom Fahrzeugschein bleibt eine Vorschau, bis das Fahrzeug abgesendet oder ein neues begonnen ist.</p>
@@ -790,11 +789,8 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   /* =====================================================================
      Darstellung: Hell und Dunkel nach Systemeinstellung (Schalter Auto, Hell, Dunkel), Messwerte-Schalter
      ===================================================================== */
-  var UI = { mess: false, exifWeg: null };   // Hell und Dunkel folgt nur der Handy-Einstellung (Entscheidung Giannis 08.11.2026), kein eigener Schalter
-  try { var uiSaved = JSON.parse(localStorage.getItem('fa_ui') || 'null'); if (uiSaved) { UI.mess = !!uiSaved.mess; if (typeof uiSaved.exifWeg === 'boolean') UI.exifWeg = uiSaved.exifWeg; } } catch (e) { /* ohne Speicher weiter */ }
-  // 18 a: Standort und Kameradaten aus eigenen Fotos entfernen. Voreinstellung an (Alfred 26.11.2026: „Bis dahin: an.“), Entscheidung Giannis offen.
-  var EXIF_WEG_VORGABE = true;
-  function exifWegAn() { return UI.exifWeg === null ? EXIF_WEG_VORGABE : UI.exifWeg; }
+  var UI = { mess: false };   // Hell und Dunkel folgt nur der Handy-Einstellung (Entscheidung Giannis 08.11.2026), kein eigener Schalter
+  try { var uiSaved = JSON.parse(localStorage.getItem('fa_ui') || 'null'); if (uiSaved) UI.mess = !!uiSaved.mess; } catch (e) { /* ohne Speicher weiter */ }
   function saveUI() { try { localStorage.setItem('fa_ui', JSON.stringify(UI)); } catch (e) { /* egal */ } }
   var DIR = document.documentElement.getAttribute('data-dir') === 'a' ? 'a' : 'b';
   var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
@@ -2212,26 +2208,46 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
 
   // Rückfall ohne ImageCapture: Kamera-App des Handys öffnen
   /* EIGENE FOTOS (18 a, Giannis 26.11.2026 12:37/12:38 über Alfred): Statt zu fotografieren wählt der Händler ein Foto aus der Mediathek. Es geht unverändert hoch
-     (keine Drehung, kein Zuschnitt, keine neue Kodierung) und trägt app_details.original = true: der Arbeiter reicht es byte-gleich durch (abgestimmt mit Fable Finish 4).
-     Mit dem Schalter (Voreinstellung an) entfernt die App vorher verlustfrei die Segmente mit Standort und Kameradaten (APP1 EXIF/XMP, APP13 IPTC, Kommentar);
-     die Bilddaten bleiben Byte für Byte gleich, die Drehung bleibt als kleiner EXIF-Block mit nur der Ausrichtung erhalten. Nur JPEG (iPhone wandelt HEIC bei der Auswahl selbst um). */
-  function exifNurDrehung(o) { return new Uint8Array([0xFF, 0xE1, 0, 34, 0x45, 0x78, 0x69, 0x66, 0, 0, 0x4D, 0x4D, 0, 42, 0, 0, 0, 8, 0, 1, 0x01, 0x12, 0, 3, 0, 0, 0, 1, 0, o, 0, 0, 0, 0, 0, 0]); }
-  function jpegOhneMeta(b, orient) {
-    var teile = [b.subarray(0, 2)], i = 2;
-    if (orient > 1 && orient <= 8) teile.push(exifNurDrehung(orient));
-    while (i + 4 <= b.length && b[i] === 0xFF) {
-      var m = b[i + 1];
-      if (m === 0xFF) { i++; continue; }
-      if (m === 0x01 || (m >= 0xD0 && m <= 0xD8)) { teile.push(b.subarray(i, i + 2)); i += 2; continue; }
-      if (m === 0xDA || m === 0xD9) break;   // Bilddaten (und alles danach) unverändert
-      var len = (b[i + 2] << 8) | b[i + 3];
-      if (m !== 0xE1 && m !== 0xED && m !== 0xFE) teile.push(b.subarray(i, i + 2 + len));
-      i += 2 + len;
+     (keine Drehung, kein Zuschnitt, keine neue Kodierung) und trägt app_details.original = true: der Arbeiter reicht es byte-gleich durch (Fable Finish 4, e8449f3).
+     AUFNAHMEORT RAUS, KAMERADATEN BLEIBEN (Giannis 14:1x: „Kamera Daten, ja Aufnahmeort, sonst egal. Die Kamera Daten brauchen wir ja für den Raum“), fest, ohne Schalter:
+     im EXIF wird das GPS-Verzeichnis geleert (Einträge und ihre Werte mit Nullen überschrieben, Länge des Blocks bleibt, alle Verweise stimmen weiter); ein XMP-Block mit
+     Orts- oder Adressangaben fällt ganz weg (die Kameradaten stehen im EXIF), ebenso IPTC (APP13, dort stehen Ort, Stadt, Land). Alles andere bleibt Byte für Byte,
+     auch Brennweite, Gerät, Drehung und die Bilddaten. Nur JPEG (iPhone wandelt HEIC bei der Auswahl selbst um). */
+  var TIFF_GROESSE = [0, 1, 1, 2, 4, 8, 1, 1, 2, 4, 8, 4, 8];
+  function gpsLeeren(u, t, e) {   // u: Kopie der Datei, t: Anfang des TIFF-Kopfs im EXIF-Block, e: Ende des Blocks. Gibt zurück, ob ein GPS-Verzeichnis geleert wurde.
+    var le = u[t] === 0x49;
+    function g16(o) { return le ? u[o] | (u[o + 1] << 8) : (u[o] << 8) | u[o + 1]; }
+    function g32(o) { return (le ? (u[o] | (u[o + 1] << 8) | (u[o + 2] << 16) | (u[o + 3] << 24)) : ((u[o] << 24) | (u[o + 1] << 16) | (u[o + 2] << 8) | u[o + 3])) >>> 0; }
+    function null_(a, n) { for (var j = a; j < a + n && j < e; j++) u[j] = 0; }
+    var i0 = t + g32(t + 4); if (i0 + 2 > e) return false;
+    var n0 = g16(i0), leer = false;
+    for (var k = 0; k < n0; k++) {
+      var en = i0 + 2 + k * 12; if (en + 12 > e || g16(en) !== 0x8825) continue;
+      var g = t + g32(en + 8); if (g + 2 > e) continue;
+      var n = g16(g);
+      for (var m = 0; m < n; m++) { var ge = g + 2 + m * 12; if (ge + 12 > e) break; var gr = (TIFF_GROESSE[g16(ge + 2)] || 1) * g32(ge + 4); if (gr > 4) null_(t + g32(ge + 8), gr); null_(ge, 12); }
+      u[g] = 0; u[g + 1] = 0; leer = true;   // 0 Einträge; die vier Byte danach (Verweis aufs nächste Verzeichnis) sind schon Null
     }
-    teile.push(b.subarray(Math.min(i, b.length)));
+    return leer;
+  }
+  function jpegOhneOrt(b) {
+    var u = new Uint8Array(b), teile = [u.subarray(0, 2)], i = 2, info = { gps: false, xmp_weg: false, iptc_weg: false };
+    while (i + 4 <= u.length && u[i] === 0xFF) {
+      var m = u[i + 1];
+      if (m === 0xFF) { i++; continue; }
+      if (m === 0x01 || (m >= 0xD0 && m <= 0xD8)) { teile.push(u.subarray(i, i + 2)); i += 2; continue; }
+      if (m === 0xDA || m === 0xD9) break;   // Bilddaten (und alles danach) unverändert
+      var len = (u[i + 2] << 8) | u[i + 3], ende = i + 2 + len, weg = false;
+      if (m === 0xE1 && u[i + 4] === 0x45 && u[i + 5] === 0x78 && u[i + 6] === 0x69 && u[i + 7] === 0x66) { if (gpsLeeren(u, i + 10, ende)) info.gps = true; }
+      else if (m === 0xE1) { var x = new TextDecoder('latin1').decode(u.subarray(i + 4, ende)); if (/GPS|Location|City|State|Country|Sublocation|Address/i.test(x)) { weg = true; info.xmp_weg = true; } }
+      else if (m === 0xED) { weg = true; info.iptc_weg = true; }
+      if (!weg) teile.push(u.subarray(i, ende));
+      i = ende;
+    }
+    teile.push(u.subarray(Math.min(i, u.length)));
     var n = teile.reduce(function (a, t) { return a + t.length; }, 0), out = new Uint8Array(n), p = 0;
     teile.forEach(function (t) { out.set(t, p); p += t.length; });
-    return out;
+    return { bytes: out, info: info };
   }
   async function mediathekFoto(f) {
     if (!f || $('stage').hidden || !S.cur) return;
@@ -2239,9 +2255,8 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     try {
       var buf = new Uint8Array(await f.arrayBuffer()); chk(my);
       if (!(buf.length > 4 && buf[0] === 0xFF && buf[1] === 0xD8)) { say(''); toast(T('Bitte ein JPEG-Foto wählen.', 'Bitte wählen Sie ein JPEG-Foto.'), 4000); runShot(); return; }
-      var weg = exifWegAn(), orient = weg ? ((await readExif(new Blob([buf], { type: 'image/jpeg' }))).orientation || 1) : 1, out = weg ? jpegOhneMeta(buf, orient) : buf;
-      var blob = new Blob([out], { type: 'image/jpeg' }); chk(my);
-      await processAndReview(my, blob, { snap: null, cls: null, how: { mediathek: { exif_weg: weg, bytes_vorher: buf.length, bytes: out.length } }, takeMs: null, quelle: 'mediathek', original: blob });
+      var oo = jpegOhneOrt(buf), blob = new Blob([oo.bytes], { type: 'image/jpeg' }); chk(my);
+      await processAndReview(my, blob, { snap: null, cls: null, how: { mediathek: { ort_weg: true, gps: oo.info.gps, xmp_weg: oo.info.xmp_weg, iptc_weg: oo.info.iptc_weg, bytes: oo.bytes.length } }, takeMs: null, quelle: 'mediathek', original: blob });
     } catch (e) { if (e === CANCEL) return; problem('Das Foto konnte nicht geladen werden', errText(e), true); }
   }
   $('medIn').onchange = function () { var f = this.files && this.files[0]; this.value = ''; mediathekFoto(f); };
@@ -3262,7 +3277,6 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   function initSettings() {
     $('chkMess').checked = !!VAR.debug;
     $('chkMess').onchange = function () { VAR.debug = this.checked; UI.mess = this.checked; saveUI(); };
-    $('chkExif').checked = exifWegAn(); $('chkExif').onchange = function () { UI.exifWeg = this.checked; saveUI(); };
     if (!standalone() && S.cfg && !S.cfg.bad && !S.cfg.demo && S.cfg.zugang && /iPhone|iPad|Android/.test(navigator.userAgent)) {
       $('hsTip').hidden = false;
       $('hsTip').innerHTML = /iPhone|iPad/.test(navigator.userAgent)
