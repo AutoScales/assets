@@ -305,6 +305,10 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 #vRev[data-lage="unten"]:not(.schmal) .rv-btns { grid-column: 3; margin-top: 0; padding-top: 0; align-self: end; }
 /* schmales Band (Oberfläche gedreht bei Drehsperre, Fenster hochkant): alles untereinander wie in der Spalte, das Beispielbild nimmt den freien Platz */
 #vRev[data-lage="unten"].schmal .ex { min-height: 56px; }
+/* 18 a (iPhone-Check Fehler 2, 26.11.2026): Bedienfeld an der Seite – bei drei Hinweiszeilen und nach dem Drehen blieb vom Beispielbild nur ein Streifen von 20 px oder nichts.
+   Jetzt behält das Bild „So soll es aussehen“ mindestens 100 px; werden die Hinweise länger, scrollen sie im Textteil, die Knöpfe bleiben unten. */
+#vRev:not([data-lage="unten"]) .rv-text { display: flex; flex-direction: column; gap: 8px; flex: 0 1 auto; min-height: 0; overflow-y: auto; }
+#vRev:not([data-lage="unten"]) .ex { flex: 1 1 0; min-height: 118px; }   /* 118 = Bild mindestens 100 px plus Überschrift */
 /* Andockstelle für den Icon-Satz (Paket B): <svg class="ic"><use href="#ic-NAME"/></svg>, Linien in der Textfarbe; siehe icon() */
 svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; vertical-align: -0.22em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 /* Symbol eines Platzes ohne Foto: in der Bildleiste, in der Galerie und im Prüfen-Schritt immer auf der dunklen Bildkarte */
@@ -3102,7 +3106,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   }
   function vehLokalWeg(id) { var m = lsLoad('fa_veh_l'); if (m && m.rs && m.rs.vehicle && m.rs.vehicle.id === id) lsStore('fa_veh_l', null); }
   setInterval(function () { if (document.visibilityState !== 'visible' || !S.vehicle) return; var m = lsLoad('fa_veh_l'); if (m && m.rs && m.rs.vehicle && m.rs.vehicle.id === S.vehicle.id) { m.hb = Date.now(); lsStore('fa_veh_l', m); } }, 3000);   // Lebenszeichen dieses Tabs
-  function resetVehicle() { var alt = S.vehicle || ((load('fa_veh') || {}).vehicle); if (alt && alt.id) { raumFrei(alt.id); vehLokalWeg(alt.id); } scheinWeg(); S.vehicle = null; S.slots = {}; S.camChoice = null; S.camUltra = null; S.klasse = null; S.schritt = null; store('fa_veh', null); clearTimeout(S.pollTimer); buildKar(); }
+  function resetVehicle() { var alt = S.vehicle || ((load('fa_veh') || {}).vehicle); if (alt && alt.id) { raumFrei(alt.id); vehLokalWeg(alt.id); } scheinWeg(); S.vehicle = null; S.slots = {}; S.camChoice = null; S.camUltra = null; S.klasse = null; S.schritt = null; store('fa_veh', null); clearTimeout(S.pollTimer); ['fMarke', 'fBaujahr', 'fModell'].forEach(function (id) { $(id).value = ''; }); S.anlegeId = null; buildKar(); }   // 18 a (iPhone-Check Fehler 3, Giannis 26.11.2026: „ja mache weiter“): neues Fahrzeug = leeres Formular
   $('resumeYes').onclick = function () {
     var rs = load('fa_veh'); if (!rs || S.resumeLaeuft) return;
     sensorsNachholen();   // Erlaubnis für den Bewegungssensor schon hier nachholen (nach dem Neuladen nötig)
