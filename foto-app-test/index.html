@@ -309,6 +309,14 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
    Jetzt behält das Bild „So soll es aussehen“ mindestens 100 px; werden die Hinweise länger, scrollen sie im Textteil, die Knöpfe bleiben unten. */
 #vRev:not([data-lage="unten"]) .rv-text { display: flex; flex-direction: column; gap: 8px; flex: 0 1 auto; min-height: 0; overflow-y: auto; }
 #vRev:not([data-lage="unten"]) .ex { flex: 1 1 0; min-height: 118px; }   /* 118 = Bild mindestens 100 px plus Überschrift */
+/* Niedrige Fenster (Android quer mit Chrome-Leiste 870 × 280, Android-Check 26.11.2026: Beispielbild 2 px; iPhone im Safari-Tab): untereinander passen Hinweise, Bild und
+   Knöpfe nicht. Dann steht das Beispielbild rechts neben den Hinweisen, die Knöpfe darunter über die ganze Breite; die Hinweise behalten die volle Höhe der Zeile. */
+@media (max-height: 380px) {
+  #vRev:not([data-lage="unten"]) .rv-panel { display: grid; grid-template-columns: minmax(0, 1fr) minmax(128px, 40%); grid-template-rows: minmax(0, 1fr) auto; column-gap: 10px; row-gap: 8px; }
+  #vRev:not([data-lage="unten"]) .rv-text { grid-column: 1; grid-row: 1; }
+  #vRev:not([data-lage="unten"]) .ex { grid-column: 2; grid-row: 1; min-height: 0; }
+  #vRev:not([data-lage="unten"]) .rv-btns { grid-column: 1 / -1; grid-row: 2; margin-top: 0; }
+}
 /* Andockstelle für den Icon-Satz (Paket B): <svg class="ic"><use href="#ic-NAME"/></svg>, Linien in der Textfarbe; siehe icon() */
 svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; vertical-align: -0.22em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 /* Symbol eines Platzes ohne Foto: in der Bildleiste, in der Galerie und im Prüfen-Schritt immer auf der dunklen Bildkarte */
