@@ -474,7 +474,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       <div class="rail R">
         <button class="shut" id="shotBtn" type="button" aria-label="Auslösen" disabled></button>
       </div>
-      <div class="topwrap"><div class="radzeile" id="camRad" role="note" hidden>Alle Räder frei, kein Bordstein, kein Keil.</div><div class="cglass hintcard" id="camHint" hidden></div></div>
+      <div class="topwrap"><div class="radzeile" id="camRad" role="note" hidden>Alle Räder frei, kein Bordstein, kein Keil.</div><div class="radzeile" id="camWeit" role="note" hidden></div><div class="cglass hintcard" id="camHint" hidden></div></div>
       <div class="mid"><span class="big" id="camBig" hidden></span></div>
       <div class="gal gu cglass" id="camGal"></div>
       <label class="btn big primary" id="capLabel" hidden style="position:absolute;left:30%;right:30%;top:40%;width:auto">Kamera-App öffnen<input type="file" id="capIn" accept="image/*" capture="environment" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;font-size:0"></label>
@@ -1023,7 +1023,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     slots: {},                // id -> Platz-Zustand
     seq: [], idx: 0, cur: null, mode: 'seq',
     token: 0, phase: '', turnMan: false,
-    stream: null, track: null, ic: null, vw: 1, vh: 1, devs: null, camChoice: null, camInfo: null, camNote: '',
+    stream: null, track: null, ic: null, vw: 1, vh: 1, devs: null, camChoice: null, camUltra: null, camDev: null, camInfo: null, camNote: '',
     streamOpenedAt: 0, shotsSinceOpen: 0,
     textRot: 0, lastCls: null, wake: null,
     queue: [], uploading: false, pollTimer: null,
@@ -1614,7 +1614,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     if (!s) throw err || new Error('Kamera startet nicht');
     if (my != null && my !== S.token) { s.getTracks().forEach(function (t) { t.stop(); }); throw CANCEL; }   // abgebrochen, während die Kamera startete: Strom gleich schließen (Befund B5)
     S.fotoCaps = undefined; S.fotoPs = null; S.fotoOhne = false;   // Fähigkeiten für Fotos je Strom neu lesen
-    S.stream = s; S.track = s.getVideoTracks()[0];
+    S.stream = s; S.track = s.getVideoTracks()[0]; S.camDev = dev && dev.id ? dev.id : null;
     var v = $('video'); v.srcObject = s;
     try { await v.play(); } catch (e) { /* muted autoplay */ }
     await new Promise(function (res) { if (v.videoWidth) return res(); v.onloadedmetadata = function () { res(); }; setTimeout(res, 3000); });
@@ -1625,9 +1625,22 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   }
   // Dreht der Browser das Kamerabild mit dem Handy, ändern sich die Maße; dann Bühne neu ausrichten
   $('video').addEventListener('resize', function () { var v = $('video'); if (v.videoWidth) { var gedreht = S.vw > 1 && S.vh > 1 && (S.vw > S.vh) !== (v.videoWidth > v.videoHeight); S.vw = v.videoWidth; S.vh = v.videoHeight; applyGeom(); if (gedreht) kameraGedreht(); } });
+  // Kamera für den aktuellen Platz (17 i, B1): innen die Ultraweitwinkel-Kamera, sonst die Hauptkamera
+  function camZiel() { var m = slotMeta(S.cur); return m.art === 'innen' && S.camUltra ? S.camUltra : (S.camChoice || null); }
+  function weitHinweis() { var m = slotMeta(S.cur), el = $('camWeit'); el.hidden = !(m.art === 'innen' && S.camUltra === false); if (!el.hidden) el.textContent = T('Dein Handy hat kein 0,5×: Tür ganz öffnen und so weit zurück wie möglich.', 'Ihr Handy hat kein 0,5×: Tür ganz öffnen und so weit zurück wie möglich.'); }
+  async function openZiel(my) {
+    var z = camZiel();
+    try { await openStream(z, my); }
+    catch (e) { if (e === CANCEL || !z || z !== S.camUltra) throw e; S.camUltra = false; await openStream(S.camChoice || null, my); }   // Ultraweitwinkel startet nicht: Hauptkamera, ab jetzt mit Hinweis
+    weitHinweis();
+  }
   // Hauptkamera sicher wählen: unter Android nennt der Browser die Kameras nur „camera N“. Wir lesen die Kleinbild-Brennweite aus einem Probefoto.
   async function chooseCamera() {
     if (S.camChoice !== null) return;
+    // 17 i (Befund B1, Giannis 26.11.2026: „sicherstellen, dass bei den Innenfotos immer der Weitwinkel genutzt wird, vorausgesetzt die Handys … auch Weitwinkelkameras haben“):
+    // Innenfotos nimmt die App mit der Ultraweitwinkel-Kamera (0,5×), wenn das Gerät eine hat. iPhone: am Namen erkennbar („Ultraweitwinkel-Rückkamera“, „Back Ultra Wide Camera“).
+    // Android (Namen sagen nichts): die Rückkamera mit 10 bis 19 mm im Probefoto. Ohne solche Kamera bleibt innen die Hauptkamera, mit Hinweis im Sucher (#camWeit).
+    S.camUltra = S.devs.filter(function (d) { return d.kind === 'ultra'; })[0] || false;
     var wide = S.devs.filter(function (d) { return d.kind === 'wide'; }), multi = S.devs.filter(function (d) { return d.kind === 'multi'; });
     if (wide.length === 1) { S.camChoice = wide[0]; S.camNote = 'Kamera: ' + (wide[0].label || 'Hauptkamera'); return; }
     if (wide.length === 0) { S.camChoice = multi[0] || false; S.camNote = multi[0] ? 'Kamera: ' + multi[0].label : 'Kamera: Standard'; return; }
@@ -1646,6 +1659,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     }
     var withF = info.filter(function (r) { return r.f35 != null; }), best = info[0];
     if (withF.length) best = withF.reduce(function (a, b) { return Math.abs(b.f35 - 26) < Math.abs(a.f35 - 26) ? b : a; });
+    if (!S.camUltra) { var uw = withF.filter(function (r) { return r.dev !== best.dev && r.f35 >= 10 && r.f35 < 20; }).sort(function (a, b) { return a.f35 - b.f35; })[0]; if (uw) S.camUltra = uw.dev; }
     S.camChoice = best.dev; S.camNote = 'Kamera gewählt' + (best.f35 != null ? ' (' + fmt(best.f35, 0) + ' mm)' : ' (Brennweite unbekannt)');
   }
 
@@ -1730,7 +1744,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     $('camNr').textContent = m.frei ? 'Freiwillig' : (m.nr ? m.nr + ' von ' + pflicht().length : 'Zusatzbild');
     $('camLbl').textContent = m.name + (m.sub ? ' (' + m.sub + ')' : '');
     $('camHint').textContent = m.hint;
-    $('camRad').hidden = m.art !== 'aussen';   // vor jedem Außenfoto (Pflicht und freiwillige Seite), nie innen, Zusatz oder Fahrzeugschein
+    $('camRad').hidden = m.art !== 'aussen'; weitHinweis();   // vor jedem Außenfoto (Pflicht und freiwillige Seite), nie innen, Zusatz oder Fahrzeugschein
     $('noRueck').hidden = !(S.cur === 'ruecksitzbank' && !hasPhoto('ruecksitzbank'));
     $('camDiag').innerHTML = diagSvg(m.key);
     beispielVorratLaden(); var bu = beispielUrl(m.key, m.art); $('camEx').hidden = !bu; if (bu) { if ($('camExImg').getAttribute('src') !== bu) $('camExImg').setAttribute('src', bu); } else $('camExImg').removeAttribute('src');   // Beispiel vor dem Foto (17 g)
@@ -1757,6 +1771,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       await waitLandscape(my);
       // 2) Kamera
       paneShow('vCam', true); setLabels(); $('shotBtn').disabled = true; $('shotBtn').onclick = null;
+      if (S.stream && S.camChoice !== null && !(S.cfg && S.cfg.sim) && ((camZiel() || {}).id || null) !== S.camDev) closeStream();   // 17 i (B1): Wechsel außen/innen braucht die andere Linse
       if (S.kameraAlt && S.stream) closeStream();   // seit dem Kamerastart gedreht: neu starten, sonst liefert das iPhone nur kleine Fotos (17 f)
       if (!S.stream || !S.track || S.track.readyState !== 'live') {
         say('Kamera startet …');
@@ -1764,7 +1779,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
         else {
           if (!S.devs) await discover();
           await chooseCamera(); chk(my);
-          await openStream(S.camChoice || null, my); chk(my);
+          await openZiel(my); chk(my);
         }
         if (!S.ic) { closeStream(); S.fallbackInput = true; await fallbackShot(my); return; }
       }
@@ -1905,7 +1920,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       klein = !!(soll && px && px < soll * 0.5);
       if (!klein || rueck || !psJ || gr.length >= CFG.FOTO_VERSUCHE || my !== S.token) break;
       neustart = true;   // kleines Foto: Kamera neu starten (stop, getUserMedia wie beim Start), dann noch einmal auslösen
-      try { if (S.cfg && S.cfg.sim) await openSim(); else await openStream(S.camChoice || null, my); } catch (e) { if (e === CANCEL) throw e; break; }
+      try { if (S.cfg && S.cfg.sim) await openSim(); else await openZiel(my); } catch (e) { if (e === CANCEL) throw e; break; }
       if (!S.ic) break;
       await sleepC(my, 300);
     }
@@ -3024,7 +3039,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   }
   function vehLokalWeg(id) { var m = lsLoad('fa_veh_l'); if (m && m.rs && m.rs.vehicle && m.rs.vehicle.id === id) lsStore('fa_veh_l', null); }
   setInterval(function () { if (document.visibilityState !== 'visible' || !S.vehicle) return; var m = lsLoad('fa_veh_l'); if (m && m.rs && m.rs.vehicle && m.rs.vehicle.id === S.vehicle.id) { m.hb = Date.now(); lsStore('fa_veh_l', m); } }, 3000);   // Lebenszeichen dieses Tabs
-  function resetVehicle() { var alt = S.vehicle || ((load('fa_veh') || {}).vehicle); if (alt && alt.id) { raumFrei(alt.id); vehLokalWeg(alt.id); } scheinWeg(); S.vehicle = null; S.slots = {}; S.camChoice = null; S.klasse = null; S.schritt = null; store('fa_veh', null); clearTimeout(S.pollTimer); buildKar(); }
+  function resetVehicle() { var alt = S.vehicle || ((load('fa_veh') || {}).vehicle); if (alt && alt.id) { raumFrei(alt.id); vehLokalWeg(alt.id); } scheinWeg(); S.vehicle = null; S.slots = {}; S.camChoice = null; S.camUltra = null; S.klasse = null; S.schritt = null; store('fa_veh', null); clearTimeout(S.pollTimer); buildKar(); }
   $('resumeYes').onclick = function () {
     var rs = load('fa_veh'); if (!rs || S.resumeLaeuft) return;
     sensorsNachholen();   // Erlaubnis für den Bewegungssensor schon hier nachholen (nach dem Neuladen nötig)
@@ -3082,7 +3097,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       var ro = await raumOffenAnfragen(v.id);
       if (ro === 'ja') v.raumOffen = true;
       else { if (ro === 'unklar') v.raumOffenUnklar = true; halten(v.id, true); }   // Fotos erst nach der Raumwahl in Schritt 5 melden
-      S.vehicle = v; S.slots = {}; S.camChoice = null; S.devs = null; S.fallbackInput = false; saveSession();
+      S.vehicle = v; S.slots = {}; S.camChoice = null; S.camUltra = null; S.devs = null; S.fallbackInput = false; saveSession();
       S.sensorPerm = perm;
       fmsg('');
       zeigeSchritt('daten');   // Ablauf G1 10.11.2026: Fahrzeugdaten, Zustand, Fotos, Preis, Prüfen, Absenden
@@ -3170,7 +3185,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
      ===================================================================== */
   function init() {
     S.cfg = readCfg();
-    VAR.anrede = (S.cfg && S.cfg.a) || 'sie'; VAR.debug = !!(S.cfg && (S.cfg.debug || S.cfg.demo)) || UI.mess;
+    VAR.anrede = (S.cfg && S.cfg.a) || 'sie'; VAR.debug = !!(S.cfg && S.cfg.debug) || UI.mess;   // 17 i (Befund B2, Giannis 26.11.2026): die Demo zeigt dieselbe Oberfläche wie der echte Ablauf, ohne Messwerte im Prüfen-Bild (die schoben „So soll es aussehen“ aus dem Blick); Messwerte nur mit &debug oder dem Schalter
     if (S.cfg && S.cfg.demo) window.__lageplan = diagSvg;   // nur Demo: Skizze des Standorts für die Tests
     Array.prototype.forEach.call(document.querySelectorAll('[data-du]'), function (el) { el.innerHTML = VAR.anrede === 'du' ? el.getAttribute('data-du') : el.getAttribute('data-sie'); });
     iconsSetzen();
