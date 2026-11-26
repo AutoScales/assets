@@ -209,6 +209,8 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 .topwrap { position: absolute; z-index: 5; left: var(--vx); width: var(--vw); top: calc(var(--vy) + 10px); display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; padding: 0 10px; }
 /* Räder-Zeile (17 g, Giannis 25.11.2026, Pop-up über Alfred: „Klarer Fall plus App-Hinweis“): steht vor jedem Außenfoto oben im Sucher, ohne Tipp.
    Der Arbeiter erkennt nur den klaren Fall (weniger als zwei Räder); ein Rad hinter Bordstein oder Keil sieht nur der Mensch. Schmal, damit das Auto frei bleibt. */
+.medbtn { position: relative; display: grid; place-items: center; cursor: pointer; font: 600 11px/1.2 var(--font-body); color: var(--t); background: var(--ovbg); border: 1px solid var(--ovline); }
+.medbtn input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
 .radzeile { max-width: 100%; padding: 5px 12px; font: 600 12px/1.3 var(--font-body); color: var(--t); text-align: center; background: var(--ovbg); border: 1px solid var(--ovline); border-radius: 999px; }
 .hintcard { pointer-events: auto; max-width: 100%; padding: 10px 14px; font: 500 13px/1.45 var(--font-body); color: var(--t); text-align: left; cursor: pointer; border-radius: var(--r); }
 .mid { position: absolute; left: var(--vx); width: var(--vw); top: 50%; transform: translateY(-50%); text-align: center; pointer-events: none; z-index: 6; }
@@ -418,6 +420,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   </details>
   <div class="glass set" id="setBox">
     <div class="row"><label class="sw"><input type="checkbox" id="chkMess"> Messwerte anzeigen (für den Testplan)</label></div>
+    <div class="row"><label class="sw"><input type="checkbox" id="chkExif"> Standort und Kameradaten aus eigenen Fotos entfernen</label></div>
     <p class="hs-tip" id="hsTip" hidden></p>
   </div>
   <p class="priv"><b>Testfassung:</b> bitte nur Testfotos, keine Kundenfahrzeuge mit Personen oder Papieren; den Fahrzeugschein nur von eigenen Autos. Die App schickt Fotos nur an den eingetragenen Test-Server der AutoScales GmbH i.G. (EU, Irland). Auf dem Handy bleiben nur Fotos, die noch nicht hochgeladen sind, bis sie gesendet wurden; vom Fahrzeugschein bleibt eine Vorschau, bis das Fahrzeug abgesendet oder ein neues begonnen ist.</p>
@@ -467,6 +470,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       <button class="cglass" id="noRueck" type="button" hidden>Kein Rücksitz (Zweisitzer)</button>
       <div class="rail L">
         <button class="round" id="camX" type="button" aria-label="Kamera schließen" data-ic="schliessen">×</button>
+        <label class="mini medbtn" id="medBtn" role="button" tabindex="0" aria-label="Eigenes Foto aus der Mediathek wählen"><span>Mediathek</span><input type="file" id="medIn" accept="image/jpeg" tabindex="-1"></label>
         <button class="mini exmini" id="camEx" type="button" aria-label="Beispielbild groß ansehen" hidden><img id="camExImg" alt=""><span>Beispiel</span></button>
         <div class="mini" id="camDiag" aria-hidden="true"></div>
         <button class="railtitle" id="camChip" type="button" aria-expanded="false" aria-label="Hinweis zur Position ein- oder ausklappen"><span class="nr" id="camNr"></span><b id="camLbl"></b><span class="more">Hinweis ▾</span></button>
@@ -555,7 +559,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-17i';
+  var APP = 'foto-app-test-18a';
   var RAD = Math.PI / 180;
   /* =====================================================================
      FREIE KAMERA (Fassung 17). Giannis 23.11.2026: „man öffnet die App, man sieht den ganzen Bildschirm als freie Kamera und wir lassen das mit den Kasten und alles weg.
@@ -786,8 +790,11 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   /* =====================================================================
      Darstellung: Hell und Dunkel nach Systemeinstellung (Schalter Auto, Hell, Dunkel), Messwerte-Schalter
      ===================================================================== */
-  var UI = { mess: false };   // Hell und Dunkel folgt nur der Handy-Einstellung (Entscheidung Giannis 08.11.2026), kein eigener Schalter
-  try { var uiSaved = JSON.parse(localStorage.getItem('fa_ui') || 'null'); if (uiSaved) UI.mess = !!uiSaved.mess; } catch (e) { /* ohne Speicher weiter */ }
+  var UI = { mess: false, exifWeg: null };   // Hell und Dunkel folgt nur der Handy-Einstellung (Entscheidung Giannis 08.11.2026), kein eigener Schalter
+  try { var uiSaved = JSON.parse(localStorage.getItem('fa_ui') || 'null'); if (uiSaved) { UI.mess = !!uiSaved.mess; if (typeof uiSaved.exifWeg === 'boolean') UI.exifWeg = uiSaved.exifWeg; } } catch (e) { /* ohne Speicher weiter */ }
+  // 18 a: Standort und Kameradaten aus eigenen Fotos entfernen. Voreinstellung an (Alfred 26.11.2026: „Bis dahin: an.“), Entscheidung Giannis offen.
+  var EXIF_WEG_VORGABE = true;
+  function exifWegAn() { return UI.exifWeg === null ? EXIF_WEG_VORGABE : UI.exifWeg; }
   function saveUI() { try { localStorage.setItem('fa_ui', JSON.stringify(UI)); } catch (e) { /* egal */ } }
   var DIR = document.documentElement.getAttribute('data-dir') === 'a' ? 'a' : 'b';
   var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
@@ -880,12 +887,15 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   }
   function raumBildAttr(k) { var f = RAUM_BILD[k]; return 'data-bild="' + f + '" ' + (RAUM_VORRAT[k] ? 'src="' + RAUM_VORRAT[k] + '"' : 'src="' + f + '" srcset="' + f + ' 480w, ' + f.replace('.jpg', '@2x.jpg') + ' 960w" sizes="(min-width: 640px) 280px, 100vw"'); }
   window.addEventListener('online', raumVorratLaden);
-  function raumVorgabe() { var r = S.cfg && S.cfg.raumVorgabe; return r === 'rund' || r === 'holz' || r === 'kein' ? r : 'rund'; }   // Vorgabe je Händler aus dem Zugang (zugang_info, Spalte zugaenge.raum_vorgabe); ohne Vorgabe rund
-  function raumName(r) { var x = RAEUME.filter(function (y) { return y[0] === r; })[0]; return x ? x[1] : r === 'kein' ? 'Ohne Showroom' : RAEUME[0][1]; }
+  function raumVorgabe() { var r = S.cfg && S.cfg.raumVorgabe; return r === 'rund' || r === 'holz' || r === 'kein' || r === 'original' ? r : 'rund'; }   // Vorgabe je Händler aus dem Zugang (zugang_info, Spalte zugaenge.raum_vorgabe); ohne Vorgabe rund
+  function raumName(r) { var x = RAEUME.filter(function (y) { return y[0] === r; })[0]; return x ? x[1] : r === 'kein' ? 'Hintergrund unscharf' : r === 'original' ? 'Original' : RAEUME[0][1]; }
   function raumWahlHtml(r) {
     return '<div class="raumwahl" role="radiogroup" aria-label="Showroom wählen">' + RAEUME.map(function (x) {
       return '<button class="raum" type="button" role="radio" data-raum="' + x[0] + '" aria-checked="' + (r === x[0] ? 'true' : 'false') + '"><img alt="" ' + raumBildAttr(x[0]) + ' width="480" height="320" decoding="async"><span>' + V10[r === x[0] ? 'ok' : 'offen'] + esc(x[1]) + '</span></button>';
-    }).join('') + '<button class="raum ohne" type="button" role="radio" data-raum="kein" aria-checked="' + (r === 'kein' ? 'true' : 'false') + '"><span>' + V10[r === 'kein' ? 'ok' : 'offen'] + 'Ohne Showroom</span><small>Jedes Foto bleibt das Originalfoto, ohne Raum dahinter.</small></button></div>';
+    }).join('') + raumKnopf('kein', 'Hintergrund unscharf', 'Das Auto bleibt scharf, der Hintergrund wird weich.') + raumKnopf('original', 'Original', 'Jedes Foto bleibt genau so, wie es aufgenommen wurde.') + '</div>';
+    // 18 a (Giannis 26.11.2026 14:05 über Alfred): „kein Raum“ heißt jetzt „Hintergrund unscharf“ (Wert „kein“, der Arbeiter macht den Hintergrund unscharf), dazu „Original“
+    // (Wert „original“: der Arbeiter gibt jedes Foto unverändert weiter; Giannis 12:38: „Ohne Kennzeichen, ohne Freistellung, ohne Filter, ohne nichts.“)
+    function raumKnopf(w, name, text) { return '<button class="raum ohne" type="button" role="radio" data-raum="' + w + '" aria-checked="' + (r === w ? 'true' : 'false') + '"><span>' + V10[r === w ? 'ok' : 'offen'] + name + '</span><small>' + text + '</small></button>'; }
   }
 
   /* =====================================================================
@@ -1002,7 +1012,8 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
           var st = age < 3 ? 'neu' : age < (art === 'show' ? 9 : 4) ? 'in_arbeit' : 'fertig', amp = null, grund = null, fg = null;
           if (st === 'fertig') {
             if (p.platz === 'dreiviertel_hl') { st = 'fehler'; fg = 'Kein Kennzeichen erkannt (Demo)'; amp = 'rot'; grund = fg; }
-            else if (art === 'show' && ((S.cfg && S.cfg.ohneShow) || (vehicles[p.fahrzeug_id] || {}).raum === 'kein')) { st = 'geprueft'; amp = p.platz === 'dreiviertel_vr' ? 'rot' : (p.platz === 'front' || p.platz === 'seite') ? 'gelb' : 'gruen'; grund = amp === 'rot' ? 'Falsche Ansicht, hinten statt vorn (Demo)' : amp === 'gelb' ? 'Auto leicht angeschnitten (Demo); Kamera etwas zu tief (Demo)' : null; }
+            else if (art === 'show' && ((vehicles[p.fahrzeug_id] || {}).raum === 'original' || (p.app_details && p.app_details.original))) { amp = 'gruen'; grund = 'Original gewählt: Bild unverändert'; }
+            else if (art === 'show' && S.cfg && S.cfg.ohneShow) { st = 'geprueft'; amp = p.platz === 'dreiviertel_vr' ? 'rot' : (p.platz === 'front' || p.platz === 'seite') ? 'gelb' : 'gruen'; grund = amp === 'rot' ? 'Falsche Ansicht, hinten statt vorn (Demo)' : amp === 'gelb' ? 'Auto leicht angeschnitten (Demo); Kamera etwas zu tief (Demo)' : null; }
             else if (art === 'show') { amp = p.platz === 'seite' ? 'gelb' : 'gruen'; grund = amp === 'gelb' ? 'Auto leicht angeschnitten (Demo)' : null; }
           }
           return { platz: p.platz, zusatz_nr: p.zusatz_nr, version: 1, status: st, ampel_handy: p.ampel_handy, ampel_showroom: amp, ampel_showroom_gruende: grund, fehler_grund: fg };
@@ -1956,10 +1967,12 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       var f35 = exif.focal35 != null ? exif.focal35 : (o.quelle === 'kamera' ? camF35Jetzt() : null), f35q = exif.focal35 != null ? 'exif' : f35 != null ? 'kamera_probe' : null;
       await sleep(0);   // erst „Foto wird geprüft …“ zeigen, dann rechnen
       var tP = performance.now(), pr = fotoPruefen(res.klein, { art: mS && mS.art, key: mS && mS.key, w: res.w, h: res.h, snap: o.snap, gerade: lev != null, f35: f35, quelle: o.quelle, klein: (o.how && o.how.foto && o.how.foto.klein) ? res.w + ' × ' + res.h : null });
+      if (o.quelle === 'mediathek') { pr.zeilen = [{ art: 'info', code: 'mediathek', text: 'Eigenes Foto: geht unverändert ins Inserat.' }]; pr.gelb = false; pr.sperre = false; pr.ampel = 'gruen'; }   // 18 a: keine Prüfung, keine Sperre
       res.klein.width = 1; res.klein.height = 1; chk(my);
       var r = { aufn: o.aufn || null, gerade: lev != null ? { grad: lev, faktor: res.gerade, ende: (o.snapEnde && o.snapEnde.age <= 800) ? o.snapEnde.r : null } : null, slot: S.cur, blob: res.blob, w: res.w, h: res.h, thumb: res.thumb, drehung: (rot + extra) % 360, hand: 0, ohneDreh: ohneDreh, f35: f35, f35q: f35q, zuschnitt: res.zuschnitt || null, exif: { orient: exif.orientation, focal: exif.focal, model: exif.model }, srcW: img.w, srcH: img.h, rohBytes: blob.size || null,
         snap: o.snap, cls: o.cls, pruef: pr, how: o.how || {}, takeMs: o.takeMs, quelle: o.quelle, note: note, url: null, fovP: fovP, video: o.video || null,
         zeiten: { entschluesseln: tDec, gesamt: Math.round(performance.now() - T0), zeichnen: res.ms.zeichnen, kodieren: res.ms.kodieren, vorschau: res.ms.vorschau, pruefen: Math.round(performance.now() - tP), glaettung: res.ms.glaettung } };
+      if (o.original) { r.blob = o.original; r.original = true; r.w = effW; r.h = effH; r.drehung = 0; }   // 18 a: hochgeladen wird die Datei selbst (nur ohne Standort/EXIF, nicht neu kodiert)
       showReview(r);
     } catch (e) {
       if (e === CANCEL) return;
@@ -2037,7 +2050,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     $('revLbl').textContent = (m.nr ? m.nr + ' von ' + pflicht().length + ' · ' : '') + m.name;
     $('revTitle').textContent = 'Passt das Foto?';
     pruefZeigen(r);
-    $('revRot').hidden = false; $('vRev').classList.toggle('dbg', !!VAR.debug);
+    $('revRot').hidden = !!r.original; $('vRev').classList.toggle('dbg', !!VAR.debug);
     $('revImg').onload = null; rvLage();
     paneShow('vCam', false); paneShow('vTurn', false); paneShow('vRev', true); say('');
     beispielZeigen(m.key, m.art);
@@ -2101,7 +2114,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       id: st.fotoId, fahrzeug_id: S.vehicle.id, platz: m.key, zusatz_nr: m.zusatz_nr, zusatz_art: m.art === 'zusatz' ? S.zusatzArt : null,
       ampel_handy: P.ampel, ampel_handy_gruende: P.zeilen.map(function (z) { return z.text; }).join('; '), geraet: dev(), brennweite_kb: (r.gerade && r.f35 != null) ? +(r.f35 * r.gerade.faktor).toFixed(1) : r.f35, neigung: r.snap ? +r.snap.p.toFixed(1) : null, rollen: r.gerade ? 0 : (r.snap ? +r.snap.r.toFixed(1) : null),
       drehung: r.drehung, breite: r.w, hoehe: r.h, bytes: r.blob.size,
-      app_details: { app: APP, schein: (S.vehicle && S.vehicle.scheinLese) || undefined, quelle: r.quelle, selbstausloeser: false, ausloeser: { art: 'manuell', freigabe: kam ? 'frei' : 'kamera_app', frei_nach_ms: r.how.freiMs != null ? r.how.freiMs : null, tipp_nach_ms: r.how.tippMs != null ? r.how.tippMs : null, nachstabil_ms: r.how.nach ? r.how.nach.ms : null, nachstabil_ruhig: r.how.nach ? r.how.nach.ruhig : null },
+      app_details: { app: APP, schein: (S.vehicle && S.vehicle.scheinLese) || undefined, quelle: r.quelle, original: r.original || undefined, mediathek: r.original ? r.how.mediathek : undefined, selbstausloeser: false, ausloeser: { art: 'manuell', freigabe: kam ? 'frei' : 'kamera_app', frei_nach_ms: r.how.freiMs != null ? r.how.freiMs : null, tipp_nach_ms: r.how.tippMs != null ? r.how.tippMs : null, nachstabil_ms: r.how.nach ? r.how.nach.ms : null, nachstabil_ruhig: r.how.nach ? r.how.nach.ruhig : null },
         ohne_sensor: !(r.snap && r.snap.p != null), haltung: r.cls, drehung_hand: r.hand, ausgangsbild: r.srcW + 'x' + r.srcH, exif_ausrichtung: r.exif.orient, brennweite_real: r.exif.focal, brennweite_quelle: r.f35q || null,
         datei: { roh: r.srcW + 'x' + r.srcH, roh_bytes: r.rohBytes || null, hochgeladen: r.w + 'x' + r.h, bytes: r.blob.size, hochladen_ms: null },
         klasse: (S.vehicle && S.vehicle.klasse && KLASSE_NAME[S.vehicle.klasse]) || null, cabrio: klasseOf() === 'cabrio',
@@ -2198,6 +2211,41 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   $('turnX').onclick = function () { $('camX').onclick(); };   // 17 i (Knopf-Prüfung A2): Der Drehen-Hinweis liegt über dem Sucher und verdeckt dessen X; er hat ein eigenes
 
   // Rückfall ohne ImageCapture: Kamera-App des Handys öffnen
+  /* EIGENE FOTOS (18 a, Giannis 26.11.2026 12:37/12:38 über Alfred): Statt zu fotografieren wählt der Händler ein Foto aus der Mediathek. Es geht unverändert hoch
+     (keine Drehung, kein Zuschnitt, keine neue Kodierung) und trägt app_details.original = true: der Arbeiter reicht es byte-gleich durch (abgestimmt mit Fable Finish 4).
+     Mit dem Schalter (Voreinstellung an) entfernt die App vorher verlustfrei die Segmente mit Standort und Kameradaten (APP1 EXIF/XMP, APP13 IPTC, Kommentar);
+     die Bilddaten bleiben Byte für Byte gleich, die Drehung bleibt als kleiner EXIF-Block mit nur der Ausrichtung erhalten. Nur JPEG (iPhone wandelt HEIC bei der Auswahl selbst um). */
+  function exifNurDrehung(o) { return new Uint8Array([0xFF, 0xE1, 0, 34, 0x45, 0x78, 0x69, 0x66, 0, 0, 0x4D, 0x4D, 0, 42, 0, 0, 0, 8, 0, 1, 0x01, 0x12, 0, 3, 0, 0, 0, 1, 0, o, 0, 0, 0, 0, 0, 0]); }
+  function jpegOhneMeta(b, orient) {
+    var teile = [b.subarray(0, 2)], i = 2;
+    if (orient > 1 && orient <= 8) teile.push(exifNurDrehung(orient));
+    while (i + 4 <= b.length && b[i] === 0xFF) {
+      var m = b[i + 1];
+      if (m === 0xFF) { i++; continue; }
+      if (m === 0x01 || (m >= 0xD0 && m <= 0xD8)) { teile.push(b.subarray(i, i + 2)); i += 2; continue; }
+      if (m === 0xDA || m === 0xD9) break;   // Bilddaten (und alles danach) unverändert
+      var len = (b[i + 2] << 8) | b[i + 3];
+      if (m !== 0xE1 && m !== 0xED && m !== 0xFE) teile.push(b.subarray(i, i + 2 + len));
+      i += 2 + len;
+    }
+    teile.push(b.subarray(Math.min(i, b.length)));
+    var n = teile.reduce(function (a, t) { return a + t.length; }, 0), out = new Uint8Array(n), p = 0;
+    teile.forEach(function (t) { out.set(t, p); p += t.length; });
+    return out;
+  }
+  async function mediathekFoto(f) {
+    if (!f || $('stage').hidden || !S.cur) return;
+    var my = ++S.token; S.phase = 'mediathek'; $('shotBtn').disabled = true; say('Foto wird geladen …');
+    try {
+      var buf = new Uint8Array(await f.arrayBuffer()); chk(my);
+      if (!(buf.length > 4 && buf[0] === 0xFF && buf[1] === 0xD8)) { say(''); toast(T('Bitte ein JPEG-Foto wählen.', 'Bitte wählen Sie ein JPEG-Foto.'), 4000); runShot(); return; }
+      var weg = exifWegAn(), orient = weg ? ((await readExif(new Blob([buf], { type: 'image/jpeg' }))).orientation || 1) : 1, out = weg ? jpegOhneMeta(buf, orient) : buf;
+      var blob = new Blob([out], { type: 'image/jpeg' }); chk(my);
+      await processAndReview(my, blob, { snap: null, cls: null, how: { mediathek: { exif_weg: weg, bytes_vorher: buf.length, bytes: out.length } }, takeMs: null, quelle: 'mediathek', original: blob });
+    } catch (e) { if (e === CANCEL) return; problem('Das Foto konnte nicht geladen werden', errText(e), true); }
+  }
+  $('medIn').onchange = function () { var f = this.files && this.files[0]; this.value = ''; mediathekFoto(f); };
+  $('medBtn').onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('medIn').click(); } };
   async function fallbackShot(my) {
     S.phase = 'fallback'; paneShow('vCam', true); setLabels(); $('shotBtn').disabled = true; $('capLabel').hidden = false; say('');
     $('capIn').value = '';
@@ -2771,7 +2819,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     return '<div class="schritt"><span>Fertig</span><span>' + esc(v.marke + ' ' + v.modell) + '</span></div><div class="karte">' + V10.gesendet + '</div><h4>' + (warten ? 'Wird gesendet' : 'Gesendet') + '</h4>' +
       '<p>' + (abg ? T('Nicht alle Fotos sind angekommen. Die App sendet sie weiter, alle 5 Minuten und bei jedem Öffnen. Bitte öffne die App später noch einmal.', 'Nicht alle Fotos sind angekommen. Die App sendet sie weiter, alle 5 Minuten und bei jedem Öffnen. Bitte öffnen Sie die App später noch einmal.')
         : warten ? T('Die letzten Fotos gehen raus, sobald Netz da ist. Du kannst schon das nächste Fahrzeug anlegen.', 'Die letzten Fotos gehen raus, sobald Netz da ist. Sie können schon das nächste Fahrzeug anlegen.') : T('Deine Fotos sind bei AutoScales.', 'Ihre Fotos sind bei AutoScales.')) + '</p>' +
-      zeile(warten ? 'offen' : 'ok', '<b>' + f.an + ' von ' + f.alle + '</b> Fotos angekommen') + fotoZeilen(pflicht()) + (v.raum === 'kein' ? '' : zeile('offen', '<b>Showroom-Bilder</b> in Arbeit')) +
+      zeile(warten ? 'offen' : 'ok', '<b>' + f.an + ' von ' + f.alle + '</b> Fotos angekommen') + fotoZeilen(pflicht()) + (v.raum === 'original' ? '' : zeile('offen', v.raum === 'kein' ? '<b>Bilder mit unscharfem Hintergrund</b> in Arbeit' : '<b>Showroom-Bilder</b> in Arbeit')) +
       '<div class="sp"></div><button class="btn pr" id="sNeu" type="button">Nächstes Fahrzeug</button><button class="link" id="sGalerie" type="button">Galerie ansehen</button>';
   }
   // Angekommenes Foto ohne Vorschau (nach „Weitermachen“ liegen keine Vorschaubilder vor): Bild des Platzes wie in der Galerie, nicht das Leer-Bild (Befund A14 b)
@@ -3087,7 +3135,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
         fmsg(fe.fehler ? zugangText(fe.fehler, fe.info && fe.info.warten_s) : fe.net ? 'Keine Verbindung zum Server. Bitte Netz prüfen und nochmal tippen.' : (fe.status === 403 || fe.status === 401 ? 'Zugang verweigert. Der Link ist ungültig oder abgelaufen.' : fe.status === 404 ? (zugangNeu(S.cfg.zugang) ? 'Der Server kennt diese App-Fassung noch nicht (der Zugang je Händler fehlt in der Datenbank). Bitte AutoScales Bescheid geben.' : 'Der Server kennt diese App-Fassung noch nicht (die Raumwahl fehlt in der Datenbank). Bitte AutoScales Bescheid geben.') : 'Der Server hat das Fahrzeug nicht angenommen: ' + fe.message), true);
         $('fGo').disabled = false; return;
       }
-      S.anlegeId = null; if (!v.raum) v.raum = (cj && /^(rund|holz|kein)$/.test(cj.raum || '') ? cj.raum : null) || raumVorgabe();
+      S.anlegeId = null; if (!v.raum) v.raum = (cj && /^(rund|holz|kein|original)$/.test(cj.raum || '') ? cj.raum : null) || raumVorgabe();
       aiLoad();   // Foto-Prüfung (Auto-Erkennung) im Hintergrund laden, ab hier
       scheinWeg();   // Vorschau des Fahrzeugscheins vom vorigen Fahrzeug
       var altV = (load('fa_veh') || {}).vehicle; if (altV && altV.id && altV.id !== v.id) raumFrei(altV.id);   // Formular trotz „Weitermachen“-Box: voriges Fahrzeug freigeben (Prüfbefund 2)
@@ -3214,6 +3262,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   function initSettings() {
     $('chkMess').checked = !!VAR.debug;
     $('chkMess').onchange = function () { VAR.debug = this.checked; UI.mess = this.checked; saveUI(); };
+    $('chkExif').checked = exifWegAn(); $('chkExif').onchange = function () { UI.exifWeg = this.checked; saveUI(); };
     if (!standalone() && S.cfg && !S.cfg.bad && !S.cfg.demo && S.cfg.zugang && /iPhone|iPad|Android/.test(navigator.userAgent)) {
       $('hsTip').hidden = false;
       $('hsTip').innerHTML = /iPhone|iPad/.test(navigator.userAgent)
