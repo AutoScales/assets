@@ -395,10 +395,16 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
 #gross.bsp[data-z="1"] #grossImg { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; object-fit: contain; }   /* Beispielbild (17 h): zuerst ganz im Bild. Absolut statt im Grid, sonst richtet sich die Zeile nach der Bildhöhe und 4:3 ragt unten hinaus */
 #grossX { position: fixed; z-index: 2; top: max(10px, env(safe-area-inset-top)); right: max(10px, env(safe-area-inset-right)); background: rgba(250,250,250,.94); color: #0B0C10; border-color: transparent; }
 #grossTipp { position: fixed; z-index: 2; left: 50%; bottom: max(12px, env(safe-area-inset-bottom)); transform: translateX(-50%); font: 600 12px/1 var(--font-body); padding: 8px 12px; border-radius: 999px; background: rgba(11,12,16,.72); color: #FAFAFA; pointer-events: none; white-space: nowrap; }
-.sperre { pointer-events: none; }   /* kurz nach dem Seitenwechsel: Doppeltipp trifft nicht den Knopf der neuen Seite */
+.sperre { pointer-events: none; }
+/* 18 b: Hinweis „warten auf Netz“ unten auf jeder Seite (unter der Kamera, z-index 30) */
+.netzbox { position: fixed; left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); z-index: 25; display: flex; align-items: center; gap: 12px; justify-content: space-between; border-color: var(--warn, var(--as-gold)); color: var(--t); background: var(--base); box-shadow: 0 4px 18px rgba(0,0,0,.25); }
+.netzbox[hidden] { display: none; }
+.netzbox .btn { flex: none; }
+body.netz { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }   /* solange der Hinweis steht: Platz unten, damit er nichts verdeckt */   /* kurz nach dem Seitenwechsel: Doppeltipp trifft nicht den Knopf der neuen Seite */
 </style>
 </head>
 <body>
+<div class="note netzbox" id="netzBox" role="status" aria-live="polite" hidden><span id="netzTxt"></span><button class="btn primary" id="netzGo" type="button">Jetzt senden</button></div>
 
 <!-- Seite 1: Start (hochkant) -->
 <main class="page" id="pStart">
@@ -576,7 +582,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-18a';
+  var APP = 'foto-app-test-18b';
   var RAD = Math.PI / 180;
   /* =====================================================================
      FREIE KAMERA (Fassung 17). Giannis 23.11.2026: „man öffnet die App, man sieht den ganzen Bildschirm als freie Kamera und wir lassen das mit den Kasten und alles weg.
@@ -604,8 +610,10 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
     NACH_MAX_MS: 900, NACH_FENSTER_MS: 220, NACH_RUHIG_MS: 120,   // nach dem Tipp kurz nachstabilisieren (der Tipp wackelt), höchstens so lange
     STILL_P: FUEHRUNG.ruhig.p, STILL_R: FUEHRUNG.ruhig.r,
     ZUSATZ_MAX: 6,
-    NACHPRUEFEN_MS: 300000      // nicht endgültig abgelehnte Fotos: so oft erneut senden (dazu bei jedem Öffnen)
+    NACHPRUEFEN_MS: 300000,     // nicht endgültig abgelehnte Fotos: so oft erneut senden (dazu bei jedem Öffnen)
+    HAENGER_MS: 25000           // 18 b (iPhone 27.11.2026, TT RS: Upload ohne Fortschritt hielt alle Fotos fast 4 Minuten auf): so lange ohne Fortschritt, dann abbrechen und neu senden; Grenze auch für die Aufträge
   };
+  function haengerMs() { var w = window.__haengerMs; return typeof w === 'number' && w >= 300 && w < CFG.HAENGER_MS ? w : CFG.HAENGER_MS; }   // nur die Browser-Tests setzen window.__haengerMs (kürzer), sonst gilt CFG
   // PRUEF-ANFANG
   /* =====================================================================
      PRÜFUNG NACH DEM AUSLÖSEN (Fassung 17): am fertigen Foto, auf dem Gerät. Alle Schwellen stehen hier in einem Block.
@@ -974,32 +982,56 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       var txt = '', js = null; try { txt = await r.text(); js = txt ? JSON.parse(txt) : null; } catch (e) { /* kein JSON */ }
       return { status: r.status, ok: r.ok, json: js, text: txt };
     }
+    /* UPLOAD MIT FORTSCHRITT (18 b, Befund iPhone 27.11.2026): Beim TT RS ging die Vorab-Anfrage raus, die Datei kam nie an. fetch meldet keinen Fortschritt, die App wartete
+       bis zur Zeitgrenze (6 bis 7 Minuten bei 3 MB) und alle Fotos dahinter standen. XHR meldet den Fortschritt: Kommt HAENGER_MS lang keiner (weder beim Senden noch bei
+       der Antwort), bricht die App ab und sendet neu („haenger“). gesamtMs bleibt die äußere Grenze wie bisher. Bei verdeckter Seite zählt die Hänger-Uhr nicht. */
+    function xhrSenden(url, headers, body, gesamtMs) {
+      return new Promise(function (res, rej) {
+        var x = new XMLHttpRequest(), t0 = Date.now(), letzte = t0, aus = false, uhr = null, grenze = haengerMs();
+        var lauf = { abbruch: abbruch, still: function () { return Date.now() - letzte; } };
+        function ende(fn) { if (aus) return; aus = true; clearInterval(uhr); if (S.uploadLauf === lauf) S.uploadLauf = null; fn(); }
+        function abbruch(grund) { ende(function () { try { x.abort(); } catch (e) { /* schon zu */ } rej(grund === 'zeit' ? new ApiError(0, 'Zeitüberschreitung', true) : new ApiError(0, 'Upload hängt', true, { fehler: 'haenger' })); }); }
+        function lebt() { letzte = Date.now(); }
+        try {
+          x.open('POST', url, true);
+          Object.keys(headers).forEach(function (k) { x.setRequestHeader(k, headers[k]); });
+          if (x.upload) { x.upload.onprogress = lebt; x.upload.onload = lebt; }
+          x.onprogress = lebt; x.onreadystatechange = lebt;
+          x.onload = function () { ende(function () { var txt = x.responseText || '', js = null; try { js = txt ? JSON.parse(txt) : null; } catch (e) { /* kein JSON */ } res({ status: x.status, ok: x.status >= 200 && x.status < 300, json: js, text: txt }); }); };
+          x.onerror = x.ontimeout = function () { ende(function () { rej(new ApiError(0, 'Keine Verbindung', true)); }); };
+          x.onabort = function () { ende(function () { rej(new ApiError(0, 'Upload hängt', true, { fehler: 'haenger' })); }); };
+          S.uploadLauf = lauf;
+          uhr = setInterval(function () { var j = Date.now(); if (document.hidden) { letzte = j; return; } if (j - t0 >= gesamtMs) abbruch('zeit'); else if (j - letzte >= grenze) abbruch('haenger'); }, Math.max(100, Math.min(1000, grenze / 5)));
+          x.send(body);
+        } catch (e) { ende(function () { rej(new ApiError(0, 'Keine Verbindung', true)); }); }
+      });
+    }
     function msgOf(r) { var j = r.json; return (j && (j.message || j.error || j.msg)) || r.text || ('HTTP ' + r.status); }
-    async function rpc(name, body) {
-      var r = await call(base + '/rest/v1/rpc/' + name, { method: 'POST', headers: hdr({ 'Content-Type': 'application/json' }), body: JSON.stringify(body || {}) });
+    async function rpc(name, body, ms) {
+      var r = await call(base + '/rest/v1/rpc/' + name, { method: 'POST', headers: hdr({ 'Content-Type': 'application/json' }), body: JSON.stringify(body || {}) }, ms);
       if (!r.ok) throw new ApiError(r.status, msgOf(r), false);
       return r.json;
     }
-    async function rpcOk(name, body) { var j = await rpc(name, body); if (j && j.ok === false) throw new ApiError(422, j.fehler || 'abgelehnt', false, j); return j; }
+    async function rpcOk(name, body, ms) { var j = await rpc(name, body, ms); if (j && j.ok === false) throw new ApiError(422, j.fehler || 'abgelehnt', false, j); return j; }
     return {
       real: true,
       ping: function () { return rpc('app_ping', {}); },
       markNoRear: function (id, on) { return rpc('fahrzeug_merkmal', { p_id: id, p_ohne_ruecksitzbank: !!on }); },
       createVehicle: function (v) { var b = { p_id: v.id, p_zugang: cfg.zugang, p_marke: v.marke, p_modell: v.modell, p_baujahr: v.baujahr, p_karosserie: v.karosserie || null, p_selbsttest: !!v.selbsttest, p_raum: v.raum || null }; return zugangNeu(cfg.zugang) ? rpcOk('fahrzeug_anlegen_v2', b) : rpc('fahrzeug_anlegen', b); },
       zugangInfo: function () { return zugangNeu(cfg.zugang) ? rpc('zugang_info', { p_zugang: cfg.zugang }) : Promise.resolve(null); },
-      daten: function (id, p) { return rpcOk('fahrzeug_daten', { p_id: id, p: p || {} }); },   // {} liest nur: sagt, ob der Server für das Fahrzeug noch etwas annimmt
-      absenden: function (id) { return rpcOk('fahrzeug_absenden', { p_id: id }); },
+      daten: function (id, p) { return rpcOk('fahrzeug_daten', { p_id: id, p: p || {} }, haengerMs()); },   // {} liest nur: sagt, ob der Server für das Fahrzeug noch etwas annimmt
+      absenden: function (id) { return rpcOk('fahrzeug_absenden', { p_id: id }, haengerMs()); },
       raumOffen: function (id) { return rpcOk('fahrzeug_raum_offen', { p_id: id }); },   // Fassung 16 b: Raum bis Schritt 5 offen, der Server parkt die Fahrzeugfotos (wartet_raum)
-      raumSetzen: function (id, raum) { return rpcOk('fahrzeug_raum', { p_id: id, p_raum: raum }); },   // Schritt 5: Raum setzen, geparkte Fotos frei
+      raumSetzen: function (id, raum) { return rpcOk('fahrzeug_raum', { p_id: id, p_raum: raum }, haengerMs()); },   // Schritt 5: Raum setzen, geparkte Fotos frei
       upload: async function (path, blob, ms) {
-        var r = await call(base + '/storage/v1/object/roh/' + path, { method: 'POST', headers: hdr({ 'Content-Type': 'image/jpeg', 'x-upsert': 'false', 'cache-control': 'max-age=3600' }), body: blob }, ms || 90000);
+        var r = await xhrSenden(base + '/storage/v1/object/roh/' + path, hdr({ 'Content-Type': 'image/jpeg', 'x-upsert': 'false', 'cache-control': 'max-age=3600' }), blob, ms || 90000);   // 18 b: XHR mit Fortschritt statt fetch
         if (r.ok) return true;
         var dup = r.status === 409 || (r.json && String(r.json.statusCode) === '409');
         if (dup) return true;   // Datei liegt schon (Wiederholung nach Abbruch)
         var gross = r.status === 413 || (r.json && String(r.json.statusCode) === '413') || /too large|maximum allowed size/i.test(msgOf(r));   // Speichergrenze des Servers (17 e): kommt als HTTP 400 mit statusCode 413
         throw new ApiError(r.status, msgOf(r), false, gross ? { fehler: 'zu_gross' } : null);
       },
-      report: function (meta) { return rpc('foto_melden', { p: meta }); },
+      report: function (meta) { return rpc('foto_melden', { p: meta }, haengerMs()); },   // 18 b: Aufträge und Melden mit derselben kurzen Grenze (Antwort klein)
       status: function (id) { return rpc('foto_status', { p_fahrzeug_id: id }); },
       fileThere: function (id, path) { return rpc('selbsttest_datei_da', { p_fahrzeug_id: id, p_pfad: path }); },
       raw: async function (method, path, extraHdr, body) { var r = await call(base + path, { method: method, headers: hdr(extraHdr || {}), body: body }); return r; },
@@ -2277,6 +2309,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       await processAndReview(my, blob, { snap: null, cls: null, how: { mediathek: { ort_weg: true, gps: oo.info.gps, xmp_weg: oo.info.xmp_weg, iptc_weg: oo.info.iptc_weg, bytes: oo.bytes.length } }, takeMs: null, quelle: 'mediathek', original: blob });
     } catch (e) { if (e === CANCEL) return; problem('Das Foto konnte nicht geladen werden', errText(e), true); }
   }
+  $('netzGo').onclick = jetztSenden;   // 18 b
   $('medIn').onchange = function () { var f = this.files && this.files[0]; this.value = ''; mediathekFoto(f); };
   $('medBtn').onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('medIn').click(); } };
   async function fallbackShot(my) {
@@ -2346,7 +2379,23 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
      S.nach zählt dazu, was aus den Fotos geworden ist, die beim Öffnen schon auf dem Gerät lagen (it.vorher). */
   function fehlListe(unlesbar) { return S.restoredFailed.filter(function (it) { return it.failed && (it.grund === 'unlesbar') === !!unlesbar && (unlesbar || it.blob); }); }
   function nachZahl(it, feld) { if (S.nach && it && it.vorher) S.nach[feld] = (S.nach[feld] || 0) + 1; queueNote(); }
+  /* HINWEIS „WARTEN AUF NETZ“ (18 b, Befund iPhone 27.11.2026: Giannis merkte nicht, dass die Fotos des TT RS festhingen). Liegt ein Foto nach einem Netzfehler
+     oder Hänger noch auf dem Gerät, oder hängt ein Auftrag (Angaben, Raum, Absenden), steht unten ein Hinweis mit „Jetzt senden“ auf jeder Seite (nicht über der Kamera). */
+  function netzWartend() { return S.netzAus ? S.queue.filter(function (it) { return !(it.fileDone && haltOf(it)); }).length : 0; }
+  function netzHinweis() {
+    var b = $('netzBox'); if (!b) return; var n = netzWartend(), an = n > 0 || !!S.auftragNetz;
+    if (an) $('netzTxt').textContent = (n === 1 ? '1 Foto wartet auf Netz.' : n > 1 ? n + ' Fotos warten auf Netz.' : 'Angaben warten auf Netz.') + ' Die App versucht es weiter.';
+    if (b.hidden === an) { b.hidden = !an; document.body.classList.toggle('netz', an); }
+  }
+  function jetztSenden() {   // „Jetzt senden“: hängenden Upload neu starten, Wartezeiten abkürzen, alles gleich senden
+    var L = S.uploadLauf; if (L && L.still() >= 3000) L.abbruch('haenger');
+    S.queue.forEach(function (q) { q.tries = 0; q.zeitAus = 0; });
+    if (onlineWake) onlineWake(); if (auftragWake) auftragWake();
+    kick(); auftraegeSenden(); if (S.restoredFailed.some(function (it) { return it.failed && it.blob; })) nachpruefen();
+    toast(T('Wird gesendet …', 'Wird gesendet …'), 2500);
+  }
   function queueNote() {
+    netzHinweis();
     var n = $('queueNote'); if (!n) return;
     var q = S.nach || {}, rest = S.queue.filter(function (it) { return !(it.fileDone && haltOf(it)); }).length, fehl = fehlListe(false).length, weg = fehlListe(true).length, t;
     if (rest) t = (rest === 1 ? 'Auf diesem Gerät wartet noch 1 Foto. Es wird' : 'Auf diesem Gerät warten noch ' + rest + ' Fotos. Sie werden') + ' jetzt gesendet.' + (S.netzAus ? ' Im Moment besteht keine Verbindung, die App versucht es weiter.' : '');
@@ -2462,19 +2511,20 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
       var L = lsLoad('fa_auftraege') || [], a = L[0]; if (!a) break;
       var api = a.srv ? (scheinOk(a) ? (S.api && S.api.real && S.cfg && S.cfg.url === a.srv.u && S.cfg.key === a.srv.k ? S.api : mkRealApi({ url: a.srv.u, key: a.srv.k })) : null) : (S.demo ? S.api : null), fertig = !api;
       if (api) {
-        try { if (a.art === 'absenden') await api.absenden(a.id); else if (a.art === 'raum') { await api.raumSetzen(a.id, a.raum); raumBestaetigt(a.id); } else await api.daten(a.id, a.p || {}); fertig = true; warte = 0; }
+        try { if (a.art === 'absenden') await api.absenden(a.id); else if (a.art === 'raum') { await api.raumSetzen(a.id, a.raum); raumBestaetigt(a.id); } else await api.daten(a.id, a.p || {}); fertig = true; warte = 0; if (S.auftragNetz) { S.auftragNetz = false; netzHinweis(); } }
         catch (e) {
           if (e && e.fehler) { fertig = true; if (e.fehler === 'schon_fotos' && ((a.p && 'raum' in a.p) || (a.art === 'raum' && !a.still))) raumAbgelehnt(a.id, e.info && e.info.raum); }
           else if (e && e.status === 404 && a.art === 'raum') fertig = true;   // Server ohne das SQL „Raum offen“: nichts zu tun   // vom Server endgültig abgelehnt (Fahrzeug unbekannt oder abgeschlossen, Eingabe ungültig, Raum schon fest)
           else if (e && e.status >= 400 && e.status < 500 && e.status !== 408 && e.status !== 429) {   // dauerhafter Fehler (z. B. 401, 404): nach drei Versuchen aufgeben, damit spätere Aufträge nicht ewig warten (Prüfbefund 10)
             var L2 = lsLoad('fa_auftraege') || []; if (L2[0] && L2[0].nr === a.nr) { L2[0].fehl = (L2[0].fehl || 0) + 1; lsStore('fa_auftraege', L2); if (L2[0].fehl >= 3) fertig = true; }
           }
+          if (!fertig && e && e.net) { S.auftragNetz = true; netzHinweis(); }   // 18 b: Hinweis „warten auf Netz“ auch für Angaben und Absenden
           if (!fertig) { warte = Math.min(60000, (warte || 1000) * 2); await new Promise(function (res) { var t = setTimeout(res, warte); auftragWake = function () { clearTimeout(t); res(); }; }); auftragWake = null; }
         }
       }
       if (fertig) { L = lsLoad('fa_auftraege') || []; if (L[0] && L[0].nr === a.nr) { L.shift(); lsStore('fa_auftraege', L); } if (a.freigabe) halten(a.freigabe, false); }   // Raum ist beim Server (oder endgültig abgelehnt): Fotos melden
     }
-    S.auftragLaeuft = false;
+    S.auftragLaeuft = false; if (S.auftragNetz) { S.auftragNetz = false; netzHinweis(); }
   }
   /* HALTEN (Fassung 16): Die Raumwahl steht am Ende (Schritt 5). Bis dahin lädt die App die Fotos eines Fahrzeugs hoch, meldet sie aber nicht (foto_melden),
      denn nach dem ersten gemeldeten Foto nimmt der Server keinen anderen Raum mehr an (fahrzeug_daten: schon_fotos) und der Arbeiter finge schon im Vorgabe-Raum an.
@@ -2528,7 +2578,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
      Die Kachel und ein Hinweis sagen es klar; app_details.datei.zu_gross zählt die Ablehnungen. Die Grenze am Server hebt AutoScales. */
   function ausSchlange(it) { var i = S.queue.indexOf(it); if (i >= 0) S.queue.splice(i, 1); }
   // Hochladezeit des geglückten Versuchs je Foto ins Protokoll (app_details.datei), bevor das Foto gemeldet wird; versuche: nur, wenn es mehr als einen brauchte
-  function hochladeZeit(it, ms) { var d = it.meta && it.meta.app_details && it.meta.app_details.datei; if (!d) return; d.hochladen_ms = Math.round(ms); if (it.tries) d.hochladen_versuche = it.tries + 1; }
+  function hochladeZeit(it, ms) { var d = it.meta && it.meta.app_details && it.meta.app_details.datei; if (!d) return; d.hochladen_ms = Math.round(ms); if (it.tries) d.hochladen_versuche = it.tries + 1; if (it.haenger) d.hochladen_haenger = it.haenger; }   // 18 b: wie oft ein Upload ohne Fortschritt abgebrochen wurde
   async function kick() {
     if (S.uploading) return; S.uploading = true;
     for (;;) {
@@ -2544,7 +2594,7 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
         st = kachelVon(it);
         ausSchlange(it); st.state = 'hochgeladen'; st.err = null; idbDel(it.id); it.blob = null; it.meta = null;
         if (rep && rep.status) st.server = Object.assign({}, st.server || {}, { status: rep.status });
-        S.netzAus = false; nachZahl(it, 'ok'); startStand(it.vehicleId, it.slot);
+        S.netzAus = false; netzHinweis(); nachZahl(it, 'ok'); startStand(it.vehicleId, it.slot);
         saveSession(); renderGalleryIfShown(); schedulePoll(1500);
       } catch (e) {
         if (it.ersetzt) { ausSchlange(it); idbDel(it.id); it.blob = null; it.meta = null; renderGalleryIfShown(); continue; }   // inzwischen durch ein neues Foto ersetzt: nicht weiter senden
@@ -2565,8 +2615,11 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
         }
         else {
           if (e && e.message === 'Zeitüberschreitung') it.zeitAus = (it.zeitAus || 0) + 1;
+          var haengt = !!(e && e.fehler === 'haenger');
+          if (haengt) { it.haenger = (it.haenger || 0) + 1; ausSchlange(it); S.queue.push(it); }   // 18 b: hinten anstellen, die Fotos dahinter gehen vor (ein hängender Upload blockiert sie nicht mehr)
           st = kachelVon(it); st.state = 'retry'; st.err = e.message; renderGalleryIfShown(); S.netzAus = true; queueNote();
-          var wait = Math.min(30000, 2000 * Math.pow(2, Math.min(it.tries, 4)));
+          if (haengt && S.queue.some(function (q) { return q !== it && !(q.fileDone && haltOf(q)) && apiFuer(q); })) continue;   // gleich das nächste Foto
+          var wait = haengt ? 2000 : Math.min(30000, 2000 * Math.pow(2, Math.min(it.tries, 4)));
           await new Promise(function (res) { var t = setTimeout(res, wait); onlineWake = function () { clearTimeout(t); res(); }; });
           onlineWake = null;
         }
