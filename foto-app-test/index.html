@@ -212,6 +212,14 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
    Der Arbeiter erkennt nur den klaren Fall (weniger als zwei Räder); ein Rad hinter Bordstein oder Keil sieht nur der Mensch. Schmal, damit das Auto frei bleibt. */
 .medbtn { position: relative; display: grid; place-items: center; cursor: pointer; font: 600 11px/1.2 var(--font-body); color: var(--t); background: var(--ovbg); border: 1px solid var(--ovline); }
 .medbtn input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+/* 18 b (Giannis 27.11.2026 „Ja“): Knopf „Foto hochladen“ mit Symbol, goldener Rand (CI), Text in zwei Zeilen; Link „Aus der Mediathek“ an jeder Kachel; Hinweis einmal je Gerät */
+.medbtn { grid-auto-flow: row; align-content: center; gap: 3px; padding: 4px 3px; text-align: center; line-height: 1.12; border-color: var(--as-gold); }
+.mini.medbtn svg.medic { width: 22px; height: 22px; display: block; margin: 0 auto; }
+.medlink { display: inline-flex; align-items: center; gap: 6px; margin: 2px 10px 0; padding: 7px 10px; border-radius: 999px; border: 1px solid var(--as-gold); font: 600 12px/1.2 var(--font-body); color: var(--t); background: transparent; justify-self: start; }
+.medlink svg.medic { width: 16px; height: 16px; flex: none; }
+.medtipp { position: absolute; left: 50%; transform: translateX(-50%); top: 50px; z-index: 8; display: flex; align-items: center; gap: 10px; max-width: min(360px, calc(100% - 24px)); padding: 8px 8px 8px 14px; border-radius: 14px; background: var(--as-gold); color: #0B0C10; font: 600 13px/1.3 var(--font-body); box-shadow: 0 4px 14px rgba(0,0,0,.3); }
+.medtipp[hidden] { display: none; }
+.medtipp .round { flex: none; width: 30px; height: 30px; min-width: 30px; font-size: 18px; color: #0B0C10; background: rgba(255,255,255,.55); border: 0; }
 .radzeile { max-width: 100%; padding: 5px 12px; font: 600 12px/1.3 var(--font-body); color: var(--t); text-align: center; background: var(--ovbg); border: 1px solid var(--ovline); border-radius: 999px; }
 .hintcard { pointer-events: auto; max-width: 100%; padding: 10px 14px; font: 500 13px/1.45 var(--font-body); color: var(--t); text-align: left; cursor: pointer; border-radius: var(--r); }
 .mid { position: absolute; left: var(--vx); width: var(--vw); top: 50%; transform: translateY(-50%); text-align: center; pointer-events: none; z-index: 6; }
@@ -231,9 +239,10 @@ details.more summary { cursor: pointer; padding: 6px 0; font-weight: 600; }
 #ui[data-form="voll"] .rail.R { right: 0; padding-right: calc(var(--sr, 0px) + 10px); padding-left: 0; align-items: flex-end; justify-content: center; }
 #ui[data-form="voll"] .rail.L .railtitle { order: 1; }
 #ui[data-form="voll"] .rail.L .mini { order: 2; margin-top: auto; width: 64px; max-width: 64px; opacity: .92; background: var(--ovbg); border-color: var(--ovline); }
+#ui .rail.L #medBtn { border-color: var(--as-gold); }   /* 18 b: goldener Rand in jeder Form (CI) */
 #ui[data-form="voll"] .rail.L .exmini { width: 104px; max-width: 104px; opacity: 1; background: #EEF0F3; }
 /* 18 a: sehr niedrige Fenster (Android quer mit Chrome-Leiste, 870 × 280): Lage-Symbol unten war 4 px abgeschnitten; Knöpfe links etwas kleiner, engerer Abstand */
-@media (max-height: 300px) { #ui[data-form="voll"] .rail { gap: 6px; padding-top: 8px; } #ui[data-form="voll"] .rail.L .mini { width: 54px; max-width: 54px; } #ui[data-form="voll"] .rail.L .exmini { width: 92px; max-width: 92px; } #ui[data-form="voll"] .rail.L .medbtn { font-size: 9px; }   /* „Mediathek“ passt ganz in den 54 px breiten Knopf (Testblatt 18 a: „Mediathe“) */ }
+@media (max-height: 300px) { #ui[data-form="voll"] .rail { gap: 6px; padding-top: 8px; } #ui[data-form="voll"] .rail.L .mini { width: 54px; max-width: 54px; } #ui[data-form="voll"] .rail.L .exmini { width: 92px; max-width: 92px; } #ui[data-form="voll"] .rail.L .medbtn { font-size: 9px; gap: 1px; } #ui[data-form="voll"] .rail.L .medbtn svg.medic { width: 16px; height: 16px; }   /* „Mediathek“ passt ganz in den 54 px breiten Knopf (Testblatt 18 a: „Mediathe“) */ }
 #ui[data-form="voll"] .rail.L .exmini:not([hidden]) + #camDiag { order: 3; margin-top: 0; }
 #ui[data-form="voll"] .round { width: 44px; height: 44px; font-size: 18px; background: var(--ovbg); border-color: var(--ovline); }
 #ui[data-form="voll"] .railtitle { width: auto; max-width: 168px; text-align: left; padding: 6px 10px; background: var(--ovbg); border-color: var(--ovline); }
@@ -400,10 +409,12 @@ svg.ic { width: 1.25em; height: 1.25em; flex: none; display: inline-block; verti
 .netzbox { position: fixed; left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); z-index: 25; display: flex; align-items: center; gap: 12px; justify-content: space-between; border-color: var(--warn, var(--as-gold)); color: var(--t); background: var(--base); box-shadow: 0 4px 18px rgba(0,0,0,.25); }
 .netzbox[hidden] { display: none; }
 .netzbox .btn { flex: none; }
+.ptoast { position: fixed; top: max(12px, env(safe-area-inset-top)); z-index: 26; }
 body.netz { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }   /* solange der Hinweis steht: Platz unten, damit er nichts verdeckt */   /* kurz nach dem Seitenwechsel: Doppeltipp trifft nicht den Knopf der neuen Seite */
 </style>
 </head>
 <body>
+<div class="toast ptoast" id="pToast" role="status" hidden></div>
 <div class="note netzbox" id="netzBox" role="status" aria-live="polite" hidden><span id="netzTxt"></span><button class="btn primary" id="netzGo" type="button">Jetzt senden</button></div>
 
 <!-- Seite 1: Start (hochkant) -->
@@ -453,6 +464,7 @@ body.netz { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }   /* sol
 
 <!-- Seite 2: Galerie -->
 <main class="page" id="pGallery" hidden>
+  <input type="file" id="medGal" accept="image/jpeg" hidden>
   <header class="brand"><span class="logo"><img class="l" src="logo.png" alt="AutoScales"><img class="d" src="logo-dunkel.png" alt="AutoScales"></span><span class="chip" id="gChip"></span></header>
   <button class="link zur" id="gZurueck" type="button" hidden>‹ Zurück zum Fahrzeugschein</button>
   <div><span class="lbl">Fahrzeug</span><h1 id="gTitle" style="margin-top:6px;font-size:clamp(18px,5vw,22px)">Fahrzeug</h1></div>
@@ -493,7 +505,7 @@ body.netz { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }   /* sol
       <button class="cglass" id="noRueck" type="button" hidden>Kein Rücksitz (Zweisitzer)</button>
       <div class="rail L">
         <button class="round" id="camX" type="button" aria-label="Kamera schließen" data-ic="schliessen">×</button>
-        <label class="mini medbtn" id="medBtn" role="button" tabindex="0" aria-label="Eigenes Foto aus der Mediathek wählen"><span>Mediathek</span><input type="file" id="medIn" accept="image/jpeg" tabindex="-1"></label>
+        <label class="mini medbtn" id="medBtn" role="button" tabindex="0" aria-label="Foto hochladen: eigenes Foto aus der Mediathek wählen"><svg class="medic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="15" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="8.5" cy="10" r="1.6" fill="currentColor"/><path d="M4.5 18l5-5 3.5 3.5 2.5-2.5 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M17 3.2v6.3M14.4 5.8L17 3.2l2.6 2.6" fill="none" stroke="var(--as-gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Foto hochladen</span><input type="file" id="medIn" accept="image/jpeg" tabindex="-1"></label>
         <button class="mini exmini" id="camEx" type="button" aria-label="Beispielbild groß ansehen" hidden><img id="camExImg" alt=""><span>Beispiel</span></button>
         <div class="mini" id="camDiag" aria-hidden="true"></div>
         <button class="railtitle" id="camChip" type="button" aria-expanded="false" aria-label="Hinweis zur Position ein- oder ausklappen"><span class="nr" id="camNr"></span><b id="camLbl"></b><span class="more">Hinweis ▾</span></button>
@@ -504,6 +516,7 @@ body.netz { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }   /* sol
       <div class="topwrap"><div class="radzeile" id="camRad" role="note" hidden>Alle Räder frei, kein Bordstein, kein Keil.</div><div class="radzeile" id="camWeit" role="note" hidden></div><div class="cglass hintcard" id="camHint" hidden></div></div>
       <div class="mid"><span class="big" id="camBig" hidden></span></div>
       <div class="gal gu cglass" id="camGal"></div>
+      <div class="medtipp" id="medTipp" role="note" hidden><span id="medTippTxt"></span><button class="round" id="medTippX" type="button" aria-label="Hinweis schließen">×</button></div>
       <label class="btn big primary" id="capLabel" hidden style="position:absolute;left:30%;right:30%;top:40%;width:auto">Kamera-App öffnen<input type="file" id="capIn" accept="image/*" capture="environment" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;font-size:0"></label>
     </div>
     <div class="pane" id="vRev" hidden>
@@ -1741,7 +1754,7 @@ body.netz { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }   /* sol
     keepAwake(); aiNochmal(); aiLoad();
   }
   async function leaveStage() {
-    S.token++; S.phase = ''; closeStream(); sensorsDetach();
+    S.token++; S.phase = ''; closeStream(); sensorsDetach(); $('medTipp').hidden = true; S.medGalerie = false;
     $('stage').hidden = true; document.body.style.overflow = ''; releaseAwake();
     if (S.unterBuehne) { if (SEITEN_IDS.every(function (p) { return $(p).hidden; })) { $(S.unterBuehne).hidden = false; renderGalleryIfShown(); } S.unterBuehne = null; }   // die Seite von vorher wieder zeigen (der Aufrufer wechselt danach meist selbst)
     if (S.review && S.review.url) { URL.revokeObjectURL(S.review.url); } S.review = null;
@@ -1819,7 +1832,7 @@ body.netz { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }   /* sol
   }
 
   async function runShot() {
-    var my = ++S.token, tStart = performance.now();
+    var my = ++S.token, tStart = performance.now(); S.medGalerie = false;
     S.phase = 'start'; S.review = null;
     paneShow('vRev', false); paneShow('vBet', false);
     try {
@@ -1827,7 +1840,7 @@ body.netz { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }   /* sol
       // 1) Querhaltung abwarten (Schwerkraft), erst dann startet die Kamera
       await waitLandscape(my);
       // 2) Kamera
-      paneShow('vCam', true); setLabels(); $('shotBtn').disabled = true; $('shotBtn').onclick = null;
+      paneShow('vCam', true); setLabels(); $('shotBtn').disabled = true; $('shotBtn').onclick = null; medTippPruefen();
       if (S.stream && S.camChoice !== null && !(S.cfg && S.cfg.sim) && ((camZiel() || {}).id || null) !== S.camDev) closeStream();   // 17 i (B1): Wechsel außen/innen braucht die andere Linse
       if (S.kameraAlt && S.stream) closeStream();   // seit dem Kamerastart gedreht: neu starten, sonst liefert das iPhone nur kleine Fotos (17 f)
       if (!S.stream || !S.track || S.track.readyState !== 'live') {
@@ -2304,13 +2317,32 @@ body.netz { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }   /* sol
     var my = ++S.token; S.phase = 'mediathek'; $('shotBtn').disabled = true; say('Foto wird geladen …');
     try {
       var buf = new Uint8Array(await f.arrayBuffer()); chk(my);
-      if (!(buf.length > 4 && buf[0] === 0xFF && buf[1] === 0xD8)) { say(''); toast(T('Bitte ein JPEG-Foto wählen.', 'Bitte wählen Sie ein JPEG-Foto.'), 4000); runShot(); return; }
+      if (!(buf.length > 4 && buf[0] === 0xFF && buf[1] === 0xD8)) { say(''); toast(T('Bitte ein JPEG-Foto wählen.', 'Bitte wählen Sie ein JPEG-Foto.'), 4000); if (S.medGalerie) endSequence(); else runShot(); return; }
       var oo = jpegOhneOrt(buf), blob = new Blob([oo.bytes], { type: 'image/jpeg' }); chk(my);
       await processAndReview(my, blob, { snap: null, cls: null, how: { mediathek: { ort_weg: true, gps: oo.info.gps, xmp_weg: oo.info.xmp_weg, iptc_weg: oo.info.iptc_weg, bytes: oo.bytes.length } }, takeMs: null, quelle: 'mediathek', original: blob });
     } catch (e) { if (e === CANCEL) return; problem('Das Foto konnte nicht geladen werden', errText(e), true); }
   }
   $('netzGo').onclick = jetztSenden;   // 18 b
-  $('medIn').onchange = function () { var f = this.files && this.files[0]; this.value = ''; mediathekFoto(f); };
+  $('medIn').onchange = function () { var f = this.files && this.files[0]; this.value = ''; $('medTipp').hidden = true; mediathekFoto(f); };
+  /* HINWEIS BEIM ERSTEN ÖFFNEN (18 b, Giannis 27.11.2026): einmal je Gerät (localStorage fa_med_tipp, gesetzt beim Zeigen), kurz, wegtippbar; weg auch beim Verlassen der Kamera */
+  function medTippPruefen() {
+    var t = $('medTipp'); if (!t.hidden || $('medBtn').hidden) return; var gesehen = true; try { gesehen = localStorage.getItem('fa_med_tipp') === '1'; } catch (e) { gesehen = true; }
+    if (gesehen) return; try { localStorage.setItem('fa_med_tipp', '1'); } catch (e) { /* ohne Speicher: nur dieses Mal */ }
+    $('medTippTxt').textContent = T('Neu: Eigene Fotos lädst du über „Foto hochladen“.', 'Neu: Eigene Fotos laden Sie über „Foto hochladen“.'); t.hidden = false;
+  }
+  $('medTipp').onclick = function () { $('medTipp').hidden = true; };
+  function seitenToast(text, ms) { var e = $('pToast'); e.textContent = text; e.hidden = false; clearTimeout(S.pToastT); S.pToastT = setTimeout(function () { e.hidden = true; }, ms || 3000); }   // Hinweis auf den Seiten (der Toast im Sucher liegt in der Bühne)
+  /* FOTOÜBERSICHT (18 b, Giannis 27.11.2026): „Aus der Mediathek“ an jeder Kachel. Das Dateifeld öffnet direkt im Tipp (iPhone verlangt das); ersetzt das Foto
+     ein vorhandenes, fragt die App erst nach der Auswahl. Dann wie im Sucher: Prüfen-Bild, „Passt“, zurück zur Übersicht (ohne Kamera). */
+  $('medGal').onchange = async function () {
+    var f = this.files && this.files[0], id = S.medZiel; this.value = ''; S.medZiel = null; if (!f || !id || !S.vehicle || !slotMeta(id)) return;
+    var kopf = null; try { kopf = new Uint8Array(await f.slice(0, 2).arrayBuffer()); } catch (e) { kopf = null; }
+    if (!kopf || kopf[0] !== 0xFF || kopf[1] !== 0xD8) { seitenToast(T('Bitte ein JPEG-Foto wählen.', 'Bitte wählen Sie ein JPEG-Foto.'), 4000); return; }   // vor der Kamera-Bühne prüfen: der Hinweis steht auf der Seite
+    var m = slotMeta(id), s = S.slots[id];
+    if (hasPhoto(id) && !confirm('„' + m.name + '“ durch das Foto aus der Mediathek ersetzen? Das alte bleibt als frühere Version gespeichert.')) return;
+    if (m.art === 'zusatz') S.zusatzArt = (s && s.zusatz_art) || 'sonstiges';
+    S.nachFoto = null; enterStage(); S.seq = [id]; S.idx = 0; S.mode = 'single'; S.cur = id; S.medGalerie = true; setLabels(); mediathekFoto(f);
+  };
   $('medBtn').onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('medIn').click(); } };
   async function fallbackShot(my) {
     S.phase = 'fallback'; paneShow('vCam', true); setLabels(); $('shotBtn').disabled = true; $('capLabel').hidden = false; say('');
@@ -2678,7 +2710,8 @@ body.netz { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }   /* sol
       var sv = s && s.server ? s.server : null, a1 = s && s.ampelHandy, a2 = sv && sv.ampel_showroom;
       var retry = s && s.state === 'fehler' && s.item && s.item.blob && s.grund !== 'unlesbar' ? ' · <u>nochmal senden</u>' : '';
       return '<button class="glass tile" type="button" data-id="' + id + '"><div class="im' + (taken ? '' : ' empty') + '">' + img + (m.nr ? '<span class="nr">' + m.nr + '</span>' : '') + '</div><b>' + esc(m.name) + (m.frei ? ' · freiwillig' : '') + (m.art === 'zusatz' && s && s.zusatz_art ? ' · ' + esc((ZUSATZ_ARTEN.filter(function (z) { return z[0] === s.zusatz_art; })[0] || [0, ''])[1]) : '') + '</b>' +
-        '<span class="st"><span><i class="dot ' + ti.c + '"></i>' + esc(ti.t) + retry + '</span>' + amp(a1, 'Handy') + ampSrv(sv) + '</span>' + gruendeTile(sv) + '</button>';
+        '<span class="st"><span><i class="dot ' + ti.c + '"></i>' + esc(ti.t) + retry + '</span>' + amp(a1, 'Handy') + ampSrv(sv) + '</span>' + gruendeTile(sv) +
+        (id === 'ruecksitzbank' && ohneRueck() && !taken ? '' : '<span class="medlink" data-med="' + id + '"><svg class="medic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="15" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="8.5" cy="10" r="1.6" fill="currentColor"/><path d="M4.5 18l5-5 3.5 3.5 2.5-2.5 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>Aus der Mediathek</span>') + '</button>';   // 18 b
     }).join('');
     var next = PF.filter(function (p) { return !hasPhoto(p.key); })[0];
     $('gCta').hidden = !next; $('gNext').hidden = !next; $('gNext').textContent = next ? 'Weiter: ' + next.name : '';
@@ -2690,6 +2723,7 @@ body.netz { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }   /* sol
   // Abschluss nach dem letzten Pflichtbild
   $('gGrid').addEventListener('click', function (ev) {
     var b = ev.target.closest('.tile'); if (!b) return; var id = b.getAttribute('data-id'), s = S.slots[id];
+    if (ev.target.closest('[data-med]')) { S.medZiel = id; $('medGal').click(); return; }   // 18 b: Foto aus der Mediathek für diesen Platz
     if (s && s.state === 'fehler' && s.item && s.item.blob && /nochmal/.test(ev.target.textContent || '')) { var it = s.item; s.item = null; it.tries = 0; it.failed = false; S.restoredFailed = S.restoredFailed.filter(function (x) { return x !== it; }); idbPut(it); s.state = 'wartet'; S.queue.push(it); renderGallery(); kick(); return; }
     if (id === 'ruecksitzbank' && ohneRueck() && !hasPhoto(id)) {   // Kachel „kein Rücksitz“ antippen = rückgängig
       if (confirm('Doch eine Rücksitzbank aufnehmen? Sie zählt dann wieder als Pflichtbild.')) { S.vehicle.keineRueck = false; S.vehicle.flagTries = 0; saveSession(); syncFlag(); renderGallery(); }
