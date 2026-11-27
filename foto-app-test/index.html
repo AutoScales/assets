@@ -618,6 +618,10 @@ body.netz { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }   /* sol
     // 48 Megapixel sprengten den Speicher. Der Fahrzeugschein bleibt bei LONG_EDGE_SCHEIN.
     LONG_EDGE: 4032, LONG_EDGE_SCHEIN: 2560, QUALITY: 0.85,
     FOTO_VERSUCHE: 2,           // kleines Foto trotz Größenangabe: Kamera neu starten und noch einmal auslösen, höchstens so viele Aufnahmen (17 f)
+    // 18 b (Giannis 27.11.2026: „Android können wir leider nicht mehr checken daher versuchen wir es für alle richtig zu machen.“): „schwarz“ heißt technisch tot,
+    // nicht dunkel. Hellster Punkt unter max (13 von 255) und Mittel unter mittel. Zum Vergleich: dunkelstes echtes Innenfoto (Tachobild Tiefgarage 23.11.) Mittel 0,033, Spitze 0,36.
+    // bpp: erst unter dieser Dateigröße je Bildpunkt wird das Foto überhaupt angesehen (ein schwarzes JPEG ist winzig; echte Fotos liegen bei 0,15 bis 0,3).
+    SCHWARZ: { max: 0.05, mittel: 0.012, bpp: 0.03 },
     FOTO_MS: 6000,              // takePhoto mit Größenangabe: antwortet die Kamera nicht in dieser Zeit, gilt der Rückfall ohne Angaben (danach für diesen Kamerastart immer)
     SETTLE_MS: 1500,            // Einschwingzeit nach Kamerastart
     NACH_MAX_MS: 900, NACH_FENSTER_MS: 220, NACH_RUHIG_MS: 120,   // nach dem Tipp kurz nachstabilisieren (der Tipp wackelt), höchstens so lange
@@ -1701,7 +1705,9 @@ body.netz { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }   /* sol
   async function openZiel(my) {
     var z = camZiel();
     try { await openStream(z, my); }
-    catch (e) { if (e === CANCEL || !z || z !== S.camUltra) throw e; S.camUltra = false; await openStream(S.camChoice || null, my); }   // Ultraweitwinkel startet nicht: Hauptkamera, ab jetzt mit Hinweis
+    catch (e) { if (e === CANCEL || !z || z !== S.camUltra) throw e; S.camUltra = false; S.camRueckfall = 'ultra_startet_nicht'; await openStream(S.camChoice || null, my); }   // Ultraweitwinkel startet nicht: Hauptkamera, ab jetzt mit Hinweis
+    if (z && z === S.camUltra && !(S.cfg && S.cfg.sim) && await stromSchwarz(my)) { S.camUltra = false; S.camRueckfall = 'ultra_schwarz'; await openStream(S.camChoice || null, my); }   // 18 b: 0,5× liefert nur Schwarz
+    else if (z && z === S.camChoice && !(S.cfg && S.cfg.sim) && await stromSchwarz(my)) { S.camChoice = false; S.camRueckfall = 'haupt_schwarz'; await openStream(null, my); }   // 18 b: gewählte Hauptkamera schwarz: Standard-Rückkamera
     weitHinweis();
   }
   // Hauptkamera sicher wählen: unter Android nennt der Browser die Kameras nur „camera N“. Wir lesen die Kleinbild-Brennweite aus einem Probefoto.
@@ -1738,6 +1744,25 @@ body.netz { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }   /* sol
      ===================================================================== */
   var CANCEL = { cancel: true };
   function chk(my) { if (my !== S.token) throw CANCEL; }
+  /* ANDROID ABSICHERN (18 b): unsichtbare Rückfallwege hinter den bestehenden Erkennungen, für iPhone ohne Wirkung, solange Kamera und Foto nicht schwarz sind.
+     1) Liefert die 0,5×-Kamera nach dem Start nur Schwarz (Strom ohne Bild), nimmt die App die Hauptkamera (wie bei einer 0,5×-Kamera, die nicht startet).
+     2) Liefert die gewählte Hauptkamera nur Schwarz, nimmt die App die Standard-Rückkamera (facingMode environment).
+     3) Ist ein Foto schwarz, das Livebild davor aber nicht, startet die App die Kamera neu und löst still noch einmal aus (wie bei zu kleinen Fotos).
+     Was danach noch dunkel ist, sagt die Prüfung am Foto („sehr dunkel“, Neu aufnehmen). Im Protokoll: app_details.kamera_rueckfall, kamera_foto.schwarz. */
+  function lumaStat(g) { var s = 0, m = 0; for (var i = 0; i < g.length; i++) { s += g[i]; if (g[i] > m) m = g[i]; } return { mittel: s / Math.max(1, g.length) / 255, max: m / 255 }; }
+  function istSchwarz(st) { return !!st && st.max < CFG.SCHWARZ.max && st.mittel < CFG.SCHWARZ.mittel; }
+  async function stromSchwarz(my) {   // true nur, wenn mindestens 3 Bilder des laufenden Stroms da und alle schwarz sind; ohne Bild oder ohne Messung: false (nichts ändern)
+    var v = $('video'), n = 0;
+    for (var i = 0; i < 8; i++) {
+      if (my != null && my !== S.token) return false;
+      if (v.readyState >= 2 && v.videoWidth) { var st; try { st = lumaStat(smallOf(v, v.videoWidth, v.videoHeight).g); } catch (e) { return false; } if (!istSchwarz(st)) return false; n++; if (n >= 3) return true; }
+      await sleep(250);
+    }
+    return false;
+  }
+  async function fotoHelligkeit(blob) {   // klein dekodiert; ohne createImageBitmap oder bei Fehler: null (dann gilt das Foto nicht als schwarz)
+    try { var bm = await createImageBitmap(blob, { resizeWidth: 64, resizeHeight: 48, resizeQuality: 'low' }), st = lumaStat(smallOf(bm, bm.width, bm.height).g); if (bm.close) bm.close(); return st; } catch (e) { return null; }
+  }
   async function sleepC(my, ms) { var t0 = performance.now(); while (performance.now() - t0 < ms) { chk(my); await sleep(Math.min(100, ms)); } }
   function paneShow(id, on) { $(id).hidden = !on; }
   function say(t) { if (!$('stage').hidden) { var b = $('camBig'); if (t) { b.textContent = t; b.hidden = false; } else b.hidden = true; $('camHint').style.visibility = t ? 'hidden' : ''; } }
@@ -1979,7 +2004,7 @@ body.netz { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }   /* sol
        Sicherung (17 f): Die App liest die Größe des gelieferten Fotos. Hat es weniger als die Hälfte der verlangten Bildpunkte, startet sie die Kamera neu und löst
        still noch einmal aus (höchstens CFG.FOTO_VERSUCHE Aufnahmen). Bleibt es klein, sagt das Prüfen-Bild es gelb (Code foto_klein); nichts geht still durch.
        Alle gelieferten Größen und der Neustart stehen im Protokoll (kamera_foto.groessen, neustart). Ohne Größenangabe (Rückfall) zählt die Größe des Kamerastroms. */
-    var ps = await fotoEinstellung(), rueck = false, soll = ps ? ps.imageWidth * ps.imageHeight : (S.vw > 1 && S.vh > 1 ? S.vw * S.vh : 0), verlangt = ps ? ps.imageWidth + 'x' + ps.imageHeight : null, gr = [], klein = false, neustart = false;
+    var ps = await fotoEinstellung(), rueck = false, soll = ps ? ps.imageWidth * ps.imageHeight : (S.vw > 1 && S.vh > 1 ? S.vw * S.vh : 0), verlangt = ps ? ps.imageWidth + 'x' + ps.imageHeight : null, gr = [], klein = false, neustart = false, nSchwarz = 0;
     var vor = kameraJetzt();   // echte Werte der Kamera unmittelbar vor dem Auslösen (nur lesen)
     for (;;) {
       var psJ = gr.length ? await fotoEinstellung() : ps;
@@ -1988,13 +2013,15 @@ body.netz { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }   /* sol
       S.letztesFoto = performance.now(); S.fotosSeitStart = (S.fotosSeitStart || 0) + 1;
       var xG = await readExif(blob), px = xG.sofW && xG.sofH ? xG.sofW * xG.sofH : 0; gr.push(px ? xG.sofW + 'x' + xG.sofH : '?');
       klein = !!(soll && px && px < soll * 0.5);
-      if (!klein || rueck || !psJ || gr.length >= CFG.FOTO_VERSUCHE || my !== S.token) break;
-      neustart = true;   // kleines Foto: Kamera neu starten (stop, getUserMedia wie beim Start), dann noch einmal auslösen
+      var schwarz = false;   // 18 b: schwarzes Foto bei nicht schwarzem Livebild (Emulator 26.11.: Tachobild Helligkeit 1 von 255)
+      if (!klein && px && blob.size / px < CFG.SCHWARZ.bpp && !(live && istSchwarz(lumaStat(live.g)))) { var hS = await fotoHelligkeit(blob); if (istSchwarz(hS)) { schwarz = true; nSchwarz++; } }
+      if (!((klein && !rueck && psJ) || schwarz) || gr.length >= CFG.FOTO_VERSUCHE || my !== S.token) break;
+      neustart = true;   // kleines oder schwarzes Foto: Kamera neu starten (stop, getUserMedia wie beim Start), dann noch einmal auslösen
       try { if (S.cfg && S.cfg.sim) await openSim(); else await openZiel(my); } catch (e) { if (e === CANCEL) throw e; break; }
       if (!S.ic) break;
       await sleepC(my, 300);
     }
-    how.foto = { faehig: S.fotoCaps || null, verlangt: verlangt, rueckfall: rueck, zoom_aus: !!S.zoomAus, versuche: gr.length, groessen: (gr.length > 1 || klein) ? gr : undefined, klein: klein || undefined, neustart: neustart || undefined, vor: vor || undefined, datei: (xG.sofW && xG.sofH) ? xG.sofW + 'x' + xG.sofH : undefined, ausloesen_ms: Math.round(performance.now() - t0) };
+    how.foto = { faehig: S.fotoCaps || null, verlangt: verlangt, rueckfall: rueck, zoom_aus: !!S.zoomAus, versuche: gr.length, groessen: (gr.length > 1 || klein) ? gr : undefined, klein: klein || undefined, schwarz: nSchwarz || undefined, neustart: neustart || undefined, vor: vor || undefined, datei: (xG.sofW && xG.sofH) ? xG.sofW + 'x' + xG.sofH : undefined, ausloesen_ms: Math.round(performance.now() - t0) };
     var snapE = snapshot();   // Lage nach der Aufnahme: nur fürs Protokoll (wie weit das Handy während der Aufnahme weiterdreht)
     chk(my);
     flash();
@@ -2181,7 +2208,7 @@ body.netz { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }   /* sol
         nicht_geprueft: P.codes.length > 0, nicht_geprueft_grund: P.codes.join(','),
         fuehrung: { stand: FUEHRUNG.stand, licht: P.lack !== undefined ? { lack_rot: P.lack } : undefined },
         pruefung: P.zahlen,
-        ruecksitzbank: rueckPflicht() ? 'pflicht' : 'keine', design: 'v4', aufnahme_ms: r.takeMs, aufnahme: r.aufn ? { zeit: new Date(r.aufn.zeit).toISOString(), nr: r.aufn.nr, verworfen: r.aufn.verworfen, gesperrt: r.aufn.gesperrt || 0 } : undefined, kamera: S.camNote, kamera_foto: r.how.foto || undefined, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), fenster: (r.how && r.how.sucher && r.how.sucher.fenster) || window.innerWidth + 'x' + window.innerHeight, sucher_sichtbar: (r.how && r.how.sucher && r.how.sucher.sichtbar) || undefined, schirm: screen.width + 'x' + screen.height, form: (r.how && r.how.sucher && r.how.sucher.form) || LAY.form || null, buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null,
+        ruecksitzbank: rueckPflicht() ? 'pflicht' : 'keine', design: 'v4', aufnahme_ms: r.takeMs, aufnahme: r.aufn ? { zeit: new Date(r.aufn.zeit).toISOString(), nr: r.aufn.nr, verworfen: r.aufn.verworfen, gesperrt: r.aufn.gesperrt || 0 } : undefined, kamera: S.camNote, kamera_rueckfall: S.camRueckfall || undefined, kamera_foto: r.how.foto || undefined, sucher: r.video, bildschirm: (screen.orientation && screen.orientation.type) ? screen.orientation.type + ' ' + screen.orientation.angle : String(window.orientation), fenster: (r.how && r.how.sucher && r.how.sucher.fenster) || window.innerWidth + 'x' + window.innerHeight, sucher_sichtbar: (r.how && r.how.sucher && r.how.sucher.sichtbar) || undefined, schirm: screen.width + 'x' + screen.height, form: (r.how && r.how.sucher && r.how.sucher.form) || LAY.form || null, buehne_drehung: S.textRot, zeiten_ms: r.zeiten, sichtfeld: fov, hinweis: r.note || null,
         // Lage beim Tippen und nach dem Ruhig-Werden mit Spanne und Rohwerten (Fable (Studio) 18, 22.11.2026), Zuschnitt gegenüber dem Ausgangsbild, Linse und Zoom.
         // brennweite_kb oben gilt für das ausgelieferte Bild (nach Zuschnitt und Gerade-Richten). sichtfeld ist kein Winkel, sondern Foto gegen Live-Bild (Lehre 9).
         sensor: kam ? { fenster_ms: CFG.NACH_FENSTER_MS, tipp: (r.how.nach && r.how.nach.tipp) || null, ruhig: r.how.sens || null } : null,   // Zeit vom Tipp bis zum Foto: ausloeser.nachstabil_ms
@@ -3207,7 +3234,7 @@ body.netz { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }   /* sol
   }
   function vehLokalWeg(id) { var m = lsLoad('fa_veh_l'); if (m && m.rs && m.rs.vehicle && m.rs.vehicle.id === id) lsStore('fa_veh_l', null); }
   setInterval(function () { if (document.visibilityState !== 'visible' || !S.vehicle) return; var m = lsLoad('fa_veh_l'); if (m && m.rs && m.rs.vehicle && m.rs.vehicle.id === S.vehicle.id) { m.hb = Date.now(); lsStore('fa_veh_l', m); } }, 3000);   // Lebenszeichen dieses Tabs
-  function resetVehicle() { var alt = S.vehicle || ((load('fa_veh') || {}).vehicle); if (alt && alt.id) { raumFrei(alt.id); vehLokalWeg(alt.id); } scheinWeg(); S.vehicle = null; S.slots = {}; S.camChoice = null; S.camUltra = null; S.klasse = null; S.schritt = null; store('fa_veh', null); clearTimeout(S.pollTimer); ['fMarke', 'fBaujahr', 'fModell'].forEach(function (id) { $(id).value = ''; }); S.anlegeId = null; buildKar(); }   // 18 a (iPhone-Check Fehler 3, Giannis 26.11.2026: „ja mache weiter“): neues Fahrzeug = leeres Formular
+  function resetVehicle() { var alt = S.vehicle || ((load('fa_veh') || {}).vehicle); if (alt && alt.id) { raumFrei(alt.id); vehLokalWeg(alt.id); } scheinWeg(); S.vehicle = null; S.slots = {}; S.camChoice = null; S.camUltra = null; S.camRueckfall = null; S.klasse = null; S.schritt = null; store('fa_veh', null); clearTimeout(S.pollTimer); ['fMarke', 'fBaujahr', 'fModell'].forEach(function (id) { $(id).value = ''; }); S.anlegeId = null; buildKar(); }   // 18 a (iPhone-Check Fehler 3, Giannis 26.11.2026: „ja mache weiter“): neues Fahrzeug = leeres Formular
   $('resumeYes').onclick = function () {
     var rs = load('fa_veh'); if (!rs || S.resumeLaeuft) return;
     sensorsNachholen();   // Erlaubnis für den Bewegungssensor schon hier nachholen (nach dem Neuladen nötig)
@@ -3265,7 +3292,7 @@ body.netz { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }   /* sol
       var ro = await raumOffenAnfragen(v.id);
       if (ro === 'ja') v.raumOffen = true;
       else { if (ro === 'unklar') v.raumOffenUnklar = true; halten(v.id, true); }   // Fotos erst nach der Raumwahl in Schritt 5 melden
-      S.vehicle = v; S.slots = {}; S.camChoice = null; S.camUltra = null; S.devs = null; S.fallbackInput = false; saveSession();
+      S.vehicle = v; S.slots = {}; S.camChoice = null; S.camUltra = null; S.camRueckfall = null; S.devs = null; S.fallbackInput = false; saveSession();
       S.sensorPerm = perm;
       fmsg('');
       zeigeSchritt('daten');   // Ablauf G1 10.11.2026: Fahrzeugdaten, Zustand, Fotos, Preis, Prüfen, Absenden
