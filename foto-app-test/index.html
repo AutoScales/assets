@@ -595,7 +595,7 @@ body.netz { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }   /* sol
   /* =====================================================================
      Konstanten
      ===================================================================== */
-  var APP = 'foto-app-test-18b';
+  var APP = 'foto-app-test-18c';
   var RAD = Math.PI / 180;
   /* =====================================================================
      FREIE KAMERA (Fassung 17). Giannis 23.11.2026: „man öffnet die App, man sieht den ganzen Bildschirm als freie Kamera und wir lassen das mit den Kasten und alles weg.
@@ -2075,7 +2075,7 @@ body.netz { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }   /* sol
      Gezeigt im Sucher (#camEx) vor dem Foto und im Prüfen-Bild. Zusatzbild und Fahrzeugschein haben keins. Bis 17 g zeichnete die App die Beispiele selbst (SVG); das ist raus.
      Ohne Netz: Beim Öffnen der Kamera lädt die App die 13 Bilder der Klasse in einen Vorrat (wie die Raumbilder), danach gehen sie auch im Keller. */
   var BEISPIEL_AUSSEN = ['titel', 'front', 'dreiviertel_vr', 'dreiviertel_hr', 'heck', 'dreiviertel_hl', 'seite_l', 'seite_r'], BEISPIEL_INNEN = ['cockpit', 'tacho', 'vordersitze', 'ruecksitzbank', 'kofferraum'];
-  var BEISPIEL_ORDNER = { kleinwagen: 'kleinwagen', kompakt: 'kleinwagen', limousine: 'limousine', suv: 'limousine', coupe: 'coupe', cabrio: 'coupe' };   // Bilder gibt es für drei Klassen; die übrigen nehmen die nächste Form
+  var BEISPIEL_ORDNER = { kleinwagen: 'kleinwagen', kompakt: 'kompakt', limousine: 'limousine', suv: 'suv', coupe: 'coupe', cabrio: 'cabrio' };   // je Klasse eigene Bilder (18 c, Giannis 28.11.2026: „Beispielbilder sind fürs Erste okay, das können wir so nehmen.“); vorher nahmen Kompakt, SUV und Cabrio die nächste Form
   var BEISPIEL_VORRAT = {}, beispielLaeuft = {};
   function beispielPfad(key, art) {
     if (key === 'seite') key = 'seite_l';
